@@ -120,6 +120,9 @@ Important current rules:
 - Class Pulse checks local storage when the form opens. Identity-dependent
   activities check after the relevant Student ID or team selection is entered,
   then show the recorded time and lock the form before another submission.
+- New local submission receipts also retain the non-identity answers needed for
+  a read-only confirmation view. Student names and Student IDs are excluded.
+  Older timestamp-only receipts remain valid but cannot display past answers.
 
 ## Current product decisions
 

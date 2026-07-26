@@ -30,6 +30,7 @@ The current module guides students through a four-week journey:
 - Supabase email/password authentication
 - Teacher-only access through `app_metadata.role = teacher`
 - RLS-protected summary counts for all activity types
+- Read-only same-browser submission receipts that exclude names and Student IDs
 
 ## Technology stack
 

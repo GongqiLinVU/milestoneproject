@@ -57,6 +57,8 @@ The project currently uses simple milestone-based versions while the production 
 
 ### Fixed
 
+- Displayed a read-only, same-browser receipt after submission and on reopening
+- Excluded student names and Student IDs from locally stored receipt details
 - Checked local submission memory before submit and locked previously completed forms with a timestamped notice
 - Updated production URLs to `milestoneproject-two.vercel.app`
 - Isolated modal state by activity so success and error messages cannot carry into another form
