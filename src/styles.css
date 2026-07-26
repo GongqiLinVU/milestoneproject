@@ -330,6 +330,9 @@ footer {
   display: flex;
   cursor: pointer;
   list-style: none;
+  padding: 3px;
+  border-radius: 50%;
+  background: #e9efff;
 }
 .field-help summary::-webkit-details-marker {
   display: none;
@@ -380,6 +383,10 @@ footer {
 }
 .form-status.success {
   color: #267a48;
+}
+.dialog form > button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
 }
 .admin-login {
   min-height: 100vh;
