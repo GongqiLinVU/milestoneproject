@@ -57,6 +57,9 @@ The project currently uses simple milestone-based versions while the production 
 
 ### Fixed
 
+- Isolated modal state by activity so success and error messages cannot carry into another form
+- Made the 1–5 scale direction visible without requiring students to open help
+- Added hashed same-browser submission memory to reduce accidental duplicate submissions
 - Added an idempotent migration for the missing `week1_pulse.concern` column
 - Clarified that Class Pulse confidence uses 1 as the lowest and 5 as the highest
 - Added accessible help for confidence and poster-review rating scales
