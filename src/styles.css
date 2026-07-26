@@ -263,6 +263,15 @@ blockquote {
   margin: 14px 0;
   color: var(--muted);
 }
+.expo .primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.activity-status {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
 .deliverables {
   grid-template-columns: repeat(3, 1fr);
 }
