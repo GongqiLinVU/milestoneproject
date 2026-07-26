@@ -74,6 +74,11 @@ set raw_app_meta_data =
 where email = 'teacher@example.edu';
 ```
 
+For an existing environment, apply the reviewed SQL files in
+`supabase/migrations` before deploying frontend code that depends on them.
+The schema file creates new environments; `create table if not exists` does
+not add missing columns to an existing table.
+
 ## Vercel deployment
 
 Import this GitHub repository into Vercel and configure:
