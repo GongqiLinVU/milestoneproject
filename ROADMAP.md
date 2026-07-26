@@ -54,6 +54,8 @@ Turn the dashboard from a summary screen into an operational teaching tool.
 - Loading, empty and error states
 - Clear student-facing duplicate submission message
 - CSV export after record management is stable
+- Teacher-managed Poster Peer Review open/close control, replacing the current
+  disabled Week 3 placeholder
 
 ### Out of scope
 
