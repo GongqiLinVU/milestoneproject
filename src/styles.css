@@ -400,6 +400,39 @@ footer {
 .submission-notice span {
   line-height: 1.5;
 }
+.submission-receipt {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.submission-receipt > div {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.35fr) 1fr;
+  gap: 16px;
+  padding: 13px 15px;
+  background: #fff;
+}
+.submission-receipt > div + div {
+  border-top: 1px solid var(--line);
+}
+.submission-receipt dt {
+  color: var(--muted);
+  font-weight: 600;
+}
+.submission-receipt dd {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.receipt-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
 .dialog form .secondary {
   background: white;
   color: var(--ink);
@@ -466,6 +499,10 @@ footer {
   }
   .hero h1 {
     font-size: 62px;
+  }
+  .submission-receipt > div {
+    grid-template-columns: 1fr;
+    gap: 4px;
   }
 }
 @media (max-width: 520px) {
