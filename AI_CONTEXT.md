@@ -22,8 +22,8 @@ This is a real production application, not a disposable demonstration.
 ## Production environment
 
 - Repository: `GongqiLinVU/milestoneproject`
-- Student portal: `https://milestoneproject-gaerotzi4-guccimasters-projects.vercel.app/`
-- Teacher dashboard: `https://milestoneproject-gaerotzi4-guccimasters-projects.vercel.app/admin`
+- Student portal: `https://milestoneproject-two.vercel.app/`
+- Teacher dashboard: `https://milestoneproject-two.vercel.app/admin`
 - Hosting: Vercel
 - Backend: Supabase
 - Database: PostgreSQL
@@ -117,6 +117,9 @@ Important current rules:
   activity-specific fingerprints. No student name or plain-text Student ID is
   stored. This prevents accidental repeat submissions only on the same browser;
   database constraints remain the authoritative cross-device protection.
+- Class Pulse checks local storage when the form opens. Identity-dependent
+  activities check after the relevant Student ID or team selection is entered,
+  then show the recorded time and lock the form before another submission.
 
 ## Current product decisions
 
