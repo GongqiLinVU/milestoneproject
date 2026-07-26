@@ -123,6 +123,9 @@ Important current rules:
 - New local submission receipts also retain the non-identity answers needed for
   a read-only confirmation view. Student names and Student IDs are excluded.
   Older timestamp-only receipts remain valid but cannot display past answers.
+- The Poster Peer Review entry point is currently disabled in the student
+  portal and labelled as opening in Week 3. A teacher-managed activity window,
+  including database enforcement, is deferred to Sprint 2.
 
 ## Current product decisions
 
