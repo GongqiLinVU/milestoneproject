@@ -66,6 +66,8 @@ The project currently uses simple milestone-based versions while the production 
 - Clarified that Team Conversation is submitted once per team and Four-Week Promise once per student
 - Aligned Team Conversation and Poster Review insert payloads with production column names
 - Synchronised `supabase/schema.sql` with the deployed activity-table columns and timestamps
+- Added an idempotent least-privilege migration for activity-table grants and insert policies
+- Aligned repository trigger and policy definitions with production naming
 
 ### Planned for Sprint 2
 
