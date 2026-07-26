@@ -109,6 +109,10 @@ Important current rules:
 - Existing database changes require a reproducible file in
   `supabase/migrations`; rerunning `schema.sql` alone does not alter an
   existing table created with `create table if not exists`.
+- Production activity tables use `created_at` and `updated_at` timestamps.
+- Team Conversation stores `proudest_achievement` and
+  `biggest_delivery_risk`.
+- Poster Review stores `presentation_quality` and `highest_priority`.
 
 ## Current product decisions
 
