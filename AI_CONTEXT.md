@@ -98,6 +98,22 @@ Important current rules:
 - A teacher user can sign in.
 - Teacher RLS permissions allow dashboard summary reads.
 
+## Student activity semantics
+
+- Class Pulse is anonymous, is not an assessment and uses a 1–5 confidence
+  scale where 1 is lowest and 5 is highest.
+- Team Conversation is one shared response per team.
+- Four-Week Promise is one individual commitment per student.
+- Form errors must be scoped to the active form and must not expose raw
+  database details to students.
+- Existing database changes require a reproducible file in
+  `supabase/migrations`; rerunning `schema.sql` alone does not alter an
+  existing table created with `create table if not exists`.
+- Production activity tables use `created_at` and `updated_at` timestamps.
+- Team Conversation stores `proudest_achievement` and
+  `biggest_delivery_risk`.
+- Poster Review stores `presentation_quality` and `highest_priority`.
+
 ## Current product decisions
 
 - Students currently submit without an account.

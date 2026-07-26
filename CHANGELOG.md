@@ -55,6 +55,20 @@ The project currently uses simple milestone-based versions while the production 
 
 ## Unreleased
 
+### Fixed
+
+- Added an idempotent migration for the missing `week1_pulse.concern` column
+- Clarified that Class Pulse confidence uses 1 as the lowest and 5 as the highest
+- Added accessible help for confidence and poster-review rating scales
+- Prevented form errors from carrying over into other activity modals
+- Replaced raw database errors with student-friendly messages
+- Added frontend field limits that match database constraints
+- Clarified that Team Conversation is submitted once per team and Four-Week Promise once per student
+- Aligned Team Conversation and Poster Review insert payloads with production column names
+- Synchronised `supabase/schema.sql` with the deployed activity-table columns and timestamps
+- Added an idempotent least-privilege migration for activity-table grants and insert policies
+- Aligned repository trigger and policy definitions with production naming
+
 ### Planned for Sprint 2
 
 - Detailed student check-in table
