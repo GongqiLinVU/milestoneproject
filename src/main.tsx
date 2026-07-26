@@ -366,22 +366,128 @@ async function submissionStorageKey(
   return `nit3004-submission-v1:${kind}:${hash}`;
 }
 
+type SubmissionReceipt = {
+  submittedAt: string;
+  answers: Array<{ label: string; value: string }>;
+};
+
+const ratingText = (value: FormDataEntryValue | undefined) => {
+  const labels = [
+    "Needs significant work",
+    "Needs improvement",
+    "Developing",
+    "Strong",
+    "Excellent",
+  ];
+  const number = Number(value);
+  return number >= 1 && number <= 5
+    ? `${number} — ${labels[number - 1]}`
+    : String(value ?? "");
+};
+
+function submissionReceipt(
+  kind: Kind,
+  values: Record<string, FormDataEntryValue>,
+): SubmissionReceipt {
+  const text = (name: string) => String(values[name] ?? "").trim();
+  const answersByKind: Record<
+    Kind,
+    Array<{ label: string; value: string }>
+  > = {
+    checkin: [
+      { label: "Team", value: text("team") },
+      { label: "Four-week goal", value: text("goal") },
+    ],
+    pulse: [
+      {
+        label: "Confidence",
+        value: [
+          "Not confident yet",
+          "Slightly confident",
+          "Moderately confident",
+          "Confident",
+          "Very confident",
+        ][Number(values.confidence) - 1]
+          ? `${values.confidence} — ${
+              [
+                "Not confident yet",
+                "Slightly confident",
+                "Moderately confident",
+                "Confident",
+                "Very confident",
+              ][Number(values.confidence) - 1]
+            }`
+          : text("confidence"),
+      },
+      { label: "Main concern", value: text("concern") },
+      { label: "AI usage", value: text("ai") },
+    ],
+    team: [
+      { label: "Team", value: text("team") },
+      { label: "What the team is proud of", value: text("proud") },
+      { label: "Biggest delivery risk", value: text("risk") },
+      { label: "Support needed", value: text("support") },
+    ],
+    promise: [
+      { label: "Team", value: text("team") },
+      { label: "Four-week promise", value: text("promise") },
+    ],
+    review: [
+      { label: "Reviewer team", value: text("reviewer_team") },
+      { label: "Reviewed team", value: text("reviewed_team") },
+      { label: "Problem clarity", value: ratingText(values.problem) },
+      { label: "Working product", value: ratingText(values.product) },
+      { label: "Evidence and testing", value: ratingText(values.evidence) },
+      { label: "Document readiness", value: ratingText(values.docs) },
+      { label: "Explanation quality", value: ratingText(values.explanation) },
+      { label: "Strongest part", value: text("strongest") },
+      { label: "Highest priority", value: text("priority") },
+    ],
+  };
+  return {
+    submittedAt: new Date().toISOString(),
+    answers: answersByKind[kind].filter(({ value }) => Boolean(value)),
+  };
+}
+
+function readSubmissionReceipt(key: string): SubmissionReceipt | null {
+  const stored = localStorage.getItem(key);
+  if (!stored) return null;
+  try {
+    const parsed = JSON.parse(stored) as Partial<SubmissionReceipt>;
+    if (parsed.submittedAt && Array.isArray(parsed.answers)) {
+      return {
+        submittedAt: parsed.submittedAt,
+        answers: parsed.answers.filter(
+          (answer): answer is { label: string; value: string } =>
+            typeof answer?.label === "string" &&
+            typeof answer?.value === "string",
+        ),
+      };
+    }
+  } catch {
+    // Earlier versions stored only an ISO timestamp.
+  }
+  return { submittedAt: stored, answers: [] };
+}
+
 function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
   const [msg, setMsg] = useState("");
   const [submitted, setSubmitted] = useState(false);
-  const [storedSubmissionAt, setStoredSubmissionAt] = useState<string | null>(
-    null,
+  const [storedSubmission, setStoredSubmission] =
+    useState<SubmissionReceipt | null>(
+      null,
   );
   useEffect(() => {
     setMsg("");
     setSubmitted(false);
-    setStoredSubmissionAt(null);
+    setStoredSubmission(null);
     if (kind !== "pulse") return;
     let cancelled = false;
     submissionStorageKey(kind, {})
       .then((key) => {
-        const submittedAt = localStorage.getItem(key);
-        if (!cancelled && submittedAt) setStoredSubmissionAt(submittedAt);
+        const receipt = readSubmissionReceipt(key);
+        if (!cancelled && receipt) setStoredSubmission(receipt);
       })
       .catch(() => {
         // Storage is optional and may be unavailable in restricted browsers.
@@ -406,14 +512,14 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
         Boolean(String(values.sid ?? "").trim()) &&
         Boolean(values.reviewed_team));
     if (!identityReady) {
-      setStoredSubmissionAt(null);
+      setStoredSubmission(null);
       return;
     }
     try {
       const key = await submissionStorageKey(activeKind, values);
-      setStoredSubmissionAt(localStorage.getItem(key));
+      setStoredSubmission(readSubmissionReceipt(key));
     } catch {
-      setStoredSubmissionAt(null);
+      setStoredSubmission(null);
     }
   }
   async function submit(e: any) {
@@ -426,9 +532,9 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
     let storageKey = "";
     try {
       storageKey = await submissionStorageKey(activeKind, v);
-      const submittedAt = localStorage.getItem(storageKey);
-      if (submittedAt) {
-        setStoredSubmissionAt(submittedAt);
+      const receipt = readSubmissionReceipt(storageKey);
+      if (receipt) {
+        setStoredSubmission(receipt);
         setMsg("");
         return;
       }
@@ -497,13 +603,15 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
       setMsg(friendlyError(error.code, activeKind));
       return;
     }
+    const receipt = submissionReceipt(activeKind, v);
     if (storageKey) {
       try {
-        localStorage.setItem(storageKey, new Date().toISOString());
+        localStorage.setItem(storageKey, JSON.stringify(receipt));
       } catch {
         // A successful database submission must not fail because storage is unavailable.
       }
     }
+    setStoredSubmission(receipt);
     setSubmitted(true);
     setMsg("Response recorded. Thank you.");
   }
@@ -522,24 +630,46 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
           onSubmit={submit}
           onChange={(event) => void checkStoredSubmission(event.currentTarget)}
         >
-          {storedSubmissionAt ? (
+          {storedSubmission ? (
             <>
               <div className="submission-notice" role="status">
                 <b>Already submitted from this browser</b>
                 <span>
                   Recorded{" "}
-                  {new Date(storedSubmissionAt).toLocaleString(undefined, {
+                  {new Date(storedSubmission.submittedAt).toLocaleString(
+                    undefined,
+                    {
                     dateStyle: "medium",
                     timeStyle: "short",
-                  })}
-                  . This form is locked to prevent an accidental duplicate.
+                    },
+                  )}
+                  . This submission is locked and cannot be edited.
                 </span>
               </div>
+              {storedSubmission.answers.length > 0 ? (
+                <dl className="submission-receipt">
+                  {storedSubmission.answers.map(({ label, value }) => (
+                    <div key={label}>
+                      <dt>{label}</dt>
+                      <dd>{value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              ) : (
+                <p className="receipt-note">
+                  This submission was saved by an earlier version, so its
+                  answers are not available on this browser.
+                </p>
+              )}
+              <p className="receipt-note">
+                This receipt is saved only on this browser. Your name and
+                Student ID are not stored here.
+              </p>
               {activeKind !== "pulse" && (
                 <button
                   type="button"
                   className="secondary"
-                  onClick={() => setStoredSubmissionAt(null)}
+                  onClick={() => setStoredSubmission(null)}
                 >
                   Start a different submission
                 </button>
