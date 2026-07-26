@@ -8,8 +8,8 @@ The current module guides students through a four-week journey:
 
 ## Live application
 
-- Student portal: `https://milestoneproject-gaerotzi4-guccimasters-projects.vercel.app/`
-- Teacher dashboard: `https://milestoneproject-gaerotzi4-guccimasters-projects.vercel.app/admin`
+- Student portal: `https://milestoneproject-two.vercel.app/`
+- Teacher dashboard: `https://milestoneproject-two.vercel.app/admin`
 - Repository: `GongqiLinVU/milestoneproject`
 
 ## Current capabilities
