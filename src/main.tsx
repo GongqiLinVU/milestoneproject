@@ -100,7 +100,7 @@ function App() {
       <footer>
         NIT3004 Engineering Studio · Learn to deliver like an engineer.
       </footer>
-      <Modal kind={form} close={() => setForm(null)} />
+      <Modal key={form ?? "closed"} kind={form} close={() => setForm(null)} />
     </>
   );
 }
@@ -341,15 +341,58 @@ function friendlyError(code: string | undefined, kind: Kind) {
     return "This activity is temporarily unavailable. Please tell your teacher.";
   return "We could not record your response. Please check your answers and try again.";
 }
+
+async function submissionStorageKey(
+  kind: Kind,
+  values: Record<string, FormDataEntryValue>,
+) {
+  const normalise = (value: FormDataEntryValue | undefined) =>
+    String(value ?? "")
+      .trim()
+      .toLowerCase();
+  const identity =
+    kind === "pulse"
+      ? "anonymous-class-pulse"
+      : kind === "team"
+        ? normalise(values.team)
+        : kind === "review"
+          ? `${normalise(values.sid)}|${normalise(values.reviewed_team)}`
+          : normalise(values.sid);
+  const bytes = new TextEncoder().encode(`nit3004|${kind}|${identity}`);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  const hash = Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+  return `nit3004-submission-v1:${kind}:${hash}`;
+}
+
 function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
   const [msg, setMsg] = useState("");
-  useEffect(() => setMsg(""), [kind]);
+  const [submitted, setSubmitted] = useState(false);
+  useEffect(() => {
+    setMsg("");
+    setSubmitted(false);
+  }, [kind]);
   if (!kind) return null;
   const activeKind = kind;
   async function submit(e: any) {
     e.preventDefault();
     setMsg("");
-    const v = Object.fromEntries(new FormData(e.currentTarget));
+    const v = Object.fromEntries(new FormData(e.currentTarget)) as Record<
+      string,
+      FormDataEntryValue
+    >;
+    let storageKey = "";
+    try {
+      storageKey = await submissionStorageKey(activeKind, v);
+      if (localStorage.getItem(storageKey)) {
+        setSubmitted(true);
+        setMsg("This response was already submitted from this browser.");
+        return;
+      }
+    } catch {
+      // Storage is a convenience guard only. Database constraints remain authoritative.
+    }
     let table = "",
       payload: any = {};
     if (activeKind === "checkin") {
@@ -408,11 +451,19 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
       };
     }
     const { error } = await supabase.from(table).insert(payload);
-    setMsg(
-      error
-        ? friendlyError(error.code, activeKind)
-        : "Response recorded. Thank you.",
-    );
+    if (error) {
+      setMsg(friendlyError(error.code, activeKind));
+      return;
+    }
+    if (storageKey) {
+      try {
+        localStorage.setItem(storageKey, new Date().toISOString());
+      } catch {
+        // A successful database submission must not fail because storage is unavailable.
+      }
+    }
+    setSubmitted(true);
+    setMsg("Response recorded. Thank you.");
   }
   return (
     <div
@@ -429,16 +480,15 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
           {fields(kind)}
           {msg && (
             <p
-              className={
-                "form-status " +
-                (msg.startsWith("Response recorded") ? "success" : "")
-              }
+              className={"form-status " + (submitted ? "success" : "")}
               aria-live="polite"
             >
               {msg}
             </p>
           )}
-          <button>Submit response</button>
+          <button disabled={submitted}>
+            {submitted ? "Already submitted" : "Submit response"}
+          </button>
         </form>
       </div>
     </div>
@@ -447,7 +497,7 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
 const Help = ({ text }: { text: string }) => (
   <details className="field-help">
     <summary aria-label="Show help">
-      <CircleHelp size={17} />
+      <CircleHelp size={20} />
     </summary>
     <span>{text}</span>
   </details>
@@ -537,6 +587,11 @@ function Rating({
           </option>
         ))}
       </select>
+      <small className="field-hint">
+        {confidence
+          ? "1 = lowest confidence · 5 = highest confidence"
+          : "1 = lowest rating · 5 = highest rating"}
+      </small>
     </div>
   );
 }
