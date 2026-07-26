@@ -373,8 +373,8 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
       table = "team_conversations";
       payload = {
         team_name: v.team,
-        proud_of: v.proud,
-        delivery_risk: v.risk,
+        proudest_achievement: v.proud,
+        biggest_delivery_risk: v.risk,
         support_needed: v.support,
       };
     }
@@ -402,9 +402,9 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
         working_product: +v.product,
         evidence_testing: +v.evidence,
         document_readiness: +v.docs,
-        explanation_quality: +v.explanation,
+        presentation_quality: +v.explanation,
         strongest_part: v.strongest,
-        priority_before_demo: v.priority,
+        highest_priority: v.priority,
       };
     }
     const { error } = await supabase.from(table).insert(payload);
