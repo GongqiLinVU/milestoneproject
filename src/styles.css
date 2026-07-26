@@ -384,6 +384,27 @@ footer {
 .form-status.success {
   color: #267a48;
 }
+.submission-notice {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  border: 1px solid #a9d8b9;
+  border-left: 4px solid #267a48;
+  border-radius: 10px;
+  background: #eff9f2;
+  color: #245f3c;
+}
+.submission-notice b {
+  font: 700 18px Manrope;
+}
+.submission-notice span {
+  line-height: 1.5;
+}
+.dialog form .secondary {
+  background: white;
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
 .dialog form > button:disabled {
   cursor: not-allowed;
   opacity: 0.65;
