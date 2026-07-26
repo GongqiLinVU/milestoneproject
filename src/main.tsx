@@ -486,7 +486,7 @@ const Identity = () => (
     </label>
     <label>
       Student ID
-      <input name="sid" required maxLength={30} />
+      <input name="sid" required minLength={3} maxLength={40} />
     </label>
     <Team />
   </>
@@ -627,7 +627,7 @@ function fields(k: Kind) {
       </label>
       <label>
         Student ID
-        <input name="sid" required maxLength={30} />
+        <input name="sid" required minLength={3} maxLength={40} />
       </label>
       <Team name="reviewer_team" />
       <Team name="reviewed_team" />
