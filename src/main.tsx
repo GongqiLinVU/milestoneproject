@@ -369,12 +369,53 @@ async function submissionStorageKey(
 function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
   const [msg, setMsg] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [storedSubmissionAt, setStoredSubmissionAt] = useState<string | null>(
+    null,
+  );
   useEffect(() => {
     setMsg("");
     setSubmitted(false);
+    setStoredSubmissionAt(null);
+    if (kind !== "pulse") return;
+    let cancelled = false;
+    submissionStorageKey(kind, {})
+      .then((key) => {
+        const submittedAt = localStorage.getItem(key);
+        if (!cancelled && submittedAt) setStoredSubmissionAt(submittedAt);
+      })
+      .catch(() => {
+        // Storage is optional and may be unavailable in restricted browsers.
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [kind]);
   if (!kind) return null;
   const activeKind = kind;
+  async function checkStoredSubmission(form: HTMLFormElement) {
+    const values = Object.fromEntries(new FormData(form)) as Record<
+      string,
+      FormDataEntryValue
+    >;
+    const identityReady =
+      activeKind === "pulse" ||
+      (activeKind === "team" && Boolean(values.team)) ||
+      ((activeKind === "checkin" || activeKind === "promise") &&
+        Boolean(String(values.sid ?? "").trim())) ||
+      (activeKind === "review" &&
+        Boolean(String(values.sid ?? "").trim()) &&
+        Boolean(values.reviewed_team));
+    if (!identityReady) {
+      setStoredSubmissionAt(null);
+      return;
+    }
+    try {
+      const key = await submissionStorageKey(activeKind, values);
+      setStoredSubmissionAt(localStorage.getItem(key));
+    } catch {
+      setStoredSubmissionAt(null);
+    }
+  }
   async function submit(e: any) {
     e.preventDefault();
     setMsg("");
@@ -385,9 +426,10 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
     let storageKey = "";
     try {
       storageKey = await submissionStorageKey(activeKind, v);
-      if (localStorage.getItem(storageKey)) {
-        setSubmitted(true);
-        setMsg("This response was already submitted from this browser.");
+      const submittedAt = localStorage.getItem(storageKey);
+      if (submittedAt) {
+        setStoredSubmissionAt(submittedAt);
+        setMsg("");
         return;
       }
     } catch {
@@ -476,19 +518,52 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
         </button>
         <div className="eyebrow">Student interaction</div>
         <h2>{titles[kind]}</h2>
-        <form onSubmit={submit}>
-          {fields(kind)}
-          {msg && (
-            <p
-              className={"form-status " + (submitted ? "success" : "")}
-              aria-live="polite"
-            >
-              {msg}
-            </p>
+        <form
+          onSubmit={submit}
+          onChange={(event) => void checkStoredSubmission(event.currentTarget)}
+        >
+          {storedSubmissionAt ? (
+            <>
+              <div className="submission-notice" role="status">
+                <b>Already submitted from this browser</b>
+                <span>
+                  Recorded{" "}
+                  {new Date(storedSubmissionAt).toLocaleString(undefined, {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })}
+                  . This form is locked to prevent an accidental duplicate.
+                </span>
+              </div>
+              {activeKind !== "pulse" && (
+                <button
+                  type="button"
+                  className="secondary"
+                  onClick={() => setStoredSubmissionAt(null)}
+                >
+                  Start a different submission
+                </button>
+              )}
+              <button type="button" onClick={close}>
+                Close
+              </button>
+            </>
+          ) : (
+            <>
+              {fields(kind)}
+              {msg && (
+                <p
+                  className={"form-status " + (submitted ? "success" : "")}
+                  aria-live="polite"
+                >
+                  {msg}
+                </p>
+              )}
+              <button disabled={submitted}>
+                {submitted ? "Already submitted" : "Submit response"}
+              </button>
+            </>
           )}
-          <button disabled={submitted}>
-            {submitted ? "Already submitted" : "Submit response"}
-          </button>
         </form>
       </div>
     </div>

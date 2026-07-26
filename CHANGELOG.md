@@ -57,6 +57,8 @@ The project currently uses simple milestone-based versions while the production 
 
 ### Fixed
 
+- Checked local submission memory before submit and locked previously completed forms with a timestamped notice
+- Updated production URLs to `milestoneproject-two.vercel.app`
 - Isolated modal state by activity so success and error messages cannot carry into another form
 - Made the 1–5 scale direction visible without requiring students to open help
 - Added hashed same-browser submission memory to reduce accidental duplicate submissions
