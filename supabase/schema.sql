@@ -20,7 +20,7 @@ create table if not exists public.student_checkins (
 create table if not exists public.week1_pulse (
   id uuid primary key default gen_random_uuid(),
   confidence smallint not null check (confidence between 1 and 5),
-  concern text not null check (concern in ('Working product','Documentation','Presentation','Teamwork','Testing','Time')),
+  concern text not null check (concern in ('Working product','Documentation','Presentation','Teamwork','Testing','Time','Not recorded (legacy)')),
   ai_usage text not null check (ai_usage in ('Rarely','Weekly','Daily','It is part of almost every task')),
   submitted_at timestamptz not null default now()
 );
