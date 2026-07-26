@@ -57,6 +57,7 @@ The project currently uses simple milestone-based versions while the production 
 
 ### Fixed
 
+- Disabled the Poster Peer Review entry point until Week 3
 - Displayed a read-only, same-browser receipt after submission and on reopening
 - Excluded student names and Student IDs from locally stored receipt details
 - Checked local submission memory before submit and locked previously completed forms with a timestamped notice

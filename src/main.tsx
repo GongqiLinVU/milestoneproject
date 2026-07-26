@@ -94,7 +94,7 @@ function App() {
         <Journey />
         <Studio />
         <Week1 open={setForm} />
-        <Expo open={setForm} />
+        <Expo />
         <Deliverables />
       </main>
       <footer>
@@ -220,7 +220,7 @@ function Week1({ open }: { open: (k: Kind) => void }) {
     </section>
   );
 }
-function Expo({ open }: { open: (k: Kind) => void }) {
+function Expo() {
   return (
     <section id="expo" className="expo">
       <Head
@@ -250,9 +250,16 @@ function Expo({ open }: { open: (k: Kind) => void }) {
             <li>Document readiness</li>
             <li>Explanation quality</li>
           </ul>
-          <button className="primary" onClick={() => open("review")}>
-            Open peer review
+          <button
+            className="primary"
+            disabled
+            aria-describedby="peer-review-status"
+          >
+            Peer review opens in Week 3
           </button>
+          <p id="peer-review-status" className="activity-status">
+            This activity is not open yet.
+          </p>
         </div>
       </div>
     </section>
