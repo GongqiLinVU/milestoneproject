@@ -113,6 +113,10 @@ Important current rules:
 - Team Conversation stores `proudest_achievement` and
   `biggest_delivery_risk`.
 - Poster Review stores `presentation_quality` and `highest_priority`.
+- Successful submissions are remembered in browser local storage using hashed,
+  activity-specific fingerprints. No student name or plain-text Student ID is
+  stored. This prevents accidental repeat submissions only on the same browser;
+  database constraints remain the authoritative cross-device protection.
 
 ## Current product decisions
 
