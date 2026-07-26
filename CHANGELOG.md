@@ -64,6 +64,8 @@ The project currently uses simple milestone-based versions while the production 
 - Replaced raw database errors with student-friendly messages
 - Added frontend field limits that match database constraints
 - Clarified that Team Conversation is submitted once per team and Four-Week Promise once per student
+- Aligned Team Conversation and Poster Review insert payloads with production column names
+- Synchronised `supabase/schema.sql` with the deployed activity-table columns and timestamps
 
 ### Planned for Sprint 2
 
