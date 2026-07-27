@@ -19,7 +19,7 @@ The current module guides students through a four-week journey:
 - Week 1 check-in
 - Class pulse
 - Team conversation
-- Four-week promise
+- Four-week action plan
 - Week 3 poster peer review
 - Supabase-backed submissions
 - Duplicate submission prevention
@@ -31,7 +31,8 @@ The current module guides students through a four-week journey:
 - Teacher-only access through `app_metadata.role = teacher`
 - RLS-protected summary counts for all activity types
 - Restored authenticated sessions with explicit sign-out and access status
-- Clickable activity panels and detailed records for all five activities
+- Clickable activity panels with detailed records for identified activities
+- Anonymous Class Pulse charts for confidence, concerns and AI usage
 - Accessible loading, empty, refresh and actionable error states
 
 ## Technology stack
@@ -81,6 +82,10 @@ For an existing environment, apply the reviewed SQL files in
 `supabase/migrations` before deploying frontend code that depends on them.
 The schema file creates new environments; `create table if not exists` does
 not add missing columns to an existing table.
+
+Disposable activity submissions can be cleared manually with
+`supabase/scripts/reset_test_activity_data.sql`. This one-off script is not a
+migration and must not be used after real classroom responses begin.
 
 ## Vercel deployment
 
