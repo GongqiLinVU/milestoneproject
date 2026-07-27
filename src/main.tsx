@@ -1,4 +1,4 @@
-import { StrictMode, useEffect, useState } from "react";
+import { StrictMode, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { createClient } from "@supabase/supabase-js";
 import {
@@ -920,21 +920,105 @@ function fields(k: Kind) {
 }
 function Admin() {
   const activityTables = [
-    ["student_checkins", "Student check-ins"],
-    ["week1_pulse", "Class pulse"],
-    ["team_conversations", "Team conversations"],
-    ["student_promises", "Four-week promises"],
-    ["poster_reviews", "Poster reviews"],
+    {
+      table: "student_checkins",
+      label: "Student check-ins",
+      title: "Student Check-in records",
+      description: "Review each student’s team and intended four-week outcome.",
+      select:
+        "id, student_name, student_id, team_name, goal, created_at, updated_at",
+      columns: [
+        ["student_name", "Name"],
+        ["student_id", "Student ID"],
+        ["team_name", "Team"],
+        ["goal", "Four-week goal"],
+        ["created_at", "Created"],
+        ["updated_at", "Updated"],
+      ],
+    },
+    {
+      table: "week1_pulse",
+      label: "Class pulse",
+      title: "Class Pulse records",
+      description:
+        "Review individual confidence, AI usage, concerns and expected outcomes.",
+      select:
+        "id, student_id, team_name, ai_usage, confidence, concern, biggest_concern, expected_outcome, anonymous_comment, created_at, updated_at",
+      columns: [
+        ["student_id", "Student ID"],
+        ["team_name", "Team"],
+        ["ai_usage", "AI usage"],
+        ["confidence", "Confidence"],
+        ["concern", "Primary concern"],
+        ["biggest_concern", "Concern detail"],
+        ["expected_outcome", "Expected outcome"],
+        ["anonymous_comment", "Anonymous comment"],
+        ["created_at", "Created"],
+        ["updated_at", "Updated"],
+      ],
+    },
+    {
+      table: "team_conversations",
+      label: "Team conversations",
+      title: "Team Conversation records",
+      description:
+        "Review each team’s achievement, delivery risk and requested support.",
+      select:
+        "id, team_name, proudest_achievement, biggest_delivery_risk, support_needed, submitted_by, created_at, updated_at",
+      columns: [
+        ["team_name", "Team"],
+        ["proudest_achievement", "Proudest achievement"],
+        ["biggest_delivery_risk", "Biggest delivery risk"],
+        ["support_needed", "Support needed"],
+        ["submitted_by", "Submitted by"],
+        ["created_at", "Created"],
+        ["updated_at", "Updated"],
+      ],
+    },
+    {
+      table: "student_promises",
+      label: "Four-week promises",
+      title: "Four-Week Promise records",
+      description: "Review the individual commitments students made to their teams.",
+      select:
+        "id, student_name, student_id, team_name, promise, created_at, updated_at",
+      columns: [
+        ["student_name", "Name"],
+        ["student_id", "Student ID"],
+        ["team_name", "Team"],
+        ["promise", "Four-week promise"],
+        ["created_at", "Created"],
+        ["updated_at", "Updated"],
+      ],
+    },
+    {
+      table: "poster_reviews",
+      label: "Poster reviews",
+      title: "Poster Peer Review records",
+      description:
+        "Review peer ratings, strongest points and the highest-priority feedback.",
+      select:
+        "id, reviewer_name, reviewer_student_id, reviewer_team, reviewed_team, problem_clarity, working_product, evidence_testing, document_readiness, presentation_quality, strongest_part, highest_priority, additional_feedback, created_at, updated_at",
+      columns: [
+        ["reviewer_name", "Reviewer"],
+        ["reviewer_student_id", "Student ID"],
+        ["reviewer_team", "Reviewer team"],
+        ["reviewed_team", "Reviewed team"],
+        ["problem_clarity", "Problem clarity"],
+        ["working_product", "Working product"],
+        ["evidence_testing", "Evidence & testing"],
+        ["document_readiness", "Document readiness"],
+        ["presentation_quality", "Explanation quality"],
+        ["strongest_part", "Strongest part"],
+        ["highest_priority", "Highest priority"],
+        ["additional_feedback", "Additional feedback"],
+        ["created_at", "Created"],
+        ["updated_at", "Updated"],
+      ],
+    },
   ] as const;
-  type Checkin = {
-    id: string;
-    student_name: string | null;
-    student_id: string;
-    team_name: string;
-    goal: string | null;
-    created_at: string;
-    updated_at: string;
-  };
+  type ActivityTable = (typeof activityTables)[number]["table"];
+  type ActivityRecord = { id: string } & Record<string, unknown>;
   const [sessionUser, setSessionUser] = useState<{
     email: string;
     isTeacher: boolean;
@@ -947,9 +1031,12 @@ function Admin() {
   >("idle");
   const [dataMessage, setDataMessage] = useState("");
   const [counts, setCounts] = useState<Record<string, number | null>>(
-    Object.fromEntries(activityTables.map(([table]) => [table, null])),
+    Object.fromEntries(activityTables.map(({ table }) => [table, null])),
   );
-  const [checkins, setCheckins] = useState<Checkin[]>([]);
+  const [activeTable, setActiveTable] =
+    useState<ActivityTable>("student_checkins");
+  const [records, setRecords] = useState<ActivityRecord[]>([]);
+  const requestSequence = useRef(0);
 
   useEffect(() => {
     let active = true;
@@ -991,9 +1078,9 @@ function Admin() {
     } else {
       setDataStatus("idle");
       setDataMessage("");
-      setCheckins([]);
+      setRecords([]);
       setCounts(
-        Object.fromEntries(activityTables.map(([table]) => [table, null])),
+        Object.fromEntries(activityTables.map(({ table }) => [table, null])),
       );
     }
   }, [sessionUser?.email, sessionUser?.isTeacher]);
@@ -1016,23 +1103,38 @@ function Admin() {
     }
   }
 
-  async function loadDashboard() {
+  async function loadDashboard(table: ActivityTable = activeTable) {
+    const requestId = ++requestSequence.current;
     setDataStatus("loading");
     setDataMessage("");
-    const [checkinResult, ...countResults] = await Promise.all([
-      supabase
-        .from("student_checkins")
-        .select(
-          "id, student_name, student_id, team_name, goal, created_at, updated_at",
-        )
+    setRecords([]);
+    const activity = activityTables.find((item) => item.table === table)!;
+    const activityClient = supabase as unknown as {
+      from: (tableName: string) => {
+        select: (columns: string) => {
+          order: (
+            column: string,
+            options: { ascending: boolean },
+          ) => Promise<{
+            data: ActivityRecord[] | null;
+            error: { message: string } | null;
+          }>;
+        };
+      };
+    };
+    const [recordResult, ...countResults] = await Promise.all([
+      activityClient
+        .from(table)
+        .select(activity.select)
         .order("created_at", { ascending: false }),
-      ...activityTables.map(([table]) =>
-        supabase.from(table).select("*", { count: "exact", head: true }),
+      ...activityTables.map(({ table: countTable }) =>
+        supabase.from(countTable).select("*", { count: "exact", head: true }),
       ),
     ]);
     const firstError =
-      checkinResult.error ||
+      recordResult.error ||
       countResults.find((result) => result.error)?.error;
+    if (requestId !== requestSequence.current) return;
     if (firstError) {
       setDataStatus("error");
       setDataMessage(
@@ -1040,10 +1142,10 @@ function Admin() {
       );
       return;
     }
-    setCheckins((checkinResult.data ?? []) as Checkin[]);
+    setRecords((recordResult.data ?? []) as ActivityRecord[]);
     setCounts(
       Object.fromEntries(
-        activityTables.map(([table], index) => [
+        activityTables.map(({ table }, index) => [
           table,
           countResults[index].count ?? 0,
         ]),
@@ -1069,6 +1171,27 @@ function Admin() {
       dateStyle: "medium",
       timeStyle: "short",
     });
+  const activeActivity = activityTables.find(
+    (activity) => activity.table === activeTable,
+  )!;
+  const ratingFields = new Set([
+    "confidence",
+    "problem_clarity",
+    "working_product",
+    "evidence_testing",
+    "document_readiness",
+    "presentation_quality",
+  ]);
+  const formatValue = (field: string, value: unknown) => {
+    if (value === null || value === undefined || value === "")
+      return "Not provided";
+    if ((field === "created_at" || field === "updated_at") && typeof value === "string")
+      return (
+        <time dateTime={value}>{formatDateTime(value)}</time>
+      );
+    if (ratingFields.has(field)) return `${String(value)} / 5`;
+    return String(value);
+  };
 
   if (authChecking)
     return (
@@ -1154,22 +1277,30 @@ function Admin() {
           {authMessage}
         </p>
       )}
-      <div className="metric-grid">
-        {activityTables.map(([table, label]) => (
-          <div key={table}>
+      <div className="metric-grid" aria-label="Activity record views">
+        {activityTables.map(({ table, label }) => (
+          <button
+            key={table}
+            type="button"
+            className={activeTable === table ? "active" : ""}
+            aria-pressed={activeTable === table}
+            onClick={() => {
+              if (table === activeTable) return;
+              setActiveTable(table);
+              void loadDashboard(table);
+            }}
+          >
             <b>{counts[table] ?? "—"}</b>
             <span>{label}</span>
-          </div>
+          </button>
         ))}
       </div>
-      <section className="admin-records" aria-labelledby="checkins-heading">
+      <section className="admin-records" aria-labelledby="activity-heading">
         <div className="admin-records-heading">
           <div>
-            <div className="eyebrow">Week 1 activity</div>
-            <h2 id="checkins-heading">Student Check-in records</h2>
-            <p>
-              Review each student’s team and intended four-week outcome.
-            </p>
+            <div className="eyebrow">Activity records</div>
+            <h2 id="activity-heading">{activeActivity.title}</h2>
+            <p>{activeActivity.description}</p>
           </div>
           <button
             className="secondary"
@@ -1187,8 +1318,8 @@ function Admin() {
         {dataStatus === "loading" && (
           <div className="admin-state" role="status" aria-live="polite">
             <RefreshCw className="spin" aria-hidden="true" />
-            <b>Loading dashboard records…</b>
-            <span>Counts and Check-in details are being refreshed.</span>
+            <b>Loading {activeActivity.label}…</b>
+            <span>Counts and the selected activity records are being refreshed.</span>
           </div>
         )}
         {dataStatus === "error" && (
@@ -1204,53 +1335,48 @@ function Admin() {
             </button>
           </div>
         )}
-        {dataStatus === "success" && checkins.length === 0 && (
+        {dataStatus === "success" && records.length === 0 && (
           <div className="admin-state" role="status">
-            <b>No Check-in records yet</b>
+            <b>No {activeActivity.label} records yet</b>
             <span>
-              Student Check-ins will appear here after the first valid
-              submission.
+              Valid {activeActivity.label.toLowerCase()} submissions will appear
+              here.
             </span>
           </div>
         )}
-        {dataStatus === "success" && checkins.length > 0 && (
+        {dataStatus === "success" && records.length > 0 && (
           <div className="admin-table-wrap">
             <table>
               <caption>
-                {checkins.length} Student Check-in{" "}
-                {checkins.length === 1 ? "record" : "records"}, newest first
+                {records.length} {activeActivity.label}{" "}
+                {records.length === 1 ? "record" : "records"}, newest first
               </caption>
               <thead>
                 <tr>
-                  <th scope="col">Name</th>
-                  <th scope="col">Student ID</th>
-                  <th scope="col">Team</th>
-                  <th scope="col">Four-week goal</th>
-                  <th scope="col">Created</th>
-                  <th scope="col">Updated</th>
+                  {activeActivity.columns.map(([field, label]) => (
+                    <th key={field} scope="col">
+                      {label}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {checkins.map((checkin) => (
-                  <tr key={checkin.id}>
-                    <td data-label="Name">
-                      {checkin.student_name || "Not provided"}
-                    </td>
-                    <td data-label="Student ID">{checkin.student_id}</td>
-                    <td data-label="Team">{checkin.team_name}</td>
-                    <td data-label="Four-week goal" className="goal-cell">
-                      {checkin.goal || "Not provided"}
-                    </td>
-                    <td data-label="Created">
-                      <time dateTime={checkin.created_at}>
-                        {formatDateTime(checkin.created_at)}
-                      </time>
-                    </td>
-                    <td data-label="Updated">
-                      <time dateTime={checkin.updated_at}>
-                        {formatDateTime(checkin.updated_at)}
-                      </time>
-                    </td>
+                {records.map((record) => (
+                  <tr key={record.id}>
+                    {activeActivity.columns.map(([field, label]) => (
+                      <td
+                        key={field}
+                        data-label={label}
+                        className={
+                          typeof record[field] === "string" &&
+                          String(record[field]).length > 80
+                            ? "long-text-cell"
+                            : undefined
+                        }
+                      >
+                        {formatValue(field, record[field])}
+                      </td>
+                    ))}
                   </tr>
                 ))}
               </tbody>

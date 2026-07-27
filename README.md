@@ -31,7 +31,7 @@ The current module guides students through a four-week journey:
 - Teacher-only access through `app_metadata.role = teacher`
 - RLS-protected summary counts for all activity types
 - Restored authenticated sessions with explicit sign-out and access status
-- Detailed Student Check-in records with team, goal and timestamps
+- Clickable activity panels and detailed records for all five activities
 - Accessible loading, empty, refresh and actionable error states
 
 ## Technology stack
@@ -108,7 +108,7 @@ Every push to `main` triggers a production deployment.
 
 Sprint 1 is working in production. Sprint 2 is in progress and turns the Teacher Dashboard into an operational teaching tool:
 
-- Extend the Phase 1 Student Check-in record view to the other four activities
+- Review and production-verify the five Phase 2 activity record views
 - Edit incorrect records and delete invalid submissions as an authorised teacher
 - Export stable teacher-only CSV files after record management is complete
 - Replace the temporary Peer Review disabled button with an Admin **Open peer review** control that is off by default and enforced by Supabase RLS

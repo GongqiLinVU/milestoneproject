@@ -549,11 +549,31 @@ footer {
   margin: 30px 0;
   grid-template-columns: repeat(5, 1fr);
 }
-.metric-grid > div {
+.metric-grid > button {
   background: white;
   padding: 25px;
   border-radius: 16px;
   border: 1px solid var(--line);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+.metric-grid > button:hover {
+  border-color: #9eb3ff;
+  transform: translateY(-2px);
+}
+.metric-grid > button:focus-visible {
+  outline: 3px solid #9eb3ff;
+  outline-offset: 3px;
+}
+.metric-grid > button.active {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
 }
 .metric-grid b {
   font: 800 40px Manrope;
@@ -619,7 +639,8 @@ footer {
 .admin tbody tr:hover {
   background: #fafbf8;
 }
-.admin .goal-cell {
+.admin .goal-cell,
+.admin .long-text-cell {
   min-width: 280px;
   max-width: 460px;
   white-space: pre-wrap;

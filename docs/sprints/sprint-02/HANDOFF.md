@@ -1,6 +1,6 @@
 # Sprint 2 Handoff
 
-**Status: Phase 1 implemented in Draft PR; review and production verification pending**
+**Status: Phase 2 implemented; Draft PR review and production verification pending**
 
 ## Starting point
 
@@ -8,15 +8,15 @@
 - Sprint 1 is complete and production validated. See
   `docs/sprints/sprint-01/HANDOFF.md`.
 - Peer Review is currently hard-disabled only in the student UI.
-- No Sprint 2 frontend behaviour or database migration has been implemented.
+- Phase 1 was merged in PR #7 (`5a93a170745d91b834eba78e20a8190a67eb74a4`).
 
 ## Next Phase
 
-**Phase 2 — Activity record views**
+**Phase 3 — Teacher actions**
 
-After Phase 1 is reviewed and merged, reuse its protected query, refresh,
-status and table patterns for the remaining four activity types. Do not start
-Phase 2 from the unmerged Phase 1 branch.
+After Phase 2 is reviewed, merged and production verified, add authorised edit
+and delete actions with the minimum required grants and RLS policies. Do not
+start Phase 3 from the unmerged Phase 2 branch.
 
 ## Completion records
 
@@ -39,14 +39,13 @@ Phase:
 Phase 1 — Dashboard foundation
 
 Status:
-Implemented; local build and diff checks passed. Draft PR review and production
-verification pending.
+Merged.
 
 PR:
-Pending
+#7
 
 Merge commit:
-Not merged
+`5a93a170745d91b834eba78e20a8190a67eb74a4`
 
 Database migration:
 None. Existing authenticated SELECT grants and `is_teacher()` RLS policies
@@ -67,8 +66,40 @@ Decisions:
 
 Remaining issues:
 
-- Review and merge the Draft PR only after approval.
 - Verify sign-in, refresh persistence, sign-out, teacher reads and non-teacher
   denial in the deployed environment.
-- Implement the other four activity record views in Phase 2 after Phase 1 is
-  merged.
+
+Phase:
+Phase 2 — Activity record views
+
+Status:
+Implemented; production build and diff checks passed. Draft PR review and
+production verification pending.
+
+PR:
+Pending
+
+Merge commit:
+Not merged
+
+Database migration:
+None. Existing authenticated SELECT grants and `is_teacher()` RLS policies
+cover all five activity reads.
+
+Production verified:
+No
+
+Decisions:
+
+- The five summary panels are keyboard-accessible activity selectors.
+- The selected panel controls a single activity-specific query and record table.
+- Each activity defines stable headings, explanatory text and empty state.
+- Records are cleared before a selection loads so rows from the previous
+  activity are never shown under a new heading.
+- Rating fields are displayed consistently as values out of five.
+
+Remaining issues:
+
+- Review and merge the Phase 2 Draft PR only after approval.
+- Verify all five selectors, tables, empty states and error states in production.
+- Begin Phase 3 only from the merged Phase 2 `main`.

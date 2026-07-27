@@ -69,6 +69,8 @@ Do not place service-role keys, database passwords or third-party secrets in cli
 - Clear authenticated, non-teacher, loading, empty and error states
 - Refreshable Student Check-in details showing name, Student ID, team, goal and
   timestamps
+- Clickable summary panels that switch between protected record views for all
+  five activities, with stable activity-specific fields and states
 
 ## Current database tables
 
