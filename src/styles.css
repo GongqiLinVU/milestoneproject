@@ -609,6 +609,59 @@ footer {
   border-radius: 16px;
   background: white;
 }
+.pulse-overview {
+  display: grid;
+  gap: 1.25rem;
+}
+.pulse-privacy-note {
+  margin: 0;
+  padding: 0.8rem 1rem;
+  border-radius: 0.75rem;
+  background: #eef8f4;
+  color: #245b4b;
+  font-size: 0.9rem;
+}
+.pulse-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+.pulse-chart {
+  padding: 1.15rem;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  background: #fff;
+}
+.pulse-chart h3 {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+}
+.pulse-bar-row + .pulse-bar-row {
+  margin-top: 0.85rem;
+}
+.pulse-bar-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+  font-size: 0.82rem;
+}
+.pulse-bar-label b {
+  flex: none;
+}
+.pulse-bar-track {
+  display: block;
+  height: 0.55rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e8ebe9;
+}
+.pulse-bar-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--green);
+}
 .admin table {
   width: 100%;
   min-width: 1000px;
@@ -650,6 +703,9 @@ footer {
   white-space: nowrap;
 }
 @media (max-width: 850px) {
+  .pulse-chart-grid {
+    grid-template-columns: 1fr;
+  }
   nav {
     display: none;
   }
