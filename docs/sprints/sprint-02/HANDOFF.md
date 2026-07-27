@@ -1,6 +1,6 @@
 # Sprint 2 Handoff
 
-**Status: Phase 3 implemented; Draft PR and database rollout pending**
+**Status: Phase 3 merged and migrated; Phase 4 is next**
 
 ## Starting point
 
@@ -17,9 +17,9 @@
 
 **Phase 4 — Peer Review control**
 
-After Phase 3 is reviewed, merged, migrated and production verified, add the
-Supabase-backed **Open peer review** control. Do not begin Phase 4 from the
-unmerged Phase 3 branch.
+Start from the latest `main` and add the Supabase-backed **Open peer review**
+control. Phase 3 was merged in PR #12 after its migration was applied. Do not
+reuse the deleted Phase 3 working branch.
 
 ## Completion records
 
@@ -116,13 +116,13 @@ Phase:
 Phase 3 — Teacher actions
 
 Status:
-Implemented; Draft PR pending.
+Merged; migration applied.
 
 PR:
-Pending.
+#12
 
 Merge commit:
-Pending.
+`2133a60df835e84e4c7732947437292e75a85713`
 
 Database migration:
 `supabase/migrations/20260727_add_teacher_record_actions.sql`
@@ -144,7 +144,7 @@ Decisions:
 
 Remaining issues:
 
-- Review and merge the Phase 3 Draft PR.
-- Apply the migration before deploying the dependent frontend.
-- Verify teacher update/delete, constraint errors, anonymous denial and
-  authenticated non-teacher denial in production.
+- Classroom use confirmed that student submissions and dashboard data were
+  operating with twelve student records visible.
+- Complete explicit production verification of teacher update/delete,
+  constraint errors, anonymous denial and authenticated non-teacher denial.
