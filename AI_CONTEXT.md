@@ -65,6 +65,10 @@ Do not place service-role keys, database passwords or third-party secrets in cli
   - team conversations
   - student promises
   - poster reviews
+- Supabase session restoration and explicit teacher sign-out
+- Clear authenticated, non-teacher, loading, empty and error states
+- Refreshable Student Check-in details showing name, Student ID, team, goal and
+  timestamps
 
 ## Current database tables
 
@@ -144,13 +148,15 @@ Sprint 1 is working in production. Do not reopen completed Sprint 1 work unless 
 
 Implementation order:
 
-1. Dashboard foundation: preserve summary cards; add sign-out, session status, and loading/empty/error states.
-2. Add detailed Student Check-in records with name, Student ID, team, goal, created time and updated time.
-3. Generalise record views to Class Pulse, Team Conversation, Four-Week Promise and Poster Peer Review.
-4. Add teacher-only edit and confirmed delete, backed by explicit grants and `is_teacher()` RLS policies.
-5. Add **Open peer review** to Admin. It is off by default; its state is stored in Supabase, safely readable by the public portal, writable only by teachers, and enforced by the Poster Review INSERT policy.
-6. Add CSV export after record management is stable.
-7. Complete role, RLS, migration, build and production smoke tests.
+1. Dashboard foundation is implemented in the current Draft PR: preserved
+   summary cards; session restoration; sign-out; access, loading, empty and
+   error states; refresh; and detailed Student Check-in records.
+2. Next, generalise the record view to Class Pulse, Team Conversation,
+   Four-Week Promise and Poster Peer Review.
+3. Add teacher-only edit and confirmed delete, backed by explicit grants and `is_teacher()` RLS policies.
+4. Add **Open peer review** to Admin. It is off by default; its state is stored in Supabase, safely readable by the public portal, writable only by teachers, and enforced by the Poster Review INSERT policy.
+5. Add CSV export after record management is stable.
+6. Complete role, RLS, migration, build and production smoke tests.
 
 Student submissions remain create-once. Do not add student authentication, student-side editing, AI features, multi-course administration or a major database redesign in Sprint 2.
 

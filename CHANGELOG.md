@@ -55,6 +55,16 @@ The project currently uses simple milestone-based versions while the production 
 
 ## Unreleased
 
+### Added
+
+- Restored authenticated Teacher Dashboard sessions across page refreshes
+- Added teacher sign-out and visible signed-in account status
+- Added a protected non-teacher access state that does not load student records
+- Added a refreshable Student Check-in table with identity, team, goal and
+  timestamps
+- Added accessible loading, empty and actionable dashboard error states
+- Made all five summary cards stable while dashboard data loads and refreshes
+
 ### Fixed
 
 - Disabled the Poster Peer Review entry point until Week 3
@@ -79,9 +89,8 @@ The project currently uses simple milestone-based versions while the production 
 
 ### Planned for Sprint 2
 
-- Detailed teacher record views for all five activities
+- Detailed teacher record views for the remaining four activities
 - Teacher-only edit and confirmed delete
-- Teacher sign-out plus loading, empty, success and error states
 - Admin **Open peer review** control, off by default
 - Supabase-backed activity state and RLS enforcement that blocks direct Poster Review inserts while closed
 - CSV export after record management is stable
