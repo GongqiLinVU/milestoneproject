@@ -154,7 +154,9 @@ The public browser may insert permitted activity records. It must not be able to
 
 Teacher access is based on an authenticated JWT and the `teacher` app metadata role.
 
-Current teacher policies allow protected reads. Sprint 2 will add controlled update and delete policies for operational dashboard management.
+Teacher policies allow protected reads and controlled update/delete operations
+through `is_teacher()`. The dashboard can export only the currently loaded,
+RLS-authorised records. Class Pulse export remains aggregate-only.
 
 ### RLS as the primary boundary
 
@@ -189,7 +191,8 @@ Database changes do not deploy automatically. They require reviewed SQL to be ru
 - The schema is activity-specific rather than fully generic.
 - Students are anonymous from an authentication perspective.
 - Teacher role assignment is managed through `app_metadata`.
-- The dashboard currently shows summary counts only.
+- The dashboard shows summaries, protected activity records, teacher actions
+  and selected-activity CSV export.
 - There is no server-side AI service.
 
 These are intentional first-version constraints. Changes should be driven by validated teaching needs rather than abstract platform ambitions.

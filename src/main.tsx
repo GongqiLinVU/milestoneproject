@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   CircleHelp,
   ClipboardCheck,
+  Download,
   FileText,
   LogOut,
   Pencil,
@@ -1431,6 +1432,55 @@ function Admin() {
     if (ratingFields.has(field)) return `${String(value)} / 5`;
     return String(value);
   };
+  const csvCell = (value: unknown) => {
+    if (value === null || value === undefined) return "";
+    let text = String(value);
+    if (/^[=+\-@]/.test(text)) text = `'${text}`;
+    return `"${text.replace(/"/g, '""')}"`;
+  };
+  const exportCsv = () => {
+    if (dataStatus !== "success" || records.length === 0)
+      return;
+
+    let headings: string[];
+    let rows: unknown[][];
+    if (activeTable === "week1_pulse") {
+      headings = ["Category", "Response", "Count", "Percentage"];
+      rows = pulseGroups.flatMap(({ title, field, options }) =>
+        options.map(([value, label]) => {
+          const count = pulseCount(field, value);
+          return [
+            title,
+            label,
+            count,
+            Math.round((count / records.length) * 100),
+          ];
+        }),
+      );
+    } else {
+      headings = activeActivity.columns.map(([, label]) => label);
+      rows = records.map((record) =>
+        activeActivity.columns.map(([field]) => record[field] ?? ""),
+      );
+    }
+
+    const csv = [
+      headings.map(csvCell).join(","),
+      ...rows.map((row) => row.map(csvCell).join(",")),
+    ].join("\r\n");
+    const blob = new Blob([`\uFEFF${csv}`], {
+      type: "text/csv;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const date = new Date().toISOString().slice(0, 10);
+    link.href = url;
+    link.download = `nit3004-${activeTable.replace(/_/g, "-")}-${date}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
   const pulseGroups = [
     {
       title: "Delivery confidence",
@@ -1629,18 +1679,34 @@ function Admin() {
               </p>
             )}
           </div>
-          <button
-            className="secondary"
-            type="button"
-            onClick={() => void loadDashboard()}
-            disabled={dataStatus === "loading"}
-          >
-            <RefreshCw
-              size={17}
-              className={dataStatus === "loading" ? "spin" : ""}
-            />
-            {dataStatus === "loading" ? "Refreshing…" : "Refresh"}
-          </button>
+          <div className="admin-record-actions">
+            <button
+              className="secondary"
+              type="button"
+              onClick={exportCsv}
+              disabled={dataStatus !== "success" || records.length === 0}
+              title={
+                records.length === 0
+                  ? "There are no records to export"
+                  : `Export ${activeActivity.label} as CSV`
+              }
+            >
+              <Download size={17} />
+              Export CSV
+            </button>
+            <button
+              className="secondary"
+              type="button"
+              onClick={() => void loadDashboard()}
+              disabled={dataStatus === "loading"}
+            >
+              <RefreshCw
+                size={17}
+                className={dataStatus === "loading" ? "spin" : ""}
+              />
+              {dataStatus === "loading" ? "Refreshing…" : "Refresh"}
+            </button>
+          </div>
         </div>
         {dataStatus === "loading" && (
           <div className="admin-state" role="status" aria-live="polite">

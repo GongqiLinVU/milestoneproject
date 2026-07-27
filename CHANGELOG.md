@@ -60,6 +60,9 @@ The project currently uses simple milestone-based versions while the production 
 
 ### Added
 
+- Added teacher-only CSV export for the currently selected dashboard activity
+- Added aggregate-only Class Pulse export to preserve response anonymity
+- Added a repeatable Sprint 2 production security and smoke-test checklist
 - Added a teacher-controlled Poster Peer Review open/closed control
 - Added a safe public activity-state read and teacher-only update policy
 - Enforced the Peer Review closed state in the anonymous INSERT policy
