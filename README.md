@@ -97,6 +97,8 @@ Every push to `main` triggers a production deployment.
 - [AI context](AI_CONTEXT.md)
 - [Architecture](ARCHITECTURE.md)
 - [Roadmap](ROADMAP.md)
+- [Session start protocol](prompts/START_SESSION.md)
+- [Sprint records](docs/sprints)
 - [Contributing guide](CONTRIBUTING.md)
 - [Changelog](CHANGELOG.md)
 
@@ -112,4 +114,6 @@ Sprint 1 is working in production. Sprint 2 turns the Teacher Dashboard into an 
 
 Students remain unauthenticated and their submissions remain create-once. AI features, student-side editing and major database redesign are intentionally out of scope.
 
-See [Sprint 2 roadmap](ROADMAP.md#sprint-2--teacher-operations-and-activity-control) and [new-session implementation prompt](SPRINT2_SESSION_PROMPT.md).
+See [Sprint 2 roadmap](ROADMAP.md#sprint-2--teacher-operations-and-activity-control),
+the detailed [Sprint 2 plan](docs/sprints/sprint-02/PLAN.md), and the reusable
+[session start protocol](prompts/START_SESSION.md).
