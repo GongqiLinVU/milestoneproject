@@ -25,7 +25,7 @@ Production validation completed for all Sprint 1 student forms, teacher login, d
 
 ## Sprint 2 — Teacher operations and activity control
 
-**Status: Ready to start**
+**Status: In progress — Phase 1 implemented in Draft PR**
 
 ### Goal
 
@@ -38,11 +38,13 @@ Detailed scope, Phase acceptance criteria and the current handoff are stored in
 
 #### Phase 1 — Dashboard foundation
 
-- Preserve authentication and the current summary cards.
-- Add teacher sign-out and clear authenticated-session status.
-- Add loading, empty and actionable error states.
-- Add a detailed Student Check-in table showing name, Student ID, team, goal, created time and updated time.
-- Establish reusable table, refresh and status patterns before adding other activities.
+- Implemented while preserving authentication and the five summary cards.
+- Restores Supabase sessions and provides explicit teacher sign-out and access
+  status, including a clear non-teacher state.
+- Provides loading, empty, refresh and actionable error states.
+- Shows a detailed Student Check-in table with name, Student ID, team, goal,
+  created time and updated time.
+- Establishes reusable table, query, refresh and status patterns for Phase 2.
 
 #### Phase 2 — Activity record views
 

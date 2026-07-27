@@ -461,20 +461,99 @@ footer {
   background: white;
   padding: 40px;
   border-radius: 24px;
+  box-shadow: 0 20px 60px #17202a12;
+}
+.admin-login h1 {
+  font-size: clamp(38px, 6vw, 58px);
+  letter-spacing: -0.05em;
+  margin: 12px 0 28px;
 }
 .admin-login a {
   color: var(--blue);
 }
 .admin {
   padding: 60px max(20px, 4vw);
+  min-height: 100vh;
+}
+.admin-heading,
+.admin-records-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+.admin-heading .section-head h2 {
+  margin-bottom: 0;
+}
+.admin-session {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  color: var(--muted);
+  font-size: 14px;
+}
+.admin-session b {
+  color: var(--ink);
+}
+.admin button:disabled,
+.admin-login button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+.admin-alert {
+  padding: 13px 15px;
+  border-radius: 10px;
+  line-height: 1.5;
+}
+.admin-alert.error,
+.admin-state.error {
+  border-color: #e7b4a8;
+  background: #fff3f0;
+  color: #8c3523;
+}
+.admin-session-check,
+.admin-state {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  width: min(540px, 90vw);
+  padding: 34px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: white;
+  color: var(--muted);
+  text-align: center;
+}
+.admin-session-check b,
+.admin-state b {
+  color: var(--ink);
+  font: 700 18px Manrope;
+}
+.admin-session-check.error {
+  border-color: #e7b4a8;
+  background: #fff3f0;
+  color: #8c3523;
+}
+.admin-session-check.error .secondary {
+  margin-top: 10px;
+}
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 .metric-grid {
   margin: 30px 0;
+  grid-template-columns: repeat(5, 1fr);
 }
 .metric-grid > div {
   background: white;
   padding: 25px;
   border-radius: 16px;
+  border: 1px solid var(--line);
 }
 .metric-grid b {
   font: 800 40px Manrope;
@@ -482,6 +561,72 @@ footer {
 }
 .metric-grid span {
   color: var(--muted);
+}
+.admin-records {
+  margin-top: 50px;
+}
+.admin-records-heading {
+  margin-bottom: 20px;
+}
+.admin-records-heading h2 {
+  margin-top: 8px;
+  font-size: clamp(28px, 4vw, 42px);
+  letter-spacing: -0.04em;
+}
+.admin-records-heading p {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+.admin-records .admin-state {
+  width: 100%;
+}
+.admin-state .secondary {
+  margin-top: 8px;
+}
+.admin-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: white;
+}
+.admin table {
+  width: 100%;
+  min-width: 1000px;
+  border-collapse: collapse;
+  text-align: left;
+}
+.admin caption {
+  padding: 14px 18px;
+  color: var(--muted);
+  text-align: left;
+  font-size: 13px;
+}
+.admin th,
+.admin td {
+  padding: 15px 18px;
+  border-top: 1px solid var(--line);
+  vertical-align: top;
+}
+.admin th {
+  background: #f1f3ee;
+  color: #43505d;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.admin td {
+  font-size: 14px;
+}
+.admin tbody tr:hover {
+  background: #fafbf8;
+}
+.admin .goal-cell {
+  min-width: 280px;
+  max-width: 460px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.admin time {
+  white-space: nowrap;
 }
 @media (max-width: 850px) {
   nav {
@@ -505,6 +650,15 @@ footer {
   .deliverables,
   .metric-grid {
     grid-template-columns: 1fr;
+  }
+  .admin-heading,
+  .admin-records-heading,
+  .admin-session {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .admin-session {
+    gap: 10px;
   }
   .hero h1 {
     font-size: 62px;

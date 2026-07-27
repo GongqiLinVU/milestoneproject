@@ -7,7 +7,9 @@ import {
   CircleHelp,
   ClipboardCheck,
   FileText,
+  LogOut,
   Presentation,
+  RefreshCw,
   Users,
 } from "lucide-react";
 import "./styles.css";
@@ -917,35 +919,169 @@ function fields(k: Kind) {
   );
 }
 function Admin() {
-  const [user, setUser] = useState(false),
-    [msg, setMsg] = useState(""),
-    [counts, setCounts] = useState<Record<string, number>>({});
+  const activityTables = [
+    ["student_checkins", "Student check-ins"],
+    ["week1_pulse", "Class pulse"],
+    ["team_conversations", "Team conversations"],
+    ["student_promises", "Four-week promises"],
+    ["poster_reviews", "Poster reviews"],
+  ] as const;
+  type Checkin = {
+    id: string;
+    student_name: string | null;
+    student_id: string;
+    team_name: string;
+    goal: string | null;
+    created_at: string;
+    updated_at: string;
+  };
+  const [sessionUser, setSessionUser] = useState<{
+    email: string;
+    isTeacher: boolean;
+  } | null>(null);
+  const [authChecking, setAuthChecking] = useState(true);
+  const [authBusy, setAuthBusy] = useState(false);
+  const [authMessage, setAuthMessage] = useState("");
+  const [dataStatus, setDataStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [dataMessage, setDataMessage] = useState("");
+  const [counts, setCounts] = useState<Record<string, number | null>>(
+    Object.fromEntries(activityTables.map(([table]) => [table, null])),
+  );
+  const [checkins, setCheckins] = useState<Checkin[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!active) return;
+      setSessionUser(
+        session?.user.email
+          ? {
+              email: session.user.email,
+              isTeacher: session.user.app_metadata.role === "teacher",
+            }
+          : null,
+      );
+      setAuthChecking(false);
+    });
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!active) return;
+      setSessionUser(
+        session?.user.email
+          ? {
+              email: session.user.email,
+              isTeacher: session.user.app_metadata.role === "teacher",
+            }
+          : null,
+      );
+      setAuthChecking(false);
+    });
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (sessionUser?.isTeacher) {
+      void loadDashboard();
+    } else {
+      setDataStatus("idle");
+      setDataMessage("");
+      setCheckins([]);
+      setCounts(
+        Object.fromEntries(activityTables.map(([table]) => [table, null])),
+      );
+    }
+  }, [sessionUser?.email, sessionUser?.isTeacher]);
+
   async function login(e: any) {
     e.preventDefault();
+    setAuthBusy(true);
+    setAuthMessage("");
     const f = new FormData(e.currentTarget);
     const { error } = await supabase.auth.signInWithPassword({
       email: String(f.get("email")),
       password: String(f.get("password")),
     });
+    setAuthBusy(false);
     if (error) {
-      setMsg(error.message);
+      setAuthMessage(
+        "Sign-in failed. Check your teacher email and password, then try again.",
+      );
       return;
     }
-    setUser(true);
-    for (const t of [
-      "student_checkins",
-      "week1_pulse",
-      "team_conversations",
-      "student_promises",
-      "poster_reviews",
-    ]) {
-      const { count } = await supabase
-        .from(t)
-        .select("*", { count: "exact", head: true });
-      setCounts((c) => ({ ...c, [t]: count || 0 }));
+  }
+
+  async function loadDashboard() {
+    setDataStatus("loading");
+    setDataMessage("");
+    const [checkinResult, ...countResults] = await Promise.all([
+      supabase
+        .from("student_checkins")
+        .select(
+          "id, student_name, student_id, team_name, goal, created_at, updated_at",
+        )
+        .order("created_at", { ascending: false }),
+      ...activityTables.map(([table]) =>
+        supabase.from(table).select("*", { count: "exact", head: true }),
+      ),
+    ]);
+    const firstError =
+      checkinResult.error ||
+      countResults.find((result) => result.error)?.error;
+    if (firstError) {
+      setDataStatus("error");
+      setDataMessage(
+        "Dashboard data could not be loaded. Confirm this account has the teacher role, then retry. If the problem continues, contact the course administrator.",
+      );
+      return;
+    }
+    setCheckins((checkinResult.data ?? []) as Checkin[]);
+    setCounts(
+      Object.fromEntries(
+        activityTables.map(([table], index) => [
+          table,
+          countResults[index].count ?? 0,
+        ]),
+      ),
+    );
+    setDataStatus("success");
+  }
+
+  async function signOut() {
+    setAuthBusy(true);
+    setAuthMessage("");
+    const { error } = await supabase.auth.signOut();
+    setAuthBusy(false);
+    if (error) {
+      setAuthMessage(
+        "We could not sign you out. Refresh the page and try again.",
+      );
     }
   }
-  if (!user)
+
+  const formatDateTime = (value: string) =>
+    new Date(value).toLocaleString(undefined, {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+
+  if (authChecking)
+    return (
+      <main className="admin-login">
+        <div className="admin-session-check" role="status" aria-live="polite">
+          <RefreshCw className="spin" aria-hidden="true" />
+          <b>Restoring teacher session…</b>
+          <span>Please wait while secure access is checked.</span>
+        </div>
+      </main>
+    );
+
+  if (!sessionUser)
     return (
       <main className="admin-login">
         <form onSubmit={login}>
@@ -959,23 +1095,169 @@ function Admin() {
             Password
             <input type="password" name="password" required />
           </label>
-          <p>{msg}</p>
-          <button>Sign in</button>
+          {authMessage && (
+            <p className="admin-alert error" role="alert">
+              {authMessage}
+            </p>
+          )}
+          <button disabled={authBusy}>
+            {authBusy ? "Signing in…" : "Sign in"}
+          </button>
           <a href="/">Back to portal</a>
         </form>
       </main>
     );
+
+  if (!sessionUser.isTeacher)
+    return (
+      <main className="admin-login">
+        <div className="admin-session-check error" role="alert">
+          <b>Teacher access required</b>
+          <span>
+            {sessionUser.email} is signed in, but this account does not have
+            the teacher role. No student records have been loaded.
+          </span>
+          <button
+            className="secondary"
+            type="button"
+            onClick={signOut}
+            disabled={authBusy}
+          >
+            <LogOut size={17} />
+            {authBusy ? "Signing out…" : "Sign out"}
+          </button>
+        </div>
+      </main>
+    );
+
   return (
     <main className="admin">
-      <Head label="NIT3004" title="Teacher Dashboard" />
+      <div className="admin-heading">
+        <Head label="NIT3004" title="Teacher Dashboard" />
+        <div className="admin-session">
+          <span>
+            Signed in as <b>{sessionUser.email}</b>
+          </span>
+          <button
+            className="secondary"
+            type="button"
+            onClick={signOut}
+            disabled={authBusy}
+          >
+            <LogOut size={17} />
+            {authBusy ? "Signing out…" : "Sign out"}
+          </button>
+        </div>
+      </div>
+      {authMessage && (
+        <p className="admin-alert error" role="alert">
+          {authMessage}
+        </p>
+      )}
       <div className="metric-grid">
-        {Object.entries(counts).map(([k, v]) => (
-          <div key={k}>
-            <b>{v}</b>
-            <span>{k.replaceAll("_", " ")}</span>
+        {activityTables.map(([table, label]) => (
+          <div key={table}>
+            <b>{counts[table] ?? "—"}</b>
+            <span>{label}</span>
           </div>
         ))}
       </div>
+      <section className="admin-records" aria-labelledby="checkins-heading">
+        <div className="admin-records-heading">
+          <div>
+            <div className="eyebrow">Week 1 activity</div>
+            <h2 id="checkins-heading">Student Check-in records</h2>
+            <p>
+              Review each student’s team and intended four-week outcome.
+            </p>
+          </div>
+          <button
+            className="secondary"
+            type="button"
+            onClick={() => void loadDashboard()}
+            disabled={dataStatus === "loading"}
+          >
+            <RefreshCw
+              size={17}
+              className={dataStatus === "loading" ? "spin" : ""}
+            />
+            {dataStatus === "loading" ? "Refreshing…" : "Refresh"}
+          </button>
+        </div>
+        {dataStatus === "loading" && (
+          <div className="admin-state" role="status" aria-live="polite">
+            <RefreshCw className="spin" aria-hidden="true" />
+            <b>Loading dashboard records…</b>
+            <span>Counts and Check-in details are being refreshed.</span>
+          </div>
+        )}
+        {dataStatus === "error" && (
+          <div className="admin-state error" role="alert">
+            <b>Unable to load teacher data</b>
+            <span>{dataMessage}</span>
+            <button
+              type="button"
+              className="secondary"
+              onClick={() => void loadDashboard()}
+            >
+              Try again
+            </button>
+          </div>
+        )}
+        {dataStatus === "success" && checkins.length === 0 && (
+          <div className="admin-state" role="status">
+            <b>No Check-in records yet</b>
+            <span>
+              Student Check-ins will appear here after the first valid
+              submission.
+            </span>
+          </div>
+        )}
+        {dataStatus === "success" && checkins.length > 0 && (
+          <div className="admin-table-wrap">
+            <table>
+              <caption>
+                {checkins.length} Student Check-in{" "}
+                {checkins.length === 1 ? "record" : "records"}, newest first
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Name</th>
+                  <th scope="col">Student ID</th>
+                  <th scope="col">Team</th>
+                  <th scope="col">Four-week goal</th>
+                  <th scope="col">Created</th>
+                  <th scope="col">Updated</th>
+                </tr>
+              </thead>
+              <tbody>
+                {checkins.map((checkin) => (
+                  <tr key={checkin.id}>
+                    <td data-label="Name">
+                      {checkin.student_name || "Not provided"}
+                    </td>
+                    <td data-label="Student ID">{checkin.student_id}</td>
+                    <td data-label="Team">{checkin.team_name}</td>
+                    <td data-label="Four-week goal" className="goal-cell">
+                      {checkin.goal || "Not provided"}
+                    </td>
+                    <td data-label="Created">
+                      <time dateTime={checkin.created_at}>
+                        {formatDateTime(checkin.created_at)}
+                      </time>
+                    </td>
+                    <td data-label="Updated">
+                      <time dateTime={checkin.updated_at}>
+                        {formatDateTime(checkin.updated_at)}
+                      </time>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
     </main>
   );
 }
