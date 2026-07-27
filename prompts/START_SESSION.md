@@ -3,6 +3,23 @@
 GitHub `main` is the source of truth. Begin every session from the latest
 `main`; do not rely on chat history or an older local checkout.
 
+## Repository access
+
+- Use the connected GitHub App as the default repository interface in every
+  session.
+- Use the GitHub App to inspect the latest `main`, branches, commits, open and
+  merged pull requests, and repository files.
+- Use the GitHub App for supported write operations, including creating
+  branches, commits and focused Draft PRs.
+- Do not depend on a temporary container retaining GitHub CLI installation,
+  credentials or device-login state between sessions.
+- Local tools may be used for implementation and validation. Use local
+  `git` or GitHub CLI only as an explicit fallback when a required operation
+  is not available through the GitHub App.
+- If the GitHub App is unavailable or lacks the required repository permission,
+  report the exact blocker instead of repeatedly requesting temporary CLI
+  authentication.
+
 ## Read first
 
 1. Inspect the latest code, schema, migrations, open pull requests and recent
@@ -49,4 +66,3 @@ material decision is genuinely ambiguous.
 - Update the current Sprint `HANDOFF.md` and `ROADMAP.md` with actual evidence.
 - Run the Phase's required validation.
 - Create a focused Draft PR and do not merge without explicit approval.
-
