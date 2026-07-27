@@ -25,7 +25,7 @@ const titles: Record<Kind, string> = {
   checkin: "Week 1 Check-in",
   pulse: "Class Pulse",
   team: "Team Conversation",
-  promise: "Four-Week Promise",
+  promise: "Four-Week Action Plan",
   review: "Poster Peer Review",
 };
 function App() {
@@ -112,7 +112,7 @@ function Journey() {
       "01",
       "Commit",
       "Studio Kickoff",
-      "Align the team, understand the rules and make a four-week promise.",
+      "Align the team, understand the rules and make a practical four-week plan.",
     ],
     [
       "02",
@@ -210,8 +210,8 @@ function Week1({ open }: { open: (k: Kind) => void }) {
           action={() => open("team")}
         />
         <Activity
-          title="Four-Week Promise"
-          text="Each student makes one practical commitment to their team."
+          title="Four-Week Action Plan"
+          text="Turn your intended outcome into a concrete next step, success signal and support request."
           action={() => open("promise")}
         />
       </div>
@@ -439,7 +439,7 @@ function submissionReceipt(
     ],
     promise: [
       { label: "Team", value: text("team") },
-      { label: "Four-week promise", value: text("promise") },
+      { label: "Four-week action plan", value: text("promise") },
     ],
     review: [
       { label: "Reviewer team", value: text("reviewer_team") },
@@ -882,10 +882,14 @@ function fields(k: Kind) {
     return (
       <>
         <p className="form-note">
-          Submit your own individual commitment to your team.
+          Turn your Week 1 goal into a practical delivery plan for your team.
         </p>
         <Identity />
-        <Text label="My four-week promise" name="promise" maxLength={1000} />
+        <Text
+          label="What will you do, what evidence will show success, and what support might you need?"
+          name="promise"
+          maxLength={1000}
+        />
       </>
     );
   return (
@@ -939,23 +943,11 @@ function Admin() {
     {
       table: "week1_pulse",
       label: "Class pulse",
-      title: "Class Pulse records",
+      title: "Class Pulse overview",
       description:
-        "Review individual confidence, AI usage, concerns and expected outcomes.",
-      select:
-        "id, student_id, team_name, ai_usage, confidence, concern, biggest_concern, expected_outcome, anonymous_comment, created_at, updated_at",
-      columns: [
-        ["student_id", "Student ID"],
-        ["team_name", "Team"],
-        ["ai_usage", "AI usage"],
-        ["confidence", "Confidence"],
-        ["concern", "Primary concern"],
-        ["biggest_concern", "Concern detail"],
-        ["expected_outcome", "Expected outcome"],
-        ["anonymous_comment", "Anonymous comment"],
-        ["created_at", "Created"],
-        ["updated_at", "Updated"],
-      ],
+        "See anonymous class-level patterns without exposing individual responses.",
+      select: "id, ai_usage, confidence, concern",
+      columns: [],
     },
     {
       table: "team_conversations",
@@ -977,16 +969,17 @@ function Admin() {
     },
     {
       table: "student_promises",
-      label: "Four-week promises",
-      title: "Four-Week Promise records",
-      description: "Review the individual commitments students made to their teams.",
+      label: "Four-week plans",
+      title: "Four-Week Action Plans",
+      description:
+        "Review how students plan to turn their Week 1 goals into evidence and action.",
       select:
         "id, student_name, student_id, team_name, promise, created_at, updated_at",
       columns: [
         ["student_name", "Name"],
         ["student_id", "Student ID"],
         ["team_name", "Team"],
-        ["promise", "Four-week promise"],
+        ["promise", "Action plan"],
         ["created_at", "Created"],
         ["updated_at", "Updated"],
       ],
@@ -1192,6 +1185,43 @@ function Admin() {
     if (ratingFields.has(field)) return `${String(value)} / 5`;
     return String(value);
   };
+  const pulseGroups = [
+    {
+      title: "Delivery confidence",
+      field: "confidence",
+      options: [
+        ["1", "Not confident yet"],
+        ["2", "Slightly confident"],
+        ["3", "Moderately confident"],
+        ["4", "Confident"],
+        ["5", "Very confident"],
+      ],
+    },
+    {
+      title: "Main concern",
+      field: "concern",
+      options: [
+        ["Working product", "Working product"],
+        ["Documentation", "Documentation"],
+        ["Presentation", "Presentation"],
+        ["Teamwork", "Teamwork"],
+        ["Testing", "Testing"],
+        ["Time", "Time"],
+      ],
+    },
+    {
+      title: "AI usage",
+      field: "ai_usage",
+      options: [
+        ["Rarely", "Rarely"],
+        ["Weekly", "Weekly"],
+        ["Daily", "Daily"],
+        ["It is part of almost every task", "Almost every task"],
+      ],
+    },
+  ] as const;
+  const pulseCount = (field: string, value: string) =>
+    records.filter((record) => String(record[field]) === value).length;
 
   if (authChecking)
     return (
@@ -1344,7 +1374,49 @@ function Admin() {
             </span>
           </div>
         )}
-        {dataStatus === "success" && records.length > 0 && (
+        {dataStatus === "success" &&
+          records.length > 0 &&
+          activeTable === "week1_pulse" && (
+            <div className="pulse-overview">
+              <p className="pulse-privacy-note">
+                Anonymous overview · individual submissions and timestamps are
+                intentionally hidden.
+              </p>
+              <div className="pulse-chart-grid">
+                {pulseGroups.map(({ title, field, options }) => (
+                  <section key={field} className="pulse-chart">
+                    <h3>{title}</h3>
+                    {options.map(([value, label]) => {
+                      const count = pulseCount(field, value);
+                      const percentage = Math.round(
+                        (count / records.length) * 100,
+                      );
+                      return (
+                        <div className="pulse-bar-row" key={value}>
+                          <div className="pulse-bar-label">
+                            <span>{label}</span>
+                            <b>
+                              {count} · {percentage}%
+                            </b>
+                          </div>
+                          <div
+                            className="pulse-bar-track"
+                            role="img"
+                            aria-label={`${label}: ${count} responses, ${percentage}%`}
+                          >
+                            <span style={{ width: `${percentage}%` }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </section>
+                ))}
+              </div>
+            </div>
+          )}
+        {dataStatus === "success" &&
+          records.length > 0 &&
+          activeTable !== "week1_pulse" && (
           <div className="admin-table-wrap">
             <table>
               <caption>
