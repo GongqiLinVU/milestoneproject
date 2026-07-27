@@ -373,6 +373,64 @@ footer {
   color: #43505d;
   line-height: 1.5;
 }
+.peer-rating {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.peer-rating legend {
+  margin-bottom: 9px;
+  font-weight: 700;
+}
+.peer-rating-options {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+.peer-rating-options label {
+  position: relative;
+  cursor: pointer;
+}
+.peer-rating-options input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.peer-rating-options span {
+  display: grid;
+  gap: 5px;
+  height: 100%;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fafbf8;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+.peer-rating-options b {
+  font-size: 14px;
+}
+.peer-rating-options small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.35;
+}
+.peer-rating-options input:checked + span {
+  border-color: var(--blue);
+  background: #eef3ff;
+  box-shadow: 0 0 0 2px #0b61ce25;
+}
+.peer-rating-options input:focus-visible + span {
+  outline: 3px solid #0b61ce40;
+  outline-offset: 2px;
+}
+@media (max-width: 760px) {
+  .peer-rating-options {
+    grid-template-columns: 1fr;
+  }
+}
 .dialog input,
 .dialog textarea,
 .dialog select,

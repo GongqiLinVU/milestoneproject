@@ -81,6 +81,8 @@ Detailed scope, Phase acceptance criteria and the current handoff are stored in
 
 #### Phase 5 — Export and production hardening
 
+- Refine Poster Peer Review so the two teams are unambiguous and responses use
+  descriptive selections instead of required written comments.
 - Add CSV export only after record viewing and management are stable.
 - Export the currently selected activity with explicit, stable column headings.
 - Re-test duplicate, self-review and create-only student behaviour.

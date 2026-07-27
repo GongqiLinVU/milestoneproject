@@ -1,14 +1,13 @@
 # Sprint 2 Handoff
 
-**Status: Phase 3 merged and migrated; Phase 4 implemented in Draft PR**
+**Status: Phase 4 merged and migrated; Phase 5 in progress**
 
 ## Starting point
 
 - Base all work on latest GitHub `main`.
 - Sprint 1 is complete and production validated. See
   `docs/sprints/sprint-01/HANDOFF.md`.
-- Peer Review remains closed in production until the Phase 4 migration and
-  frontend are deployed.
+- The Poster Peer Review window is now controlled from the Teacher Dashboard.
 - Phase 1 was merged in PR #7 (`5a93a170745d91b834eba78e20a8190a67eb74a4`).
 - Phase 2 was merged in PR #9 (`b6cd0efe6384c78b9c33c97a382d179d96c5a9d8`).
 - The Phase 2 privacy and language refinement was merged in PR #10
@@ -18,9 +17,9 @@
 
 **Phase 5 — Export, security and production**
 
-Do not start until the Phase 4 PR is merged and its migration is applied.
-Then add selected-activity CSV export and complete the Sprint 2 role, RLS and
-production verification matrix.
+Refine the Poster Peer Review form using structured selections, then add
+selected-activity CSV export and complete the Sprint 2 role, RLS and production
+verification matrix.
 
 ## Completion records
 
@@ -154,17 +153,17 @@ Phase:
 Phase 4 — Peer Review control
 
 Status:
-Implemented in Draft PR; migration not yet applied.
+Merged and migrated.
 
 PR:
-Pending
+#14
 
 Merge commit:
-Pending
+`a6c6000496b3c90a282551d93878ae368ab00c42`
 
 Database migration:
-`supabase/migrations/20260727_add_peer_review_control.sql` — pending manual
-application before frontend deployment.
+`supabase/migrations/20260727_add_peer_review_control.sql` — applied manually
+before merge.
 
 Production verified:
 No
@@ -184,8 +183,41 @@ Decisions:
 
 Remaining issues:
 
-- Apply the migration before deploying the frontend.
 - Verify closed/open/closed behaviour through the student UI and direct
   Supabase requests.
 - Verify anonymous and authenticated non-teacher users cannot change the
   setting.
+
+Phase:
+Phase 5 — Poster Review form refinement
+
+Status:
+Implemented in Draft PR; no migration required.
+
+PR:
+Pending
+
+Merge commit:
+Pending
+
+Database migration:
+None. Existing Poster Review columns and constraints are reused.
+
+Production verified:
+No
+
+Decisions:
+
+- Labels distinguish `Your team (from team)` from `Team being reviewed (to
+  team)`.
+- The existing client validation and database constraint continue to prevent
+  self-review.
+- Five numeric ratings use descriptive, directly selectable cards while
+  retaining the existing 1–5 data model and dashboard analytics.
+- Strongest area and highest priority use predefined selections instead of
+  required written comments.
+
+Remaining issues:
+
+- Verify the mobile and desktop form in the Vercel preview.
+- Continue Phase 5 with CSV export and the production security matrix.
