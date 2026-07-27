@@ -1,12 +1,11 @@
 # Sprint 3 Handoff
 
-**Status: Planned; not started**
+**Status: Active; Phase 1 next**
 
 ## Starting point
 
 - GitHub `main` is the source of truth.
-- Sprint 2 remains active. Continue its first incomplete Phase unless the user
-  explicitly approves switching to Sprint 3.
+- Sprint 2 is completed and production validated as of 27 July 2026.
 - Sprint 3 originated from classroom evidence on 27 July 2026: twelve students
   had submitted activity data, while only one team completed the shared,
   long-text Team Conversation.
@@ -15,12 +14,12 @@
 - Read `PLAN.md`, `ROADMAP.md`, `AI_CONTEXT.md` and
   `prompts/START_SESSION.md` before implementation.
 
-## First Phase when activated
+## Next Phase
 
 **Phase 1 — Team Health Check**
 
-Do not begin this Phase merely because the plan exists. Confirm that Sprint 2
-is complete or obtain explicit approval to change the active Sprint.
+Sprint 3 is active. A new Session should begin by reviewing the Phase 1 design
+and acceptance criteria before changing code.
 
 Before coding, present:
 
