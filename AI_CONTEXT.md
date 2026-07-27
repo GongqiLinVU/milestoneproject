@@ -156,7 +156,24 @@ Student submissions remain create-once. Do not add student authentication, stude
 
 The temporary hard-coded Peer Review disabled state is only a Sprint 1 safety measure. Sprint 2 must replace it with teacher-controlled runtime state and database enforcement; it must not merely enable the button in frontend code.
 
-Detailed scope and acceptance criteria are in `ROADMAP.md`. The implementation handoff is in `SPRINT2_SESSION_PROMPT.md`.
+Detailed scope and acceptance criteria are in
+`docs/sprints/sprint-02/PLAN.md`. Actual progress and evidence belong in
+`docs/sprints/sprint-02/HANDOFF.md`. New sessions must use
+`prompts/START_SESSION.md`.
+
+## Sprint continuity
+
+- Sprints form one linear delivery history and all work starts from latest
+  GitHub `main`.
+- A completed Sprint is frozen as a historical record. New requirements extend
+  the product in a later Sprint rather than creating versions such as
+  `Sprint 2-1`.
+- Phases are execution slices inside a Sprint, not long-lived code branches or
+  versions.
+- A current Sprint may fix defects required by its accepted scope. Changed or
+  additional behaviour belongs in a later Sprint.
+- `PLAN.md` defines intended scope; `HANDOFF.md` records verified delivery,
+  pull requests, merge commits and remaining issues.
 
 ## Rules for AI-assisted changes
 
