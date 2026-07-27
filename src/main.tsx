@@ -748,9 +748,15 @@ const Help = ({ text }: { text: string }) => (
     <span>{text}</span>
   </details>
 );
-const Team = ({ name = "team" }: { name?: string }) => (
+const Team = ({
+  name = "team",
+  label = "Team",
+}: {
+  name?: string;
+  label?: string;
+}) => (
   <label>
-    Team
+    {label}
     <select name={name} required>
       <option value="">Select team</option>
       {teams.map((t) => (
@@ -841,6 +847,50 @@ function Rating({
     </div>
   );
 }
+const peerRatingOptions = [
+  ["1", "Not demonstrated", "No clear evidence was shown."],
+  ["2", "Early stage", "Some work is visible, but major gaps remain."],
+  ["3", "Developing", "The core idea is present, with more work needed."],
+  ["4", "Strong", "Clear and convincing evidence was shown."],
+  ["5", "Excellent", "Complete, polished and ready to present."],
+] as const;
+function PeerRating({ label, name }: { label: string; name: string }) {
+  return (
+    <fieldset className="peer-rating">
+      <legend>{label}</legend>
+      <div className="peer-rating-options">
+        {peerRatingOptions.map(([value, title, description]) => (
+          <label key={value}>
+            <input type="radio" name={name} value={value} required />
+            <span>
+              <b>{value} · {title}</b>
+              <small>{description}</small>
+            </span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+const SelectChoice = ({
+  label,
+  name,
+  placeholder,
+  options,
+}: {
+  label: string;
+  name: string;
+  placeholder: string;
+  options: string[];
+}) => (
+  <label>
+    {label}
+    <select name={name} defaultValue="" required>
+      <option value="" disabled>{placeholder}</option>
+      {options.map((option) => <option key={option}>{option}</option>)}
+    </select>
+  </label>
+);
 function fields(k: Kind) {
   if (k === "checkin")
     return (
@@ -926,6 +976,10 @@ function fields(k: Kind) {
     );
   return (
     <>
+      <p className="form-note">
+        Review another team. Choose the option that best matches the evidence
+        you saw—no written comment is required.
+      </p>
       <label>
         Reviewer name
         <input name="name" required maxLength={100} />
@@ -934,8 +988,8 @@ function fields(k: Kind) {
         Student ID
         <input name="sid" required minLength={3} maxLength={40} />
       </label>
-      <Team name="reviewer_team" />
-      <Team name="reviewed_team" />
+      <Team name="reviewer_team" label="Your team (from team)" />
+      <Team name="reviewed_team" label="Team being reviewed (to team)" />
       {[
         ["Problem clarity", "problem"],
         ["Working product", "product"],
@@ -943,13 +997,36 @@ function fields(k: Kind) {
         ["Document readiness", "docs"],
         ["Explanation quality", "explanation"],
       ].map(([label, name]) => (
-        <Rating key={name} label={label} name={name} />
+        <PeerRating key={name} label={label} name={name} />
       ))}
-      <Text label="Strongest part" name="strongest" maxLength={1000} />
-      <Text
+      <SelectChoice
+        label="Strongest part"
+        name="strongest"
+        placeholder="Select the strongest area"
+        options={[
+          "Problem and user need",
+          "Solution and scope",
+          "Working product",
+          "Evidence and testing",
+          "Documentation",
+          "Presentation and explanation",
+          "Team coordination",
+        ]}
+      />
+      <SelectChoice
         label="Highest priority before Demo Day"
         name="priority"
-        maxLength={1000}
+        placeholder="Select the most important next step"
+        options={[
+          "Clarify the problem and user need",
+          "Reduce or clarify the scope",
+          "Complete the core product flow",
+          "Fix reliability or technical issues",
+          "Add stronger testing evidence",
+          "Complete the documentation",
+          "Improve the presentation and demo",
+          "No major change needed",
+        ]}
       />
     </>
   );
