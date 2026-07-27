@@ -36,6 +36,8 @@ The current module guides students through a four-week journey:
 - Teacher edit and confirmed delete for identified activity records
 - Teacher mutations protected by `is_teacher()` UPDATE/DELETE RLS policies
 - Teacher-controlled Poster Peer Review opening and closing
+- Export the currently selected activity as a stable UTF-8 CSV; Class Pulse
+  exports only aggregate distributions
 - Accessible loading, empty, refresh and actionable error states
 
 ## Technology stack
@@ -114,11 +116,12 @@ Every push to `main` triggers a production deployment.
 
 ## Current priority
 
-Sprint 1 is working in production. Sprint 2 is in progress and turns the Teacher Dashboard into an operational teaching tool:
+Sprint 1 is working in production. Sprint 2 Phase 5 is implemented and awaits
+the documented production verification:
 
-- Apply and production-verify the Phase 4 Peer Review control migration
-- Export stable teacher-only CSV files after record management is complete
-- Complete closed/open/closed UI and direct-Supabase security checks
+- Verify the role and RLS access matrix
+- Verify duplicate, self-review and create-once constraints
+- Complete closed/open/closed Peer Review and CSV smoke tests
 
 Students remain unauthenticated and their submissions remain create-once. AI features, student-side editing and major database redesign are intentionally out of scope.
 

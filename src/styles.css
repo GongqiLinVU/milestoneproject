@@ -691,6 +691,11 @@ footer {
 .admin-records-heading {
   margin-bottom: 20px;
 }
+.admin-record-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
 .admin-records-heading h2 {
   margin-top: 8px;
   font-size: clamp(28px, 4vw, 42px);
@@ -902,6 +907,11 @@ button.danger:hover {
   .admin-session {
     align-items: flex-start;
     flex-direction: column;
+  }
+  .admin-record-actions {
+    align-items: stretch;
+    flex-direction: column;
+    width: 100%;
   }
   .admin-session {
     gap: 10px;

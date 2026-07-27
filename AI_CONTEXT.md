@@ -170,7 +170,9 @@ Implementation order:
    state is stored in Supabase, safely readable by the public portal, writable
    only by teachers, and enforced by the Poster Review INSERT policy. Apply and
    verify the Phase 4 migration before treating this as production-complete.
-5. Add CSV export after record management is stable.
+5. CSV export is implemented after record management, with Class Pulse kept
+   aggregate-only; complete the production verification matrix before closing
+   Sprint 2.
 6. Complete role, RLS, migration, build and production smoke tests.
 
 Student submissions remain create-once. Do not add student authentication, student-side editing, AI features, multi-course administration or a major database redesign in Sprint 2.

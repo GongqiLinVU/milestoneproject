@@ -25,7 +25,7 @@ Production validation completed for all Sprint 1 student forms, teacher login, d
 
 ## Sprint 2 — Teacher operations and activity control
 
-**Status: In progress — Phase 4 implemented; migration and merge pending**
+**Status: Phase 5 implemented — production verification pending**
 
 ### Goal
 
@@ -81,10 +81,12 @@ Detailed scope, Phase acceptance criteria and the current handoff are stored in
 
 #### Phase 5 — Export and production hardening
 
-- Refine Poster Peer Review so the two teams are unambiguous and responses use
+- Refined Poster Peer Review so the two teams are unambiguous and responses use
   descriptive selections instead of required written comments.
-- Add CSV export only after record viewing and management are stable.
-- Export the currently selected activity with explicit, stable column headings.
+- Added CSV export after record viewing and management became stable.
+- Exports the currently selected activity with explicit, stable column headings.
+- Keeps Class Pulse anonymous by exporting aggregates rather than individual
+  response rows.
 - Re-test duplicate, self-review and create-only student behaviour.
 - Verify anonymous and authenticated non-teacher users cannot read or mutate protected records.
 - Run production build, apply reviewed migration SQL, verify production policies and test the Vercel deployment.

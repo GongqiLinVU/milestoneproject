@@ -1,6 +1,6 @@
 # Sprint 2 Handoff
 
-**Status: Phase 4 merged and migrated; Phase 5 in progress**
+**Status: Phase 5 implemented; production verification pending**
 
 ## Starting point
 
@@ -12,14 +12,19 @@
 - Phase 2 was merged in PR #9 (`b6cd0efe6384c78b9c33c97a382d179d96c5a9d8`).
 - The Phase 2 privacy and language refinement was merged in PR #10
   (`f619d048e5edd1b5fd570d873918af870d078280`).
+- Phase 3 was merged in PR #12
+  (`2133a60df835e84e4c7732947437292e75a85713`) and its migration was applied.
+- Phase 4 was merged in PR #14
+  (`a6c6000496b3c90a282551d93878ae368ab00c42`) and its migration was applied.
+- The Poster Review form refinement was merged in PR #15
+  (`8e29a2e4f983c7cb255c30dd7646bee14f4a8c88`).
 
 ## Next Phase
 
-**Phase 5 — Export, security and production**
+**Phase 5 — Production verification**
 
-Refine the Poster Peer Review form using structured selections, then add
-selected-activity CSV export and complete the Sprint 2 role, RLS and production
-verification matrix.
+Run `docs/sprints/sprint-02/PRODUCTION_VERIFICATION.md` against production.
+Record only observed results. Sprint 2 is complete only after the matrix passes.
 
 ## Completion records
 
@@ -192,13 +197,13 @@ Phase:
 Phase 5 — Poster Review form refinement
 
 Status:
-Implemented in Draft PR; no migration required.
+Merged; no migration required.
 
 PR:
-Pending
+#15
 
 Merge commit:
-Pending
+`8e29a2e4f983c7cb255c30dd7646bee14f4a8c88`
 
 Database migration:
 None. Existing Poster Review columns and constraints are reused.
@@ -219,5 +224,40 @@ Decisions:
 
 Remaining issues:
 
-- Verify the mobile and desktop form in the Vercel preview.
-- Continue Phase 5 with CSV export and the production security matrix.
+- Verify the mobile and desktop form in production.
+
+Phase:
+Phase 5 — CSV export and production hardening
+
+Status:
+Implemented; production verification pending.
+
+PR:
+Pending
+
+Merge commit:
+Pending
+
+Database migration:
+None. Export uses records already authorised and loaded into the active teacher
+session.
+
+Production verified:
+No
+
+Decisions:
+
+- Export is available only after the selected activity has loaded successfully
+  and contains records.
+- Identified activities export the same stable columns shown in the dashboard.
+- Anonymous Class Pulse exports aggregate category counts and percentages, not
+  hidden individual rows or timestamps.
+- CSV uses UTF-8 BOM, CRLF rows, quoted/escaped cells, safe dated filenames and
+  spreadsheet-formula neutralisation.
+- Production verification remains an explicit manual gate documented in
+  `PRODUCTION_VERIFICATION.md`.
+
+Remaining issues:
+
+- Merge the Phase 5 PR after preview checks.
+- Execute and record the production verification matrix.
