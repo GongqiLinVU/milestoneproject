@@ -25,7 +25,7 @@ Production validation completed for all Sprint 1 student forms, teacher login, d
 
 ## Sprint 2 — Teacher operations and activity control
 
-**Status: Phase 5 implemented — production verification pending**
+**Status: Completed and production validated**
 
 ### Goal
 
@@ -129,7 +129,7 @@ Detailed scope, Phase acceptance criteria and the current handoff are stored in
 
 ## Sprint 3 — Week 2 Review and Teaching Analytics
 
-**Status: Planned — not started while Sprint 2 remains active**
+**Status: Active — Phase 1 next**
 
 Sprint 3 combines the original Teaching Analytics direction with classroom
 feedback gathered on 27 July 2026. The current shared, long-text Team
@@ -152,9 +152,9 @@ Analytics remain descriptive and must not infer marks or performance without
 sufficient evidence.
 
 Detailed scope, Phase acceptance criteria and activation rules are stored in
-`docs/sprints/sprint-03/`. The existence of this Plan does not make Sprint 3
-active; new Sessions must continue Sprint 2 unless it is complete or the user
-explicitly changes priority.
+`docs/sprints/sprint-03/`. Sprint 2 was production validated on 27 July 2026. Sprint 3 is now the active
+Sprint; new Sessions should begin with Phase 1 unless the user explicitly
+changes priority.
 
 ## Sprint 4 — Student identity and team management
 
