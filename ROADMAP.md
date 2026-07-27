@@ -25,7 +25,7 @@ Production validation completed for all Sprint 1 student forms, teacher login, d
 
 ## Sprint 2 — Teacher operations and activity control
 
-**Status: In progress — Phase 2 merged; privacy and activity-language refinement pending**
+**Status: In progress — Phase 3 implemented; review and rollout pending**
 
 ### Goal
 
@@ -58,11 +58,13 @@ Detailed scope, Phase acceptance criteria and the current handoff are stored in
 
 #### Phase 3 — Teacher actions
 
-- Allow authorised teachers to edit incorrect records.
-- Allow authorised teachers to delete invalid records after explicit confirmation.
-- Refresh affected rows and summary counts after mutations.
-- Preserve database constraints during edits and translate constraint failures into understandable messages.
-- Add teacher-only UPDATE and DELETE grants and RLS policies for each managed activity table.
+- Implemented authorised edit and explicit confirmed delete for identified
+  activity records.
+- Refreshes the selected records and all summary counts after mutations.
+- Preserves database constraints and translates common failures into
+  understandable teacher-facing messages.
+- Adds minimum authenticated UPDATE/DELETE grants backed by `is_teacher()` RLS.
+- Keeps anonymous Class Pulse rows outside record management.
 
 #### Phase 4 — Poster Peer Review Week 3 control
 

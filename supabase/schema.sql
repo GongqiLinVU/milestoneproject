@@ -160,8 +160,17 @@ create policy "Teachers can read class pulse" on public.week1_pulse for select t
 create policy "Teachers can read conversations" on public.team_conversations for select to authenticated using (public.is_teacher());
 create policy "Teachers can read promises" on public.student_promises for select to authenticated using (public.is_teacher());
 create policy "Teachers can read poster reviews" on public.poster_reviews for select to authenticated using (public.is_teacher());
+create policy "Teachers can update check-ins" on public.student_checkins for update to authenticated using (public.is_teacher()) with check (public.is_teacher());
+create policy "Teachers can delete check-ins" on public.student_checkins for delete to authenticated using (public.is_teacher());
+create policy "Teachers can update conversations" on public.team_conversations for update to authenticated using (public.is_teacher()) with check (public.is_teacher());
+create policy "Teachers can delete conversations" on public.team_conversations for delete to authenticated using (public.is_teacher());
+create policy "Teachers can update promises" on public.student_promises for update to authenticated using (public.is_teacher()) with check (public.is_teacher());
+create policy "Teachers can delete promises" on public.student_promises for delete to authenticated using (public.is_teacher());
+create policy "Teachers can update poster reviews" on public.poster_reviews for update to authenticated using (public.is_teacher()) with check (public.is_teacher());
+create policy "Teachers can delete poster reviews" on public.poster_reviews for delete to authenticated using (public.is_teacher());
 
 grant select on public.portal_health to anon, authenticated;
 revoke all privileges on public.student_checkins, public.week1_pulse, public.team_conversations, public.student_promises, public.poster_reviews from anon, authenticated;
 grant insert on public.student_checkins, public.week1_pulse, public.team_conversations, public.student_promises, public.poster_reviews to anon, authenticated;
 grant select on public.student_checkins, public.week1_pulse, public.team_conversations, public.student_promises, public.poster_reviews to authenticated;
+grant update, delete on public.student_checkins, public.team_conversations, public.student_promises, public.poster_reviews to authenticated;
