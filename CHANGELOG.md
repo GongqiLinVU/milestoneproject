@@ -86,6 +86,8 @@ The project currently uses simple milestone-based versions while the production 
 - Supabase-backed activity state and RLS enforcement that blocks direct Poster Review inserts while closed
 - CSV export after record management is stable
 - Full anonymous, non-teacher and teacher authorisation verification
+- Linear Sprint plans and evidence-based handoffs under `docs/sprints`
+- A reusable new-session protocol at `prompts/START_SESSION.md`
 
 ### Deferred
 
