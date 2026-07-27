@@ -13,7 +13,7 @@ Delivered:
 - React, Vite and TypeScript application
 - GitHub repository and Vercel production deployment
 - Supabase integration, health check, grants and Row Level Security
-- Week 1 student check-in, class pulse, team conversation and four-week promise
+- Week 1 student check-in, class pulse, team conversation and four-week action plan
 - Week 3 poster peer review with self-review and duplicate-review prevention
 - Teacher authentication and teacher-only dashboard summary reads
 - Student-friendly validation and duplicate-submission messages
@@ -25,7 +25,7 @@ Production validation completed for all Sprint 1 student forms, teacher login, d
 
 ## Sprint 2 — Teacher operations and activity control
 
-**Status: In progress — Phase 2 implemented in Draft PR**
+**Status: In progress — Phase 2 merged; privacy and activity-language refinement pending**
 
 ### Goal
 
@@ -52,6 +52,9 @@ Detailed scope, Phase acceptance criteria and the current handoff are stored in
 - Added stable activity-specific headings, fields, descriptions and empty states.
 - Reused the protected query, refresh and table patterns established in Phase 1.
 - Clears previous rows during switching to preserve activity-specific state.
+- Presents anonymous Class Pulse responses only as class-level distributions.
+- Separates the initial Check-in goal from a later Four-Week Action Plan focused
+  on action, success evidence and required support.
 
 #### Phase 3 — Teacher actions
 
