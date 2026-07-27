@@ -57,6 +57,9 @@ The project currently uses simple milestone-based versions while the production 
 
 ### Added
 
+- Added anonymous Class Pulse charts for confidence, concerns and AI usage
+- Added a manual one-off script for clearing disposable activity test data
+- Reframed Four-Week Promise as a concrete Four-Week Action Plan
 - Added clickable Teacher Dashboard panels for all five activity record views
 - Added activity-specific record headings, columns, descriptions and empty states
 - Restored authenticated Teacher Dashboard sessions across page refreshes

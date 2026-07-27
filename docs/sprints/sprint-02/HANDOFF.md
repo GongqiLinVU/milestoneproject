@@ -1,6 +1,6 @@
 # Sprint 2 Handoff
 
-**Status: Phase 2 implemented; Draft PR review and production verification pending**
+**Status: Phase 2 merged; privacy and activity-language refinement pending**
 
 ## Starting point
 
@@ -9,12 +9,13 @@
   `docs/sprints/sprint-01/HANDOFF.md`.
 - Peer Review is currently hard-disabled only in the student UI.
 - Phase 1 was merged in PR #7 (`5a93a170745d91b834eba78e20a8190a67eb74a4`).
+- Phase 2 was merged in PR #9 (`b6cd0efe6384c78b9c33c97a382d179d96c5a9d8`).
 
 ## Next Phase
 
 **Phase 3 — Teacher actions**
 
-After Phase 2 is reviewed, merged and production verified, add authorised edit
+After the Phase 2 refinement is reviewed, merged and production verified, add authorised edit
 and delete actions with the minimum required grants and RLS policies. Do not
 start Phase 3 from the unmerged Phase 2 branch.
 
@@ -73,14 +74,13 @@ Phase:
 Phase 2 — Activity record views
 
 Status:
-Implemented; production build and diff checks passed. Draft PR review and
-production verification pending.
+Merged; follow-up privacy and activity-language refinement implemented locally.
 
 PR:
-Pending
+#9
 
 Merge commit:
-Not merged
+`b6cd0efe6384c78b9c33c97a382d179d96c5a9d8`
 
 Database migration:
 None. Existing authenticated SELECT grants and `is_teacher()` RLS policies
@@ -97,9 +97,17 @@ Decisions:
 - Records are cleared before a selection loads so rows from the previous
   activity are never shown under a new heading.
 - Rating fields are displayed consistently as values out of five.
+- Anonymous Class Pulse responses are visualised only as class-level
+  distributions; individual rows and timestamps are intentionally hidden.
+- Four-Week Promise is reframed as a Four-Week Action Plan so the initial
+  Check-in captures the goal and the later activity captures action, success
+  evidence and support.
+- A one-off manual SQL script can clear disposable test submissions. It is not
+  an automatic migration.
 
 Remaining issues:
 
-- Review and merge the Phase 2 Draft PR only after approval.
-- Verify all five selectors, tables, empty states and error states in production.
+- Review and merge the Phase 2 refinement Draft PR only after approval.
+- Verify all five selectors, Class Pulse charts, tables, empty states and error
+  states in production.
 - Begin Phase 3 only from the merged Phase 2 `main`.

@@ -51,7 +51,7 @@ Do not place service-role keys, database passwords or third-party secrets in cli
 - Week 1 check-in
 - Week 1 class pulse
 - Team conversation
-- Four-week promise
+- Four-week action plan
 - Week 3 poster peer review
 - Health indicator showing Supabase connectivity
 
@@ -71,6 +71,8 @@ Do not place service-role keys, database passwords or third-party secrets in cli
   timestamps
 - Clickable summary panels that switch between protected record views for all
   five activities, with stable activity-specific fields and states
+- Anonymous Class Pulse distributions; individual pulse rows and timestamps are
+  intentionally not displayed
 
 ## Current database tables
 
@@ -109,7 +111,8 @@ Important current rules:
 - Class Pulse is anonymous, is not an assessment and uses a 1–5 confidence
   scale where 1 is lowest and 5 is highest.
 - Team Conversation is one shared response per team.
-- Four-Week Promise is one individual commitment per student.
+- Four-Week Action Plan is one individual plan per student, focused on action,
+  success evidence and support rather than repeating the Check-in goal.
 - Form errors must be scoped to the active form and must not expose raw
   database details to students.
 - Existing database changes require a reproducible file in
