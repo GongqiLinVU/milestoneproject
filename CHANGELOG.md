@@ -60,6 +60,9 @@ The project currently uses simple milestone-based versions while the production 
 
 ### Added
 
+- Added a teacher-controlled Poster Peer Review open/closed control
+- Added a safe public activity-state read and teacher-only update policy
+- Enforced the Peer Review closed state in the anonymous INSERT policy
 - Added anonymous Class Pulse charts for confidence, concerns and AI usage
 - Added a manual one-off script for clearing disposable activity test data
 - Reframed Four-Week Promise as a concrete Four-Week Action Plan
@@ -97,9 +100,6 @@ The project currently uses simple milestone-based versions while the production 
 
 ### Planned for Sprint 2
 
-- Detailed teacher record views for the remaining four activities
-- Admin **Open peer review** control, off by default
-- Supabase-backed activity state and RLS enforcement that blocks direct Poster Review inserts while closed
 - CSV export after record management is stable
 - Full anonymous, non-teacher and teacher authorisation verification
 - Linear Sprint plans and evidence-based handoffs under `docs/sprints`

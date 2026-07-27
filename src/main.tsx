@@ -33,12 +33,21 @@ const titles: Record<Kind, string> = {
 function App() {
   const [form, setForm] = useState<Kind | null>(null);
   const [live, setLive] = useState<boolean | null>(null);
+  const [peerReviewOpen, setPeerReviewOpen] = useState<boolean | null>(null);
   useEffect(() => {
     supabase
       .from("portal_health")
       .select("status")
       .limit(1)
       .then(({ error }) => setLive(!error));
+    supabase
+      .from("activity_settings")
+      .select("is_open")
+      .eq("setting_key", "poster_peer_review")
+      .single()
+      .then(({ data, error }) =>
+        setPeerReviewOpen(error ? false : Boolean(data?.is_open)),
+      );
   }, []);
   return (
     <>
@@ -98,7 +107,10 @@ function App() {
         <Journey />
         <Studio />
         <Week1 open={setForm} />
-        <Expo />
+        <Expo
+          peerReviewOpen={peerReviewOpen}
+          openReview={() => peerReviewOpen && setForm("review")}
+        />
         <Deliverables />
       </main>
       <footer>
@@ -224,7 +236,14 @@ function Week1({ open }: { open: (k: Kind) => void }) {
     </section>
   );
 }
-function Expo() {
+function Expo({
+  peerReviewOpen,
+  openReview,
+}: {
+  peerReviewOpen: boolean | null;
+  openReview: () => void;
+}) {
+  const reviewLoading = peerReviewOpen === null;
   return (
     <section id="expo" className="expo">
       <Head
@@ -256,13 +275,22 @@ function Expo() {
           </ul>
           <button
             className="primary"
-            disabled
+            disabled={!peerReviewOpen}
             aria-describedby="peer-review-status"
+            onClick={openReview}
           >
-            Peer review opens in Week 3
+            {reviewLoading
+              ? "Checking peer review…"
+              : peerReviewOpen
+                ? "Open peer review"
+                : "Peer review opens in Week 3"}
           </button>
           <p id="peer-review-status" className="activity-status">
-            This activity is not open yet.
+            {reviewLoading
+              ? "Checking whether this activity is open."
+              : peerReviewOpen
+                ? "Peer review is open. Submit one review for another team."
+                : "This activity is not open yet."}
           </p>
         </div>
       </div>
@@ -341,6 +369,8 @@ function Activity({
   );
 }
 function friendlyError(code: string | undefined, kind: Kind) {
+  if (kind === "review" && code === "42501")
+    return "Peer review is currently closed. Your response was not submitted.";
   if (code === "23505") {
     if (kind === "team")
       return "Your team has already submitted this conversation.";
@@ -1069,6 +1099,9 @@ function Admin() {
   const [deleteRecord, setDeleteRecord] = useState<ActivityRecord | null>(null);
   const [mutationBusy, setMutationBusy] = useState(false);
   const [mutationMessage, setMutationMessage] = useState("");
+  const [peerReviewOpen, setPeerReviewOpen] = useState<boolean | null>(null);
+  const [peerReviewBusy, setPeerReviewBusy] = useState(false);
+  const [peerReviewMessage, setPeerReviewMessage] = useState("");
   const requestSequence = useRef(0);
 
   useEffect(() => {
@@ -1108,6 +1141,7 @@ function Admin() {
   useEffect(() => {
     if (sessionUser?.isTeacher) {
       void loadDashboard();
+      void loadPeerReviewSetting();
     } else {
       setDataStatus("idle");
       setDataMessage("");
@@ -1115,8 +1149,51 @@ function Admin() {
       setCounts(
         Object.fromEntries(activityTables.map(({ table }) => [table, null])),
       );
+      setPeerReviewOpen(null);
+      setPeerReviewMessage("");
     }
   }, [sessionUser?.email, sessionUser?.isTeacher]);
+
+  async function loadPeerReviewSetting() {
+    setPeerReviewMessage("");
+    const { data, error } = await supabase
+      .from("activity_settings")
+      .select("is_open")
+      .eq("setting_key", "poster_peer_review")
+      .single();
+    if (error) {
+      setPeerReviewOpen(null);
+      setPeerReviewMessage(
+        "Peer Review control could not be loaded. Confirm the Phase 4 migration has been applied.",
+      );
+      return;
+    }
+    setPeerReviewOpen(Boolean(data.is_open));
+  }
+
+  async function setPeerReviewState(nextOpen: boolean) {
+    setPeerReviewBusy(true);
+    setPeerReviewMessage("");
+    const { data, error } = await supabase
+      .from("activity_settings")
+      .update({ is_open: nextOpen })
+      .eq("setting_key", "poster_peer_review")
+      .select("is_open")
+      .single();
+    setPeerReviewBusy(false);
+    if (error) {
+      setPeerReviewMessage(
+        "Peer Review could not be changed. Confirm this account has the teacher role and try again.",
+      );
+      return;
+    }
+    setPeerReviewOpen(Boolean(data.is_open));
+    setPeerReviewMessage(
+      data.is_open
+        ? "Peer Review is now open for student submissions."
+        : "Peer Review is now closed. Existing reviews are unchanged.",
+    );
+  }
 
   async function login(e: any) {
     e.preventDefault();
@@ -1399,6 +1476,52 @@ function Admin() {
           {authMessage}
         </p>
       )}
+      <section className="activity-control" aria-labelledby="peer-review-control-title">
+        <div>
+          <div className="eyebrow">Week 3 activity</div>
+          <h2 id="peer-review-control-title">Poster Peer Review</h2>
+          <p>
+            Open or close new student submissions. Existing review records are
+            not changed.
+          </p>
+        </div>
+        <div className="activity-control-action">
+          <span
+            className={`activity-control-status ${
+              peerReviewOpen ? "open" : "closed"
+            }`}
+          >
+            {peerReviewOpen === null
+              ? "Status unavailable"
+              : peerReviewOpen
+                ? "Open"
+                : "Closed"}
+          </span>
+          <button
+            type="button"
+            className={peerReviewOpen ? "danger" : "primary"}
+            disabled={peerReviewBusy || peerReviewOpen === null}
+            onClick={() => void setPeerReviewState(!peerReviewOpen)}
+          >
+            {peerReviewBusy
+              ? "Updating…"
+              : peerReviewOpen
+                ? "Close peer review"
+                : "Open peer review"}
+          </button>
+        </div>
+        {peerReviewMessage && (
+          <p
+            className={`activity-control-message ${
+              peerReviewOpen === null ? "error" : ""
+            }`}
+            role={peerReviewOpen === null ? "alert" : "status"}
+            aria-live="polite"
+          >
+            {peerReviewMessage}
+          </p>
+        )}
+      </section>
       <div className="metric-grid" aria-label="Activity record views">
         {activityTables.map(({ table, label }) => (
           <button

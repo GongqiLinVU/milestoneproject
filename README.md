@@ -35,6 +35,7 @@ The current module guides students through a four-week journey:
 - Anonymous Class Pulse charts for confidence, concerns and AI usage
 - Teacher edit and confirmed delete for identified activity records
 - Teacher mutations protected by `is_teacher()` UPDATE/DELETE RLS policies
+- Teacher-controlled Poster Peer Review opening and closing
 - Accessible loading, empty, refresh and actionable error states
 
 ## Technology stack
@@ -115,9 +116,9 @@ Every push to `main` triggers a production deployment.
 
 Sprint 1 is working in production. Sprint 2 is in progress and turns the Teacher Dashboard into an operational teaching tool:
 
-- Review, migrate and production-verify Phase 3 teacher record actions
+- Apply and production-verify the Phase 4 Peer Review control migration
 - Export stable teacher-only CSV files after record management is complete
-- Replace the temporary Peer Review disabled button with an Admin **Open peer review** control that is off by default and enforced by Supabase RLS
+- Complete closed/open/closed UI and direct-Supabase security checks
 
 Students remain unauthenticated and their submissions remain create-once. AI features, student-side editing and major database redesign are intentionally out of scope.
 

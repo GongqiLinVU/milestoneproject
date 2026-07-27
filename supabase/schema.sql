@@ -7,6 +7,15 @@ create table if not exists public.portal_health (
 );
 insert into public.portal_health (id, status) values (1, 'ok') on conflict (id) do nothing;
 
+create table if not exists public.activity_settings (
+  setting_key text primary key check (setting_key = 'poster_peer_review'),
+  is_open boolean not null default false,
+  updated_at timestamptz not null default now()
+);
+insert into public.activity_settings (setting_key, is_open)
+values ('poster_peer_review', false)
+on conflict (setting_key) do nothing;
+
 create table if not exists public.student_checkins (
   id uuid primary key default gen_random_uuid(),
   student_id text not null check (char_length(student_id) between 3 and 40),
@@ -105,8 +114,11 @@ drop trigger if exists set_student_promises_updated_at on public.student_promise
 create trigger set_student_promises_updated_at before update on public.student_promises for each row execute function public.set_updated_at();
 drop trigger if exists set_poster_reviews_updated_at on public.poster_reviews;
 create trigger set_poster_reviews_updated_at before update on public.poster_reviews for each row execute function public.set_updated_at();
+drop trigger if exists set_activity_settings_updated_at on public.activity_settings;
+create trigger set_activity_settings_updated_at before update on public.activity_settings for each row execute function public.set_updated_at();
 
 alter table public.portal_health enable row level security;
+alter table public.activity_settings enable row level security;
 alter table public.student_checkins enable row level security;
 alter table public.week1_pulse enable row level security;
 alter table public.team_conversations enable row level security;
@@ -114,6 +126,7 @@ alter table public.student_promises enable row level security;
 alter table public.poster_reviews enable row level security;
 
 create policy "public can read portal health" on public.portal_health for select to anon, authenticated using (true);
+create policy "Public can read peer review state" on public.activity_settings for select to anon, authenticated using (setting_key = 'poster_peer_review');
 create policy "Students can submit check-ins" on public.student_checkins for insert to anon, authenticated with check (
   char_length(trim(student_id)) between 3 and 40
   and char_length(trim(student_name)) between 1 and 100
@@ -138,7 +151,11 @@ create policy "Students can submit promises" on public.student_promises for inse
   and char_length(trim(promise)) between 1 and 1000
 );
 create policy "Students can submit poster reviews" on public.poster_reviews for insert to anon, authenticated with check (
-  char_length(trim(reviewer_student_id)) between 3 and 40
+  exists (
+    select 1 from public.activity_settings
+    where setting_key = 'poster_peer_review' and is_open
+  )
+  and char_length(trim(reviewer_student_id)) between 3 and 40
   and char_length(trim(reviewer_name)) between 1 and 100
   and reviewer_team ~ '^Team [1-8]$'
   and reviewed_team ~ '^Team [1-8]$'
@@ -155,6 +172,9 @@ create policy "Students can submit poster reviews" on public.poster_reviews for 
 create or replace function public.is_teacher() returns boolean language sql stable security definer set search_path = public as $$
   select coalesce((auth.jwt() -> 'app_metadata' ->> 'role') = 'teacher', false);
 $$;
+create policy "Teachers can update peer review state" on public.activity_settings for update to authenticated
+using (setting_key = 'poster_peer_review' and public.is_teacher())
+with check (setting_key = 'poster_peer_review' and public.is_teacher());
 create policy "Teachers can read check-ins" on public.student_checkins for select to authenticated using (public.is_teacher());
 create policy "Teachers can read class pulse" on public.week1_pulse for select to authenticated using (public.is_teacher());
 create policy "Teachers can read conversations" on public.team_conversations for select to authenticated using (public.is_teacher());
@@ -170,6 +190,8 @@ create policy "Teachers can update poster reviews" on public.poster_reviews for 
 create policy "Teachers can delete poster reviews" on public.poster_reviews for delete to authenticated using (public.is_teacher());
 
 grant select on public.portal_health to anon, authenticated;
+grant select on public.activity_settings to anon, authenticated;
+grant update on public.activity_settings to authenticated;
 revoke all privileges on public.student_checkins, public.week1_pulse, public.team_conversations, public.student_promises, public.poster_reviews from anon, authenticated;
 grant insert on public.student_checkins, public.week1_pulse, public.team_conversations, public.student_promises, public.poster_reviews to anon, authenticated;
 grant select on public.student_checkins, public.week1_pulse, public.team_conversations, public.student_promises, public.poster_reviews to authenticated;

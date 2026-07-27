@@ -549,6 +549,51 @@ footer {
   margin: 30px 0;
   grid-template-columns: repeat(5, 1fr);
 }
+.activity-control {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 20px;
+  margin: 30px 0;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: white;
+}
+.activity-control h2 {
+  margin: 6px 0;
+  font-size: 24px;
+}
+.activity-control p {
+  margin: 0;
+  color: var(--muted);
+}
+.activity-control-action {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.activity-control-status {
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: #f1f3ee;
+  color: #536158;
+  font-size: 13px;
+  font-weight: 750;
+}
+.activity-control-status.open {
+  background: #e6f5ee;
+  color: #17613f;
+}
+.activity-control-message {
+  grid-column: 1 / -1;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  color: #17613f !important;
+}
+.activity-control-message.error {
+  color: #8c3523 !important;
+}
 .metric-grid > button {
   background: white;
   padding: 25px;
@@ -763,6 +808,12 @@ button.danger:hover {
   white-space: nowrap;
 }
 @media (max-width: 850px) {
+  .activity-control {
+    grid-template-columns: 1fr;
+  }
+  .activity-control-action {
+    justify-content: space-between;
+  }
   .pulse-chart-grid {
     grid-template-columns: 1fr;
   }
