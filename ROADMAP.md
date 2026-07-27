@@ -31,9 +31,12 @@ Production validation completed for all Sprint 1 student forms, teacher login, d
 
 Turn the dashboard from a summary screen into a safe operational teaching tool. Teachers must be able to inspect and correct submitted evidence, remove invalid records, export data and control when Poster Peer Review opens. Student submissions remain create-once and students remain unauthenticated.
 
+Detailed scope, Phase acceptance criteria and the current handoff are stored in
+`docs/sprints/sprint-02/`.
+
 ### Delivery sequence
 
-#### Slice 1 — Dashboard foundation
+#### Phase 1 — Dashboard foundation
 
 - Preserve authentication and the current summary cards.
 - Add teacher sign-out and clear authenticated-session status.
@@ -41,16 +44,22 @@ Turn the dashboard from a summary screen into a safe operational teaching tool. 
 - Add a detailed Student Check-in table showing name, Student ID, team, goal, created time and updated time.
 - Establish reusable table, refresh and status patterns before adding other activities.
 
-#### Slice 2 — Submission record management
+#### Phase 2 — Activity record views
 
-- Add record views for Class Pulse, Team Conversation, Four-Week Promise and Poster Peer Review.
+- Add record views for Class Pulse, Team Conversation, Four-Week Promise and
+  Poster Peer Review.
+- Reuse the table, query, refresh and status patterns established in Phase 1.
+- Preserve teacher-only reads and activity-specific state.
+
+#### Phase 3 — Teacher actions
+
 - Allow authorised teachers to edit incorrect records.
 - Allow authorised teachers to delete invalid records after explicit confirmation.
 - Refresh affected rows and summary counts after mutations.
 - Preserve database constraints during edits and translate constraint failures into understandable messages.
 - Add teacher-only UPDATE and DELETE grants and RLS policies for each managed activity table.
 
-#### Slice 3 — Poster Peer Review Week 3 control
+#### Phase 4 — Poster Peer Review Week 3 control
 
 - Add an Admin control labelled **Open peer review**.
 - Default the control to off.
@@ -62,7 +71,7 @@ Turn the dashboard from a summary screen into a safe operational teaching tool. 
 - Enforce the closed state in the Poster Review INSERT policy so a direct API request cannot bypass the UI.
 - Existing review records remain readable and manageable by teachers whether the activity is open or closed.
 
-#### Slice 4 — Export and production hardening
+#### Phase 5 — Export and production hardening
 
 - Add CSV export only after record viewing and management are stable.
 - Export the currently selected activity with explicit, stable column headings.
@@ -170,3 +179,14 @@ Possible future modules:
 - Multi-course teacher administration
 
 These expansions should only begin after the NIT3004 workflow is stable and demonstrably useful.
+
+## Sprint lifecycle
+
+- Every Sprint builds on latest `main`; Sprint names are not long-lived code
+  branches.
+- Completed Sprint plans and handoffs are frozen historical records.
+- New requirements discovered after completion move to a later Sprint and cite
+  their origin. Do not create revision names such as `Sprint 2-1`.
+- Phases divide one Sprint into reviewable sessions and focused Draft PRs.
+- `docs/sprints/sprint-xx/PLAN.md` defines scope, while `HANDOFF.md` records
+  verified progress and evidence.
