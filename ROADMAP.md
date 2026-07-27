@@ -6,73 +6,105 @@ Engineering Studio Platform will evolve from a single-course delivery portal int
 
 ## Sprint 1 — Production foundation
 
-**Status: Completed**
+**Status: Completed and production validated**
 
 Delivered:
 
 - React, Vite and TypeScript application
-- GitHub repository
-- Vercel production deployment
-- Supabase database integration
-- Supabase health check
-- Row Level Security
-- Week 1 student check-in
-- Class pulse
-- Team conversation
-- Four-week promise
-- Poster peer review
-- Duplicate submission constraints
-- Poster self-review prevention
-- Teacher authentication
-- Teacher-only dashboard summary reads
+- GitHub repository and Vercel production deployment
+- Supabase integration, health check, grants and Row Level Security
+- Week 1 student check-in, class pulse, team conversation and four-week promise
+- Week 3 poster peer review with self-review and duplicate-review prevention
+- Teacher authentication and teacher-only dashboard summary reads
+- Student-friendly validation and duplicate-submission messages
+- Activity-scoped modal state
+- Same-browser duplicate prevention and read-only submission receipts
+- Poster Peer Review student entry point temporarily disabled until Sprint 2 adds the formal teacher control
 
-Production validation completed for:
+Production validation completed for all Sprint 1 student forms, teacher login, dashboard summary reads, database constraints and automatic Vercel deployment.
 
-- Live page loading
-- Database connectivity
-- Student check-in write
-- Goal storage
-- Duplicate student ID rejection
-- Teacher login
-- Teacher dashboard counts
+## Sprint 2 — Teacher operations and activity control
 
-## Sprint 2 — Teacher Dashboard management
-
-**Status: Active**
+**Status: Ready to start**
 
 ### Goal
 
-Turn the dashboard from a summary screen into an operational teaching tool.
+Turn the dashboard from a summary screen into a safe operational teaching tool. Teachers must be able to inspect and correct submitted evidence, remove invalid records, export data and control when Poster Peer Review opens. Student submissions remain create-once and students remain unauthenticated.
 
-### Scope
+### Delivery sequence
 
-- Detailed student check-in table
-- Student name, ID, team, goal and submission time
-- Teacher edit capability
-- Teacher delete capability
-- Sign-out
-- Loading, empty and error states
-- Clear student-facing duplicate submission message
-- CSV export after record management is stable
-- Teacher-managed Poster Peer Review open/close control, replacing the current
-  disabled Week 3 placeholder
+#### Slice 1 — Dashboard foundation
+
+- Preserve authentication and the current summary cards.
+- Add teacher sign-out and clear authenticated-session status.
+- Add loading, empty and actionable error states.
+- Add a detailed Student Check-in table showing name, Student ID, team, goal, created time and updated time.
+- Establish reusable table, refresh and status patterns before adding other activities.
+
+#### Slice 2 — Submission record management
+
+- Add record views for Class Pulse, Team Conversation, Four-Week Promise and Poster Peer Review.
+- Allow authorised teachers to edit incorrect records.
+- Allow authorised teachers to delete invalid records after explicit confirmation.
+- Refresh affected rows and summary counts after mutations.
+- Preserve database constraints during edits and translate constraint failures into understandable messages.
+- Add teacher-only UPDATE and DELETE grants and RLS policies for each managed activity table.
+
+#### Slice 3 — Poster Peer Review Week 3 control
+
+- Add an Admin control labelled **Open peer review**.
+- Default the control to off.
+- Keep the student Peer Review button visible but disabled while closed, with **Peer review opens in Week 3**.
+- When a teacher opens the activity, enable the student entry point without a redeployment.
+- Store the activity state in Supabase as non-sensitive configuration.
+- Permit public read of only the safe activity-open state.
+- Permit state changes only for authenticated teachers.
+- Enforce the closed state in the Poster Review INSERT policy so a direct API request cannot bypass the UI.
+- Existing review records remain readable and manageable by teachers whether the activity is open or closed.
+
+#### Slice 4 — Export and production hardening
+
+- Add CSV export only after record viewing and management are stable.
+- Export the currently selected activity with explicit, stable column headings.
+- Re-test duplicate, self-review and create-only student behaviour.
+- Verify anonymous and authenticated non-teacher users cannot read or mutate protected records.
+- Run production build, apply reviewed migration SQL, verify production policies and test the Vercel deployment.
 
 ### Out of scope
 
-- Student accounts
-- AI summaries
-- Risk prediction
-- Major database redesign
+- Student accounts or student-side editing
+- AI summaries, recommendations or risk prediction
+- Major or generic database redesign
 - Multi-course administration
+- Tutor/coordinator role expansion
+- Scheduling multiple activity windows
+
+### Security and privacy requirements
+
+- RLS remains the primary security boundary.
+- The browser must never receive a service-role key.
+- Anonymous users may insert only where the relevant activity policy permits and may not read student submissions.
+- Authenticated non-teachers must not gain teacher access.
+- Teacher UPDATE and DELETE policies must call the existing `is_teacher()` role check.
+- Every database change requires an idempotent migration, matching `schema.sql`, production verification queries and documented recovery steps.
+- Raw PostgreSQL or Supabase errors must not be displayed to students.
 
 ### Acceptance criteria
 
-- Only authenticated teachers can read records.
-- Only authorised teachers can update or delete records.
-- Student public users remain unable to read submissions.
-- Edits are immediately reflected in Supabase and the dashboard.
-- Delete requires an explicit confirmation.
-- Errors are understandable and do not expose internal database details.
+- An unauthenticated user cannot access dashboard records.
+- An authenticated non-teacher cannot select, update or delete protected records.
+- A teacher can sign in, sign out and view each activity's records.
+- The Student Check-in table shows name, Student ID, team, goal and timestamps.
+- A teacher edit is persisted, immediately reflected in the UI and still obeys constraints.
+- Delete requires explicit confirmation, removes only the selected record and refreshes counts.
+- Loading, empty and error states are understandable and accessible.
+- CSV export matches the selected activity and does not expose data outside the teacher session.
+- **Open peer review** is off by default.
+- While closed, the student button is disabled and direct anonymous Poster Review inserts are rejected by RLS.
+- When opened by a teacher, the student form becomes available without redeployment and valid inserts succeed.
+- Closing the activity again blocks new submissions without changing existing records.
+- `npm run build`, migration verification and production smoke tests pass.
+- README, AI context, architecture, roadmap and changelog are synchronised with the implemented behaviour.
 
 ## Sprint 3 — Teaching analytics
 
@@ -101,7 +133,7 @@ Potential scope:
 - Student profile
 - Team membership
 - Controlled resubmission or correction workflow
-- Teacher-managed activity windows
+- Additional teacher-managed activity windows
 - Tutor and coordinator roles
 
 The current anonymous submission workflow should remain available until authenticated student onboarding is proven usable.
