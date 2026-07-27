@@ -692,6 +692,66 @@ footer {
 .admin tbody tr:hover {
   background: #fafbf8;
 }
+.admin-management-note {
+  color: #536158;
+  font-size: 13px;
+  font-weight: 650;
+}
+.admin-row-actions {
+  min-width: 190px;
+  white-space: nowrap;
+}
+.admin-row-actions button + button {
+  margin-left: 8px;
+}
+button.compact {
+  padding: 8px 10px;
+  font-size: 13px;
+}
+button.danger {
+  background: #9f2f2f;
+  color: #fff;
+}
+button.danger:hover {
+  background: #812525;
+}
+.admin-action-dialog {
+  max-height: min(88vh, 820px);
+  overflow-y: auto;
+}
+.admin-action-dialog > p {
+  color: #536158;
+  line-height: 1.6;
+}
+.admin-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.delete-summary {
+  margin: 20px 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.delete-summary > div {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.35fr) 1fr;
+  gap: 16px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.delete-summary > div:last-child {
+  border-bottom: 0;
+}
+.delete-summary dt {
+  color: #536158;
+  font-weight: 700;
+}
+.delete-summary dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
 .admin .goal-cell,
 .admin .long-text-cell {
   min-width: 280px;

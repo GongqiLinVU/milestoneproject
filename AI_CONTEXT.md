@@ -73,6 +73,8 @@ Do not place service-role keys, database passwords or third-party secrets in cli
   five activities, with stable activity-specific fields and states
 - Anonymous Class Pulse distributions; individual pulse rows and timestamps are
   intentionally not displayed
+- Teacher edit and confirmed delete for identified activity records, protected
+  by authenticated grants and `is_teacher()` UPDATE/DELETE RLS policies
 
 ## Current database tables
 
@@ -158,7 +160,8 @@ Implementation order:
    error states; refresh; and detailed Student Check-in records.
 2. Next, generalise the record view to Class Pulse, Team Conversation,
    Four-Week Promise and Poster Peer Review.
-3. Add teacher-only edit and confirmed delete, backed by explicit grants and `is_teacher()` RLS policies.
+3. Teacher-only edit and confirmed delete are implemented for identified
+   activities; Class Pulse remains aggregate-only.
 4. Add **Open peer review** to Admin. It is off by default; its state is stored in Supabase, safely readable by the public portal, writable only by teachers, and enforced by the Poster Review INSERT policy.
 5. Add CSV export after record management is stable.
 6. Complete role, RLS, migration, build and production smoke tests.

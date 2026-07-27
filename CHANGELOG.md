@@ -8,6 +8,9 @@ The project currently uses simple milestone-based versions while the production 
 
 ### Added
 
+- Added teacher edit and confirmed delete for identified activity records
+- Added least-privilege teacher UPDATE/DELETE grants and `is_teacher()` RLS
+  policies while keeping Class Pulse aggregate-only
 - Production deployment on Vercel
 - Supabase PostgreSQL integration
 - Live portal health indicator
@@ -95,7 +98,6 @@ The project currently uses simple milestone-based versions while the production 
 ### Planned for Sprint 2
 
 - Detailed teacher record views for the remaining four activities
-- Teacher-only edit and confirmed delete
 - Admin **Open peer review** control, off by default
 - Supabase-backed activity state and RLS enforcement that blocks direct Poster Review inserts while closed
 - CSV export after record management is stable

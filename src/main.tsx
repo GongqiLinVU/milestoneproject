@@ -1,4 +1,4 @@
-import { StrictMode, useEffect, useRef, useState } from "react";
+import { StrictMode, useEffect, useRef, useState, type FormEvent } from "react";
 import { createRoot } from "react-dom/client";
 import { createClient } from "@supabase/supabase-js";
 import {
@@ -8,8 +8,10 @@ import {
   ClipboardCheck,
   FileText,
   LogOut,
+  Pencil,
   Presentation,
   RefreshCw,
+  Trash2,
   Users,
 } from "lucide-react";
 import "./styles.css";
@@ -939,6 +941,12 @@ function Admin() {
         ["created_at", "Created"],
         ["updated_at", "Updated"],
       ],
+      editable: [
+        ["student_name", "Name", "text", 100],
+        ["student_id", "Student ID", "text", 40],
+        ["team_name", "Team", "team", 0],
+        ["goal", "Four-week goal", "textarea", 800],
+      ],
     },
     {
       table: "week1_pulse",
@@ -948,6 +956,7 @@ function Admin() {
         "See anonymous class-level patterns without exposing individual responses.",
       select: "id, ai_usage, confidence, concern",
       columns: [],
+      editable: [],
     },
     {
       table: "team_conversations",
@@ -966,6 +975,13 @@ function Admin() {
         ["created_at", "Created"],
         ["updated_at", "Updated"],
       ],
+      editable: [
+        ["team_name", "Team", "team", 0],
+        ["proudest_achievement", "Proudest achievement", "textarea", 1200],
+        ["biggest_delivery_risk", "Biggest delivery risk", "textarea", 1200],
+        ["support_needed", "Support needed", "textarea", 1200],
+        ["submitted_by", "Submitted by", "text", 100],
+      ],
     },
     {
       table: "student_promises",
@@ -982,6 +998,12 @@ function Admin() {
         ["promise", "Action plan"],
         ["created_at", "Created"],
         ["updated_at", "Updated"],
+      ],
+      editable: [
+        ["student_name", "Name", "text", 100],
+        ["student_id", "Student ID", "text", 40],
+        ["team_name", "Team", "team", 0],
+        ["promise", "Action plan", "textarea", 1000],
       ],
     },
     {
@@ -1008,6 +1030,20 @@ function Admin() {
         ["created_at", "Created"],
         ["updated_at", "Updated"],
       ],
+      editable: [
+        ["reviewer_name", "Reviewer", "text", 100],
+        ["reviewer_student_id", "Student ID", "text", 40],
+        ["reviewer_team", "Reviewer team", "team", 0],
+        ["reviewed_team", "Reviewed team", "team", 0],
+        ["problem_clarity", "Problem clarity", "rating", 0],
+        ["working_product", "Working product", "rating", 0],
+        ["evidence_testing", "Evidence & testing", "rating", 0],
+        ["document_readiness", "Document readiness", "rating", 0],
+        ["presentation_quality", "Explanation quality", "rating", 0],
+        ["strongest_part", "Strongest part", "textarea", 1000],
+        ["highest_priority", "Highest priority", "textarea", 1000],
+        ["additional_feedback", "Additional feedback", "textarea", 2000],
+      ],
     },
   ] as const;
   type ActivityTable = (typeof activityTables)[number]["table"];
@@ -1029,6 +1065,10 @@ function Admin() {
   const [activeTable, setActiveTable] =
     useState<ActivityTable>("student_checkins");
   const [records, setRecords] = useState<ActivityRecord[]>([]);
+  const [editRecord, setEditRecord] = useState<ActivityRecord | null>(null);
+  const [deleteRecord, setDeleteRecord] = useState<ActivityRecord | null>(null);
+  const [mutationBusy, setMutationBusy] = useState(false);
+  const [mutationMessage, setMutationMessage] = useState("");
   const requestSequence = useRef(0);
 
   useEffect(() => {
@@ -1157,6 +1197,58 @@ function Admin() {
         "We could not sign you out. Refresh the page and try again.",
       );
     }
+  }
+
+  function mutationError(code?: string) {
+    if (code === "23505")
+      return "That change conflicts with an existing submission. Check the Student ID, team or reviewer details.";
+    if (code === "23514")
+      return "One or more values are outside the allowed range. Check the team, rating and text fields.";
+    if (code === "42501")
+      return "This account is not authorised to change activity records.";
+    return "The record could not be changed. Check the values and try again.";
+  }
+
+  async function saveRecord(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editRecord || activeTable === "week1_pulse") return;
+    setMutationBusy(true);
+    setMutationMessage("");
+    const values = Object.fromEntries(new FormData(event.currentTarget));
+    const payload = Object.fromEntries(
+      activeActivity.editable.map(([field, , type]) => [
+        field,
+        type === "rating" ? Number(values[field]) : String(values[field] ?? "").trim() || null,
+      ]),
+    );
+    const { error } = await supabase
+      .from(activeTable)
+      .update(payload)
+      .eq("id", editRecord.id);
+    setMutationBusy(false);
+    if (error) {
+      setMutationMessage(mutationError(error.code));
+      return;
+    }
+    setEditRecord(null);
+    await loadDashboard(activeTable);
+  }
+
+  async function confirmDelete() {
+    if (!deleteRecord || activeTable === "week1_pulse") return;
+    setMutationBusy(true);
+    setMutationMessage("");
+    const { error } = await supabase
+      .from(activeTable)
+      .delete()
+      .eq("id", deleteRecord.id);
+    setMutationBusy(false);
+    if (error) {
+      setMutationMessage(mutationError(error.code));
+      return;
+    }
+    setDeleteRecord(null);
+    await loadDashboard(activeTable);
   }
 
   const formatDateTime = (value: string) =>
@@ -1331,6 +1423,11 @@ function Admin() {
             <div className="eyebrow">Activity records</div>
             <h2 id="activity-heading">{activeActivity.title}</h2>
             <p>{activeActivity.description}</p>
+            {activeTable !== "week1_pulse" && (
+              <p className="admin-management-note">
+                Teachers can correct invalid details or remove a test submission.
+              </p>
+            )}
           </div>
           <button
             className="secondary"
@@ -1430,6 +1527,7 @@ function Admin() {
                       {label}
                     </th>
                   ))}
+                  <th scope="col">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -1449,6 +1547,28 @@ function Admin() {
                         {formatValue(field, record[field])}
                       </td>
                     ))}
+                    <td className="admin-row-actions" data-label="Actions">
+                      <button
+                        type="button"
+                        className="secondary compact"
+                        onClick={() => {
+                          setMutationMessage("");
+                          setEditRecord(record);
+                        }}
+                      >
+                        <Pencil size={15} /> Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="danger compact"
+                        onClick={() => {
+                          setMutationMessage("");
+                          setDeleteRecord(record);
+                        }}
+                      >
+                        <Trash2 size={15} /> Delete
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -1456,6 +1576,61 @@ function Admin() {
           </div>
         )}
       </section>
+      {editRecord && (
+        <div className="modal" role="presentation">
+          <div className="dialog admin-action-dialog" role="dialog" aria-modal="true" aria-labelledby="edit-record-title">
+            <button className="close" onClick={() => setEditRecord(null)} aria-label="Close edit form">×</button>
+            <div className="eyebrow">Teacher action</div>
+            <h2 id="edit-record-title">Edit {activeActivity.label}</h2>
+            <form onSubmit={saveRecord}>
+              {activeActivity.editable.map(([field, label, type, maxLength]) => (
+                <label key={field}>
+                  {label}
+                  {type === "team" ? (
+                    <select name={field} defaultValue={String(editRecord[field] ?? "")} required>
+                      {teams.map((team) => <option key={team}>{team}</option>)}
+                    </select>
+                  ) : type === "rating" ? (
+                    <select name={field} defaultValue={String(editRecord[field] ?? "")} required>
+                      {[1, 2, 3, 4, 5].map((rating) => <option key={rating} value={rating}>{rating} / 5</option>)}
+                    </select>
+                  ) : type === "textarea" ? (
+                    <textarea name={field} defaultValue={String(editRecord[field] ?? "")} maxLength={maxLength} required={field !== "additional_feedback"} />
+                  ) : (
+                    <input name={field} defaultValue={String(editRecord[field] ?? "")} maxLength={maxLength} required={field !== "submitted_by"} />
+                  )}
+                </label>
+              ))}
+              {mutationMessage && <p className="admin-alert error" role="alert">{mutationMessage}</p>}
+              <div className="admin-dialog-actions">
+                <button type="button" className="secondary" onClick={() => setEditRecord(null)} disabled={mutationBusy}>Cancel</button>
+                <button disabled={mutationBusy}>{mutationBusy ? "Saving…" : "Save changes"}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {deleteRecord && (
+        <div className="modal" role="presentation">
+          <div className="dialog admin-action-dialog" role="alertdialog" aria-modal="true" aria-labelledby="delete-record-title">
+            <div className="eyebrow">Teacher action</div>
+            <h2 id="delete-record-title">Delete this record?</h2>
+            <p>This permanently removes the selected {activeActivity.label.toLowerCase()} record. This action cannot be undone.</p>
+            <dl className="delete-summary">
+              {activeActivity.columns.slice(0, 3).map(([field, label]) => (
+                <div key={field}><dt>{label}</dt><dd>{formatValue(field, deleteRecord[field])}</dd></div>
+              ))}
+            </dl>
+            {mutationMessage && <p className="admin-alert error" role="alert">{mutationMessage}</p>}
+            <div className="admin-dialog-actions">
+              <button type="button" className="secondary" onClick={() => setDeleteRecord(null)} disabled={mutationBusy}>Cancel</button>
+              <button type="button" className="danger" onClick={confirmDelete} disabled={mutationBusy}>
+                <Trash2 size={16} /> {mutationBusy ? "Deleting…" : "Delete record"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

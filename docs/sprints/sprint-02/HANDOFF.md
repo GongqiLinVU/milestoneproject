@@ -1,6 +1,6 @@
 # Sprint 2 Handoff
 
-**Status: Phase 2 merged; privacy and activity-language refinement pending**
+**Status: Phase 3 implemented; Draft PR and database rollout pending**
 
 ## Starting point
 
@@ -10,14 +10,16 @@
 - Peer Review is currently hard-disabled only in the student UI.
 - Phase 1 was merged in PR #7 (`5a93a170745d91b834eba78e20a8190a67eb74a4`).
 - Phase 2 was merged in PR #9 (`b6cd0efe6384c78b9c33c97a382d179d96c5a9d8`).
+- The Phase 2 privacy and language refinement was merged in PR #10
+  (`f619d048e5edd1b5fd570d873918af870d078280`).
 
 ## Next Phase
 
-**Phase 3 — Teacher actions**
+**Phase 4 — Peer Review control**
 
-After the Phase 2 refinement is reviewed, merged and production verified, add authorised edit
-and delete actions with the minimum required grants and RLS policies. Do not
-start Phase 3 from the unmerged Phase 2 branch.
+After Phase 3 is reviewed, merged, migrated and production verified, add the
+Supabase-backed **Open peer review** control. Do not begin Phase 4 from the
+unmerged Phase 3 branch.
 
 ## Completion records
 
@@ -74,10 +76,10 @@ Phase:
 Phase 2 — Activity record views
 
 Status:
-Merged; follow-up privacy and activity-language refinement implemented locally.
+Merged, including the privacy and activity-language refinement.
 
 PR:
-#9
+#9 and #10
 
 Merge commit:
 `b6cd0efe6384c78b9c33c97a382d179d96c5a9d8`
@@ -107,7 +109,42 @@ Decisions:
 
 Remaining issues:
 
-- Review and merge the Phase 2 refinement Draft PR only after approval.
 - Verify all five selectors, Class Pulse charts, tables, empty states and error
   states in production.
-- Begin Phase 3 only from the merged Phase 2 `main`.
+
+Phase:
+Phase 3 — Teacher actions
+
+Status:
+Implemented; Draft PR pending.
+
+PR:
+Pending.
+
+Merge commit:
+Pending.
+
+Database migration:
+`supabase/migrations/20260727_add_teacher_record_actions.sql`
+
+Production verified:
+No
+
+Decisions:
+
+- Teachers can edit and explicitly confirm deletion for the four identified
+  activity tables.
+- Class Pulse remains anonymous and has no row-level edit/delete UI, grant or
+  RLS policy.
+- Mutations refresh the selected records and all five summary counts.
+- Database constraint and authorisation errors are translated into concise
+  teacher-facing messages.
+- UPDATE/DELETE access is limited to authenticated users and still requires
+  `public.is_teacher()` through RLS.
+
+Remaining issues:
+
+- Review and merge the Phase 3 Draft PR.
+- Apply the migration before deploying the dependent frontend.
+- Verify teacher update/delete, constraint errors, anonymous denial and
+  authenticated non-teacher denial in production.
