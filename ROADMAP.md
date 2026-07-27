@@ -25,7 +25,7 @@ Production validation completed for all Sprint 1 student forms, teacher login, d
 
 ## Sprint 2 — Teacher operations and activity control
 
-**Status: In progress — Phase 3 merged; Phase 4 is next**
+**Status: In progress — Phase 4 implemented; migration and merge pending**
 
 ### Goal
 
@@ -68,15 +68,16 @@ Detailed scope, Phase acceptance criteria and the current handoff are stored in
 
 #### Phase 4 — Poster Peer Review Week 3 control
 
-- Add an Admin control labelled **Open peer review**.
-- Default the control to off.
-- Keep the student Peer Review button visible but disabled while closed, with **Peer review opens in Week 3**.
-- When a teacher opens the activity, enable the student entry point without a redeployment.
-- Store the activity state in Supabase as non-sensitive configuration.
-- Permit public read of only the safe activity-open state.
-- Permit state changes only for authenticated teachers.
-- Enforce the closed state in the Poster Review INSERT policy so a direct API request cannot bypass the UI.
-- Existing review records remain readable and manageable by teachers whether the activity is open or closed.
+- Implemented an Admin control labelled **Open peer review**, defaulting to off.
+- Keeps the student Peer Review button visible but disabled while closed, with **Peer review opens in Week 3**.
+- Enables the student entry point from Supabase state without a redeployment.
+- Stores one non-sensitive activity state row with public read and
+  teacher-only update access.
+- Enforces the closed state in the Poster Review INSERT policy so a direct API
+  request cannot bypass the UI.
+- Keeps existing review records readable and manageable whether open or closed.
+- Requires migration application and production verification before Phase 4 is
+  complete.
 
 #### Phase 5 — Export and production hardening
 

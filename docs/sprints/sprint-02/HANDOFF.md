@@ -1,13 +1,14 @@
 # Sprint 2 Handoff
 
-**Status: Phase 3 merged and migrated; Phase 4 is next**
+**Status: Phase 3 merged and migrated; Phase 4 implemented in Draft PR**
 
 ## Starting point
 
 - Base all work on latest GitHub `main`.
 - Sprint 1 is complete and production validated. See
   `docs/sprints/sprint-01/HANDOFF.md`.
-- Peer Review is currently hard-disabled only in the student UI.
+- Peer Review remains closed in production until the Phase 4 migration and
+  frontend are deployed.
 - Phase 1 was merged in PR #7 (`5a93a170745d91b834eba78e20a8190a67eb74a4`).
 - Phase 2 was merged in PR #9 (`b6cd0efe6384c78b9c33c97a382d179d96c5a9d8`).
 - The Phase 2 privacy and language refinement was merged in PR #10
@@ -15,11 +16,11 @@
 
 ## Next Phase
 
-**Phase 4 — Peer Review control**
+**Phase 5 — Export, security and production**
 
-Start from the latest `main` and add the Supabase-backed **Open peer review**
-control. Phase 3 was merged in PR #12 after its migration was applied. Do not
-reuse the deleted Phase 3 working branch.
+Do not start until the Phase 4 PR is merged and its migration is applied.
+Then add selected-activity CSV export and complete the Sprint 2 role, RLS and
+production verification matrix.
 
 ## Completion records
 
@@ -148,3 +149,43 @@ Remaining issues:
   operating with twelve student records visible.
 - Complete explicit production verification of teacher update/delete,
   constraint errors, anonymous denial and authenticated non-teacher denial.
+
+Phase:
+Phase 4 — Peer Review control
+
+Status:
+Implemented in Draft PR; migration not yet applied.
+
+PR:
+Pending
+
+Merge commit:
+Pending
+
+Database migration:
+`supabase/migrations/20260727_add_peer_review_control.sql` — pending manual
+application before frontend deployment.
+
+Production verified:
+No
+
+Decisions:
+
+- One singleton `activity_settings` row controls Poster Peer Review; no generic
+  scheduling engine was introduced.
+- The setting is false on first install and exposes only its non-sensitive
+  open/closed state to public readers.
+- Only authenticated teachers can update the setting through `is_teacher()`
+  RLS; anonymous and non-teacher users have no update permission.
+- The student portal reads the setting at runtime and keeps the Week 3 entry
+  visible but disabled while closed.
+- The `poster_reviews` INSERT policy also checks the setting, so closing the
+  activity blocks direct API inserts while preserving existing records.
+
+Remaining issues:
+
+- Apply the migration before deploying the frontend.
+- Verify closed/open/closed behaviour through the student UI and direct
+  Supabase requests.
+- Verify anonymous and authenticated non-teacher users cannot change the
+  setting.

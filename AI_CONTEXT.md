@@ -75,10 +75,13 @@ Do not place service-role keys, database passwords or third-party secrets in cli
   intentionally not displayed
 - Teacher edit and confirmed delete for identified activity records, protected
   by authenticated grants and `is_teacher()` UPDATE/DELETE RLS policies
+- Teacher-controlled Poster Peer Review state, publicly readable as a single
+  safe open/closed value and enforced by the review INSERT policy
 
 ## Current database tables
 
 - `portal_health`
+- `activity_settings`
 - `student_checkins`
 - `week1_pulse`
 - `team_conversations`
@@ -134,9 +137,10 @@ Important current rules:
 - New local submission receipts also retain the non-identity answers needed for
   a read-only confirmation view. Student names and Student IDs are excluded.
   Older timestamp-only receipts remain valid but cannot display past answers.
-- The Poster Peer Review entry point is currently disabled in the student
-  portal and labelled as opening in Week 3. A teacher-managed activity window,
-  including database enforcement, is deferred to Sprint 2.
+- The Poster Peer Review entry point reads the singleton
+  `activity_settings.poster_peer_review` state. It remains visible but disabled
+  while closed, and the database INSERT policy independently enforces the same
+  state.
 
 ## Current product decisions
 
@@ -162,7 +166,10 @@ Implementation order:
    Four-Week Promise and Poster Peer Review.
 3. Teacher-only edit and confirmed delete are implemented for identified
    activities; Class Pulse remains aggregate-only.
-4. Add **Open peer review** to Admin. It is off by default; its state is stored in Supabase, safely readable by the public portal, writable only by teachers, and enforced by the Poster Review INSERT policy.
+4. **Open peer review** is implemented in Admin. It is off by default; its
+   state is stored in Supabase, safely readable by the public portal, writable
+   only by teachers, and enforced by the Poster Review INSERT policy. Apply and
+   verify the Phase 4 migration before treating this as production-complete.
 5. Add CSV export after record management is stable.
 6. Complete role, RLS, migration, build and production smoke tests.
 
