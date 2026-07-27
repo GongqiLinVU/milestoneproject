@@ -138,18 +138,25 @@ Important current rules:
 
 ## Active sprint
 
-**Sprint 2 — Teacher Dashboard Management**
+**Sprint 2 — Teacher Operations and Activity Control**
 
-Priority order:
+Sprint 1 is working in production. Do not reopen completed Sprint 1 work unless a reproducible regression is found.
 
-1. Show detailed student check-in records.
-2. Show student, team, goal and submission time.
-3. Allow authorised teachers to edit incorrect records.
-4. Allow authorised teachers to delete invalid records.
-5. Add sign-out.
-6. Add loading, empty and error states.
-7. Improve duplicate-submission messages shown to students.
-8. Add CSV export after core record management works.
+Implementation order:
+
+1. Dashboard foundation: preserve summary cards; add sign-out, session status, and loading/empty/error states.
+2. Add detailed Student Check-in records with name, Student ID, team, goal, created time and updated time.
+3. Generalise record views to Class Pulse, Team Conversation, Four-Week Promise and Poster Peer Review.
+4. Add teacher-only edit and confirmed delete, backed by explicit grants and `is_teacher()` RLS policies.
+5. Add **Open peer review** to Admin. It is off by default; its state is stored in Supabase, safely readable by the public portal, writable only by teachers, and enforced by the Poster Review INSERT policy.
+6. Add CSV export after record management is stable.
+7. Complete role, RLS, migration, build and production smoke tests.
+
+Student submissions remain create-once. Do not add student authentication, student-side editing, AI features, multi-course administration or a major database redesign in Sprint 2.
+
+The temporary hard-coded Peer Review disabled state is only a Sprint 1 safety measure. Sprint 2 must replace it with teacher-controlled runtime state and database enforcement; it must not merely enable the button in frontend code.
+
+Detailed scope and acceptance criteria are in `ROADMAP.md`. The implementation handoff is in `SPRINT2_SESSION_PROMPT.md`.
 
 ## Rules for AI-assisted changes
 
