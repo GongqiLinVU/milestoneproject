@@ -25,7 +25,7 @@ Production validation completed for all Sprint 1 student forms, teacher login, d
 
 ## Sprint 2 — Teacher operations and activity control
 
-**Status: In progress — Phase 3 implemented; review and rollout pending**
+**Status: In progress — Phase 3 merged; Phase 4 is next**
 
 ### Goal
 
@@ -122,22 +122,34 @@ Detailed scope, Phase acceptance criteria and the current handoff are stored in
 - `npm run build`, migration verification and production smoke tests pass.
 - README, AI context, architecture, roadmap and changelog are synchronised with the implemented behaviour.
 
-## Sprint 3 — Teaching analytics
+## Sprint 3 — Week 2 Review and Teaching Analytics
 
-**Status: Planned**
+**Status: Planned — not started while Sprint 2 remains active**
 
-Potential scope:
+Sprint 3 combines the original Teaching Analytics direction with classroom
+feedback gathered on 27 July 2026. The current shared, long-text Team
+Conversation had low participation, and teachers need structured individual
+evidence before Week 2 reviews plus a place to record feedback and follow-up.
 
-- Participation overview
-- Submission completion by activity
-- Team-level aggregation
-- Confidence distribution
-- Poster review averages
-- Missing submission indicators
-- Filter and search
-- Downloadable reporting
+Planned delivery sequence:
 
-Analytics must remain descriptive and evidence based. They must not infer student performance without sufficient evidence.
+1. Replace Team Conversation with an individual, selection-first Team Health
+   Check and team response summaries.
+2. Add a short Week 2 Individual Progress Review completed before the teacher
+   meeting.
+3. Add teacher-only review outcome, feedback, agreed action and follow-up.
+4. Add completion, team health, disagreement and follow-up analytics that drill
+   down to submitted evidence.
+5. Add authorised export, privacy verification and production hardening.
+
+Most student questions use selections. Short text is conditional or optional.
+Analytics remain descriptive and must not infer marks or performance without
+sufficient evidence.
+
+Detailed scope, Phase acceptance criteria and activation rules are stored in
+`docs/sprints/sprint-03/`. The existence of this Plan does not make Sprint 3
+active; new Sessions must continue Sprint 2 unless it is complete or the user
+explicitly changes priority.
 
 ## Sprint 4 — Student identity and team management
 
