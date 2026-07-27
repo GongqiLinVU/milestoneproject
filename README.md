@@ -97,17 +97,23 @@ Every push to `main` triggers a production deployment.
 - [AI context](AI_CONTEXT.md)
 - [Architecture](ARCHITECTURE.md)
 - [Roadmap](ROADMAP.md)
+- [Session start protocol](prompts/START_SESSION.md)
+- [Sprint records](docs/sprints)
 - [Contributing guide](CONTRIBUTING.md)
 - [Changelog](CHANGELOG.md)
 
 ## Current priority
 
-Sprint 2 focuses on making the Teacher Dashboard operational rather than only informational:
+Sprint 1 is working in production. Sprint 2 turns the Teacher Dashboard into an operational teaching tool:
 
-- View submission records
-- Edit incorrect student information
-- Delete invalid submissions
-- Export CSV
-- Improve user-facing validation messages
+- View records for all five student activities
+- Edit incorrect records and delete invalid submissions as an authorised teacher
+- Sign out and see clear loading, empty, success and error states
+- Export stable teacher-only CSV files after record management is complete
+- Replace the temporary Peer Review disabled button with an Admin **Open peer review** control that is off by default and enforced by Supabase RLS
 
-AI features are intentionally deferred until the core teaching workflow is stable.
+Students remain unauthenticated and their submissions remain create-once. AI features, student-side editing and major database redesign are intentionally out of scope.
+
+See [Sprint 2 roadmap](ROADMAP.md#sprint-2--teacher-operations-and-activity-control),
+the detailed [Sprint 2 plan](docs/sprints/sprint-02/PLAN.md), and the reusable
+[session start protocol](prompts/START_SESSION.md).

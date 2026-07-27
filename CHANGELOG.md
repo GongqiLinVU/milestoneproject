@@ -79,13 +79,15 @@ The project currently uses simple milestone-based versions while the production 
 
 ### Planned for Sprint 2
 
-- Detailed student check-in table
-- Teacher edit capability
-- Teacher delete capability
-- Teacher sign-out
-- Loading, empty and error states
-- Clear duplicate-submission feedback
-- CSV export
+- Detailed teacher record views for all five activities
+- Teacher-only edit and confirmed delete
+- Teacher sign-out plus loading, empty, success and error states
+- Admin **Open peer review** control, off by default
+- Supabase-backed activity state and RLS enforcement that blocks direct Poster Review inserts while closed
+- CSV export after record management is stable
+- Full anonymous, non-teacher and teacher authorisation verification
+- Linear Sprint plans and evidence-based handoffs under `docs/sprints`
+- A reusable new-session protocol at `prompts/START_SESSION.md`
 
 ### Deferred
 
