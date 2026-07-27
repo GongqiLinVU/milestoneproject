@@ -57,6 +57,8 @@ The project currently uses simple milestone-based versions while the production 
 
 ### Added
 
+- Added clickable Teacher Dashboard panels for all five activity record views
+- Added activity-specific record headings, columns, descriptions and empty states
 - Restored authenticated Teacher Dashboard sessions across page refreshes
 - Added teacher sign-out and visible signed-in account status
 - Added a protected non-teacher access state that does not load student records

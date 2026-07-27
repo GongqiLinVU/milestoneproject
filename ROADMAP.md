@@ -25,7 +25,7 @@ Production validation completed for all Sprint 1 student forms, teacher login, d
 
 ## Sprint 2 — Teacher operations and activity control
 
-**Status: In progress — Phase 1 implemented in Draft PR**
+**Status: In progress — Phase 2 implemented in Draft PR**
 
 ### Goal
 
@@ -48,10 +48,10 @@ Detailed scope, Phase acceptance criteria and the current handoff are stored in
 
 #### Phase 2 — Activity record views
 
-- Add record views for Class Pulse, Team Conversation, Four-Week Promise and
-  Poster Peer Review.
-- Reuse the table, query, refresh and status patterns established in Phase 1.
-- Preserve teacher-only reads and activity-specific state.
+- Implemented clickable summary panels for all five activity record views.
+- Added stable activity-specific headings, fields, descriptions and empty states.
+- Reused the protected query, refresh and table patterns established in Phase 1.
+- Clears previous rows during switching to preserve activity-specific state.
 
 #### Phase 3 — Teacher actions
 
