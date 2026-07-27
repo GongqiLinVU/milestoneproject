@@ -20,6 +20,25 @@ GitHub `main` is the source of truth. Begin every session from the latest
   report the exact blocker instead of repeatedly requesting temporary CLI
   authentication.
 
+## Branch lifecycle
+
+- Treat working branches as temporary delivery branches, not long-term project
+  history.
+- Create one focused branch for the selected Phase from the latest `main`.
+- Keep a branch while its Draft PR or implementation is still active.
+- After a PR is merged, delete its head branch. The merged PR, squash commit,
+  Sprint documentation and `main` retain the durable history.
+- If work is abandoned, record the reason in the PR, close it and delete the
+  branch after confirming that nothing should be preserved.
+- Preserve only `main` and any explicitly approved long-lived release branch.
+- At the start and end of a session, identify stale merged or closed working
+  branches and remove them when the available repository interface supports
+  branch deletion.
+- Prefer the repository setting that automatically deletes head branches after
+  PR merges. If that setting cannot be managed through the GitHub App, report
+  the one-time repository-setting action clearly rather than keeping stale
+  branches indefinitely.
+
 ## Read first
 
 1. Inspect the latest code, schema, migrations, open pull requests and recent
