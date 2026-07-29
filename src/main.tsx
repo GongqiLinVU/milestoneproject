@@ -6,12 +6,17 @@ import {
   CheckCircle2,
   CircleHelp,
   ClipboardCheck,
+  Code2,
   Download,
   FileText,
+  HeartPulse,
+  ListChecks,
+  LockKeyhole,
   LogOut,
   Pencil,
   Presentation,
   RefreshCw,
+  Rocket,
   Trash2,
   Users,
 } from "lucide-react";
@@ -60,9 +65,7 @@ function App() {
         </a>
         <nav>
           <a href="#journey">Journey</a>
-          <a href="#week1">Week 1</a>
-          <a href="#week2">Week 2</a>
-          <a href="#expo">Project Expo</a>
+          <a href="#weekly">Weekly Check-in</a>
           <a href="#deliverables">Deliverables</a>
           <a href="/admin">Teacher</a>
         </nav>
@@ -110,11 +113,9 @@ function App() {
         </section>
         <Journey />
         <Studio />
-        <Week1 open={setForm} />
-        <Week2 open={setForm} />
-        <Expo
+        <WeeklyHub
+          open={setForm}
           peerReviewOpen={peerReviewOpen}
-          openReview={() => peerReviewOpen && setForm("review")}
         />
         <Deliverables />
       </main>
@@ -209,63 +210,133 @@ function Studio() {
     </section>
   );
 }
-function Week1({ open }: { open: (k: Kind) => void }) {
+function WeeklyHub({
+  open,
+  peerReviewOpen,
+}: {
+  open: (k: Kind) => void;
+  peerReviewOpen: boolean | null;
+}) {
+  const [week, setWeek] = useState<1 | 2 | 3 | 4>(1);
+  const tabs = [
+    { number: 1 as const, label: "Start", hint: "Connect & align" },
+    { number: 2 as const, label: "Prove", hint: "Show implementation" },
+    { number: 3 as const, label: "Validate", hint: "Review readiness" },
+    { number: 4 as const, label: "Deliver", hint: "Prepare presentation" },
+  ];
   return (
-    <section id="week1">
+    <section id="weekly" className="weekly-hub">
       <Head
-        label="Week 1 · Studio Kickoff"
-        title="Start light. Learn who is in the room."
-        text="After the course briefing, use short interactions to understand the class, meet every team and establish how we will work together."
+        label="Weekly Check-in"
+        title="One place for every week."
+        text="Choose your week to see the activities, evidence and preparation needed now."
       />
-      <div className="activity-grid">
-        <Activity
-          title="Class Pulse"
-          text="Anonymous confidence, concerns and AI-use snapshot."
-          action={() => open("pulse")}
-        />
-        <Activity
-          title="Team Health Check"
-          text="Share your individual view of communication, participation and delivery health."
-          action={() => open("health")}
-        />
-        <Activity
-          title="Week 1 Engagement Check-out"
-          text="Record how you participated after Monday and what the teacher should verify next."
-          action={() => open("checkout")}
-        />
+      <div className="week-tabs" role="tablist" aria-label="Weekly activities">
+        {tabs.map((tab) => (
+          <button
+            key={tab.number}
+            type="button"
+            role="tab"
+            aria-selected={week === tab.number}
+            aria-controls={`week-panel-${tab.number}`}
+            className={week === tab.number ? "active" : ""}
+            onClick={() => setWeek(tab.number)}
+          >
+            <span>Week {tab.number}</span>
+            <b>{tab.label}</b>
+            <small>{tab.hint}</small>
+          </button>
+        ))}
       </div>
-      <blockquote>
-        “I already know you can build software. For the next four weeks, I want
-        to help you learn how to deliver software.”
-      </blockquote>
+
+      <div id={`week-panel-${week}`} className={`week-panel week-${week}`} role="tabpanel">
+        {week === 1 && (
+          <>
+            <div className="week-panel-intro">
+              <div className="week-visual"><Rocket /></div>
+              <div>
+                <span>Week 1 · Studio Kickoff</span>
+                <h3>Meet the team and establish a healthy start.</h3>
+                <p>Three short touchpoints connect the compulsory Monday studio with the rest of your first week.</p>
+              </div>
+            </div>
+            <div className="activity-grid">
+              <Activity icon={Presentation} badge="Class signal" title="Class Pulse" text="Share an anonymous snapshot of confidence, concerns and AI use." action={() => open("pulse")} />
+              <Activity icon={HeartPulse} badge="Individual view" title="Team Health Check" text="Reflect on communication, participation and delivery health." action={() => open("health")} />
+              <Activity icon={ClipboardCheck} badge="End of week" title="Week 1 Engagement Check-out" text="Record participation beyond Monday and prepare for the next conversation." action={() => open("checkout")} />
+            </div>
+          </>
+        )}
+
+        {week === 2 && (
+          <>
+            <div className="week-panel-intro">
+              <div className="week-visual"><Code2 /></div>
+              <div>
+                <span>Week 2 · Implementation Review</span>
+                <h3>Show one concrete contribution and prove it.</h3>
+                <p>Prepare the implementation claim, location, demonstration and verification evidence for the compulsory Monday review.</p>
+              </div>
+            </div>
+            <div className="activity-grid two-up">
+              <Activity icon={Code2} badge="Before Monday review" title="Implementation Pre-check" text="Identify one implementation, where it can be found, how it works and how you will verify it." action={() => open("progress")} />
+              <Activity icon={ClipboardCheck} badge="End of week" title="Week 2 Engagement Check-out" text="Record participation beyond Monday without repeating implementation evidence." action={() => open("checkout2")} />
+            </div>
+            <p className="week-panel-note">Pre-check responses prepare a verification conversation. They are descriptive evidence, not an automatic mark.</p>
+          </>
+        )}
+
+        {week === 3 && (
+          <>
+            <div className="week-panel-intro">
+              <div className="week-visual"><ListChecks /></div>
+              <div>
+                <span>Week 3 · Project Expo</span>
+                <h3>Validate the product, evidence and document readiness.</h3>
+                <p>Use peer review to find the highest-priority gap before Demo Day.</p>
+              </div>
+            </div>
+            <Expo
+              peerReviewOpen={peerReviewOpen}
+              openReview={() => peerReviewOpen && open("review")}
+            />
+            <div className="coming-card">
+              <ClipboardCheck />
+              <div><b>Week 3 Engagement Check-out</b><p>The continuous Week 3 check-out will appear here in the next phase.</p></div>
+              <span>Coming next</span>
+            </div>
+          </>
+        )}
+
+        {week === 4 && (
+          <>
+            <div className="week-panel-intro">
+              <div className="week-visual"><Rocket /></div>
+              <div>
+                <span>Week 4 · Demo Day</span>
+                <h3>Prepare a calm, credible presentation.</h3>
+                <p>This space is ready for the final presentation checklist and confirmed presentation order.</p>
+              </div>
+            </div>
+            <div className="week4-placeholders">
+              <article>
+                <ListChecks />
+                <div><span>Preparation</span><h3>Presentation Checklist</h3><p>Final content, demo readiness, evidence, timing and team handover checks will be added here.</p></div>
+                <b>To be confirmed</b>
+              </article>
+              <article>
+                <Presentation />
+                <div><span>Schedule</span><h3>Presentation Order</h3><p>The confirmed team order and presentation timing will be published here.</p></div>
+                <b>To be published</b>
+              </article>
+            </div>
+          </>
+        )}
+      </div>
     </section>
   );
 }
-function Week2({ open }: { open: (k: Kind) => void }) {
-  return (
-    <section id="week2" className="week2-review">
-      <Head
-        label="Week 2 · Progress Review"
-        title="Show the evidence. Clarify the next move."
-        text="Complete both short activities before your compulsory Monday review so the discussion can focus on your demo, method verification and individual contribution."
-      />
-      <div className="activity-grid">
-        <Activity
-          title="Individual Progress Review"
-          text="Summarise your progress, contribution evidence, next task and support needs before the demo conversation."
-          action={() => open("progress")}
-        />
-        <Activity
-          title="Week 2 Engagement Check-out"
-          text="Record how you participated beyond Monday and what the teacher should verify at the next compulsory meeting."
-          action={() => open("checkout2")}
-        />
-      </div>
-      <p className="week2-note">These responses prepare the conversation. They are descriptive evidence, not an automatic mark.</p>
-    </section>
-  );
-}
-function Expo({
+function Expo(function Expo({
   peerReviewOpen,
   openReview,
 }: {
@@ -379,16 +450,24 @@ function Head({
   );
 }
 function Activity({
+  icon: Icon,
+  badge,
   title,
   text,
   action,
 }: {
+  icon: typeof ArrowRight;
+  badge: string;
   title: string;
   text: string;
   action: () => void;
 }) {
   return (
-    <article>
+    <article className="activity-card">
+      <div className="activity-card-top">
+        <span className="activity-icon"><Icon /></span>
+        <small>{badge}</small>
+      </div>
       <h3>{title}</h3>
       <p>{text}</p>
       <button onClick={action}>
@@ -397,7 +476,7 @@ function Activity({
     </article>
   );
 }
-function friendlyError(code: string | undefined, kind: Kind) {
+function friendlyErrorfunction friendlyError(code: string | undefined, kind: Kind) {
   if (kind === "review" && code === "42501")
     return "Peer review is currently closed. Your response was not submitted.";
   if (code === "23505") {
