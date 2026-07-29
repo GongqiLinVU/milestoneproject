@@ -1,6 +1,9 @@
 const MAX_BODY_BYTES = 20_000;
 
+type SuggestionStage = "starting" | "closing";
+
 type TeachingSuggestionRequest = {
+  stage?: SuggestionStage;
   project?: {
     name?: string;
     area?: string;
@@ -33,6 +36,7 @@ const text = (value: unknown, maxLength: number) =>
 
 function normalise(body: TeachingSuggestionRequest) {
   return {
+    stage: body.stage === "closing" ? "closing" : "starting",
     project: {
       name: text(body.project?.name, 120),
       area: text(body.project?.area, 80),
@@ -129,12 +133,13 @@ export default async function handler(req: any, res: any) {
     });
   }
   if (
+    context.stage === "closing" &&
     !Object.values(context.teacherVerification).some(
       (value) => value && value !== "Not reviewed",
     )
   ) {
     return res.status(400).json({
-      error: "Begin teacher verification before generating a suggestion.",
+      error: "Begin teacher verification before generating a closing suggestion.",
     });
   }
 
@@ -149,7 +154,9 @@ export default async function handler(req: any, res: any) {
       store: false,
       max_output_tokens: 450,
       instructions:
-        "You are a supportive software-engineering studio teaching copilot. Analyse only the supplied project and verification evidence. Do not grade, score, diagnose performance, infer identity, or make disciplinary claims. Give concise, practical advice for a live teacher-student conversation. The teaching spark should be playful but respectful and specific to the project area. If evidence is incomplete, frame uncertainty as something to verify.",
+        context.stage === "starting"
+          ? "You are a supportive software-engineering studio teaching copilot preparing a teacher to begin a live review. Analyse only the supplied project and student pre-check. Do not use teacher verification, grade, score, diagnose performance, infer identity, or make disciplinary claims. Give a tentative starting point: one initial signal, one question, one item to verify, and one playful but respectful project-specific teaching spark. Treat every claim as unverified until demonstrated."
+          : "You are a supportive software-engineering studio teaching copilot helping a teacher close a live review. Compare the student pre-check with the supplied teacher verification. Do not grade, score, diagnose performance, infer identity, or make disciplinary claims. State what the review clarified or changed, recommend one practical next action, and end with a supportive project-specific teaching message. If evidence remains incomplete, state the uncertainty.",
       input: JSON.stringify(context),
       text: {
         format: {
@@ -160,28 +167,33 @@ export default async function handler(req: any, res: any) {
             type: "object",
             additionalProperties: false,
             properties: {
-              current_signal: {
+              signal: {
                 type: "string",
-                description: "One concise evidence-based observation, maximum 45 words.",
+                description: "Starting: one tentative initial signal. Closing: one final evidence-based signal. Maximum 45 words.",
               },
-              ask_the_student: {
+              question_or_clarification: {
                 type: "string",
-                description: "One useful question for the teacher to ask, maximum 35 words.",
+                description: "Starting: one useful question to ask. Closing: what the review clarified. Maximum 40 words.",
               },
-              suggested_next_action: {
+              action_or_verification: {
                 type: "string",
-                description: "One concrete next action, maximum 35 words.",
+                description: "Starting: one item to verify. Closing: one recommended next action. Maximum 40 words.",
               },
-              teaching_spark: {
+              teaching_message: {
                 type: "string",
-                description: "One engaging project-area-specific challenge, maximum 35 words.",
+                description: "Starting: one engaging teaching spark. Closing: one supportive closing message. Maximum 40 words.",
+              },
+              what_changed_after_review: {
+                type: "string",
+                description: "Starting: return an empty string. Closing: briefly compare the pre-check with verification and state what changed, maximum 45 words.",
               },
             },
             required: [
-              "current_signal",
-              "ask_the_student",
-              "suggested_next_action",
-              "teaching_spark",
+              "signal",
+              "question_or_clarification",
+              "action_or_verification",
+              "teaching_message",
+              "what_changed_after_review",
             ],
           },
         },
