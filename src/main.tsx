@@ -31,12 +31,25 @@ const supabase = createClient(
 const teams = Array.from({ length: 8 }, (_, i) => `Team ${i + 1}`);
 type Kind = "checkin" | "pulse" | "health" | "checkout" | "progress" | "checkout2" | "checkout3" | "review";
 type AiSuggestionStage = "starting" | "closing";
+type AiDiscussionPath = {
+  title: string;
+  focus: string;
+  question: string;
+  evidence_check: string;
+  teaching_spark: string;
+};
+type AiNextStep = {
+  title: string;
+  action: string;
+};
 type AiTeachingSuggestion = {
   signal: string;
   question_or_clarification: string;
   action_or_verification: string;
   teaching_message: string;
   what_changed_after_review: string;
+  discussion_paths: AiDiscussionPath[];
+  next_step_options: AiNextStep[];
 };
 const titles: Record<Kind, string> = {
   checkin: "Week 1 Check-in",
@@ -1733,19 +1746,6 @@ function Admin() {
     }
   }
 
-  function updateAiSuggestion(
-    studentId: string,
-    stage: AiSuggestionStage,
-    field: keyof AiTeachingSuggestion,
-    value: string,
-  ) {
-    const key = aiSuggestionKey(studentId, stage);
-    setAiSuggestions((current) => ({
-      ...current,
-      [key]: { ...current[key], [field]: value },
-    }));
-  }
-
   function dismissAiSuggestion(studentId: string, stage: AiSuggestionStage) {
     const key = aiSuggestionKey(studentId, stage);
     setAiSuggestions((current) => {
@@ -1763,8 +1763,11 @@ function Admin() {
   ) {
     const note = form.elements.namedItem("follow_up_note");
     if (!(note instanceof HTMLTextAreaElement)) return;
+    const selectedStep = form.querySelector<HTMLInputElement>(
+      'input[name="closing_next_step"]:checked',
+    );
     note.value = [
-      `Recommended next action: ${suggestion.action_or_verification}`,
+      `Recommended next action: ${selectedStep?.value || suggestion.action_or_verification}`,
       `What changed after review: ${suggestion.what_changed_after_review}`,
       `Closing message: ${suggestion.teaching_message}`,
     ].filter((line) => !line.endsWith(": ")).join("\n");
@@ -2498,130 +2501,142 @@ function Admin() {
                               <span className="ai-teaching-icon"><Sparkles aria-hidden="true" /></span>
                               <div>
                                 <small>Optional teaching copilot · two checkpoints</small>
-                                <h4>AI Teaching Suggestions</h4>
-                                <p>Compare a tentative starting point with evidence after the live review. No name, Student ID, email or team is sent.</p>
+                                <h4>Choose a conversation path</h4>
+                                <p>AI offers possibilities, not conclusions. Pick one direction, test it with the student, then close the loop with evidence.</p>
                               </div>
                             </div>
-                            {([
-                              {
-                                stage: "starting" as const,
-                                eyebrow: "1 · Before verification",
-                                title: "Starting suggestion",
-                                text: "Uses the project snapshot and student pre-check to suggest how to begin the conversation.",
-                                suggestion: startingSuggestion,
-                                message: aiSuggestionMessages[startingKey],
-                                fields: [
-                                  ["signal", "Initial signal"],
-                                  ["question_or_clarification", "Ask the student"],
-                                  ["action_or_verification", "What to verify"],
-                                  ["teaching_message", "Teaching spark"],
-                                ] as const,
-                              },
-                              {
-                                stage: "closing" as const,
-                                eyebrow: "2 · After verification",
-                                title: "Closing suggestion",
-                                text: "Uses the teacher checks to summarise what changed and suggest the next teaching action.",
-                                suggestion: closingSuggestion,
-                                message: aiSuggestionMessages[closingKey],
-                                fields: [
-                                  ["signal", "Final assessment signal"],
-                                  ["question_or_clarification", "What the review clarified"],
-                                  ["what_changed_after_review", "What changed after review"],
-                                  ["action_or_verification", "Recommended next action"],
-                                  ["teaching_message", "Closing teaching message"],
-                                ] as const,
-                              },
-                            ]).map((checkpoint) => (
-                              <div className={`ai-checkpoint ai-checkpoint-${checkpoint.stage}`} key={checkpoint.stage}>
-                                <div className="ai-teaching-heading">
-                                  <div>
-                                    <small>{checkpoint.eyebrow}</small>
-                                    <h4>{checkpoint.title}</h4>
-                                    <p>{checkpoint.text}</p>
+
+                            <div className="ai-checkpoint ai-checkpoint-starting">
+                              <div className="ai-teaching-heading">
+                                <div>
+                                  <small>1 · Before verification</small>
+                                  <h4>Where could this conversation go?</h4>
+                                  <p>Generate three different paths, then choose the one most useful for this student.</p>
+                                </div>
+                                <button
+                                  type="button"
+                                  className="secondary compact"
+                                  disabled={aiSuggestionBusyId === startingKey}
+                                  onClick={(event) =>
+                                    void generateAiTeachingSuggestion(student, event.currentTarget.form!, "starting")
+                                  }
+                                >
+                                  <Sparkles size={15} />
+                                  {aiSuggestionBusyId === startingKey
+                                    ? "Thinking…"
+                                    : startingSuggestion ? "Try three new paths" : "Generate conversation paths"}
+                                </button>
+                              </div>
+                              {aiSuggestionMessages[startingKey] && (
+                                <p className="ai-teaching-message" role="status">{aiSuggestionMessages[startingKey]}</p>
+                              )}
+                              {startingSuggestion && (
+                                <div className="ai-path-workspace">
+                                  <div className="ai-signal-strip">
+                                    <span>Starting signal</span>
+                                    <p>{startingSuggestion.signal}</p>
                                   </div>
-                                  <button
-                                    type="button"
-                                    className="secondary compact"
-                                    disabled={aiSuggestionBusyId === aiSuggestionKey(studentId, checkpoint.stage)}
-                                    onClick={(event) =>
-                                      void generateAiTeachingSuggestion(
-                                        student,
-                                        event.currentTarget.form!,
-                                        checkpoint.stage,
-                                      )
-                                    }
-                                  >
-                                    <Sparkles size={15} />
-                                    {aiSuggestionBusyId === aiSuggestionKey(studentId, checkpoint.stage)
-                                      ? "Thinking…"
-                                      : checkpoint.suggestion
-                                        ? "Regenerate"
-                                        : checkpoint.stage === "starting"
-                                          ? "Generate starting suggestion"
-                                          : "Generate closing suggestion"}
+                                  <p className="ai-path-instruction">Select one path to reveal its conversation prompts.</p>
+                                  <div className="ai-path-list">
+                                    {startingSuggestion.discussion_paths.map((path, index) => (
+                                      <label className="ai-path-option" key={`${path.title}-${index}`}>
+                                        <input
+                                          type="radio"
+                                          name="starting_discussion_path"
+                                          value={path.title}
+                                          defaultChecked={index === 0}
+                                        />
+                                        <span className="ai-path-number">{index + 1}</span>
+                                        <span className="ai-path-copy">
+                                          <strong>{path.title}</strong>
+                                          <span>{path.focus}</span>
+                                        </span>
+                                        <ChevronDown className="ai-path-chevron" size={18} aria-hidden="true" />
+                                        <span className="ai-path-detail">
+                                          <span><b>Ask</b>{path.question}</span>
+                                          <span><b>Check</b>{path.evidence_check}</span>
+                                          <span><b>Teaching spark</b>{path.teaching_spark}</span>
+                                        </span>
+                                      </label>
+                                    ))}
+                                  </div>
+                                  <button type="button" className="ai-dismiss-link" onClick={() => dismissAiSuggestion(studentId, "starting")}>
+                                    Dismiss starting paths
                                   </button>
                                 </div>
-                                {checkpoint.message && (
-                                  <p className="ai-teaching-message" role="status">{checkpoint.message}</p>
-                                )}
-                                {checkpoint.suggestion && (
-                                  <div className="ai-suggestion-card">
-                                    <p className="ai-disclaimer">
-                                      AI-generated teaching suggestion · review and edit before using
-                                    </p>
-                                    <div className="ai-suggestion-fields">
-                                      {checkpoint.fields.map(([field, label]) => (
-                                        <label key={field}>
-                                          {label}
-                                          <textarea
-                                            value={checkpoint.suggestion![field]}
-                                            maxLength={300}
-                                            onChange={(event) =>
-                                              updateAiSuggestion(
-                                                studentId,
-                                                checkpoint.stage,
-                                                field,
-                                                event.target.value,
-                                              )
-                                            }
-                                          />
-                                        </label>
-                                      ))}
-                                    </div>
-                                    <div className="ai-suggestion-actions">
-                                      {checkpoint.stage === "closing" && (
-                                        <button
-                                          type="button"
-                                          onClick={(event) =>
-                                            useAiSuggestion(
-                                              studentId,
-                                              event.currentTarget.form!,
-                                              checkpoint.suggestion!,
-                                            )
-                                          }
-                                        >
-                                          Use as follow-up
-                                        </button>
-                                      )}
-                                      <button
-                                        type="button"
-                                        className="secondary"
-                                        onClick={() =>
-                                          dismissAiSuggestion(studentId, checkpoint.stage)
-                                        }
-                                      >
-                                        Dismiss
-                                      </button>
-                                    </div>
-                                  </div>
-                                )}
+                              )}
+                            </div>
+
+                            <div className="ai-journey-connector" aria-hidden="true">
+                              <span>Live conversation & verification</span>
+                            </div>
+
+                            <div className="ai-checkpoint ai-checkpoint-closing">
+                              <div className="ai-teaching-heading">
+                                <div>
+                                  <small>2 · After verification</small>
+                                  <h4>What changed, and what comes next?</h4>
+                                  <p>Generate this after the live checks to turn evidence into a focused next step.</p>
+                                </div>
+                                <button
+                                  type="button"
+                                  className="secondary compact"
+                                  disabled={aiSuggestionBusyId === closingKey}
+                                  onClick={(event) =>
+                                    void generateAiTeachingSuggestion(student, event.currentTarget.form!, "closing")
+                                  }
+                                >
+                                  <Sparkles size={15} />
+                                  {aiSuggestionBusyId === closingKey
+                                    ? "Thinking…"
+                                    : closingSuggestion ? "Refresh closing view" : "Generate closing view"}
+                                </button>
                               </div>
-                            ))}
+                              {aiSuggestionMessages[closingKey] && (
+                                <p className="ai-teaching-message" role="status">{aiSuggestionMessages[closingKey]}</p>
+                              )}
+                              {closingSuggestion && (
+                                <div className="ai-closing-workspace">
+                                  <div className="ai-review-timeline">
+                                    <div><span>Initial picture</span><p>{startingSuggestion?.signal || "Student pre-check captured"}</p></div>
+                                    <ArrowRight aria-hidden="true" />
+                                    <div><span>Live evidence</span><p>{closingSuggestion.question_or_clarification}</p></div>
+                                    <ArrowRight aria-hidden="true" />
+                                    <div className="changed"><span>What changed</span><p>{closingSuggestion.what_changed_after_review}</p></div>
+                                  </div>
+                                  <div className="ai-closing-message">
+                                    <strong>{closingSuggestion.signal}</strong>
+                                    <p>{closingSuggestion.teaching_message}</p>
+                                  </div>
+                                  <fieldset className="ai-next-step-list">
+                                    <legend>Choose the next move</legend>
+                                    {closingSuggestion.next_step_options.map((step, index) => (
+                                      <label key={`${step.title}-${index}`}>
+                                        <input
+                                          type="radio"
+                                          name="closing_next_step"
+                                          value={step.action}
+                                          defaultChecked={index === 0}
+                                        />
+                                        <span><strong>{step.title}</strong>{step.action}</span>
+                                      </label>
+                                    ))}
+                                  </fieldset>
+                                  <div className="ai-suggestion-actions">
+                                    <button type="button" onClick={(event) => useAiSuggestion(studentId, event.currentTarget.form!, closingSuggestion)}>
+                                      Use selected next move
+                                    </button>
+                                    <button type="button" className="secondary" onClick={() => dismissAiSuggestion(studentId, "closing")}>
+                                      Dismiss
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </section>
-                          <label>
-                            Teacher feedback
-                            <textarea name="teacher_feedback" required maxLength={800} defaultValue={String(review?.teacher_feedback ?? "")} placeholder="Record what was verified, what did not match, and the feedback discussed with the student." />
+                          <label className="teacher-conversation-note">
+                            <span>Conversation note <small>Keep only what matters after the discussion</small></span>
+                            <textarea name="teacher_feedback" required maxLength={800} defaultValue={String(review?.teacher_feedback ?? "")} placeholder="What did the student demonstrate? What changed after discussing the code, method or evidence?" />
                           </label>
                           <fieldset className="choice-checklist follow-up-actions">
                             <legend>Agreed follow-up action (select all that apply)</legend>
