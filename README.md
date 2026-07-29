@@ -18,7 +18,10 @@ The current module guides students through a four-week journey:
 
 - Week 1 check-in
 - Class pulse
-- Individual Team Health Check\n- Week 1 Engagement Check-out\n- Week 2 Individual Progress Review\n- Week 2 Engagement Check-out
+- Individual Team Health Check
+- Week 1 Engagement Check-out
+- Week 2 Individual Progress Review
+- Week 2 Engagement Check-out
 - Week 3 Engagement Check-out
 - Week 3 poster peer review
 - Supabase-backed submissions
@@ -35,7 +38,8 @@ The current module guides students through a four-week journey:
 - Anonymous Class Pulse charts for confidence, concerns and AI usage
 - Teacher edit and confirmed delete for identified activity records
 - Teacher mutations protected by `is_teacher()` UPDATE/DELETE RLS policies
-- Private student-by-student implementation Review & Follow-up with operational status and recheck actions\n- Optional teacher-triggered AI teaching suggestions using de-identified project and verification evidence
+- Private student-by-student implementation Review & Follow-up with operational status and recheck actions
+- Optional teacher-triggered AI teaching suggestions using de-identified project and verification evidence
 - Teacher-controlled Poster Peer Review opening and closing
 - Export the currently selected activity as a stable UTF-8 CSV; Class Pulse
   exports only aggregate distributions
