@@ -145,10 +145,11 @@ Monday discussion questions, but teachers retain final judgement.
 
 ### Phase 3B — AI teaching suggestion
 
-- Generate a short teaching suggestion only after teacher verification has begun.
+- Provide two teacher-triggered checkpoints: a starting suggestion before verification and a closing suggestion after verification.
+- The starting suggestion uses only Project Snapshot and student pre-check evidence; the closing suggestion adds teacher verification.
 - Call OpenAI from a server-side function; never expose the API key in the browser.
 - Send project context and review evidence only; exclude student name, ID and email.
-- Return a fixed structure: current signal, one question, next action and teaching spark.
+- Return short structured fields appropriate to each checkpoint, including what changed after review in the closing suggestion.
 - Label all output as AI-generated and require teacher review.
 - AI must never set verification status, follow-up status or marks.
 - Allow the teacher to use, edit, regenerate or dismiss a suggestion.
@@ -164,8 +165,10 @@ Phase 3B acceptance:
 - Only a valid Supabase teacher session can call the AI endpoint.
 - `OPENAI_API_KEY` is server-only and absent from browser bundles.
 - Requests exclude name, Student ID, email and team.
-- Project name, description, implementation claim and begun teacher verification are required.
-- Structured output contains current signal, one question, next action and teaching spark.
+- Project name, description and implementation claim are required for both checkpoints; begun teacher verification is required only for closing.
+- Starting output contains an initial signal, one question, what to verify and a teaching spark.
+- Closing output contains a final signal, what the review clarified, what changed, one next action and a closing teaching message.
 - Suggestions remain temporary until the teacher explicitly copies content and saves the review.
 - AI cannot set marks, verification outcome or follow-up status.
-- Generate, edit, regenerate, use and dismiss flows are available.
+- Starting and closing suggestions can be generated, edited, regenerated and dismissed independently.
+- Only the closing suggestion can be copied into the formal follow-up note.
