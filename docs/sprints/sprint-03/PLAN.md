@@ -1,6 +1,6 @@
 # Sprint 3 — Continuous Engagement and Teaching Review
 
-**Status: Active — Phase 1 in progress**
+**Status: Active — Phase 1 complete; Phase 2 in progress**
 
 ## Teaching problem
 
@@ -65,10 +65,7 @@ Acceptance:
 
 ## Phase 2 — Week 2 Progress Review and Check-out
 
-Add the short pre-review Progress Review and reuse the ten-question Engagement
-Check-out with week number 2. The review captures current progress, contribution
-areas, evidence, next-task clarity and support needs. Week 2 evidence prepares
-the compulsory demo, method verification and individual discussion.
+Add a two-minute Individual Progress Review before the compulsory Monday review and reuse the ten-question Engagement Check-out with week number 2. The progress review captures current progress, contribution areas, evidence status and reference, next-task clarity, support needs and a conditional discussion note. Week 2 evidence prepares the project demo, method verification and individual discussion.\n\nAcceptance:\n\n- Each Student ID submits one Progress Review and one Week 2 Check-out.\n- Contribution areas support multiple selections.\n- Written notes appear only where evidence needs clarification or a risk/support answer is selected.\n- Students can insert but cannot read or manage submissions.\n- Teachers can review raw evidence and identify review readiness without automated marks.\n- Week 1 records and receipts remain separate and unchanged.\n- Build, migration and RLS verification pass before merge.
 
 ## Phase 3 — Teacher Review and Week 3 Check-out
 

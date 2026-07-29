@@ -4,14 +4,19 @@ import { createClient } from "@supabase/supabase-js";
 import {
   ArrowRight,
   CheckCircle2,
+  ChevronDown,
   CircleHelp,
   ClipboardCheck,
+  Code2,
   Download,
   FileText,
+  HeartPulse,
+  ListChecks,
   LogOut,
   Pencil,
   Presentation,
   RefreshCw,
+  Rocket,
   Trash2,
   Users,
 } from "lucide-react";
@@ -23,12 +28,14 @@ const supabase = createClient(
     "sb_publishable_-RPm45eBd8_CVaNk4GbXhg_nxOkMrLr",
 );
 const teams = Array.from({ length: 8 }, (_, i) => `Team ${i + 1}`);
-type Kind = "checkin" | "pulse" | "health" | "checkout" | "review";
+type Kind = "checkin" | "pulse" | "health" | "checkout" | "progress" | "checkout2" | "review";
 const titles: Record<Kind, string> = {
   checkin: "Week 1 Check-in",
   pulse: "Class Pulse",
   health: "Team Health Check",
   checkout: "Week 1 Engagement Check-out",
+  progress: "Week 2 Implementation Pre-check",
+  checkout2: "Week 2 Engagement Check-out",
   review: "Poster Peer Review",
 };
 function App() {
@@ -58,8 +65,7 @@ function App() {
         </a>
         <nav>
           <a href="#journey">Journey</a>
-          <a href="#week1">Week 1</a>
-          <a href="#expo">Project Expo</a>
+          <a href="#weekly">Weekly Check-in</a>
           <a href="#deliverables">Deliverables</a>
           <a href="/admin">Teacher</a>
         </nav>
@@ -107,10 +113,9 @@ function App() {
         </section>
         <Journey />
         <Studio />
-        <Week1 open={setForm} />
-        <Expo
+        <WeeklyHub
+          open={setForm}
           peerReviewOpen={peerReviewOpen}
-          openReview={() => peerReviewOpen && setForm("review")}
         />
         <Deliverables />
       </main>
@@ -149,91 +154,210 @@ function Journey() {
     ],
   ];
   return (
-    <section id="journey">
-      <Head label="Course journey" title="Commit. Prove. Validate. Deliver." />
-      <div className="week-grid">
-        {weeks.map((w) => (
-          <article key={w[0]}>
-            <small>WEEK {w[0]}</small>
-            <h3>{w[1]}</h3>
-            <b>{w[2]}</b>
-            <p>{w[3]}</p>
-          </article>
-        ))}
-      </div>
+    <section id="journey" className="journey-collapsible">
+      <details>
+        <summary>
+          <div>
+            <span>Course journey · Four-week overview</span>
+            <h2>Commit. Prove. Validate. Deliver.</h2>
+          </div>
+          <span className="journey-expand">
+            <span>View journey</span>
+            <ChevronDown aria-hidden="true" />
+          </span>
+        </summary>
+        <div className="journey-content">
+          <div className="week-grid">
+            {weeks.map((w) => (
+              <article key={w[0]}>
+                <small>WEEK {w[0]}</small>
+                <h3>{w[1]}</h3>
+                <b>{w[2]}</b>
+                <p>{w[3]}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </details>
     </section>
   );
 }
 function Studio() {
   return (
-    <section className="dark">
-      <Head
-        label="Monday Studio"
-        title="The one session every team protects."
-        text="Industry story → team stand-up → design review → workshop → checkpoint → next mission."
-      />
-      <div className="principles">
-        {[
-          [
-            Users,
-            "Show up",
-            "Real engineering teams protect shared delivery time.",
-          ],
-          [
-            Presentation,
-            "Speak up",
-            "Every member should explain decisions and contribution.",
-          ],
-          [
-            ClipboardCheck,
-            "Help another team",
-            "Peer feedback is part of professional practice.",
-          ],
-          [
-            CheckCircle2,
-            "Demo over excuses",
-            "Evidence of working software matters.",
-          ],
-        ].map(([Icon, t, p]: any) => (
-          <div key={t}>
-            <Icon />
-            <b>{t}</b>
-            <p>{p}</p>
+    <section className="dark studio-collapsible">
+      <details>
+        <summary>
+          <div>
+            <span>Monday Studio · First session guide</span>
+            <h2>The one session every team protects.</h2>
           </div>
-        ))}
-      </div>
+          <span className="studio-expand">
+            <span>View session guide</span>
+            <ChevronDown aria-hidden="true" />
+          </span>
+        </summary>
+        <div className="studio-content">
+          <p className="studio-flow">
+            Industry story → team stand-up → design review → workshop → checkpoint → next mission.
+          </p>
+          <div className="principles">
+            {[
+              [
+                Users,
+                "Show up",
+                "Real engineering teams protect shared delivery time.",
+              ],
+              [
+                Presentation,
+                "Speak up",
+                "Every member should explain decisions and contribution.",
+              ],
+              [
+                ClipboardCheck,
+                "Help another team",
+                "Peer feedback is part of professional practice.",
+              ],
+              [
+                CheckCircle2,
+                "Demo over excuses",
+                "Evidence of working software matters.",
+              ],
+            ].map(([Icon, t, p]: any) => (
+              <div key={t}>
+                <Icon />
+                <b>{t}</b>
+                <p>{p}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </details>
     </section>
   );
 }
-function Week1({ open }: { open: (k: Kind) => void }) {
+function WeeklyHub({
+  open,
+  peerReviewOpen,
+}: {
+  open: (k: Kind) => void;
+  peerReviewOpen: boolean | null;
+}) {
+  const [week, setWeek] = useState<1 | 2 | 3 | 4>(1);
+  const tabs = [
+    { number: 1 as const, label: "Start", hint: "Connect & align" },
+    { number: 2 as const, label: "Prove", hint: "Show implementation" },
+    { number: 3 as const, label: "Validate", hint: "Review readiness" },
+    { number: 4 as const, label: "Deliver", hint: "Prepare presentation" },
+  ];
   return (
-    <section id="week1">
+    <section id="weekly" className="weekly-hub">
       <Head
-        label="Week 1 · Studio Kickoff"
-        title="Start light. Learn who is in the room."
-        text="After the course briefing, use short interactions to understand the class, meet every team and establish how we will work together."
+        label="Weekly Check-in"
+        title="One place for every week."
+        text="Choose your week to see the activities, evidence and preparation needed now."
       />
-      <div className="activity-grid">
-        <Activity
-          title="Class Pulse"
-          text="Anonymous confidence, concerns and AI-use snapshot."
-          action={() => open("pulse")}
-        />
-        <Activity
-          title="Team Health Check"
-          text="Share your individual view of communication, participation and delivery health."
-          action={() => open("health")}
-        />
-        <Activity
-          title="Week 1 Engagement Check-out"
-          text="Record how you participated after Monday and what the teacher should verify next."
-          action={() => open("checkout")}
-        />
+      <div className="week-tabs" role="tablist" aria-label="Weekly activities">
+        {tabs.map((tab) => (
+          <button
+            key={tab.number}
+            type="button"
+            role="tab"
+            aria-selected={week === tab.number}
+            aria-controls={`week-panel-${tab.number}`}
+            className={week === tab.number ? "active" : ""}
+            onClick={() => setWeek(tab.number)}
+          >
+            <span>Week {tab.number}</span>
+            <b>{tab.label}</b>
+            <small>{tab.hint}</small>
+          </button>
+        ))}
       </div>
-      <blockquote>
-        “I already know you can build software. For the next four weeks, I want
-        to help you learn how to deliver software.”
-      </blockquote>
+
+      <div id={`week-panel-${week}`} className={`week-panel week-${week}`} role="tabpanel">
+        {week === 1 && (
+          <>
+            <div className="week-panel-intro">
+              <div className="week-visual"><Rocket /></div>
+              <div>
+                <span>Week 1 · Studio Kickoff</span>
+                <h3>Meet the team and establish a healthy start.</h3>
+                <p>Three short touchpoints connect the compulsory Monday studio with the rest of your first week.</p>
+              </div>
+            </div>
+            <div className="activity-grid">
+              <Activity icon={Presentation} badge="Class signal" title="Class Pulse" text="Share an anonymous snapshot of confidence, concerns and AI use." action={() => open("pulse")} />
+              <Activity icon={HeartPulse} badge="Individual view" title="Team Health Check" text="Reflect on communication, participation and delivery health." action={() => open("health")} />
+              <Activity icon={ClipboardCheck} badge="End of week" title="Week 1 Engagement Check-out" text="Record participation beyond Monday and prepare for the next conversation." action={() => open("checkout")} />
+            </div>
+          </>
+        )}
+
+        {week === 2 && (
+          <>
+            <div className="week-panel-intro">
+              <div className="week-visual"><Code2 /></div>
+              <div>
+                <span>Week 2 · Implementation Review</span>
+                <h3>Show one concrete contribution and prove it.</h3>
+                <p>Prepare the implementation claim, location, demonstration and verification evidence for the compulsory Monday review.</p>
+              </div>
+            </div>
+            <div className="activity-grid two-up">
+              <Activity icon={Code2} badge="Before Monday review" title="Implementation Pre-check" text="Identify one implementation, where it can be found, how it works and how you will verify it." action={() => open("progress")} />
+              <Activity icon={ClipboardCheck} badge="End of week" title="Week 2 Engagement Check-out" text="Record participation beyond Monday without repeating implementation evidence." action={() => open("checkout2")} />
+            </div>
+            <p className="week-panel-note">Pre-check responses prepare a verification conversation. They are descriptive evidence, not an automatic mark.</p>
+          </>
+        )}
+
+        {week === 3 && (
+          <>
+            <div className="week-panel-intro">
+              <div className="week-visual"><ListChecks /></div>
+              <div>
+                <span>Week 3 · Project Expo</span>
+                <h3>Validate the product, evidence and document readiness.</h3>
+                <p>Use peer review to find the highest-priority gap before Demo Day.</p>
+              </div>
+            </div>
+            <Expo
+              peerReviewOpen={peerReviewOpen}
+              openReview={() => peerReviewOpen && open("review")}
+            />
+            <div className="coming-card">
+              <ClipboardCheck />
+              <div><b>Week 3 Engagement Check-out</b><p>The continuous Week 3 check-out will appear here in the next phase.</p></div>
+              <span>Coming next</span>
+            </div>
+          </>
+        )}
+
+        {week === 4 && (
+          <>
+            <div className="week-panel-intro">
+              <div className="week-visual"><Rocket /></div>
+              <div>
+                <span>Week 4 · Demo Day</span>
+                <h3>Prepare a calm, credible presentation.</h3>
+                <p>This space is ready for the final presentation checklist and confirmed presentation order.</p>
+              </div>
+            </div>
+            <div className="week4-placeholders">
+              <article>
+                <ListChecks />
+                <div><span>Preparation</span><h3>Presentation Checklist</h3><p>Final content, demo readiness, evidence, timing and team handover checks will be added here.</p></div>
+                <b>To be confirmed</b>
+              </article>
+              <article>
+                <Presentation />
+                <div><span>Schedule</span><h3>Presentation Order</h3><p>The confirmed team order and presentation timing will be published here.</p></div>
+                <b>To be published</b>
+              </article>
+            </div>
+          </>
+        )}
+      </div>
     </section>
   );
 }
@@ -351,16 +475,24 @@ function Head({
   );
 }
 function Activity({
+  icon: Icon,
+  badge,
   title,
   text,
   action,
 }: {
+  icon: typeof ArrowRight;
+  badge: string;
   title: string;
   text: string;
   action: () => void;
 }) {
   return (
-    <article>
+    <article className="activity-card">
+      <div className="activity-card-top">
+        <span className="activity-icon"><Icon /></span>
+        <small>{badge}</small>
+      </div>
       <h3>{title}</h3>
       <p>{text}</p>
       <button onClick={action}>
@@ -373,7 +505,7 @@ function friendlyError(code: string | undefined, kind: Kind) {
   if (kind === "review" && code === "42501")
     return "Peer review is currently closed. Your response was not submitted.";
   if (code === "23505") {
-    if (kind === "health" || kind === "checkout" || kind === "checkin")
+    if (kind === "health" || kind === "checkout" || kind === "checkout2" || kind === "progress" || kind === "checkin")
       return "This Student ID has already submitted this activity.";
     if (kind === "review") return "You have already reviewed this team.";
   }
@@ -471,7 +603,36 @@ function submissionReceipt(
       { label: "Main issue", value: text("main_issue") },
       { label: "Details", value: text("risk_note") },
     ],
+    progress: [
+      { label: "Team", value: text("team") },
+      { label: "Deliverable area", value: text("deliverable_area") },
+      { label: "Implementation claim", value: text("implementation_item") },
+      { label: "Implementation state", value: text("implementation_state") },
+      { label: "Work location", value: text("work_location") },
+      { label: "Evidence reference", value: text("evidence_reference") },
+      { label: "Demonstration", value: text("demonstration_method") },
+      { label: "Verification level", value: text("verification_level") },
+      { label: "Methods to explain", value: text("implementation_methods") },
+      { label: "Remaining issue", value: text("remaining_issue") },
+      { label: "Issue details", value: text("issue_note") },
+      { label: "Next action", value: text("next_action") },
+      { label: "Teacher verification", value: text("teacher_verification") },
+    ],
     checkout: [
+      { label: "Team", value: text("team") },
+      { label: "Participation", value: text("participation_mode") },
+      { label: "Time invested", value: text("time_invested") },
+      { label: "Contribution areas", value: text("contribution_areas") },
+      { label: "Task completion", value: text("task_completion") },
+      { label: "Evidence", value: text("evidence_status") },
+      { label: "Team communication", value: text("team_communication") },
+      { label: "Participation balance", value: text("participation_balance") },
+      { label: "Next task clarity", value: text("next_task_clarity") },
+      { label: "Work status", value: text("work_status") },
+      { label: "Monday discussion focus", value: text("discussion_focus") },
+      { label: "Details", value: text("detail_note") },
+    ],
+    checkout2: [
       { label: "Team", value: text("team") },
       { label: "Participation", value: text("participation_mode") },
       { label: "Time invested", value: text("time_invested") },
@@ -558,7 +719,7 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
     >;
     const identityReady =
       activeKind === "pulse" ||
-      ((activeKind === "checkin" || activeKind === "health" || activeKind === "checkout") &&
+      ((activeKind === "checkin" || activeKind === "health" || activeKind === "checkout" || activeKind === "checkout2" || activeKind === "progress") &&
         Boolean(String(values.sid ?? "").trim())) ||
       (activeKind === "review" &&
         Boolean(String(values.sid ?? "").trim()) &&
@@ -583,12 +744,20 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
       FormDataEntryValue
     >;
     const contributionAreas = formData.getAll("contribution_areas").map(String);
-    if (activeKind === "checkout") {
+    const implementationMethods = formData.getAll("implementation_methods").map(String);
+    if (activeKind === "checkout" || activeKind === "checkout2") {
       if (contributionAreas.length === 0) {
         setMsg("Select at least one contribution area.");
         return;
       }
       v.contribution_areas = contributionAreas.join(", ");
+    }
+    if (activeKind === "progress") {
+      if (implementationMethods.length === 0) {
+        setMsg("Select at least one implementation method to explain.");
+        return;
+      }
+      v.implementation_methods = implementationMethods.join(", ");
     }
     let storageKey = "";
     try {
@@ -637,10 +806,10 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
         risk_note: v.risk_note || null,
       };
     }
-    if (activeKind === "checkout") {
+    if (activeKind === "checkout" || activeKind === "checkout2") {
       table = "weekly_engagement_checkouts";
       payload = {
-        week_number: 1,
+        week_number: activeKind === "checkout2" ? 2 : 1,
         student_name: v.name,
         student_id: v.sid,
         team_name: v.team,
@@ -655,6 +824,26 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
         work_status: v.work_status,
         discussion_focus: v.discussion_focus,
         detail_note: v.detail_note || null,
+      };
+    }
+    if (activeKind === "progress") {
+      table = "week2_progress_reviews";
+      payload = {
+        student_name: v.name,
+        student_id: v.sid,
+        team_name: v.team,
+        deliverable_area: v.deliverable_area,
+        implementation_item: v.implementation_item,
+        implementation_state: v.implementation_state,
+        work_location: v.work_location,
+        evidence_reference: v.evidence_reference || null,
+        demonstration_method: v.demonstration_method,
+        verification_level: v.verification_level,
+        implementation_methods: implementationMethods,
+        remaining_issue: v.remaining_issue,
+        issue_note: v.issue_note || null,
+        next_action: v.next_action,
+        teacher_verification: v.teacher_verification,
       };
     }
     if (activeKind === "review") {
@@ -959,7 +1148,7 @@ function TeamHealthFields() {
     {risk && <label>Brief details<textarea name="risk_note" required maxLength={200} /><small className="field-hint">Maximum 200 characters</small></label>}
   </div>;
 }
-function EngagementCheckoutFields() {
+function EngagementCheckoutFields({ week = 1 }: { week?: 1 | 2 }) {
   const [risk, setRisk] = useState(false);
   const assess = (form: HTMLFormElement) => {
     const data = new FormData(form);
@@ -968,7 +1157,7 @@ function EngagementCheckoutFields() {
   };
   const areas = ["Team discussion","Planning or research","UI/UX","Development","Testing","Documentation","Presentation or demo preparation","Team coordination","Other"];
   return <div onChange={(event) => assess(event.currentTarget.closest("form") as HTMLFormElement)}>
-    <p className="form-note">Complete this after the final Week 1 session, including work completed remotely.</p>
+    <p className="form-note">Complete this after the final Week {week} session, including work completed remotely.</p>
     <Identity />
     <Choice label="1. How did you participate after compulsory Monday?" name="participation_mode" options={["Wednesday session","Thursday session","Both sessions","Remote teamwork","Individual work only","No further participation"]} />
     <Choice label="2. Time invested this week" name="time_invested" options={["Less than 1 hour","1–2 hours","3–5 hours","More than 5 hours"]} />
@@ -981,6 +1170,31 @@ function EngagementCheckoutFields() {
     <Choice label="9. Current work status" name="work_status" options={["On track","Some difficulty","At risk","Blocked"]} />
     <Choice label="10. What should the teacher verify on Monday?" name="discussion_focus" options={["My completed work","Technical difficulty","Team communication","Uneven participation","Task or scope clarity","Progress report or documentation","Nothing specific","Other"]} />
     {risk && <label>Brief details<textarea name="detail_note" required maxLength={200} /><small className="field-hint">Maximum 200 characters</small></label>}
+  </div>;
+}
+function ProgressReviewFields() {
+  const [needsDetail, setNeedsDetail] = useState(false);
+  const methods = ["Architecture or component structure","Core logic or algorithm","Data flow","Database design","API or external service integration","Security or access control","Testing method","UI/UX decision","Hardware integration","Other"];
+  const assess = (form: HTMLFormElement) => {
+    const data = new FormData(form);
+    const issue = String(data.get("remaining_issue") ?? "");
+    setNeedsDetail(!["", "No major issue"].includes(issue));
+  };
+  return <div onChange={(event) => assess(event.currentTarget.closest("form") as HTMLFormElement)}>
+    <p className="form-note">Choose one concrete personal implementation for the compulsory Week 2 review. Be ready to show it, explain the method and verify the result.</p>
+    <Identity />
+    <Choice label="1. Which deliverable are you mainly responsible for?" name="deliverable_area" options={["Frontend / UI","Backend / API","Database","Authentication / Security","Hardware / Integration","Testing","Documentation","Project coordination","Other"]} />
+    <label>2. What specific item have you personally implemented?<textarea name="implementation_item" required maxLength={200} placeholder="One concrete function, component, test result or document — not your general role." /><small className="field-hint">Maximum 200 characters</small></label>
+    <Choice label="3. What is its current implementation state?" name="implementation_state" options={["Implemented and verified","Implemented but not fully verified","Partially implemented","Designed but not implemented","Blocked"]} />
+    <Choice label="4. Where can your work be found?" name="work_location" options={["GitHub repository / commits","Application or deployed system","Database / backend service","Test records","Design or documentation","Hardware prototype","Not yet available","Other"]} />
+    <label>Evidence reference (optional)<input name="evidence_reference" maxLength={300} placeholder="Branch, commit, page, file, function or demo item" /><small className="field-hint">Do not include passwords or private access details.</small></label>
+    <Choice label="5. How will you demonstrate or verify it?" name="demonstration_method" options={["Run the function live","Show the implemented code and explain it","Run a test case","Show database / API output","Demonstrate hardware integration","Show design / document evidence","Cannot demonstrate it yet"]} />
+    <Choice label="6. What level of verification has been completed?" name="verification_level" options={["Demonstrated successfully on the target system","Integrated with other project components","Tested independently only","Informally checked","Not yet tested"]} />
+    <fieldset className="choice-checklist"><legend>7. Which implementation method should you be ready to explain?</legend>{methods.map(method => <label key={method}><input type="checkbox" name="implementation_methods" value={method} /><span>{method}</span></label>)}</fieldset>
+    <Choice label="8. What is the main remaining issue?" name="remaining_issue" options={["No major issue","Integration incomplete","Testing incomplete","Technical defect","Security or data concern","Dependency on another team member","Scope or time constraint","Implementation not yet working","Other"]} />
+    {needsDetail && <label>Brief issue details<textarea name="issue_note" required maxLength={200} /><small className="field-hint">Explain only what the teacher should verify. Maximum 200 characters.</small></label>}
+    <Choice label="9. What is your next concrete action after the review?" name="next_action" options={["Complete implementation","Integrate components","Fix defects","Add or run tests","Verify security / data","Deploy to target device or environment","Prepare evidence","Update documentation","Other"]} />
+    <Choice label="10. What should the teacher verify during Monday’s review?" name="teacher_verification" options={["Whether the function works","My implementation method","My individual contribution","Integration with the team project","Testing and evidence","Current blocker","Progress Report accuracy","Other"]} />
   </div>;
 }
 function fields(k: Kind) {
@@ -1040,7 +1254,9 @@ function fields(k: Kind) {
       </>
     );
   if (k === "health") return <TeamHealthFields />;
-  if (k === "checkout") return <EngagementCheckoutFields />;
+  if (k === "checkout") return <EngagementCheckoutFields week={1} />;
+  if (k === "progress") return <ProgressReviewFields />;
+  if (k === "checkout2") return <EngagementCheckoutFields week={2} />;
   return (
     <>
       <p className="form-note">
@@ -1151,13 +1367,35 @@ function Admin() {
       ],
     },
     {
-      table: "weekly_engagement_checkouts",
-      label: "Week 1 check-outs",
-      title: "Week 1 Engagement Check-out",
-      description: "Review participation outside Monday, evidence readiness and Monday discussion focus.",
-      select: "id, week_number, student_name, student_id, team_name, participation_mode, time_invested, contribution_areas, task_completion, evidence_status, team_communication, participation_balance, next_task_clarity, work_status, discussion_focus, detail_note, created_at, updated_at",
+      table: "week2_progress_reviews",
+      label: "Week 2 implementation pre-checks",
+      title: "Week 2 Implementation Pre-check",
+      description: "Verify each student’s claim through demonstration, method explanation, evidence and remaining work.",
+      select: "id, student_name, student_id, team_name, deliverable_area, implementation_item, implementation_state, work_location, evidence_reference, demonstration_method, verification_level, implementation_methods, remaining_issue, issue_note, next_action, teacher_verification, created_at, updated_at",
       columns: [
         ["student_name", "Name"], ["student_id", "Student ID"], ["team_name", "Team"],
+        ["deliverable_area", "Deliverable"], ["implementation_item", "Implementation claim"],
+        ["implementation_state", "State"], ["work_location", "Location"],
+        ["evidence_reference", "Evidence reference"], ["demonstration_method", "Demonstration"],
+        ["verification_level", "Verification"], ["implementation_methods", "Methods to explain"],
+        ["remaining_issue", "Remaining issue"], ["issue_note", "Issue details"],
+        ["next_action", "Next action"], ["teacher_verification", "Teacher verification"],
+        ["created_at", "Created"], ["updated_at", "Updated"],
+      ],
+      editable: [
+        ["student_name", "Name", "text", 100], ["student_id", "Student ID", "text", 40],
+        ["team_name", "Team", "team", 0], ["implementation_item", "Implementation claim", "textarea", 200],
+        ["evidence_reference", "Evidence reference", "textarea", 300], ["issue_note", "Issue details", "textarea", 200],
+      ],
+    },
+    {
+      table: "weekly_engagement_checkouts",
+      label: "Weekly check-outs",
+      title: "Weekly Engagement Check-outs",
+      description: "Review Week 1–3 participation outside Monday, evidence readiness and the next compulsory discussion focus.",
+      select: "id, week_number, student_name, student_id, team_name, participation_mode, time_invested, contribution_areas, task_completion, evidence_status, team_communication, participation_balance, next_task_clarity, work_status, discussion_focus, detail_note, created_at, updated_at",
+      columns: [
+        ["week_number", "Week"], ["student_name", "Name"], ["student_id", "Student ID"], ["team_name", "Team"],
         ["participation_mode", "Participation"], ["time_invested", "Time invested"],
         ["contribution_areas", "Contribution areas"], ["task_completion", "Task completion"],
         ["evidence_status", "Evidence"], ["team_communication", "Communication"],
@@ -2009,7 +2247,7 @@ function Admin() {
                       {[1, 2, 3, 4, 5].map((rating) => <option key={rating} value={rating}>{rating} / 5</option>)}
                     </select>
                   ) : type === "textarea" ? (
-                    <textarea name={field} defaultValue={String(editRecord[field] ?? "")} maxLength={maxLength} required={field !== "additional_feedback"} />
+                    <textarea name={field} defaultValue={String(editRecord[field] ?? "")} maxLength={maxLength} required={!["additional_feedback", "evidence_reference", "discussion_note", "issue_note", "risk_note", "detail_note"].includes(field)} />
                   ) : (
                     <input name={field} defaultValue={String(editRecord[field] ?? "")} maxLength={maxLength} required />
                   )}
