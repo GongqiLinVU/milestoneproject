@@ -6,19 +6,24 @@ create table if not exists public.teacher_progress_reviews (
   student_name text not null check (char_length(student_name) between 1 and 100),
   student_id text not null,
   team_name text not null check (team_name ~ '^Team [1-8]$'),
-  claim_status text not null check (claim_status in ('Verified','Partially verified','Not demonstrated','Different from pre-check')),
+  review_outcome text not null check (review_outcome in ('Verified','Partially verified','Not verified','Unable to demonstrate','Further evidence required')),
   demonstration_outcome text not null check (demonstration_outcome in ('Worked on target system','Worked with limitations','Partial demonstration','Could not demonstrate','Not applicable')),
   method_explanation text not null check (method_explanation in ('Clear and credible','Mostly clear','Limited explanation','Could not explain')),
   evidence_quality text not null check (evidence_quality in ('Strong and traceable','Adequate','Partial','No usable evidence')),
   contribution_verification text not null check (contribution_verification in ('Clearly verified','Partly verified','Needs further evidence','Not verified')),
   report_alignment text not null check (report_alignment in ('Consistent','Minor update needed','Significant update needed','Not checked')),
-  follow_up_priority text not null check (follow_up_priority in ('No follow-up','Implementation','Integration','Testing','Evidence','Documentation','Team contribution','Urgent intervention')),
-  teacher_note text check (teacher_note is null or char_length(teacher_note) <= 400),
+  teacher_feedback text not null check (char_length(teacher_feedback) between 1 and 800),
+  follow_up_status text not null check (follow_up_status in ('Not reviewed','No follow-up needed','Action required','In progress','Recheck next session','Resolved')),
+  follow_up_actions text[] not null check (
+    cardinality(follow_up_actions) between 1 and 10
+    and follow_up_actions <@ array['No action required','Complete implementation','Fix identified issue','Provide code or commit evidence','Add or run tests','Complete integration','Update Progress Report','Clarify individual contribution','Prepare another demonstration','Other']::text[]
+  ),
+  follow_up_note text check (follow_up_note is null or char_length(follow_up_note) <= 400),
+  recheck_week smallint check (recheck_week is null or recheck_week between 2 and 4),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint teacher_progress_reviews_student_id_key unique (student_id)
 );
-
 alter table public.teacher_progress_reviews enable row level security;
 revoke all on public.teacher_progress_reviews from anon, authenticated;
 grant select, insert, update, delete on public.teacher_progress_reviews to authenticated;
