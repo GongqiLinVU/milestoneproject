@@ -124,3 +124,4 @@ The project currently uses simple milestone-based versions while the production 
 - Added risk-triggered notes limited to 200 characters.
 - Added Team Participation Temperature and raw response review to the Teacher Dashboard.
 - Added shared Week 1–3 engagement schema with student create-only and teacher-only management policies.
+\n\n## 2026-07-29 — Sprint 3 Phase 2 (in progress)\n\n- Added Week 2 Individual Progress Review and a Week 2 instance of Weekly Engagement Check-out.\n- Added teacher views for Week 2 progress evidence and week-labelled check-outs.\n- Added insert-only student and teacher-only management policies for progress reviews.\n
