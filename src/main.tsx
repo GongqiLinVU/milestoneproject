@@ -1579,21 +1579,56 @@ function Admin() {
     activeTable === "team_health_checks"
       ? teams.map((team) => {
           const teamRecords = records.filter((record) => record.team_name === team);
-          const severe = teamRecords.some((record) =>
-            record.delivery_status === "Blocked" ||
-            record.teacher_support === "Yes" ||
-            record.communication === "Not yet" ||
-            record.voice === "No"
-          );
-          const concern = teamRecords.some((record) =>
-            record.delivery_status === "Some risk" ||
-            record.teacher_support === "Maybe" ||
-            record.role_clarity === "Not clear" ||
-            record.participation_balance === "Significant difference"
-          );
-          const level = teamRecords.length < 2 ? "insufficient" : severe ? "cold" : concern ? "cool" : "warm";
-          const label = level === "warm" ? "Warm" : level === "cool" ? "Cool" : level === "cold" ? "Cold" : "Insufficient data";
-          return { team, count: teamRecords.length, level, label };
+          const riskPoints = teamRecords.reduce((total, record) => {
+            const points = [
+              record.communication === "Not yet" ? 2 : 0,
+              record.role_clarity === "Not clear"
+                ? 2
+                : record.role_clarity === "Partly clear"
+                  ? 1
+                  : 0,
+              record.participation_balance === "Significant difference"
+                ? 2
+                : record.participation_balance === "Some difference"
+                  ? 1
+                  : 0,
+              record.delivery_status === "Blocked"
+                ? 2
+                : record.delivery_status === "Some risk"
+                  ? 1
+                  : 0,
+              record.voice === "No" ? 2 : record.voice === "Sometimes" ? 1 : 0,
+              record.teacher_support === "Yes"
+                ? 2
+                : record.teacher_support === "Maybe"
+                  ? 1
+                  : 0,
+            ];
+            return total + points.reduce((sum, point) => sum + point, 0);
+          }, 0);
+          const score =
+            teamRecords.length === 0
+              ? null
+              : Math.round(
+                  100 - (riskPoints / (teamRecords.length * 12)) * 100,
+                );
+          const level =
+            score === null
+              ? "insufficient"
+              : score >= 75
+                ? "warm"
+                : score >= 50
+                  ? "cool"
+                  : "cold";
+          const label =
+            level === "warm"
+              ? "Stable"
+              : level === "cool"
+                ? "Watch"
+                : level === "cold"
+                  ? "Attention"
+                  : "No data";
+          return { team, count: teamRecords.length, level, label, score };
         })
       : [];
 
@@ -1808,13 +1843,37 @@ function Admin() {
         )}
         {dataStatus === "success" && activeTable === "team_health_checks" && records.length > 0 && (
           <div className="temperature-grid" aria-label="Team participation temperature">
-            {teamTemperatures.map(({ team, count, level, label }) => (
+            <div className="temperature-legend" aria-label="Temperature ranges">
+              <span className="warm">75–100 Stable</span>
+              <span className="cool">50–74 Watch</span>
+              <span className="cold">0–49 Attention</span>
+              <span className="insufficient">No responses</span>
+            </div>
+            {teamTemperatures.map(({ team, count, level, label, score }) => (
               <article className={`temperature-card ${level}`} key={team}>
-                <div className="thermometer" aria-hidden="true"><span /></div>
-                <div><b>{team}</b><strong>{label}</strong><small>{count} student {count === 1 ? "response" : "responses"}</small></div>
+                <div
+                  className="thermometer"
+                  role="img"
+                  aria-label={`${team}: ${score === null ? "no data" : `${score}, ${label}`}`}
+                >
+                  <span style={{ height: `${score === null ? 8 : Math.max(score, 8)}%` }} />
+                </div>
+                <div>
+                  <b>{team}</b>
+                  <strong>{score === null ? "—" : score} · {label}</strong>
+                  <small>
+                    {count === 0
+                      ? "No student responses"
+                      : `${count} student ${count === 1 ? "response · Early signal" : "responses"}`}
+                  </small>
+                </div>
               </article>
             ))}
-            <p className="temperature-note">Participation temperature is a descriptive teaching signal only. It is not a performance score or assessment result.</p>
+            <p className="temperature-note">
+              Colour reflects the answers received; response count shows coverage.
+              A single response is an early signal, not a whole-team conclusion.
+              Participation temperature is descriptive only and is not an assessment result.
+            </p>
           </div>
         )}
         {dataStatus === "success" && records.length === 0 && (
