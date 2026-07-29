@@ -129,7 +129,7 @@ Detailed scope, Phase acceptance criteria and the current handoff are stored in
 
 ## Sprint 3 — Week 2 Review and Teaching Analytics
 
-**Status: Active — Phase 1 next**
+**Status: Active — Phase 3B in progress**
 
 Sprint 3 combines the original Teaching Analytics direction with classroom
 feedback gathered on 27 July 2026. The current shared, long-text Team
@@ -145,7 +145,7 @@ Planned delivery sequence:
 3. Add teacher-only review outcome, feedback, agreed action and follow-up.
 4. Add completion, team health, disagreement and follow-up analytics that drill
    down to submitted evidence.
-5. Add authorised export, privacy verification and production hardening.
+6. Add authorised export, privacy verification and production hardening.
 
 Most student questions use selections. Short text is conditional or optional.
 Analytics remain descriptive and must not infer marks or performance without
@@ -219,4 +219,4 @@ These expansions should only begin after the NIT3004 workflow is stable and demo
 ### Sprint 3 Phase 1 — Week 1 Engagement Loop
 
 Implemented in PR #18: individual Team Health Check, Week 1 Engagement Check-out, Team Participation Temperature, create-only student access and teacher-only review. Historical Team Conversation and Four-Week Action Plan records are retained.
-\n\n### Sprint 3 Phase 2 — Week 2 Progress Review and Check-out (in progress)\n\n- Add an individual pre-review progress snapshot.\n- Reuse the ten-question engagement check-out with Week 2 identity.\n- Prepare teacher review readiness from progress, evidence and support signals.\n- Keep teacher judgement and feedback separate for Phase 3.\n
+\n\n### Sprint 3 Phase 2 — Week 2 Progress Review and Check-out (in progress)\n\n- Add an individual pre-review progress snapshot.\n- Reuse the ten-question engagement check-out with Week 2 identity.\n- Prepare teacher review readiness from progress, evidence and support signals.\n- Keep teacher judgement and feedback separate for Phase 3.\n\n\n### Sprint 3 Phase 3B — AI Teaching Suggestion (in progress)\n\nA narrow teacher-controlled pilot adds one structured teaching suggestion inside the private Review & Follow-up. The server excludes student identity, requires a teacher session, does not persist AI output automatically and never changes marks, verification or follow-up status.\n
