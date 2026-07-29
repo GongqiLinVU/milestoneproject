@@ -1540,3 +1540,38 @@ button.danger:hover {
   .ai-suggestion-fields { grid-template-columns: 1fr; }
   .ai-suggestion-actions { align-items: stretch; flex-direction: column; }
 }
+
+/* Sprint 3 Phase 3B: starting and closing AI checkpoints */
+.ai-teaching-intro {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: .85rem;
+  margin-bottom: 1rem;
+}
+.ai-teaching-intro small {
+  color: #665aa8;
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.ai-teaching-intro h4 { margin: .15rem 0 .2rem; font-size: 1.08rem; }
+.ai-teaching-intro p { margin: 0; color: #5e6880; font-size: .84rem; line-height: 1.45; }
+.ai-checkpoint {
+  padding: 1rem;
+  border: 1px solid #d9def3;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .72);
+}
+.ai-checkpoint + .ai-checkpoint { margin-top: .85rem; }
+.ai-checkpoint-closing { border-color: #c9dfd6; background: rgba(245, 253, 249, .82); }
+.ai-checkpoint .ai-teaching-heading {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.ai-checkpoint-closing .ai-teaching-heading small { color: #2d7a5c; }
+.ai-checkpoint .ai-suggestion-card { background: #fff; }
+@media (max-width: 760px) {
+  .ai-checkpoint .ai-teaching-heading { grid-template-columns: 1fr; }
+  .ai-checkpoint .ai-teaching-heading button { grid-column: 1; }
+}
