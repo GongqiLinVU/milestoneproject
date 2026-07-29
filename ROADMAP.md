@@ -219,4 +219,16 @@ These expansions should only begin after the NIT3004 workflow is stable and demo
 ### Sprint 3 Phase 1 — Week 1 Engagement Loop
 
 Implemented in PR #18: individual Team Health Check, Week 1 Engagement Check-out, Team Participation Temperature, create-only student access and teacher-only review. Historical Team Conversation and Four-Week Action Plan records are retained.
-\n\n### Sprint 3 Phase 2 — Week 2 Progress Review and Check-out (in progress)\n\n- Add an individual pre-review progress snapshot.\n- Reuse the ten-question engagement check-out with Week 2 identity.\n- Prepare teacher review readiness from progress, evidence and support signals.\n- Keep teacher judgement and feedback separate for Phase 3.\n\n\n### Sprint 3 Phase 3B — AI Teaching Suggestion (in progress)\n\nA narrow teacher-controlled pilot adds one structured teaching suggestion inside the private Review & Follow-up. The server excludes student identity, requires a teacher session, does not persist AI output automatically and never changes marks, verification or follow-up status.\n
+
+
+### Sprint 3 Phase 2 — Week 2 Progress Review and Check-out (in progress)
+
+- Add an individual pre-review progress snapshot.
+- Reuse the ten-question engagement check-out with Week 2 identity.
+- Prepare teacher review readiness from progress, evidence and support signals.
+- Keep teacher judgement and feedback separate for Phase 3.
+
+
+### Sprint 3 Phase 3B — AI Teaching Suggestion (in progress)
+
+A narrow teacher-controlled pilot adds one structured teaching suggestion inside the private Review & Follow-up. The server excludes student identity, requires a teacher session, does not persist AI output automatically and never changes marks, verification or follow-up status.
