@@ -190,8 +190,8 @@ export default async function handler(req: any, res: any) {
               discussion_paths: {
                 type: "array",
                 description: "Starting: exactly three distinct conversation paths. Closing: return an empty array.",
-                minItems: 0,
-                maxItems: 3,
+                minItems: context.stage === "starting" ? 3 : 0,
+                maxItems: context.stage === "starting" ? 3 : 0,
                 items: {
                   type: "object",
                   additionalProperties: false,
@@ -208,8 +208,8 @@ export default async function handler(req: any, res: any) {
               next_step_options: {
                 type: "array",
                 description: "Starting: return an empty array. Closing: exactly three distinct next-step choices.",
-                minItems: 0,
-                maxItems: 3,
+                minItems: context.stage === "closing" ? 3 : 0,
+                maxItems: context.stage === "closing" ? 3 : 0,
                 items: {
                   type: "object",
                   additionalProperties: false,
