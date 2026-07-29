@@ -148,3 +148,4 @@ Monday discussion questions, but teachers retain final judgement.
 - Surface Action required, In progress and Recheck items in later-week teacher views.
 - Keep a single current review per student while preserving updated timestamps.
 - Provide a compact follow-up queue for Week 3 and Week 4.
+\nPhase 3B acceptance:\n\n- Only a valid Supabase teacher session can call the AI endpoint.\n- `OPENAI_API_KEY` is server-only and absent from browser bundles.\n- Requests exclude name, Student ID, email and team.\n- Project name, description, implementation claim and begun teacher verification are required.\n- Structured output contains current signal, one question, next action and teaching spark.\n- Suggestions remain temporary until the teacher explicitly copies content and saves the review.\n- AI cannot set marks, verification outcome or follow-up status.\n- Generate, edit, regenerate, use and dismiss flows are available.\n
