@@ -28,7 +28,7 @@ const supabase = createClient(
     "sb_publishable_-RPm45eBd8_CVaNk4GbXhg_nxOkMrLr",
 );
 const teams = Array.from({ length: 8 }, (_, i) => `Team ${i + 1}`);
-type Kind = "checkin" | "pulse" | "health" | "checkout" | "progress" | "checkout2" | "review";
+type Kind = "checkin" | "pulse" | "health" | "checkout" | "progress" | "checkout2" | "checkout3" | "review";
 const titles: Record<Kind, string> = {
   checkin: "Week 1 Check-in",
   pulse: "Class Pulse",
@@ -36,6 +36,7 @@ const titles: Record<Kind, string> = {
   checkout: "Week 1 Engagement Check-out",
   progress: "Week 2 Implementation Pre-check",
   checkout2: "Week 2 Engagement Check-out",
+  checkout3: "Week 3 Engagement Check-out",
   review: "Poster Peer Review",
 };
 function App() {
@@ -325,10 +326,8 @@ function WeeklyHub({
               peerReviewOpen={peerReviewOpen}
               openReview={() => peerReviewOpen && open("review")}
             />
-            <div className="coming-card">
-              <ClipboardCheck />
-              <div><b>Week 3 Engagement Check-out</b><p>The continuous Week 3 check-out will appear here in the next phase.</p></div>
-              <span>Coming next</span>
+            <div className="activity-grid">
+              <Activity icon={ClipboardCheck} badge="End of week" title="Week 3 Engagement Check-out" text="Record final-delivery participation, evidence readiness and any risk that needs attention before Demo Day." action={() => open("checkout3")} />
             </div>
           </>
         )}
@@ -505,7 +504,7 @@ function friendlyError(code: string | undefined, kind: Kind) {
   if (kind === "review" && code === "42501")
     return "Peer review is currently closed. Your response was not submitted.";
   if (code === "23505") {
-    if (kind === "health" || kind === "checkout" || kind === "checkout2" || kind === "progress" || kind === "checkin")
+    if (kind === "health" || kind === "checkout" || kind === "checkout2" || kind === "checkout3" || kind === "progress" || kind === "checkin")
       return "This Student ID has already submitted this activity.";
     if (kind === "review") return "You have already reviewed this team.";
   }
@@ -632,6 +631,20 @@ function submissionReceipt(
       { label: "Monday discussion focus", value: text("discussion_focus") },
       { label: "Details", value: text("detail_note") },
     ],
+    checkout3: [
+      { label: "Team", value: text("team") },
+      { label: "Participation", value: text("participation_mode") },
+      { label: "Time invested", value: text("time_invested") },
+      { label: "Contribution areas", value: text("contribution_areas") },
+      { label: "Task completion", value: text("task_completion") },
+      { label: "Evidence", value: text("evidence_status") },
+      { label: "Team communication", value: text("team_communication") },
+      { label: "Participation balance", value: text("participation_balance") },
+      { label: "Next task clarity", value: text("next_task_clarity") },
+      { label: "Work status", value: text("work_status") },
+      { label: "Monday discussion focus", value: text("discussion_focus") },
+      { label: "Details", value: text("detail_note") },
+    ],
     checkout2: [
       { label: "Team", value: text("team") },
       { label: "Participation", value: text("participation_mode") },
@@ -719,7 +732,7 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
     >;
     const identityReady =
       activeKind === "pulse" ||
-      ((activeKind === "checkin" || activeKind === "health" || activeKind === "checkout" || activeKind === "checkout2" || activeKind === "progress") &&
+      ((activeKind === "checkin" || activeKind === "health" || activeKind === "checkout" || activeKind === "checkout2" || activeKind === "checkout3" || activeKind === "progress") &&
         Boolean(String(values.sid ?? "").trim())) ||
       (activeKind === "review" &&
         Boolean(String(values.sid ?? "").trim()) &&
@@ -745,7 +758,7 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
     >;
     const contributionAreas = formData.getAll("contribution_areas").map(String);
     const implementationMethods = formData.getAll("implementation_methods").map(String);
-    if (activeKind === "checkout" || activeKind === "checkout2") {
+    if (activeKind === "checkout" || activeKind === "checkout2" || activeKind === "checkout3") {
       if (contributionAreas.length === 0) {
         setMsg("Select at least one contribution area.");
         return;
@@ -806,10 +819,10 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
         risk_note: v.risk_note || null,
       };
     }
-    if (activeKind === "checkout" || activeKind === "checkout2") {
+    if (activeKind === "checkout" || activeKind === "checkout2" || activeKind === "checkout3") {
       table = "weekly_engagement_checkouts";
       payload = {
-        week_number: activeKind === "checkout2" ? 2 : 1,
+        week_number: activeKind === "checkout3" ? 3 : activeKind === "checkout2" ? 2 : 1,
         student_name: v.name,
         student_id: v.sid,
         team_name: v.team,
@@ -1148,7 +1161,7 @@ function TeamHealthFields() {
     {risk && <label>Brief details<textarea name="risk_note" required maxLength={200} /><small className="field-hint">Maximum 200 characters</small></label>}
   </div>;
 }
-function EngagementCheckoutFields({ week = 1 }: { week?: 1 | 2 }) {
+function EngagementCheckoutFields({ week = 1 }: { week?: 1 | 2 | 3 }) {
   const [risk, setRisk] = useState(false);
   const assess = (form: HTMLFormElement) => {
     const data = new FormData(form);
@@ -1257,6 +1270,7 @@ function fields(k: Kind) {
   if (k === "checkout") return <EngagementCheckoutFields week={1} />;
   if (k === "progress") return <ProgressReviewFields />;
   if (k === "checkout2") return <EngagementCheckoutFields week={2} />;
+  if (k === "checkout3") return <EngagementCheckoutFields week={3} />;
   return (
     <>
       <p className="form-note">
@@ -1389,6 +1403,25 @@ function Admin() {
       ],
     },
     {
+      table: "teacher_progress_reviews",
+      label: "Teacher reviews",
+      title: "Week 2 Teacher Review outcomes",
+      description: "Record and inspect verified outcomes from the compulsory implementation review. These are descriptive teaching records, not automatic marks.",
+      select: "id, student_name, student_id, team_name, claim_status, demonstration_outcome, method_explanation, evidence_quality, contribution_verification, report_alignment, follow_up_priority, teacher_note, created_at, updated_at",
+      columns: [
+        ["student_name", "Name"], ["student_id", "Student ID"], ["team_name", "Team"],
+        ["claim_status", "Implementation claim"], ["demonstration_outcome", "Demonstration"],
+        ["method_explanation", "Method explanation"], ["evidence_quality", "Evidence"],
+        ["contribution_verification", "Individual contribution"], ["report_alignment", "Report alignment"],
+        ["follow_up_priority", "Follow-up"], ["teacher_note", "Teacher note"],
+        ["created_at", "Created"], ["updated_at", "Updated"],
+      ],
+      editable: [
+        ["student_name", "Name", "text", 100], ["student_id", "Student ID", "text", 40],
+        ["team_name", "Team", "team", 0], ["teacher_note", "Teacher note", "textarea", 400],
+      ],
+    },
+    {
       table: "weekly_engagement_checkouts",
       label: "Weekly check-outs",
       title: "Weekly Engagement Check-outs",
@@ -1474,6 +1507,8 @@ function Admin() {
   const [peerReviewOpen, setPeerReviewOpen] = useState<boolean | null>(null);
   const [peerReviewBusy, setPeerReviewBusy] = useState(false);
   const [peerReviewMessage, setPeerReviewMessage] = useState("");
+  const [teacherReviewBusy, setTeacherReviewBusy] = useState(false);
+  const [teacherReviewMessage, setTeacherReviewMessage] = useState("");
   const requestSequence = useRef(0);
 
   useEffect(() => {
@@ -1565,6 +1600,37 @@ function Admin() {
         ? "Peer Review is now open for student submissions."
         : "Peer Review is now closed. Existing reviews are unchanged.",
     );
+  }
+
+  async function createTeacherReview(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setTeacherReviewBusy(true);
+    setTeacherReviewMessage("");
+    const values = Object.fromEntries(new FormData(event.currentTarget));
+    const payload = {
+      student_name: String(values.student_name ?? "").trim(),
+      student_id: String(values.student_id ?? "").trim(),
+      team_name: values.team_name,
+      claim_status: values.claim_status,
+      demonstration_outcome: values.demonstration_outcome,
+      method_explanation: values.method_explanation,
+      evidence_quality: values.evidence_quality,
+      contribution_verification: values.contribution_verification,
+      report_alignment: values.report_alignment,
+      follow_up_priority: values.follow_up_priority,
+      teacher_note: String(values.teacher_note ?? "").trim() || null,
+    };
+    const { error } = await supabase.from("teacher_progress_reviews").insert(payload);
+    setTeacherReviewBusy(false);
+    if (error) {
+      setTeacherReviewMessage(error.code === "23505"
+        ? "A teacher review already exists for this Student ID. Open Teacher reviews to edit the existing record."
+        : "The teacher review could not be recorded. Check the fields and teacher permissions.");
+      return;
+    }
+    event.currentTarget.reset();
+    setTeacherReviewMessage("Teacher review recorded.");
+    await loadDashboard(activeTable);
   }
 
   async function login(e: any) {
@@ -2000,6 +2066,29 @@ function Admin() {
           </p>
         )}
       </section>
+      <details className="teacher-review-entry">
+        <summary>
+          <div><span>Week 2 compulsory review</span><h2>Record Teacher Review</h2></div>
+          <span>Open review form <ChevronDown aria-hidden="true" /></span>
+        </summary>
+        <form onSubmit={createTeacherReview}>
+          <div className="teacher-review-grid">
+            <label>Student name<input name="student_name" required maxLength={100} /></label>
+            <label>Student ID<input name="student_id" required minLength={3} maxLength={40} /></label>
+            <Team name="team_name" label="Team" />
+            <Choice label="Implementation claim" name="claim_status" options={["Verified","Partially verified","Not demonstrated","Different from pre-check"]} />
+            <Choice label="Demonstration outcome" name="demonstration_outcome" options={["Worked on target system","Worked with limitations","Partial demonstration","Could not demonstrate","Not applicable"]} />
+            <Choice label="Method explanation" name="method_explanation" options={["Clear and credible","Mostly clear","Limited explanation","Could not explain"]} />
+            <Choice label="Evidence quality" name="evidence_quality" options={["Strong and traceable","Adequate","Partial","No usable evidence"]} />
+            <Choice label="Individual contribution" name="contribution_verification" options={["Clearly verified","Partly verified","Needs further evidence","Not verified"]} />
+            <Choice label="Progress Report alignment" name="report_alignment" options={["Consistent","Minor update needed","Significant update needed","Not checked"]} />
+            <Choice label="Follow-up priority" name="follow_up_priority" options={["No follow-up","Implementation","Integration","Testing","Evidence","Documentation","Team contribution","Urgent intervention"]} />
+          </div>
+          <label>Teacher note (optional)<textarea name="teacher_note" maxLength={400} placeholder="Record only the evidence gap or agreed follow-up." /></label>
+          {teacherReviewMessage && <p className="admin-alert" role="status">{teacherReviewMessage}</p>}
+          <button disabled={teacherReviewBusy}>{teacherReviewBusy ? "Recording…" : "Record review"}</button>
+        </form>
+      </details>
       <div className="metric-grid" aria-label="Activity record views">
         {activityTables.map(({ table, label }) => (
           <button
