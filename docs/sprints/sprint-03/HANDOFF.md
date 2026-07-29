@@ -1,6 +1,6 @@
 # Sprint 3 Handoff
 
-**Status: Active; Phase 1 implementation started**
+**Status: Active; Phase 1 complete and Phase 2 in progress**
 
 ## Starting point
 
@@ -11,20 +11,7 @@
 - The Sprint now creates a continuous Week 1–3 engagement evidence loop.
 - AI-assisted personalised teaching remains future scope.
 
-## Current Phase
-
-**Phase 1 — Week 1 Engagement Loop**
-
-Implementation branch: `sprint-3-phase-1-engagement-loop`
-
-Deliver:
-
-- Team Conversation → individual Team Health Check
-- Four-Week Action Plan → Week 1 Engagement Check-out
-- Team Participation Temperature and coverage in Teacher Dashboard
-- new create-only student tables with teacher-only reads
-- retained historical tables and records
-- migration, schema, tests and documentation
+## Current Phase\n\n**Phase 2 — Week 2 Progress Review and Check-out**\n\nImplementation branch: `sprint-3-phase-2-week2-progress`\n\nDeliver:\n\n- two-minute Week 2 Individual Progress Review before the compulsory demo conversation\n- Week 2 reuse of the ten-question Engagement Check-out\n- teacher access to progress, contribution evidence, readiness and raw answers\n- create-only student submissions with teacher-only reads\n- migration, schema, build, RLS and production verification
 
 ## Approved sequencing
 
@@ -51,4 +38,5 @@ Implemented on PR #18:
 - student insert-only and teacher-only read/manage access;
 - historical Team Conversation and Four-Week Action Plan data preserved.
 
-Pending before merge: apply the migration in Supabase and complete production smoke testing with real anonymous and teacher sessions.
+Phase 1 was migration-tested, smoke-tested and merged through PR #18 as commit `b7bd280`. The temperature range now reports answer health separately from response coverage.
+\n\n## Phase 2 implementation update — 2026-07-29\n\nStarted the Week 2 Progress Review and Week 2 Check-out on a dedicated branch. Teacher review outcomes remain Phase 3 scope. Pending: preview build, migration application, anonymous/teacher smoke tests and explicit merge approval.\n
