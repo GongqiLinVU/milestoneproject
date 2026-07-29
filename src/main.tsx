@@ -2116,7 +2116,7 @@ function Admin() {
                       {[1, 2, 3, 4, 5].map((rating) => <option key={rating} value={rating}>{rating} / 5</option>)}
                     </select>
                   ) : type === "textarea" ? (
-                    <textarea name={field} defaultValue={String(editRecord[field] ?? "")} maxLength={maxLength} required={field !== "additional_feedback"} />
+                    <textarea name={field} defaultValue={String(editRecord[field] ?? "")} maxLength={maxLength} required={!["additional_feedback", "evidence_reference", "discussion_note", "risk_note", "detail_note"].includes(field)} />
                   ) : (
                     <input name={field} defaultValue={String(editRecord[field] ?? "")} maxLength={maxLength} required />
                   )}
