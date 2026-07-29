@@ -35,7 +35,7 @@ The current module guides students through a four-week journey:
 - Anonymous Class Pulse charts for confidence, concerns and AI usage
 - Teacher edit and confirmed delete for identified activity records
 - Teacher mutations protected by `is_teacher()` UPDATE/DELETE RLS policies
-- Teacher-only implementation review outcomes
+- Private student-by-student implementation Review & Follow-up with operational status and recheck actions
 - Teacher-controlled Poster Peer Review opening and closing
 - Export the currently selected activity as a stable UTF-8 CSV; Class Pulse
   exports only aggregate distributions
@@ -133,4 +133,4 @@ the detailed [Sprint 2 plan](docs/sprints/sprint-02/PLAN.md), and the reusable
 
 ### Sprint 3 — continuous engagement evidence
 
-Week 1 uses an individual Team Health Check and a ten-question Engagement Check-out. Week 2 adds an Implementation Pre-check. Phase 3 adds teacher-only verification outcomes and a Week 3 Check-out. The Teacher Dashboard retains raw evidence and presents descriptive teaching signals only—never an automatic mark or performance judgement.
+Week 1 uses an individual Team Health Check and a ten-question Engagement Check-out. Week 2 adds an Implementation Pre-check. Phase 3 adds a private teacher Review & Follow-up workflow linked to each Implementation Pre-check, plus a Week 3 Check-out. The Teacher Dashboard retains raw evidence and presents descriptive teaching signals only—never an automatic mark or performance judgement.
