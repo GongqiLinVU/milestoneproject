@@ -1,6 +1,6 @@
 # Sprint 3 — Continuous Engagement and Teaching Review
 
-**Status: Active — Phase 1 complete; Phase 2 in progress**
+**Status: Active — Phases 1–2 complete; Phase 3 in progress**
 
 ## Teaching problem
 
@@ -69,10 +69,18 @@ Add a two-minute Individual Progress Review before the compulsory Monday review 
 
 ## Phase 3 — Teacher Review and Week 3 Check-out
 
-Add teacher-only review outcome, feedback, agreed action and follow-up. Reuse the
-Engagement Check-out with week number 3, emphasising individual responsibility
-and final-delivery risk. Student self-report and teacher judgement remain
-separate.
+Add a teacher-only verification record after the compulsory implementation review. The review captures implementation claim verification, demonstration outcome, method explanation, evidence quality, individual contribution, Progress Report alignment and one follow-up priority. An optional 400-character teacher note records only evidence gaps or agreed action.
+
+Reuse the Engagement Check-out with week number 3, emphasising final-delivery participation, evidence readiness and unresolved risk. Student self-report and teacher judgement remain separate.
+
+Acceptance:
+
+- Only authenticated teachers can create, read, update or delete Teacher Review records.
+- One Teacher Review is retained per Student ID; corrections edit the existing record.
+- Teacher Review outcomes are descriptive evidence and never an automatic mark.
+- Students can submit one Week 3 Check-out using the existing Student ID + week constraint.
+- Week 1 and Week 2 records remain unchanged.
+- Build, migration and RLS verification pass before merge.
 
 ## Phase 4 — Three-week trajectory and teaching analytics
 
