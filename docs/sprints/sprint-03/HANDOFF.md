@@ -75,3 +75,17 @@ Pending: preview build, migration application, role smoke tests and explicit mer
 ## Phase 3B implementation update — 2026-07-29
 
 Started a protected Vercel serverless endpoint and teacher-only suggestion card. The request excludes student identity and returns four structured teaching prompts. AI output remains temporary unless the teacher deliberately copies it into a follow-up and saves the review. No database migration is required. Pending: preview build, Vercel environment configuration, authenticated endpoint smoke tests and explicit merge approval.
+
+
+## Phase 3B dual-checkpoint enhancement — 2026-07-30
+
+Implemented on a dedicated Draft PR branch:
+
+- a starting suggestion based only on Project Snapshot and the student pre-check;
+- a closing suggestion unlocked by teacher verification;
+- a short `What changed after review` comparison in the closing output;
+- independent temporary edit, regenerate and dismiss flows for both checkpoints;
+- follow-up copying available only from the closing suggestion;
+- no AI database persistence, automatic scoring or changes to teacher verification.
+
+No database migration is required. Pending: Vercel Preview build, authenticated starting/closing generation smoke tests and explicit merge approval.
