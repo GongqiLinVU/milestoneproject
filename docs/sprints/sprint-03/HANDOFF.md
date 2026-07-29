@@ -1,6 +1,6 @@
 # Sprint 3 Handoff
 
-**Status: Active; Phase 1 complete and Phase 2 in progress**
+**Status: Active; Phases 1–2 complete and Phase 3 in progress**
 
 ## Starting point
 
@@ -11,7 +11,19 @@
 - The Sprint now creates a continuous Week 1–3 engagement evidence loop.
 - AI-assisted personalised teaching remains future scope.
 
-## Current Phase\n\n**Phase 2 — Week 2 Progress Review and Check-out**\n\nImplementation branch: `sprint-3-phase-2-week2-progress`\n\nDeliver:\n\n- two-minute Week 2 Individual Progress Review before the compulsory demo conversation\n- Week 2 reuse of the ten-question Engagement Check-out\n- teacher access to progress, contribution evidence, readiness and raw answers\n- create-only student submissions with teacher-only reads\n- migration, schema, build, RLS and production verification
+## Current Phase
+
+**Phase 3 — Teacher Review and Week 3 Check-out**
+
+Implementation branch: `agent/sprint-3-phase-3-teacher-review`
+
+Deliver:
+
+- teacher-only verified review outcome after the compulsory implementation conversation
+- Week 3 reuse of the ten-question Engagement Check-out
+- clear separation between student self-report and teacher judgement
+- one review per Student ID with teacher correction through the dashboard
+- migration, schema, build, RLS and production verification
 
 ## Approved sequencing
 
@@ -40,3 +52,15 @@ Implemented on PR #18:
 
 Phase 1 was migration-tested, smoke-tested and merged through PR #18 as commit `b7bd280`. The temperature range now reports answer health separately from response coverage.
 \n\n## Phase 2 implementation update — 2026-07-29\n\nStarted the Week 2 Progress Review and Week 2 Check-out on a dedicated branch. Teacher review outcomes remain Phase 3 scope. Pending: preview build, migration application, anonymous/teacher smoke tests and explicit merge approval.\n
+
+## Phase 3 implementation update — 2026-07-29
+
+Implemented on a dedicated Draft PR branch:
+
+- Week 3 Engagement Check-out in the Week 3 tab;
+- collapsible Teacher Review entry in the protected dashboard;
+- verification of claim, demonstration, method, evidence, individual contribution and report alignment;
+- one follow-up priority plus an optional short teacher note;
+- teacher-only table, grants and RLS.
+
+Pending: preview build, migration application, role smoke tests and explicit merge approval.
