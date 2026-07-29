@@ -11,7 +11,6 @@ import {
   FileText,
   HeartPulse,
   ListChecks,
-  LockKeyhole,
   LogOut,
   Pencil,
   Presentation,
@@ -34,7 +33,7 @@ const titles: Record<Kind, string> = {
   pulse: "Class Pulse",
   health: "Team Health Check",
   checkout: "Week 1 Engagement Check-out",
-  progress: "Week 2 Individual Progress Review",
+  progress: "Week 2 Implementation Pre-check",
   checkout2: "Week 2 Engagement Check-out",
   review: "Poster Peer Review",
 };
@@ -580,13 +579,18 @@ function submissionReceipt(
     ],
     progress: [
       { label: "Team", value: text("team") },
-      { label: "Current progress", value: text("current_progress") },
-      { label: "Contribution areas", value: text("contribution_areas") },
-      { label: "Evidence status", value: text("evidence_status") },
+      { label: "Deliverable area", value: text("deliverable_area") },
+      { label: "Implementation claim", value: text("implementation_item") },
+      { label: "Implementation state", value: text("implementation_state") },
+      { label: "Work location", value: text("work_location") },
       { label: "Evidence reference", value: text("evidence_reference") },
-      { label: "Next task clarity", value: text("next_task_clarity") },
-      { label: "Support needed", value: text("support_needed") },
-      { label: "Discussion note", value: text("discussion_note") },
+      { label: "Demonstration", value: text("demonstration_method") },
+      { label: "Verification level", value: text("verification_level") },
+      { label: "Methods to explain", value: text("implementation_methods") },
+      { label: "Remaining issue", value: text("remaining_issue") },
+      { label: "Issue details", value: text("issue_note") },
+      { label: "Next action", value: text("next_action") },
+      { label: "Teacher verification", value: text("teacher_verification") },
     ],
     checkout: [
       { label: "Team", value: text("team") },
@@ -714,12 +718,20 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
       FormDataEntryValue
     >;
     const contributionAreas = formData.getAll("contribution_areas").map(String);
-    if (activeKind === "checkout" || activeKind === "checkout2" || activeKind === "progress") {
+    const implementationMethods = formData.getAll("implementation_methods").map(String);
+    if (activeKind === "checkout" || activeKind === "checkout2") {
       if (contributionAreas.length === 0) {
         setMsg("Select at least one contribution area.");
         return;
       }
       v.contribution_areas = contributionAreas.join(", ");
+    }
+    if (activeKind === "progress") {
+      if (implementationMethods.length === 0) {
+        setMsg("Select at least one implementation method to explain.");
+        return;
+      }
+      v.implementation_methods = implementationMethods.join(", ");
     }
     let storageKey = "";
     try {
@@ -794,13 +806,18 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
         student_name: v.name,
         student_id: v.sid,
         team_name: v.team,
-        current_progress: v.current_progress,
-        contribution_areas: contributionAreas,
-        evidence_status: v.evidence_status,
+        deliverable_area: v.deliverable_area,
+        implementation_item: v.implementation_item,
+        implementation_state: v.implementation_state,
+        work_location: v.work_location,
         evidence_reference: v.evidence_reference || null,
-        next_task_clarity: v.next_task_clarity,
-        support_needed: v.support_needed,
-        discussion_note: v.discussion_note || null,
+        demonstration_method: v.demonstration_method,
+        verification_level: v.verification_level,
+        implementation_methods: implementationMethods,
+        remaining_issue: v.remaining_issue,
+        issue_note: v.issue_note || null,
+        next_action: v.next_action,
+        teacher_verification: v.teacher_verification,
       };
     }
     if (activeKind === "review") {
@@ -1131,24 +1148,30 @@ function EngagementCheckoutFields({ week = 1 }: { week?: 1 | 2 }) {
 }
 function ProgressReviewFields() {
   const [needsDetail, setNeedsDetail] = useState(false);
-  const areas = ["Planning or research","UI/UX","Development","Testing","Documentation","Presentation or demo preparation","Team coordination","Other"];
+  const methods = ["Architecture or component structure","Core logic or algorithm","Data flow","Database design","API or external service integration","Security or access control","Testing method","UI/UX decision","Hardware integration","Other"];
   const assess = (form: HTMLFormElement) => {
     const data = new FormData(form);
-    setNeedsDetail(["At risk","Blocked","Not yet","Not clear","Yes"].some(value => Array.from(data.values()).map(String).includes(value)) || data.getAll("contribution_areas").map(String).includes("Other"));
+    const issue = String(data.get("remaining_issue") ?? "");
+    setNeedsDetail(!["", "No major issue"].includes(issue));
   };
   return <div onChange={(event) => assess(event.currentTarget.closest("form") as HTMLFormElement)}>
-    <p className="form-note">Complete this before the compulsory Week 2 review. Bring your evidence to the project demo and method-verification discussion.</p>
+    <p className="form-note">Choose one concrete personal implementation for the compulsory Week 2 review. Be ready to show it, explain the method and verify the result.</p>
     <Identity />
-    <Choice label="1. Current progress" name="current_progress" options={["On track","Slightly behind","At risk","Blocked"]} />
-    <fieldset className="choice-checklist"><legend>2. Contribution areas (select all that apply)</legend>{areas.map(area => <label key={area}><input type="checkbox" name="contribution_areas" value={area} /><span>{area}</span></label>)}</fieldset>
-    <Choice label="3. Evidence available for the review" name="evidence_status" options={["Yes, clearly available","Partly available","Not yet"]} />
-    <label>4. Evidence link or one-line reference (optional)<input name="evidence_reference" maxLength={300} placeholder="Repository, document, demo item or short reference" /><small className="field-hint">Maximum 300 characters. Do not include passwords or private access details.</small></label>
-    <Choice label="5. Is your next task clear?" name="next_task_clarity" options={["Clear","Partly clear","Not clear"]} />
-    <Choice label="6. Is teacher support needed?" name="support_needed" options={["No","Maybe","Yes"]} />
-    {needsDetail && <label>Brief discussion note<textarea name="discussion_note" required maxLength={300} /><small className="field-hint">Explain only what the teacher should verify. Maximum 300 characters.</small></label>}
+    <Choice label="1. Which deliverable are you mainly responsible for?" name="deliverable_area" options={["Frontend / UI","Backend / API","Database","Authentication / Security","Hardware / Integration","Testing","Documentation","Project coordination","Other"]} />
+    <label>2. What specific item have you personally implemented?<textarea name="implementation_item" required maxLength={200} placeholder="One concrete function, component, test result or document — not your general role." /><small className="field-hint">Maximum 200 characters</small></label>
+    <Choice label="3. What is its current implementation state?" name="implementation_state" options={["Implemented and verified","Implemented but not fully verified","Partially implemented","Designed but not implemented","Blocked"]} />
+    <Choice label="4. Where can your work be found?" name="work_location" options={["GitHub repository / commits","Application or deployed system","Database / backend service","Test records","Design or documentation","Hardware prototype","Not yet available","Other"]} />
+    <label>Evidence reference (optional)<input name="evidence_reference" maxLength={300} placeholder="Branch, commit, page, file, function or demo item" /><small className="field-hint">Do not include passwords or private access details.</small></label>
+    <Choice label="5. How will you demonstrate or verify it?" name="demonstration_method" options={["Run the function live","Show the implemented code and explain it","Run a test case","Show database / API output","Demonstrate hardware integration","Show design / document evidence","Cannot demonstrate it yet"]} />
+    <Choice label="6. What level of verification has been completed?" name="verification_level" options={["Demonstrated successfully on the target system","Integrated with other project components","Tested independently only","Informally checked","Not yet tested"]} />
+    <fieldset className="choice-checklist"><legend>7. Which implementation method should you be ready to explain?</legend>{methods.map(method => <label key={method}><input type="checkbox" name="implementation_methods" value={method} /><span>{method}</span></label>)}</fieldset>
+    <Choice label="8. What is the main remaining issue?" name="remaining_issue" options={["No major issue","Integration incomplete","Testing incomplete","Technical defect","Security or data concern","Dependency on another team member","Scope or time constraint","Implementation not yet working","Other"]} />
+    {needsDetail && <label>Brief issue details<textarea name="issue_note" required maxLength={200} /><small className="field-hint">Explain only what the teacher should verify. Maximum 200 characters.</small></label>}
+    <Choice label="9. What is your next concrete action after the review?" name="next_action" options={["Complete implementation","Integrate components","Fix defects","Add or run tests","Verify security / data","Deploy to target device or environment","Prepare evidence","Update documentation","Other"]} />
+    <Choice label="10. What should the teacher verify during Monday’s review?" name="teacher_verification" options={["Whether the function works","My implementation method","My individual contribution","Integration with the team project","Testing and evidence","Current blocker","Progress Report accuracy","Other"]} />
   </div>;
 }
-function fields(k: Kind) {
+function fields(k: Kind)function fields(k: Kind) {
   if (k === "checkin")
     return (
       <>
@@ -1319,24 +1342,28 @@ function Admin() {
     },
     {
       table: "week2_progress_reviews",
-      label: "Week 2 progress reviews",
-      title: "Week 2 Individual Progress Review",
-      description: "Prepare individual demo conversations using progress, contribution evidence, next-task clarity and support needs.",
-      select: "id, student_name, student_id, team_name, current_progress, contribution_areas, evidence_status, evidence_reference, next_task_clarity, support_needed, discussion_note, created_at, updated_at",
+      label: "Week 2 implementation pre-checks",
+      title: "Week 2 Implementation Pre-check",
+      description: "Verify each student’s claim through demonstration, method explanation, evidence and remaining work.",
+      select: "id, student_name, student_id, team_name, deliverable_area, implementation_item, implementation_state, work_location, evidence_reference, demonstration_method, verification_level, implementation_methods, remaining_issue, issue_note, next_action, teacher_verification, created_at, updated_at",
       columns: [
         ["student_name", "Name"], ["student_id", "Student ID"], ["team_name", "Team"],
-        ["current_progress", "Progress"], ["contribution_areas", "Contribution areas"],
-        ["evidence_status", "Evidence"], ["evidence_reference", "Evidence reference"],
-        ["next_task_clarity", "Next task"], ["support_needed", "Support"],
-        ["discussion_note", "Discussion note"], ["created_at", "Created"], ["updated_at", "Updated"],
+        ["deliverable_area", "Deliverable"], ["implementation_item", "Implementation claim"],
+        ["implementation_state", "State"], ["work_location", "Location"],
+        ["evidence_reference", "Evidence reference"], ["demonstration_method", "Demonstration"],
+        ["verification_level", "Verification"], ["implementation_methods", "Methods to explain"],
+        ["remaining_issue", "Remaining issue"], ["issue_note", "Issue details"],
+        ["next_action", "Next action"], ["teacher_verification", "Teacher verification"],
+        ["created_at", "Created"], ["updated_at", "Updated"],
       ],
       editable: [
         ["student_name", "Name", "text", 100], ["student_id", "Student ID", "text", 40],
-        ["team_name", "Team", "team", 0], ["evidence_reference", "Evidence reference", "textarea", 300],
-        ["discussion_note", "Discussion note", "textarea", 300],
+        ["team_name", "Team", "team", 0], ["implementation_item", "Implementation claim", "textarea", 200],
+        ["evidence_reference", "Evidence reference", "textarea", 300], ["issue_note", "Issue details", "textarea", 200],
       ],
     },
     {
+      table: "weekly_engagement_checkouts",    {
       table: "weekly_engagement_checkouts",
       label: "Weekly check-outs",
       title: "Weekly Engagement Check-outs",
@@ -2195,7 +2222,7 @@ function Admin() {
                       {[1, 2, 3, 4, 5].map((rating) => <option key={rating} value={rating}>{rating} / 5</option>)}
                     </select>
                   ) : type === "textarea" ? (
-                    <textarea name={field} defaultValue={String(editRecord[field] ?? "")} maxLength={maxLength} required={!["additional_feedback", "evidence_reference", "discussion_note", "risk_note", "detail_note"].includes(field)} />
+                    <textarea name={field} defaultValue={String(editRecord[field] ?? "")} maxLength={maxLength} required={!["additional_feedback", "evidence_reference", "discussion_note", "issue_note", "risk_note", "detail_note"].includes(field)} />
                   ) : (
                     <input name={field} defaultValue={String(editRecord[field] ?? "")} maxLength={maxLength} required />
                   )}
