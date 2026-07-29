@@ -1208,3 +1208,245 @@ button.danger:hover {
     padding: 10px;
   }
 }
+
+
+/* Sprint 3 Phase 3 — compact teacher verification entry */
+.teacher-review-entry {
+  margin: 2rem 0;
+  border: 1px solid #d9e2ec;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #f8fbff 0%, #eef7f4 100%);
+  overflow: hidden;
+}
+.teacher-review-entry > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.15rem 1.35rem;
+}
+.teacher-review-entry > summary::-webkit-details-marker { display: none; }
+.teacher-review-entry > summary div > span {
+  color: #427264;
+  font-size: .75rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.teacher-review-entry > summary h2 { margin: .2rem 0 0; font-size: 1.25rem; }
+.teacher-review-entry > summary > span {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  color: #3d5963;
+  font-size: .85rem;
+  font-weight: 700;
+}
+.teacher-review-entry[open] > summary svg { transform: rotate(180deg); }
+.teacher-review-entry > form {
+  border-top: 1px solid #d9e2ec;
+  padding: 1.35rem;
+  background: #fff;
+}
+.teacher-review-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .9rem 1.1rem;
+}
+.teacher-review-entry textarea { min-height: 88px; }
+.teacher-review-entry .admin-alert { margin: 1rem 0; color: #286450; }
+@media (max-width: 720px) {
+  .teacher-review-grid { grid-template-columns: 1fr; }
+  .teacher-review-entry > summary > span span { display: none; }
+}
+
+
+/* Sprint 3 Phase 3: private teacher review and follow-up */
+.student-review-list {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 1.25rem;
+}
+.student-review-card {
+  border: 1px solid #dce3ea;
+  border-radius: 18px;
+  background: #fff;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(24, 39, 58, 0.06);
+}
+.student-review-card.open {
+  border-color: #8da8f2;
+  box-shadow: 0 14px 34px rgba(47, 79, 160, 0.12);
+}
+.student-review-summary {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(180px, 1.2fr) minmax(180px, 1fr) auto auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.15rem;
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+  color: #172235;
+  text-align: left;
+}
+.student-review-summary:hover { background: #f7f9fd; }
+.student-review-summary > svg {
+  transition: transform 0.2s ease;
+}
+.student-review-summary[aria-expanded="true"] > svg { transform: rotate(180deg); }
+.student-review-identity,
+.student-review-deliverable {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.student-review-identity b { font-size: 1rem; }
+.student-review-identity small,
+.student-review-deliverable small { color: #68758a; }
+.follow-up-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.38rem 0.68rem;
+  border-radius: 999px;
+  background: #eef1f5;
+  color: #526174;
+  font-size: 0.78rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+.status-no-follow-up-needed,
+.status-resolved { background: #ddf7e8; color: #187346; }
+.status-action-required { background: #ffe3df; color: #a43d31; }
+.status-in-progress,
+.status-recheck-next-session { background: #fff1c9; color: #8a5d00; }
+.student-review-body {
+  border-top: 1px solid #e5eaf0;
+  background: #f7f9fc;
+}
+.student-precheck,
+.teacher-follow-up-form { padding: 1.35rem; }
+.student-precheck { border-bottom: 1px solid #dce3ea; }
+.review-section-heading span {
+  color: #61708a;
+  font-size: 0.75rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.review-section-heading h3 { margin: 0.25rem 0 1rem; }
+.review-evidence-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin: 0;
+}
+.review-evidence-grid > div {
+  padding: 0.85rem;
+  border: 1px solid #e0e6ed;
+  border-radius: 12px;
+  background: #fff;
+}
+.review-evidence-grid dt {
+  margin-bottom: 0.35rem;
+  color: #6b778a;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+.review-evidence-grid dd {
+  margin: 0;
+  color: #1d2939;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.teacher-follow-up-form { background: #fff; }
+.follow-up-actions { margin-top: 1rem; }
+.review-save-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.review-save-row small { color: #6c7889; }
+@media (max-width: 760px) {
+  .student-review-summary {
+    grid-template-columns: 1fr auto;
+  }
+  .student-review-deliverable { grid-column: 1; }
+  .follow-up-badge { grid-column: 1; justify-self: start; }
+  .student-review-summary > svg { grid-column: 2; grid-row: 1 / span 3; }
+  .review-evidence-grid { grid-template-columns: 1fr; }
+  .review-save-row { align-items: stretch; flex-direction: column; }
+}
+
+
+/* Sprint 3 Phase 3A: focused review context and private follow-up */
+.project-context-fields {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  margin: .5rem 0 1.25rem;
+  border: 1px solid #d9e2f2;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #f7faff, #eef5ff);
+}
+.project-context-fields .review-section-heading { margin-bottom: .15rem; }
+.private-teacher-record {
+  margin-top: 1rem;
+  border: 1px solid #d7deea;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #fff;
+}
+.private-teacher-record > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+  cursor: pointer;
+  list-style: none;
+  background: #f6f8fb;
+}
+.private-teacher-record > summary::-webkit-details-marker { display: none; }
+.private-teacher-record > summary > span:first-child {
+  display: grid;
+  gap: .18rem;
+  text-align: left;
+}
+.private-teacher-record > summary small {
+  color: #6d7890;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-weight: 700;
+}
+.private-record-state {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  color: #44506a;
+  font-size: .85rem;
+  font-weight: 700;
+}
+.private-record-state svg { transition: transform .2s ease; }
+.private-teacher-record[open] .private-record-state svg { transform: rotate(180deg); }
+.private-teacher-record .teacher-follow-up-form {
+  margin: 0;
+  padding: 1.1rem;
+  border: 0;
+  border-top: 1px solid #e5e9f1;
+  border-radius: 0;
+}
+.private-record-note {
+  margin: 0 0 1rem;
+  padding: .7rem .85rem;
+  border-left: 3px solid #6678a8;
+  background: #f6f7fb;
+  color: #566078;
+  font-size: .88rem;
+}

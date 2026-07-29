@@ -28,7 +28,7 @@ const supabase = createClient(
     "sb_publishable_-RPm45eBd8_CVaNk4GbXhg_nxOkMrLr",
 );
 const teams = Array.from({ length: 8 }, (_, i) => `Team ${i + 1}`);
-type Kind = "checkin" | "pulse" | "health" | "checkout" | "progress" | "checkout2" | "review";
+type Kind = "checkin" | "pulse" | "health" | "checkout" | "progress" | "checkout2" | "checkout3" | "review";
 const titles: Record<Kind, string> = {
   checkin: "Week 1 Check-in",
   pulse: "Class Pulse",
@@ -36,6 +36,7 @@ const titles: Record<Kind, string> = {
   checkout: "Week 1 Engagement Check-out",
   progress: "Week 2 Implementation Pre-check",
   checkout2: "Week 2 Engagement Check-out",
+  checkout3: "Week 3 Engagement Check-out",
   review: "Poster Peer Review",
 };
 function App() {
@@ -325,10 +326,8 @@ function WeeklyHub({
               peerReviewOpen={peerReviewOpen}
               openReview={() => peerReviewOpen && open("review")}
             />
-            <div className="coming-card">
-              <ClipboardCheck />
-              <div><b>Week 3 Engagement Check-out</b><p>The continuous Week 3 check-out will appear here in the next phase.</p></div>
-              <span>Coming next</span>
+            <div className="activity-grid">
+              <Activity icon={ClipboardCheck} badge="End of week" title="Week 3 Engagement Check-out" text="Record final-delivery participation, evidence readiness and any risk that needs attention before Demo Day." action={() => open("checkout3")} />
             </div>
           </>
         )}
@@ -505,7 +504,7 @@ function friendlyError(code: string | undefined, kind: Kind) {
   if (kind === "review" && code === "42501")
     return "Peer review is currently closed. Your response was not submitted.";
   if (code === "23505") {
-    if (kind === "health" || kind === "checkout" || kind === "checkout2" || kind === "progress" || kind === "checkin")
+    if (kind === "health" || kind === "checkout" || kind === "checkout2" || kind === "checkout3" || kind === "progress" || kind === "checkin")
       return "This Student ID has already submitted this activity.";
     if (kind === "review") return "You have already reviewed this team.";
   }
@@ -632,6 +631,20 @@ function submissionReceipt(
       { label: "Monday discussion focus", value: text("discussion_focus") },
       { label: "Details", value: text("detail_note") },
     ],
+    checkout3: [
+      { label: "Team", value: text("team") },
+      { label: "Participation", value: text("participation_mode") },
+      { label: "Time invested", value: text("time_invested") },
+      { label: "Contribution areas", value: text("contribution_areas") },
+      { label: "Task completion", value: text("task_completion") },
+      { label: "Evidence", value: text("evidence_status") },
+      { label: "Team communication", value: text("team_communication") },
+      { label: "Participation balance", value: text("participation_balance") },
+      { label: "Next task clarity", value: text("next_task_clarity") },
+      { label: "Work status", value: text("work_status") },
+      { label: "Monday discussion focus", value: text("discussion_focus") },
+      { label: "Details", value: text("detail_note") },
+    ],
     checkout2: [
       { label: "Team", value: text("team") },
       { label: "Participation", value: text("participation_mode") },
@@ -719,7 +732,7 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
     >;
     const identityReady =
       activeKind === "pulse" ||
-      ((activeKind === "checkin" || activeKind === "health" || activeKind === "checkout" || activeKind === "checkout2" || activeKind === "progress") &&
+      ((activeKind === "checkin" || activeKind === "health" || activeKind === "checkout" || activeKind === "checkout2" || activeKind === "checkout3" || activeKind === "progress") &&
         Boolean(String(values.sid ?? "").trim())) ||
       (activeKind === "review" &&
         Boolean(String(values.sid ?? "").trim()) &&
@@ -745,7 +758,7 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
     >;
     const contributionAreas = formData.getAll("contribution_areas").map(String);
     const implementationMethods = formData.getAll("implementation_methods").map(String);
-    if (activeKind === "checkout" || activeKind === "checkout2") {
+    if (activeKind === "checkout" || activeKind === "checkout2" || activeKind === "checkout3") {
       if (contributionAreas.length === 0) {
         setMsg("Select at least one contribution area.");
         return;
@@ -806,10 +819,10 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
         risk_note: v.risk_note || null,
       };
     }
-    if (activeKind === "checkout" || activeKind === "checkout2") {
+    if (activeKind === "checkout" || activeKind === "checkout2" || activeKind === "checkout3") {
       table = "weekly_engagement_checkouts";
       payload = {
-        week_number: activeKind === "checkout2" ? 2 : 1,
+        week_number: activeKind === "checkout3" ? 3 : activeKind === "checkout2" ? 2 : 1,
         student_name: v.name,
         student_id: v.sid,
         team_name: v.team,
@@ -832,6 +845,10 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
         student_name: v.name,
         student_id: v.sid,
         team_name: v.team,
+        project_name: v.project_name,
+        project_area: v.project_area,
+        project_description: v.project_description,
+        target_user_problem: v.target_user_problem || null,
         deliverable_area: v.deliverable_area,
         implementation_item: v.implementation_item,
         implementation_state: v.implementation_state,
@@ -1104,22 +1121,24 @@ const SelectChoice = ({
   name,
   placeholder,
   options,
+  defaultValue = "",
 }: {
   label: string;
   name: string;
   placeholder: string;
   options: string[];
+  defaultValue?: string;
 }) => (
   <label>
     {label}
-    <select name={name} defaultValue="" required>
+    <select name={name} defaultValue={defaultValue} required>
       <option value="" disabled>{placeholder}</option>
       {options.map((option) => <option key={option}>{option}</option>)}
     </select>
   </label>
 );
-function Choice({ label, name, options }: { label: string; name: string; options: string[] }) {
-  return <SelectChoice label={label} name={name} placeholder="Select one" options={options} />;
+function Choice({ label, name, options, defaultValue = "" }: { label: string; name: string; options: string[]; defaultValue?: string }) {
+  return <SelectChoice label={label} name={name} placeholder="Select one" options={options} defaultValue={defaultValue} />;
 }
 function TeamHealthFields() {
   const [risk, setRisk] = useState(false);
@@ -1148,7 +1167,7 @@ function TeamHealthFields() {
     {risk && <label>Brief details<textarea name="risk_note" required maxLength={200} /><small className="field-hint">Maximum 200 characters</small></label>}
   </div>;
 }
-function EngagementCheckoutFields({ week = 1 }: { week?: 1 | 2 }) {
+function EngagementCheckoutFields({ week = 1 }: { week?: 1 | 2 | 3 }) {
   const [risk, setRisk] = useState(false);
   const assess = (form: HTMLFormElement) => {
     const data = new FormData(form);
@@ -1183,6 +1202,13 @@ function ProgressReviewFields() {
   return <div onChange={(event) => assess(event.currentTarget.closest("form") as HTMLFormElement)}>
     <p className="form-note">Choose one concrete personal implementation for the compulsory Week 2 review. Be ready to show it, explain the method and verify the result.</p>
     <Identity />
+    <section className="project-context-fields">
+      <div className="review-section-heading"><span>Project snapshot</span><h3>Give the review enough context.</h3></div>
+      <label>Project name<input name="project_name" required maxLength={120} placeholder="Use the same project name across your team" /></label>
+      <Choice label="Project area" name="project_area" options={["Web","Mobile","AI","Data","IoT","Cybersecurity","Game","Other"]} />
+      <label>Project description<textarea name="project_description" required maxLength={300} placeholder="What does the project do, and what problem does it address?" /><small className="field-hint">Maximum 300 characters</small></label>
+      <label>Target user or problem (optional)<input name="target_user_problem" maxLength={150} placeholder="Who benefits, or what specific problem is being solved?" /></label>
+    </section>
     <Choice label="1. Which deliverable are you mainly responsible for?" name="deliverable_area" options={["Frontend / UI","Backend / API","Database","Authentication / Security","Hardware / Integration","Testing","Documentation","Project coordination","Other"]} />
     <label>2. What specific item have you personally implemented?<textarea name="implementation_item" required maxLength={200} placeholder="One concrete function, component, test result or document — not your general role." /><small className="field-hint">Maximum 200 characters</small></label>
     <Choice label="3. What is its current implementation state?" name="implementation_state" options={["Implemented and verified","Implemented but not fully verified","Partially implemented","Designed but not implemented","Blocked"]} />
@@ -1257,6 +1283,7 @@ function fields(k: Kind) {
   if (k === "checkout") return <EngagementCheckoutFields week={1} />;
   if (k === "progress") return <ProgressReviewFields />;
   if (k === "checkout2") return <EngagementCheckoutFields week={2} />;
+  if (k === "checkout3") return <EngagementCheckoutFields week={3} />;
   return (
     <>
       <p className="form-note">
@@ -1371,10 +1398,11 @@ function Admin() {
       label: "Week 2 implementation pre-checks",
       title: "Week 2 Implementation Pre-check",
       description: "Verify each student’s claim through demonstration, method explanation, evidence and remaining work.",
-      select: "id, student_name, student_id, team_name, deliverable_area, implementation_item, implementation_state, work_location, evidence_reference, demonstration_method, verification_level, implementation_methods, remaining_issue, issue_note, next_action, teacher_verification, created_at, updated_at",
+      select: "id, student_name, student_id, team_name, project_name, project_area, project_description, target_user_problem, deliverable_area, implementation_item, implementation_state, work_location, evidence_reference, demonstration_method, verification_level, implementation_methods, remaining_issue, issue_note, next_action, teacher_verification, created_at, updated_at",
       columns: [
         ["student_name", "Name"], ["student_id", "Student ID"], ["team_name", "Team"],
-        ["deliverable_area", "Deliverable"], ["implementation_item", "Implementation claim"],
+        ["project_name", "Project"], ["project_area", "Project area"], ["project_description", "Project description"],
+        ["target_user_problem", "Target user / problem"], ["deliverable_area", "Deliverable"], ["implementation_item", "Implementation claim"],
         ["implementation_state", "State"], ["work_location", "Location"],
         ["evidence_reference", "Evidence reference"], ["demonstration_method", "Demonstration"],
         ["verification_level", "Verification"], ["implementation_methods", "Methods to explain"],
@@ -1474,6 +1502,10 @@ function Admin() {
   const [peerReviewOpen, setPeerReviewOpen] = useState<boolean | null>(null);
   const [peerReviewBusy, setPeerReviewBusy] = useState(false);
   const [peerReviewMessage, setPeerReviewMessage] = useState("");
+  const [teacherReviewBusy, setTeacherReviewBusy] = useState(false);
+  const [teacherReviewMessage, setTeacherReviewMessage] = useState("");
+  const [teacherReviews, setTeacherReviews] = useState<ActivityRecord[]>([]);
+  const [openReviewStudentId, setOpenReviewStudentId] = useState<string | null>(null);
   const requestSequence = useRef(0);
 
   useEffect(() => {
@@ -1567,6 +1599,62 @@ function Admin() {
     );
   }
 
+  async function saveTeacherReview(event: FormEvent<HTMLFormElement>, student: ActivityRecord) {
+    event.preventDefault();
+    setTeacherReviewBusy(true);
+    setTeacherReviewMessage("");
+    const values = Object.fromEntries(new FormData(event.currentTarget));
+    const followUpActions = new FormData(event.currentTarget)
+      .getAll("follow_up_actions")
+      .map(String);
+    if (followUpActions.length === 0) {
+      setTeacherReviewBusy(false);
+      setTeacherReviewMessage("Select at least one follow-up action.");
+      return;
+    }
+    const payload = {
+      student_name: String(student.student_name),
+      student_id: String(student.student_id),
+      team_name: String(student.team_name),
+      review_outcome: values.review_outcome,
+      demonstration_outcome: values.demonstration_outcome,
+      method_explanation: values.method_explanation,
+      evidence_quality: values.evidence_quality,
+      contribution_verification: values.contribution_verification,
+      report_alignment: values.report_alignment,
+      teacher_feedback: String(values.teacher_feedback ?? "").trim(),
+      follow_up_status: values.follow_up_status,
+      follow_up_actions: followUpActions,
+      follow_up_note: String(values.follow_up_note ?? "").trim() || null,
+      recheck_week: values.recheck_week ? Number(values.recheck_week) : null,
+    };
+    const { error } = await supabase
+      .from("teacher_progress_reviews")
+      .upsert(payload, { onConflict: "student_id" });
+    setTeacherReviewBusy(false);
+    if (error) {
+      setTeacherReviewMessage(
+        "The review could not be saved. Check the fields and teacher permissions.",
+      );
+      return;
+    }
+    setTeacherReviewMessage("Review and follow-up saved.");
+    await loadTeacherReviews();
+  }
+
+  async function loadTeacherReviews() {
+    const { data, error } = await supabase
+      .from("teacher_progress_reviews")
+      .select("*")
+      .order("updated_at", { ascending: false });
+    if (error) {
+      setTeacherReviews([]);
+      setTeacherReviewMessage("Teacher follow-up records could not be loaded.");
+      return;
+    }
+    setTeacherReviews((data ?? []) as ActivityRecord[]);
+  }
+
   async function login(e: any) {
     e.preventDefault();
     setAuthBusy(true);
@@ -1625,6 +1713,9 @@ function Admin() {
       return;
     }
     setRecords((recordResult.data ?? []) as ActivityRecord[]);
+    if (table === "week2_progress_reviews") {
+      await loadTeacherReviews();
+    }
     setCounts(
       Object.fromEntries(
         activityTables.map(({ table }, index) => [
@@ -2024,11 +2115,15 @@ function Admin() {
             <div className="eyebrow">Activity records</div>
             <h2 id="activity-heading">{activeActivity.title}</h2>
             <p>{activeActivity.description}</p>
-            {activeTable !== "week1_pulse" && (
+            {activeTable === "week2_progress_reviews" ? (
+              <p className="admin-management-note">
+                Open one student at a time to compare the pre-check with the live demo and code, then save private feedback and follow-up.
+              </p>
+            ) : activeTable !== "week1_pulse" ? (
               <p className="admin-management-note">
                 Teachers can correct invalid details or remove a test submission.
               </p>
-            )}
+            ) : null}
           </div>
           <div className="admin-record-actions">
             <button
@@ -2125,6 +2220,132 @@ function Admin() {
         )}
         {dataStatus === "success" &&
           records.length > 0 &&
+          activeTable === "week2_progress_reviews" && (
+            <div className="student-review-list" aria-label="Student implementation reviews">
+              {records.map((student) => {
+                const studentId = String(student.student_id);
+                const review = teacherReviews.find(
+                  (item) => String(item.student_id).toLowerCase() === studentId.toLowerCase(),
+                );
+                const isOpen = openReviewStudentId === studentId;
+                const status = String(review?.follow_up_status ?? "Not reviewed");
+                const followUpActions = Array.isArray(review?.follow_up_actions)
+                  ? review.follow_up_actions.map(String)
+                  : [];
+                return (
+                  <article className={`student-review-card ${isOpen ? "open" : ""}`} key={student.id}>
+                    <button
+                      type="button"
+                      className="student-review-summary"
+                      aria-expanded={isOpen}
+                      onClick={() => {
+                        setTeacherReviewMessage("");
+                        setOpenReviewStudentId(isOpen ? null : studentId);
+                      }}
+                    >
+                      <span className="student-review-identity">
+                        <b>{String(student.student_name)}</b>
+                        <small>{studentId} · {String(student.team_name)}</small>
+                      </span>
+                      <span className="student-review-deliverable">
+                        <small>Deliverable</small>
+                        <b>{String(student.deliverable_area)}</b>
+                      </span>
+                      <span className={`follow-up-badge status-${status.toLowerCase().replace(/\s+/g, "-")}`}>
+                        {status}
+                      </span>
+                      <ChevronDown aria-hidden="true" />
+                    </button>
+                    {isOpen && (
+                      <div className="student-review-body">
+                        <section className="student-precheck">
+                          <div className="review-section-heading">
+                            <span>Student submission · Read only</span>
+                            <h3>Implementation Pre-check</h3>
+                          </div>
+                          <dl className="review-evidence-grid">
+                            {[
+                              ["Project name", student.project_name],
+                              ["Project area", student.project_area],
+                              ["Project description", student.project_description],
+                              ["Target user / problem", student.target_user_problem],
+                              ["Implementation claim", student.implementation_item],
+                              ["Current state", student.implementation_state],
+                              ["Where to find it", student.work_location],
+                              ["Evidence reference", student.evidence_reference],
+                              ["Demonstration plan", student.demonstration_method],
+                              ["Verification completed", student.verification_level],
+                              ["Method to explain", Array.isArray(student.implementation_methods) ? student.implementation_methods.join(", ") : student.implementation_methods],
+                              ["Remaining issue", student.remaining_issue],
+                              ["Issue details", student.issue_note],
+                              ["Next action", student.next_action],
+                              ["Teacher should verify", student.teacher_verification],
+                            ].map(([label, value]) => (
+                              <div key={String(label)}>
+                                <dt>{String(label)}</dt>
+                                <dd>{formatValue("", value)}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                        </section>
+                        <details className="private-teacher-record">
+                          <summary>
+                            <span><small>Private teacher record</small><b>Review & Follow-up</b></span>
+                            <span className="private-record-state">{review ? status : "Not started"} <ChevronDown aria-hidden="true" /></span>
+                          </summary>
+                          <form className="teacher-follow-up-form" onSubmit={(event) => saveTeacherReview(event, student)}>
+                          <p className="private-record-note">Teacher-only working record. Keep this section closed while reviewing student-submitted evidence together.</p>
+                          <div className="teacher-review-grid">
+                            <Choice label="Review outcome" name="review_outcome" options={["Verified","Partially verified","Not verified","Unable to demonstrate","Further evidence required"]} defaultValue={String(review?.review_outcome ?? "")} />
+                            <Choice label="Demonstration result" name="demonstration_outcome" options={["Worked on target system","Worked with limitations","Partial demonstration","Could not demonstrate","Not applicable"]} defaultValue={String(review?.demonstration_outcome ?? "")} />
+                            <Choice label="Method explanation" name="method_explanation" options={["Clear and credible","Mostly clear","Limited explanation","Could not explain"]} defaultValue={String(review?.method_explanation ?? "")} />
+                            <Choice label="Evidence quality" name="evidence_quality" options={["Strong and traceable","Adequate","Partial","No usable evidence"]} defaultValue={String(review?.evidence_quality ?? "")} />
+                            <Choice label="Individual contribution" name="contribution_verification" options={["Clearly verified","Partly verified","Needs further evidence","Not verified"]} defaultValue={String(review?.contribution_verification ?? "")} />
+                            <Choice label="Progress Report alignment" name="report_alignment" options={["Consistent","Minor update needed","Significant update needed","Not checked"]} defaultValue={String(review?.report_alignment ?? "")} />
+                            <Choice label="Follow-up status" name="follow_up_status" options={["Not reviewed","No follow-up needed","Action required","In progress","Recheck next session","Resolved"]} defaultValue={String(review?.follow_up_status ?? "Not reviewed")} />
+                            <label>
+                              Check again
+                              <select name="recheck_week" defaultValue={String(review?.recheck_week ?? "")}>
+                                <option value="">No scheduled recheck</option>
+                                <option value="2">Week 2</option>
+                                <option value="3">Week 3</option>
+                                <option value="4">Week 4</option>
+                              </select>
+                            </label>
+                          </div>
+                          <label>
+                            Teacher feedback
+                            <textarea name="teacher_feedback" required maxLength={800} defaultValue={String(review?.teacher_feedback ?? "")} placeholder="Record what was verified, what did not match, and the feedback discussed with the student." />
+                          </label>
+                          <fieldset className="choice-checklist follow-up-actions">
+                            <legend>Agreed follow-up action (select all that apply)</legend>
+                            {["No action required","Complete implementation","Fix identified issue","Provide code or commit evidence","Add or run tests","Complete integration","Update Progress Report","Clarify individual contribution","Prepare another demonstration","Other"].map((action) => (
+                              <label key={action}>
+                                <input type="checkbox" name="follow_up_actions" value={action} defaultChecked={followUpActions.includes(action)} />
+                                <span>{action}</span>
+                              </label>
+                            ))}
+                          </fieldset>
+                          <label>
+                            Follow-up note (optional)
+                            <textarea name="follow_up_note" maxLength={400} defaultValue={String(review?.follow_up_note ?? "")} placeholder="Add the concrete action, owner or evidence expected at the next check." />
+                          </label>
+                          {teacherReviewMessage && <p className="admin-alert" role="status">{teacherReviewMessage}</p>}
+                          <div className="review-save-row">
+                            <small>{review ? `Last saved ${formatDateTime(String(review.updated_at))}` : "No teacher review recorded yet"}</small>
+                            <button disabled={teacherReviewBusy}>{teacherReviewBusy ? "Saving…" : review ? "Update review" : "Save review"}</button>
+                          </div>
+                        </form>
+                        </details>
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        {dataStatus === "success" &&
+          records.length > 0 &&
           activeTable === "week1_pulse" && (
             <div className="pulse-overview">
               <p className="pulse-privacy-note">
@@ -2165,7 +2386,8 @@ function Admin() {
           )}
         {dataStatus === "success" &&
           records.length > 0 &&
-          activeTable !== "week1_pulse" && (
+          activeTable !== "week1_pulse" &&
+          activeTable !== "week2_progress_reviews" && (
           <div className="admin-table-wrap">
             <table>
               <caption>
