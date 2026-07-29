@@ -1208,3 +1208,56 @@ button.danger:hover {
     padding: 10px;
   }
 }
+
+
+/* Sprint 3 Phase 3 — compact teacher verification entry */
+.teacher-review-entry {
+  margin: 2rem 0;
+  border: 1px solid #d9e2ec;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #f8fbff 0%, #eef7f4 100%);
+  overflow: hidden;
+}
+.teacher-review-entry > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.15rem 1.35rem;
+}
+.teacher-review-entry > summary::-webkit-details-marker { display: none; }
+.teacher-review-entry > summary div > span {
+  color: #427264;
+  font-size: .75rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.teacher-review-entry > summary h2 { margin: .2rem 0 0; font-size: 1.25rem; }
+.teacher-review-entry > summary > span {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  color: #3d5963;
+  font-size: .85rem;
+  font-weight: 700;
+}
+.teacher-review-entry[open] > summary svg { transform: rotate(180deg); }
+.teacher-review-entry > form {
+  border-top: 1px solid #d9e2ec;
+  padding: 1.35rem;
+  background: #fff;
+}
+.teacher-review-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .9rem 1.1rem;
+}
+.teacher-review-entry textarea { min-height: 88px; }
+.teacher-review-entry .admin-alert { margin: 1rem 0; color: #286450; }
+@media (max-width: 720px) {
+  .teacher-review-grid { grid-template-columns: 1fr; }
+  .teacher-review-entry > summary > span span { display: none; }
+}
