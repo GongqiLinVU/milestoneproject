@@ -152,11 +152,11 @@ export default async function handler(req: any, res: any) {
     body: JSON.stringify({
       model: process.env.OPENAI_MODEL || "gpt-5.6-luna",
       store: false,
-      max_output_tokens: 450,
+      max_output_tokens: 900,
       instructions:
         context.stage === "starting"
-          ? "You are a supportive software-engineering studio teaching copilot preparing a teacher to begin a live review. Analyse only the supplied project and student pre-check. Do not use teacher verification, grade, score, diagnose performance, infer identity, or make disciplinary claims. Give a tentative starting point: one initial signal, one question, one item to verify, and one playful but respectful project-specific teaching spark. Treat every claim as unverified until demonstrated."
-          : "You are a supportive software-engineering studio teaching copilot helping a teacher close a live review. Compare the student pre-check with the supplied teacher verification. Do not grade, score, diagnose performance, infer identity, or make disciplinary claims. State what the review clarified or changed, recommend one practical next action, and end with a supportive project-specific teaching message. If evidence remains incomplete, state the uncertainty.",
+          ? "You are a supportive software-engineering studio teaching copilot preparing a teacher to begin a live review. Analyse only the supplied project and student pre-check. Do not use teacher verification, grade, score, diagnose performance, infer identity, or make disciplinary claims. Give one tentative signal and exactly three genuinely different conversation paths. Each path needs a short title, a distinct focus, one question, one evidence check, and one playful but respectful project-specific teaching spark. Treat every claim as unverified until demonstrated."
+          : "You are a supportive software-engineering studio teaching copilot helping a teacher close a live review. Compare the student pre-check with the supplied teacher verification. Do not grade, score, diagnose performance, infer identity, or make disciplinary claims. State what the review clarified or changed and provide exactly three distinct, practical next-step choices. End with a supportive project-specific teaching message. If evidence remains incomplete, state the uncertainty.",
       input: JSON.stringify(context),
       text: {
         format: {
@@ -187,6 +187,39 @@ export default async function handler(req: any, res: any) {
                 type: "string",
                 description: "Starting: return an empty string. Closing: briefly compare the pre-check with verification and state what changed, maximum 45 words.",
               },
+              discussion_paths: {
+                type: "array",
+                description: "Starting: exactly three distinct conversation paths. Closing: return an empty array.",
+                minItems: 0,
+                maxItems: 3,
+                items: {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: {
+                    title: { type: "string", description: "A scannable path title, maximum 7 words." },
+                    focus: { type: "string", description: "Why this direction may be useful, maximum 24 words." },
+                    question: { type: "string", description: "One question to ask the student, maximum 30 words." },
+                    evidence_check: { type: "string", description: "One concrete demo, code or method check, maximum 30 words." },
+                    teaching_spark: { type: "string", description: "One playful project-specific challenge, maximum 30 words." },
+                  },
+                  required: ["title", "focus", "question", "evidence_check", "teaching_spark"],
+                },
+              },
+              next_step_options: {
+                type: "array",
+                description: "Starting: return an empty array. Closing: exactly three distinct next-step choices.",
+                minItems: 0,
+                maxItems: 3,
+                items: {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: {
+                    title: { type: "string", description: "A scannable action title, maximum 6 words." },
+                    action: { type: "string", description: "A concrete next action, maximum 35 words." },
+                  },
+                  required: ["title", "action"],
+                },
+              },
             },
             required: [
               "signal",
@@ -194,6 +227,8 @@ export default async function handler(req: any, res: any) {
               "action_or_verification",
               "teaching_message",
               "what_changed_after_review",
+              "discussion_paths",
+              "next_step_options",
             ],
           },
         },
