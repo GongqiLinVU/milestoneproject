@@ -940,3 +940,55 @@ button.danger:hover {
     font-size: 46px;
   }
 }
+
+.choice-checklist {
+  border: 1px solid #d9ddd6;
+  border-radius: 14px;
+  padding: 16px;
+}
+.choice-checklist legend { font-weight: 700; padding: 0 6px; }
+.choice-checklist label {
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  margin: 8px 0;
+}
+.choice-checklist input { width: auto; }
+.temperature-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  margin: 20px 0 28px;
+}
+.temperature-card {
+  align-items: center;
+  background: #f6f6f2;
+  border: 1px solid #dedfd8;
+  border-radius: 16px;
+  display: flex;
+  gap: 14px;
+  padding: 16px;
+}
+.temperature-card > div:last-child { display: grid; gap: 3px; }
+.temperature-card strong { font-size: 1.05rem; }
+.temperature-card small { color: #667064; }
+.thermometer {
+  background: #e3e6df;
+  border-radius: 999px;
+  height: 64px;
+  overflow: hidden;
+  position: relative;
+  width: 16px;
+}
+.thermometer span { bottom: 0; left: 0; position: absolute; width: 100%; }
+.temperature-card.warm .thermometer span { background: #38a169; height: 80%; }
+.temperature-card.cool .thermometer span { background: #d69e2e; height: 55%; }
+.temperature-card.cold .thermometer span { background: #d64545; height: 30%; }
+.temperature-card.insufficient .thermometer span { background: #a0a7a0; height: 15%; }
+.temperature-note {
+  color: #667064;
+  font-size: .85rem;
+  grid-column: 1 / -1;
+  margin: 0;
+}
