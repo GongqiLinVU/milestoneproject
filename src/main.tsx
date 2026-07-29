@@ -154,18 +154,31 @@ function Journey() {
     ],
   ];
   return (
-    <section id="journey">
-      <Head label="Course journey" title="Commit. Prove. Validate. Deliver." />
-      <div className="week-grid">
-        {weeks.map((w) => (
-          <article key={w[0]}>
-            <small>WEEK {w[0]}</small>
-            <h3>{w[1]}</h3>
-            <b>{w[2]}</b>
-            <p>{w[3]}</p>
-          </article>
-        ))}
-      </div>
+    <section id="journey" className="journey-collapsible">
+      <details>
+        <summary>
+          <div>
+            <span>Course journey · Four-week overview</span>
+            <h2>Commit. Prove. Validate. Deliver.</h2>
+          </div>
+          <span className="journey-expand">
+            <span>View journey</span>
+            <ChevronDown aria-hidden="true" />
+          </span>
+        </summary>
+        <div className="journey-content">
+          <div className="week-grid">
+            {weeks.map((w) => (
+              <article key={w[0]}>
+                <small>WEEK {w[0]}</small>
+                <h3>{w[1]}</h3>
+                <b>{w[2]}</b>
+                <p>{w[3]}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </details>
     </section>
   );
 }
