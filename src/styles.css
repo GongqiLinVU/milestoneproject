@@ -985,7 +985,28 @@ button.danger:hover {
 .temperature-card.warm .thermometer span { background: #38a169; height: 80%; }
 .temperature-card.cool .thermometer span { background: #d69e2e; height: 55%; }
 .temperature-card.cold .thermometer span { background: #d64545; height: 30%; }
-.temperature-card.insufficient .thermometer span { background: #a0a7a0; height: 15%; }
+.temperature-card.insufficient .thermometer span { background: #a0a7a0; }
+.temperature-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  grid-column: 1 / -1;
+}
+.temperature-legend span {
+  border-radius: 999px;
+  color: #fff;
+  font-size: .78rem;
+  font-weight: 750;
+  padding: 6px 10px;
+}
+.temperature-legend .warm { background: #27824f; }
+.temperature-legend .cool { background: #b7791f; }
+.temperature-legend .cold { background: #c53030; }
+.temperature-legend .insufficient { background: #7a827a; }
+.temperature-card.warm { border-color: #9bd4af; background: #f0faf3; }
+.temperature-card.cool { border-color: #e8c879; background: #fff9e8; }
+.temperature-card.cold { border-color: #e7aaa5; background: #fff3f1; }
+.temperature-card.insufficient { color: #596159; }
 .temperature-note {
   color: #667064;
   font-size: .85rem;
