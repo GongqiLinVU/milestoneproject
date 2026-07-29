@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import {
   ArrowRight,
   CheckCircle2,
+  ChevronDown,
   CircleHelp,
   ClipboardCheck,
   Code2,
@@ -170,42 +171,54 @@ function Journey() {
 }
 function Studio() {
   return (
-    <section className="dark">
-      <Head
-        label="Monday Studio"
-        title="The one session every team protects."
-        text="Industry story → team stand-up → design review → workshop → checkpoint → next mission."
-      />
-      <div className="principles">
-        {[
-          [
-            Users,
-            "Show up",
-            "Real engineering teams protect shared delivery time.",
-          ],
-          [
-            Presentation,
-            "Speak up",
-            "Every member should explain decisions and contribution.",
-          ],
-          [
-            ClipboardCheck,
-            "Help another team",
-            "Peer feedback is part of professional practice.",
-          ],
-          [
-            CheckCircle2,
-            "Demo over excuses",
-            "Evidence of working software matters.",
-          ],
-        ].map(([Icon, t, p]: any) => (
-          <div key={t}>
-            <Icon />
-            <b>{t}</b>
-            <p>{p}</p>
+    <section className="dark studio-collapsible">
+      <details>
+        <summary>
+          <div>
+            <span>Monday Studio · First session guide</span>
+            <h2>The one session every team protects.</h2>
           </div>
-        ))}
-      </div>
+          <span className="studio-expand">
+            <span>View session guide</span>
+            <ChevronDown aria-hidden="true" />
+          </span>
+        </summary>
+        <div className="studio-content">
+          <p className="studio-flow">
+            Industry story → team stand-up → design review → workshop → checkpoint → next mission.
+          </p>
+          <div className="principles">
+            {[
+              [
+                Users,
+                "Show up",
+                "Real engineering teams protect shared delivery time.",
+              ],
+              [
+                Presentation,
+                "Speak up",
+                "Every member should explain decisions and contribution.",
+              ],
+              [
+                ClipboardCheck,
+                "Help another team",
+                "Peer feedback is part of professional practice.",
+              ],
+              [
+                CheckCircle2,
+                "Demo over excuses",
+                "Evidence of working software matters.",
+              ],
+            ].map(([Icon, t, p]: any) => (
+              <div key={t}>
+                <Icon />
+                <b>{t}</b>
+                <p>{p}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </details>
     </section>
   );
 }
