@@ -845,6 +845,10 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
         student_name: v.name,
         student_id: v.sid,
         team_name: v.team,
+        project_name: v.project_name,
+        project_area: v.project_area,
+        project_description: v.project_description,
+        target_user_problem: v.target_user_problem || null,
         deliverable_area: v.deliverable_area,
         implementation_item: v.implementation_item,
         implementation_state: v.implementation_state,
@@ -1198,6 +1202,13 @@ function ProgressReviewFields() {
   return <div onChange={(event) => assess(event.currentTarget.closest("form") as HTMLFormElement)}>
     <p className="form-note">Choose one concrete personal implementation for the compulsory Week 2 review. Be ready to show it, explain the method and verify the result.</p>
     <Identity />
+    <section className="project-context-fields">
+      <div className="review-section-heading"><span>Project snapshot</span><h3>Give the review enough context.</h3></div>
+      <label>Project name<input name="project_name" required maxLength={120} placeholder="Use the same project name across your team" /></label>
+      <Choice label="Project area" name="project_area" options={["Web","Mobile","AI","Data","IoT","Cybersecurity","Game","Other"]} />
+      <label>Project description<textarea name="project_description" required maxLength={300} placeholder="What does the project do, and what problem does it address?" /><small className="field-hint">Maximum 300 characters</small></label>
+      <label>Target user or problem (optional)<input name="target_user_problem" maxLength={150} placeholder="Who benefits, or what specific problem is being solved?" /></label>
+    </section>
     <Choice label="1. Which deliverable are you mainly responsible for?" name="deliverable_area" options={["Frontend / UI","Backend / API","Database","Authentication / Security","Hardware / Integration","Testing","Documentation","Project coordination","Other"]} />
     <label>2. What specific item have you personally implemented?<textarea name="implementation_item" required maxLength={200} placeholder="One concrete function, component, test result or document — not your general role." /><small className="field-hint">Maximum 200 characters</small></label>
     <Choice label="3. What is its current implementation state?" name="implementation_state" options={["Implemented and verified","Implemented but not fully verified","Partially implemented","Designed but not implemented","Blocked"]} />
@@ -1387,10 +1398,11 @@ function Admin() {
       label: "Week 2 implementation pre-checks",
       title: "Week 2 Implementation Pre-check",
       description: "Verify each student’s claim through demonstration, method explanation, evidence and remaining work.",
-      select: "id, student_name, student_id, team_name, deliverable_area, implementation_item, implementation_state, work_location, evidence_reference, demonstration_method, verification_level, implementation_methods, remaining_issue, issue_note, next_action, teacher_verification, created_at, updated_at",
+      select: "id, student_name, student_id, team_name, project_name, project_area, project_description, target_user_problem, deliverable_area, implementation_item, implementation_state, work_location, evidence_reference, demonstration_method, verification_level, implementation_methods, remaining_issue, issue_note, next_action, teacher_verification, created_at, updated_at",
       columns: [
         ["student_name", "Name"], ["student_id", "Student ID"], ["team_name", "Team"],
-        ["deliverable_area", "Deliverable"], ["implementation_item", "Implementation claim"],
+        ["project_name", "Project"], ["project_area", "Project area"], ["project_description", "Project description"],
+        ["target_user_problem", "Target user / problem"], ["deliverable_area", "Deliverable"], ["implementation_item", "Implementation claim"],
         ["implementation_state", "State"], ["work_location", "Location"],
         ["evidence_reference", "Evidence reference"], ["demonstration_method", "Demonstration"],
         ["verification_level", "Verification"], ["implementation_methods", "Methods to explain"],
@@ -2253,6 +2265,10 @@ function Admin() {
                           </div>
                           <dl className="review-evidence-grid">
                             {[
+                              ["Project name", student.project_name],
+                              ["Project area", student.project_area],
+                              ["Project description", student.project_description],
+                              ["Target user / problem", student.target_user_problem],
                               ["Implementation claim", student.implementation_item],
                               ["Current state", student.implementation_state],
                               ["Where to find it", student.work_location],
@@ -2272,11 +2288,13 @@ function Admin() {
                             ))}
                           </dl>
                         </section>
-                        <form className="teacher-follow-up-form" onSubmit={(event) => saveTeacherReview(event, student)}>
-                          <div className="review-section-heading">
-                            <span>Private teacher record</span>
-                            <h3>Review & Follow-up</h3>
-                          </div>
+                        <details className="private-teacher-record">
+                          <summary>
+                            <span><small>Private teacher record</small><b>Review & Follow-up</b></span>
+                            <span className="private-record-state">{review ? status : "Not started"} <ChevronDown aria-hidden="true" /></span>
+                          </summary>
+                          <form className="teacher-follow-up-form" onSubmit={(event) => saveTeacherReview(event, student)}>
+                          <p className="private-record-note">Teacher-only working record. Keep this section closed while reviewing student-submitted evidence together.</p>
                           <div className="teacher-review-grid">
                             <Choice label="Review outcome" name="review_outcome" options={["Verified","Partially verified","Not verified","Unable to demonstrate","Further evidence required"]} defaultValue={String(review?.review_outcome ?? "")} />
                             <Choice label="Demonstration result" name="demonstration_outcome" options={["Worked on target system","Worked with limitations","Partial demonstration","Could not demonstrate","Not applicable"]} defaultValue={String(review?.demonstration_outcome ?? "")} />
@@ -2318,6 +2336,7 @@ function Admin() {
                             <button disabled={teacherReviewBusy}>{teacherReviewBusy ? "Saving…" : review ? "Update review" : "Save review"}</button>
                           </div>
                         </form>
+                        </details>
                       </div>
                     )}
                   </article>
