@@ -9,7 +9,7 @@
   compulsory and that teaching decisions need evidence from the rest of each
   week.
 - The Sprint now creates a continuous Week 1–3 engagement evidence loop.
-- AI-assisted personalised teaching remains future scope.
+- Broader AI-assisted teaching remains future scope; Phase 3B is a limited teacher-controlled suggestion pilot.
 
 ## Current Phase
 
@@ -65,3 +65,4 @@ Implemented on a dedicated Draft PR branch:
 - upserted one-record-per-student follow-up history with teacher-only grants and RLS.
 
 Pending: preview build, migration application, role smoke tests and explicit merge approval.
+\n\n## Phase 3B implementation update — 2026-07-29\n\nStarted a protected Vercel serverless endpoint and teacher-only suggestion card. The request excludes student identity and returns four structured teaching prompts. AI output remains temporary unless the teacher deliberately copies it into a follow-up and saves the review. No database migration is required. Pending: preview build, Vercel environment configuration, authenticated endpoint smoke tests and explicit merge approval.\n
