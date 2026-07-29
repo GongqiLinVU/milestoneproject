@@ -1606,7 +1606,8 @@ function Admin() {
     event.preventDefault();
     setTeacherReviewBusy(true);
     setTeacherReviewMessage("");
-    const values = Object.fromEntries(new FormData(event.currentTarget));
+    const reviewForm = event.currentTarget;
+    const values = Object.fromEntries(new FormData(reviewForm));
     const payload = {
       student_name: String(values.student_name ?? "").trim(),
       student_id: String(values.student_id ?? "").trim(),
@@ -1628,7 +1629,7 @@ function Admin() {
         : "The teacher review could not be recorded. Check the fields and teacher permissions.");
       return;
     }
-    event.currentTarget.reset();
+    reviewForm.reset();
     setTeacherReviewMessage("Teacher review recorded.");
     await loadDashboard(activeTable);
   }
