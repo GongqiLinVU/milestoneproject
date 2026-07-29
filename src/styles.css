@@ -1383,3 +1383,70 @@ button.danger:hover {
   .review-evidence-grid { grid-template-columns: 1fr; }
   .review-save-row { align-items: stretch; flex-direction: column; }
 }
+
+
+/* Sprint 3 Phase 3A: focused review context and private follow-up */
+.project-context-fields {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  margin: .5rem 0 1.25rem;
+  border: 1px solid #d9e2f2;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #f7faff, #eef5ff);
+}
+.project-context-fields .review-section-heading { margin-bottom: .15rem; }
+.private-teacher-record {
+  margin-top: 1rem;
+  border: 1px solid #d7deea;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #fff;
+}
+.private-teacher-record > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+  cursor: pointer;
+  list-style: none;
+  background: #f6f8fb;
+}
+.private-teacher-record > summary::-webkit-details-marker { display: none; }
+.private-teacher-record > summary > span:first-child {
+  display: grid;
+  gap: .18rem;
+  text-align: left;
+}
+.private-teacher-record > summary small {
+  color: #6d7890;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-weight: 700;
+}
+.private-record-state {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  color: #44506a;
+  font-size: .85rem;
+  font-weight: 700;
+}
+.private-record-state svg { transition: transform .2s ease; }
+.private-teacher-record[open] .private-record-state svg { transform: rotate(180deg); }
+.private-teacher-record .teacher-follow-up-form {
+  margin: 0;
+  padding: 1.1rem;
+  border: 0;
+  border-top: 1px solid #e5e9f1;
+  border-radius: 0;
+}
+.private-record-note {
+  margin: 0 0 1rem;
+  padding: .7rem .85rem;
+  border-left: 3px solid #6678a8;
+  background: #f6f7fb;
+  color: #566078;
+  font-size: .88rem;
+}
