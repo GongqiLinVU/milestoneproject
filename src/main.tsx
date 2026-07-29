@@ -2079,7 +2079,7 @@ function Admin() {
           </p>
         )}
       </section>
-      <div className="metric-grid" aria-label="Activity record views">      <div className="metric-grid" aria-label="Activity record views">
+      <div className="metric-grid" aria-label="Activity record views">
         {activityTables.map(({ table, label }) => (
           <button
             key={table}
