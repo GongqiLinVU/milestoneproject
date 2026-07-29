@@ -1117,22 +1117,24 @@ const SelectChoice = ({
   name,
   placeholder,
   options,
+  defaultValue = "",
 }: {
   label: string;
   name: string;
   placeholder: string;
   options: string[];
+  defaultValue?: string;
 }) => (
   <label>
     {label}
-    <select name={name} defaultValue="" required>
+    <select name={name} defaultValue={defaultValue} required>
       <option value="" disabled>{placeholder}</option>
       {options.map((option) => <option key={option}>{option}</option>)}
     </select>
   </label>
 );
-function Choice({ label, name, options }: { label: string; name: string; options: string[] }) {
-  return <SelectChoice label={label} name={name} placeholder="Select one" options={options} />;
+function Choice({ label, name, options, defaultValue = "" }: { label: string; name: string; options: string[]; defaultValue?: string }) {
+  return <SelectChoice label={label} name={name} placeholder="Select one" options={options} defaultValue={defaultValue} />;
 }
 function TeamHealthFields() {
   const [risk, setRisk] = useState(false);
@@ -2276,13 +2278,13 @@ function Admin() {
                             <h3>Review & Follow-up</h3>
                           </div>
                           <div className="teacher-review-grid">
-                            <Choice label="Review outcome" name="review_outcome" options={["Verified","Partially verified","Not verified","Unable to demonstrate","Further evidence required"]} />
-                            <Choice label="Demonstration result" name="demonstration_outcome" options={["Worked on target system","Worked with limitations","Partial demonstration","Could not demonstrate","Not applicable"]} />
-                            <Choice label="Method explanation" name="method_explanation" options={["Clear and credible","Mostly clear","Limited explanation","Could not explain"]} />
-                            <Choice label="Evidence quality" name="evidence_quality" options={["Strong and traceable","Adequate","Partial","No usable evidence"]} />
-                            <Choice label="Individual contribution" name="contribution_verification" options={["Clearly verified","Partly verified","Needs further evidence","Not verified"]} />
-                            <Choice label="Progress Report alignment" name="report_alignment" options={["Consistent","Minor update needed","Significant update needed","Not checked"]} />
-                            <Choice label="Follow-up status" name="follow_up_status" options={["Not reviewed","No follow-up needed","Action required","In progress","Recheck next session","Resolved"]} />
+                            <Choice label="Review outcome" name="review_outcome" options={["Verified","Partially verified","Not verified","Unable to demonstrate","Further evidence required"]} defaultValue={String(review?.review_outcome ?? "")} />
+                            <Choice label="Demonstration result" name="demonstration_outcome" options={["Worked on target system","Worked with limitations","Partial demonstration","Could not demonstrate","Not applicable"]} defaultValue={String(review?.demonstration_outcome ?? "")} />
+                            <Choice label="Method explanation" name="method_explanation" options={["Clear and credible","Mostly clear","Limited explanation","Could not explain"]} defaultValue={String(review?.method_explanation ?? "")} />
+                            <Choice label="Evidence quality" name="evidence_quality" options={["Strong and traceable","Adequate","Partial","No usable evidence"]} defaultValue={String(review?.evidence_quality ?? "")} />
+                            <Choice label="Individual contribution" name="contribution_verification" options={["Clearly verified","Partly verified","Needs further evidence","Not verified"]} defaultValue={String(review?.contribution_verification ?? "")} />
+                            <Choice label="Progress Report alignment" name="report_alignment" options={["Consistent","Minor update needed","Significant update needed","Not checked"]} defaultValue={String(review?.report_alignment ?? "")} />
+                            <Choice label="Follow-up status" name="follow_up_status" options={["Not reviewed","No follow-up needed","Action required","In progress","Recheck next session","Resolved"]} defaultValue={String(review?.follow_up_status ?? "Not reviewed")} />
                             <label>
                               Check again
                               <select name="recheck_week" defaultValue={String(review?.recheck_week ?? "")}>
