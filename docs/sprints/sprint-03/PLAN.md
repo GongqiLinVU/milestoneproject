@@ -69,14 +69,17 @@ Add a two-minute Individual Progress Review before the compulsory Monday review 
 
 ## Phase 3 — Teacher Review and Week 3 Check-out
 
-Add a teacher-only verification record after the compulsory implementation review. The review captures implementation claim verification, demonstration outcome, method explanation, evidence quality, individual contribution, Progress Report alignment and one follow-up priority. An optional 400-character teacher note records only evidence gaps or agreed action.
+Add a teacher-only Review & Follow-up workflow inside each student's Week 2 Implementation Pre-check. The collapsed card shows only name, Student ID, team, deliverable and follow-up status; one card opens at a time for a private student conversation. Student claims remain read-only. The teacher compares the claim with the live demo and code, then records review outcome, demonstration, method, evidence, contribution, Progress Report alignment, feedback, agreed actions, follow-up status and an optional Week 2–4 recheck.
 
 Reuse the Engagement Check-out with week number 3, emphasising final-delivery participation, evidence readiness and unresolved risk. Student self-report and teacher judgement remain separate.
 
 Acceptance:
 
 - Only authenticated teachers can create, read, update or delete Teacher Review records.
-- One Teacher Review is retained per Student ID; corrections edit the existing record.
+- One Teacher Review is retained per Student ID; saving again updates the same follow-up record.
+- Student pre-check evidence is read-only and separate from teacher feedback.
+- Only one student card is expanded at a time; other students' feedback remains closed during the conversation.
+- Follow-up status supports Not reviewed, No follow-up needed, Action required, In progress, Recheck next session and Resolved.
 - Teacher Review outcomes are descriptive evidence and never an automatic mark.
 - Students can submit one Week 3 Check-out using the existing Student ID + week constraint.
 - Week 1 and Week 2 records remain unchanged.
