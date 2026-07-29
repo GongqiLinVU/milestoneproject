@@ -211,3 +211,13 @@ Before proposing or implementing a change:
 7. Update relevant documentation.
 
 Do not redesign the whole architecture for a small feature. Do not add AI merely because it is possible. Prefer the smallest maintainable solution that advances the current sprint.
+
+
+## Sprint 3 Phase 1 implementation boundary
+
+- Team Conversation is replaced in the student UI by an individual Team Health Check.
+- Four-Week Action Plan is replaced by Week 1 Engagement Check-out; the historical tables remain untouched.
+- `team_health_checks` is unique per Student ID.
+- `weekly_engagement_checkouts` is unique per Student ID and week, and is designed for Weeks 1–3.
+- Anonymous/authenticated students can insert but cannot read, update or delete these records; teacher reads and management use `is_teacher()`.
+- Team Participation Temperature is descriptive, preserves raw answers and must not be used as an assessment score.
