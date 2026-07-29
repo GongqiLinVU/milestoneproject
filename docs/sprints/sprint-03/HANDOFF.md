@@ -58,9 +58,10 @@ Phase 1 was migration-tested, smoke-tested and merged through PR #18 as commit `
 Implemented on a dedicated Draft PR branch:
 
 - Week 3 Engagement Check-out in the Week 3 tab;
-- collapsible Teacher Review entry in the protected dashboard;
-- verification of claim, demonstration, method, evidence, individual contribution and report alignment;
-- one follow-up priority plus an optional short teacher note;
-- teacher-only table, grants and RLS.
+- private accordion list built from Week 2 Implementation Pre-checks;
+- collapsed identity, team, deliverable and follow-up status, with only one student open at a time;
+- read-only student claim, demo, code/evidence, method and remaining work;
+- teacher verification, feedback, multi-select actions, operational status and optional Week 2–4 recheck;
+- upserted one-record-per-student follow-up history with teacher-only grants and RLS.
 
 Pending: preview build, migration application, role smoke tests and explicit merge approval.
