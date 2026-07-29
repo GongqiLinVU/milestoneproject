@@ -1952,7 +1952,7 @@ function Admin() {
                   ) : type === "textarea" ? (
                     <textarea name={field} defaultValue={String(editRecord[field] ?? "")} maxLength={maxLength} required={field !== "additional_feedback"} />
                   ) : (
-                    <input name={field} defaultValue={String(editRecord[field] ?? "")} maxLength={maxLength} required={field !== "submitted_by"} />
+                    <input name={field} defaultValue={String(editRecord[field] ?? "")} maxLength={maxLength} required />
                   )}
                 </label>
               ))}
