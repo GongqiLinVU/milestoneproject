@@ -120,3 +120,31 @@ Monday discussion questions, but teachers retain final judgement.
 - Start from latest `main`.
 - Do not merge without explicit approval.
 - Record verified evidence only in `HANDOFF.md`.
+
+
+## Phase 3 delivery slices
+
+### Phase 3A — Review foundation
+
+- Keep one student review open at a time.
+- Add a compact Project Snapshot to the student pre-check.
+- Preserve student submissions as read-only evidence.
+- Keep the Private Teacher Record collapsed by default.
+- Separate verification outcome from operational follow-up status.
+- Preserve existing Phase 2 rows when adding project context.
+
+### Phase 3B — AI teaching suggestion
+
+- Generate a short teaching suggestion only after teacher verification has begun.
+- Call OpenAI from a server-side function; never expose the API key in the browser.
+- Send project context and review evidence only; exclude student name, ID and email.
+- Return a fixed structure: current signal, one question, next action and teaching spark.
+- Label all output as AI-generated and require teacher review.
+- AI must never set verification status, follow-up status or marks.
+- Allow the teacher to use, edit, regenerate or dismiss a suggestion.
+
+### Phase 3C — Follow-up continuity
+
+- Surface Action required, In progress and Recheck items in later-week teacher views.
+- Keep a single current review per student while preserving updated timestamps.
+- Provide a compact follow-up queue for Week 3 and Week 4.
