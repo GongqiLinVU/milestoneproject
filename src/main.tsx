@@ -335,7 +335,7 @@ function WeeklyHub({
     </section>
   );
 }
-function Expo(function Expo({
+function Expo({
   peerReviewOpen,
   openReview,
 }: {
@@ -475,7 +475,7 @@ function Activity({
     </article>
   );
 }
-function friendlyErrorfunction friendlyError(code: string | undefined, kind: Kind) {
+function friendlyError(code: string | undefined, kind: Kind) {
   if (kind === "review" && code === "42501")
     return "Peer review is currently closed. Your response was not submitted.";
   if (code === "23505") {
@@ -1171,7 +1171,7 @@ function ProgressReviewFields() {
     <Choice label="10. What should the teacher verify during Monday’s review?" name="teacher_verification" options={["Whether the function works","My implementation method","My individual contribution","Integration with the team project","Testing and evidence","Current blocker","Progress Report accuracy","Other"]} />
   </div>;
 }
-function fields(k: Kind)function fields(k: Kind) {
+function fields(k: Kind) {
   if (k === "checkin")
     return (
       <>
@@ -1363,7 +1363,6 @@ function Admin() {
       ],
     },
     {
-      table: "weekly_engagement_checkouts",    {
       table: "weekly_engagement_checkouts",
       label: "Weekly check-outs",
       title: "Weekly Engagement Check-outs",
