@@ -38,3 +38,17 @@ Deliver:
 
 Record PR, merge commit, migration, production verification, decisions and
 remaining issues only after they are verified.
+
+
+## Phase 1 implementation update — 2026-07-29
+
+Implemented on PR #18:
+
+- individual Team Health Check with conditional risk note;
+- ten-question Week 1 Engagement Check-out with conditional detail note;
+- Team Participation Temperature plus raw teacher records;
+- shared Week 1–3 checkout table and dedicated health table;
+- student insert-only and teacher-only read/manage access;
+- historical Team Conversation and Four-Week Action Plan data preserved.
+
+Pending before merge: apply the migration in Supabase and complete production smoke testing with real anonymous and teacher sessions.
