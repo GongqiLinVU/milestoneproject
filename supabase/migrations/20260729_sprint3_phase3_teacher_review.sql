@@ -1,3 +1,11 @@
+-- Phase 3A: project context is optional at database level for compatibility
+-- with Phase 2 submissions, but required by the new student form.
+alter table public.week2_progress_reviews
+  add column if not exists project_name text check (project_name is null or char_length(trim(project_name)) between 1 and 120),
+  add column if not exists project_area text check (project_area is null or project_area in ('Web','Mobile','AI','Data','IoT','Cybersecurity','Game','Other')),
+  add column if not exists project_description text check (project_description is null or char_length(trim(project_description)) between 1 and 300),
+  add column if not exists target_user_problem text check (target_user_problem is null or char_length(trim(target_user_problem)) <= 150);
+
 -- Sprint 3 Phase 3: teacher review outcomes and Week 3 engagement
 -- Week 3 engagement uses the existing weekly_engagement_checkouts table.
 
