@@ -1063,3 +1063,78 @@ button.danger:hover {
   .coming-card { align-items:flex-start; flex-wrap:wrap; }
   .coming-card span { margin-left:38px; }
 }
+
+
+/* Monday Studio collapsible first-session guide */
+.studio-collapsible {
+  padding-top: 34px;
+  padding-bottom: 34px;
+}
+.studio-collapsible details {
+  width: 100%;
+}
+.studio-collapsible summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  cursor: pointer;
+  list-style: none;
+}
+.studio-collapsible summary::-webkit-details-marker {
+  display: none;
+}
+.studio-collapsible summary > div > span {
+  color: #72d6b5;
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.studio-collapsible summary h2 {
+  margin: 7px 0 0;
+  color: #fff;
+  font-family: "Manrope", sans-serif;
+  font-size: clamp(1.45rem, 3vw, 2.25rem);
+  letter-spacing: -.035em;
+}
+.studio-expand {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 15px;
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 999px;
+  color: #dce8e3;
+  font-size: .82rem;
+  font-weight: 750;
+}
+.studio-expand svg {
+  width: 18px;
+  height: 18px;
+  transition: transform .2s ease;
+}
+.studio-collapsible details[open] .studio-expand svg {
+  transform: rotate(180deg);
+}
+.studio-content {
+  padding-top: 32px;
+}
+.studio-flow {
+  max-width: 760px;
+  margin: 0 0 24px;
+  color: #b9c8c1;
+  line-height: 1.65;
+}
+@media (max-width: 620px) {
+  .studio-collapsible summary {
+    align-items: flex-start;
+  }
+  .studio-expand > span {
+    display: none;
+  }
+  .studio-expand {
+    padding: 10px;
+  }
+}
