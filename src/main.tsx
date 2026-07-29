@@ -23,12 +23,14 @@ const supabase = createClient(
     "sb_publishable_-RPm45eBd8_CVaNk4GbXhg_nxOkMrLr",
 );
 const teams = Array.from({ length: 8 }, (_, i) => `Team ${i + 1}`);
-type Kind = "checkin" | "pulse" | "health" | "checkout" | "review";
+type Kind = "checkin" | "pulse" | "health" | "checkout" | "progress" | "checkout2" | "review";
 const titles: Record<Kind, string> = {
   checkin: "Week 1 Check-in",
   pulse: "Class Pulse",
   health: "Team Health Check",
   checkout: "Week 1 Engagement Check-out",
+  progress: "Week 2 Individual Progress Review",
+  checkout2: "Week 2 Engagement Check-out",
   review: "Poster Peer Review",
 };
 function App() {
@@ -59,6 +61,7 @@ function App() {
         <nav>
           <a href="#journey">Journey</a>
           <a href="#week1">Week 1</a>
+          <a href="#week2">Week 2</a>
           <a href="#expo">Project Expo</a>
           <a href="#deliverables">Deliverables</a>
           <a href="/admin">Teacher</a>
@@ -108,6 +111,7 @@ function App() {
         <Journey />
         <Studio />
         <Week1 open={setForm} />
+        <Week2 open={setForm} />
         <Expo
           peerReviewOpen={peerReviewOpen}
           openReview={() => peerReviewOpen && setForm("review")}
@@ -234,6 +238,30 @@ function Week1({ open }: { open: (k: Kind) => void }) {
         “I already know you can build software. For the next four weeks, I want
         to help you learn how to deliver software.”
       </blockquote>
+    </section>
+  );
+}
+function Week2({ open }: { open: (k: Kind) => void }) {
+  return (
+    <section id="week2" className="week2-review">
+      <Head
+        label="Week 2 · Progress Review"
+        title="Show the evidence. Clarify the next move."
+        text="Complete both short activities before your compulsory Monday review so the discussion can focus on your demo, method verification and individual contribution."
+      />
+      <div className="activity-grid">
+        <Activity
+          title="Individual Progress Review"
+          text="Summarise your progress, contribution evidence, next task and support needs before the demo conversation."
+          action={() => open("progress")}
+        />
+        <Activity
+          title="Week 2 Engagement Check-out"
+          text="Record how you participated beyond Monday and what the teacher should verify at the next compulsory meeting."
+          action={() => open("checkout2")}
+        />
+      </div>
+      <p className="week2-note">These responses prepare the conversation. They are descriptive evidence, not an automatic mark.</p>
     </section>
   );
 }
@@ -373,7 +401,7 @@ function friendlyError(code: string | undefined, kind: Kind) {
   if (kind === "review" && code === "42501")
     return "Peer review is currently closed. Your response was not submitted.";
   if (code === "23505") {
-    if (kind === "health" || kind === "checkout" || kind === "checkin")
+    if (kind === "health" || kind === "checkout" || kind === "checkout2" || kind === "progress" || kind === "checkin")
       return "This Student ID has already submitted this activity.";
     if (kind === "review") return "You have already reviewed this team.";
   }
@@ -471,7 +499,31 @@ function submissionReceipt(
       { label: "Main issue", value: text("main_issue") },
       { label: "Details", value: text("risk_note") },
     ],
+    progress: [
+      { label: "Team", value: text("team") },
+      { label: "Current progress", value: text("current_progress") },
+      { label: "Contribution areas", value: text("contribution_areas") },
+      { label: "Evidence status", value: text("evidence_status") },
+      { label: "Evidence reference", value: text("evidence_reference") },
+      { label: "Next task clarity", value: text("next_task_clarity") },
+      { label: "Support needed", value: text("support_needed") },
+      { label: "Discussion note", value: text("discussion_note") },
+    ],
     checkout: [
+      { label: "Team", value: text("team") },
+      { label: "Participation", value: text("participation_mode") },
+      { label: "Time invested", value: text("time_invested") },
+      { label: "Contribution areas", value: text("contribution_areas") },
+      { label: "Task completion", value: text("task_completion") },
+      { label: "Evidence", value: text("evidence_status") },
+      { label: "Team communication", value: text("team_communication") },
+      { label: "Participation balance", value: text("participation_balance") },
+      { label: "Next task clarity", value: text("next_task_clarity") },
+      { label: "Work status", value: text("work_status") },
+      { label: "Monday discussion focus", value: text("discussion_focus") },
+      { label: "Details", value: text("detail_note") },
+    ],
+    checkout2: [
       { label: "Team", value: text("team") },
       { label: "Participation", value: text("participation_mode") },
       { label: "Time invested", value: text("time_invested") },
@@ -558,7 +610,7 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
     >;
     const identityReady =
       activeKind === "pulse" ||
-      ((activeKind === "checkin" || activeKind === "health" || activeKind === "checkout") &&
+      ((activeKind === "checkin" || activeKind === "health" || activeKind === "checkout" || activeKind === "checkout2" || activeKind === "progress") &&
         Boolean(String(values.sid ?? "").trim())) ||
       (activeKind === "review" &&
         Boolean(String(values.sid ?? "").trim()) &&
@@ -583,7 +635,7 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
       FormDataEntryValue
     >;
     const contributionAreas = formData.getAll("contribution_areas").map(String);
-    if (activeKind === "checkout") {
+    if (activeKind === "checkout" || activeKind === "checkout2" || activeKind === "progress") {
       if (contributionAreas.length === 0) {
         setMsg("Select at least one contribution area.");
         return;
@@ -637,10 +689,10 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
         risk_note: v.risk_note || null,
       };
     }
-    if (activeKind === "checkout") {
+    if (activeKind === "checkout" || activeKind === "checkout2") {
       table = "weekly_engagement_checkouts";
       payload = {
-        week_number: 1,
+        week_number: activeKind === "checkout2" ? 2 : 1,
         student_name: v.name,
         student_id: v.sid,
         team_name: v.team,
@@ -655,6 +707,21 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
         work_status: v.work_status,
         discussion_focus: v.discussion_focus,
         detail_note: v.detail_note || null,
+      };
+    }
+    if (activeKind === "progress") {
+      table = "week2_progress_reviews";
+      payload = {
+        student_name: v.name,
+        student_id: v.sid,
+        team_name: v.team,
+        current_progress: v.current_progress,
+        contribution_areas: contributionAreas,
+        evidence_status: v.evidence_status,
+        evidence_reference: v.evidence_reference || null,
+        next_task_clarity: v.next_task_clarity,
+        support_needed: v.support_needed,
+        discussion_note: v.discussion_note || null,
       };
     }
     if (activeKind === "review") {
@@ -959,7 +1026,7 @@ function TeamHealthFields() {
     {risk && <label>Brief details<textarea name="risk_note" required maxLength={200} /><small className="field-hint">Maximum 200 characters</small></label>}
   </div>;
 }
-function EngagementCheckoutFields() {
+function EngagementCheckoutFields({ week = 1 }: { week?: 1 | 2 }) {
   const [risk, setRisk] = useState(false);
   const assess = (form: HTMLFormElement) => {
     const data = new FormData(form);
@@ -968,7 +1035,7 @@ function EngagementCheckoutFields() {
   };
   const areas = ["Team discussion","Planning or research","UI/UX","Development","Testing","Documentation","Presentation or demo preparation","Team coordination","Other"];
   return <div onChange={(event) => assess(event.currentTarget.closest("form") as HTMLFormElement)}>
-    <p className="form-note">Complete this after the final Week 1 session, including work completed remotely.</p>
+    <p className="form-note">Complete this after the final Week {week} session, including work completed remotely.</p>
     <Identity />
     <Choice label="1. How did you participate after compulsory Monday?" name="participation_mode" options={["Wednesday session","Thursday session","Both sessions","Remote teamwork","Individual work only","No further participation"]} />
     <Choice label="2. Time invested this week" name="time_invested" options={["Less than 1 hour","1–2 hours","3–5 hours","More than 5 hours"]} />
@@ -981,6 +1048,25 @@ function EngagementCheckoutFields() {
     <Choice label="9. Current work status" name="work_status" options={["On track","Some difficulty","At risk","Blocked"]} />
     <Choice label="10. What should the teacher verify on Monday?" name="discussion_focus" options={["My completed work","Technical difficulty","Team communication","Uneven participation","Task or scope clarity","Progress report or documentation","Nothing specific","Other"]} />
     {risk && <label>Brief details<textarea name="detail_note" required maxLength={200} /><small className="field-hint">Maximum 200 characters</small></label>}
+  </div>;
+}
+function ProgressReviewFields() {
+  const [needsDetail, setNeedsDetail] = useState(false);
+  const areas = ["Planning or research","UI/UX","Development","Testing","Documentation","Presentation or demo preparation","Team coordination","Other"];
+  const assess = (form: HTMLFormElement) => {
+    const data = new FormData(form);
+    setNeedsDetail(["At risk","Blocked","Not yet","Not clear","Yes"].some(value => Array.from(data.values()).map(String).includes(value)) || data.getAll("contribution_areas").map(String).includes("Other"));
+  };
+  return <div onChange={(event) => assess(event.currentTarget.closest("form") as HTMLFormElement)}>
+    <p className="form-note">Complete this before the compulsory Week 2 review. Bring your evidence to the project demo and method-verification discussion.</p>
+    <Identity />
+    <Choice label="1. Current progress" name="current_progress" options={["On track","Slightly behind","At risk","Blocked"]} />
+    <fieldset className="choice-checklist"><legend>2. Contribution areas (select all that apply)</legend>{areas.map(area => <label key={area}><input type="checkbox" name="contribution_areas" value={area} /><span>{area}</span></label>)}</fieldset>
+    <Choice label="3. Evidence available for the review" name="evidence_status" options={["Yes, clearly available","Partly available","Not yet"]} />
+    <label>4. Evidence link or one-line reference (optional)<input name="evidence_reference" maxLength={300} placeholder="Repository, document, demo item or short reference" /><small className="field-hint">Maximum 300 characters. Do not include passwords or private access details.</small></label>
+    <Choice label="5. Is your next task clear?" name="next_task_clarity" options={["Clear","Partly clear","Not clear"]} />
+    <Choice label="6. Is teacher support needed?" name="support_needed" options={["No","Maybe","Yes"]} />
+    {needsDetail && <label>Brief discussion note<textarea name="discussion_note" required maxLength={300} /><small className="field-hint">Explain only what the teacher should verify. Maximum 300 characters.</small></label>}
   </div>;
 }
 function fields(k: Kind) {
@@ -1040,7 +1126,9 @@ function fields(k: Kind) {
       </>
     );
   if (k === "health") return <TeamHealthFields />;
-  if (k === "checkout") return <EngagementCheckoutFields />;
+  if (k === "checkout") return <EngagementCheckoutFields week={1} />;
+  if (k === "progress") return <ProgressReviewFields />;
+  if (k === "checkout2") return <EngagementCheckoutFields week={2} />;
   return (
     <>
       <p className="form-note">
@@ -1151,13 +1239,32 @@ function Admin() {
       ],
     },
     {
-      table: "weekly_engagement_checkouts",
-      label: "Week 1 check-outs",
-      title: "Week 1 Engagement Check-out",
-      description: "Review participation outside Monday, evidence readiness and Monday discussion focus.",
-      select: "id, week_number, student_name, student_id, team_name, participation_mode, time_invested, contribution_areas, task_completion, evidence_status, team_communication, participation_balance, next_task_clarity, work_status, discussion_focus, detail_note, created_at, updated_at",
+      table: "week2_progress_reviews",
+      label: "Week 2 progress reviews",
+      title: "Week 2 Individual Progress Review",
+      description: "Prepare individual demo conversations using progress, contribution evidence, next-task clarity and support needs.",
+      select: "id, student_name, student_id, team_name, current_progress, contribution_areas, evidence_status, evidence_reference, next_task_clarity, support_needed, discussion_note, created_at, updated_at",
       columns: [
         ["student_name", "Name"], ["student_id", "Student ID"], ["team_name", "Team"],
+        ["current_progress", "Progress"], ["contribution_areas", "Contribution areas"],
+        ["evidence_status", "Evidence"], ["evidence_reference", "Evidence reference"],
+        ["next_task_clarity", "Next task"], ["support_needed", "Support"],
+        ["discussion_note", "Discussion note"], ["created_at", "Created"], ["updated_at", "Updated"],
+      ],
+      editable: [
+        ["student_name", "Name", "text", 100], ["student_id", "Student ID", "text", 40],
+        ["team_name", "Team", "team", 0], ["evidence_reference", "Evidence reference", "textarea", 300],
+        ["discussion_note", "Discussion note", "textarea", 300],
+      ],
+    },
+    {
+      table: "weekly_engagement_checkouts",
+      label: "Weekly check-outs",
+      title: "Weekly Engagement Check-outs",
+      description: "Review Week 1–3 participation outside Monday, evidence readiness and the next compulsory discussion focus.",
+      select: "id, week_number, student_name, student_id, team_name, participation_mode, time_invested, contribution_areas, task_completion, evidence_status, team_communication, participation_balance, next_task_clarity, work_status, discussion_focus, detail_note, created_at, updated_at",
+      columns: [
+        ["week_number", "Week"], ["student_name", "Name"], ["student_id", "Student ID"], ["team_name", "Team"],
         ["participation_mode", "Participation"], ["time_invested", "Time invested"],
         ["contribution_areas", "Contribution areas"], ["task_completion", "Task completion"],
         ["evidence_status", "Evidence"], ["team_communication", "Communication"],
