@@ -1403,25 +1403,6 @@ function Admin() {
       ],
     },
     {
-      table: "teacher_progress_reviews",
-      label: "Teacher reviews",
-      title: "Week 2 Teacher Review outcomes",
-      description: "Record and inspect verified outcomes from the compulsory implementation review. These are descriptive teaching records, not automatic marks.",
-      select: "id, student_name, student_id, team_name, claim_status, demonstration_outcome, method_explanation, evidence_quality, contribution_verification, report_alignment, follow_up_priority, teacher_note, created_at, updated_at",
-      columns: [
-        ["student_name", "Name"], ["student_id", "Student ID"], ["team_name", "Team"],
-        ["claim_status", "Implementation claim"], ["demonstration_outcome", "Demonstration"],
-        ["method_explanation", "Method explanation"], ["evidence_quality", "Evidence"],
-        ["contribution_verification", "Individual contribution"], ["report_alignment", "Report alignment"],
-        ["follow_up_priority", "Follow-up"], ["teacher_note", "Teacher note"],
-        ["created_at", "Created"], ["updated_at", "Updated"],
-      ],
-      editable: [
-        ["student_name", "Name", "text", 100], ["student_id", "Student ID", "text", 40],
-        ["team_name", "Team", "team", 0], ["teacher_note", "Teacher note", "textarea", 400],
-      ],
-    },
-    {
       table: "weekly_engagement_checkouts",
       label: "Weekly check-outs",
       title: "Weekly Engagement Check-outs",
@@ -1509,6 +1490,8 @@ function Admin() {
   const [peerReviewMessage, setPeerReviewMessage] = useState("");
   const [teacherReviewBusy, setTeacherReviewBusy] = useState(false);
   const [teacherReviewMessage, setTeacherReviewMessage] = useState("");
+  const [teacherReviews, setTeacherReviews] = useState<ActivityRecord[]>([]);
+  const [openReviewStudentId, setOpenReviewStudentId] = useState<string | null>(null);
   const requestSequence = useRef(0);
 
   useEffect(() => {
@@ -1602,36 +1585,60 @@ function Admin() {
     );
   }
 
-  async function createTeacherReview(event: FormEvent<HTMLFormElement>) {
+  async function saveTeacherReview(event: FormEvent<HTMLFormElement>, student: ActivityRecord) {
     event.preventDefault();
     setTeacherReviewBusy(true);
     setTeacherReviewMessage("");
-    const reviewForm = event.currentTarget;
-    const values = Object.fromEntries(new FormData(reviewForm));
+    const values = Object.fromEntries(new FormData(event.currentTarget));
+    const followUpActions = new FormData(event.currentTarget)
+      .getAll("follow_up_actions")
+      .map(String);
+    if (followUpActions.length === 0) {
+      setTeacherReviewBusy(false);
+      setTeacherReviewMessage("Select at least one follow-up action.");
+      return;
+    }
     const payload = {
-      student_name: String(values.student_name ?? "").trim(),
-      student_id: String(values.student_id ?? "").trim(),
-      team_name: values.team_name,
-      claim_status: values.claim_status,
+      student_name: String(student.student_name),
+      student_id: String(student.student_id),
+      team_name: String(student.team_name),
+      review_outcome: values.review_outcome,
       demonstration_outcome: values.demonstration_outcome,
       method_explanation: values.method_explanation,
       evidence_quality: values.evidence_quality,
       contribution_verification: values.contribution_verification,
       report_alignment: values.report_alignment,
-      follow_up_priority: values.follow_up_priority,
-      teacher_note: String(values.teacher_note ?? "").trim() || null,
+      teacher_feedback: String(values.teacher_feedback ?? "").trim(),
+      follow_up_status: values.follow_up_status,
+      follow_up_actions: followUpActions,
+      follow_up_note: String(values.follow_up_note ?? "").trim() || null,
+      recheck_week: values.recheck_week ? Number(values.recheck_week) : null,
     };
-    const { error } = await supabase.from("teacher_progress_reviews").insert(payload);
+    const { error } = await supabase
+      .from("teacher_progress_reviews")
+      .upsert(payload, { onConflict: "student_id" });
     setTeacherReviewBusy(false);
     if (error) {
-      setTeacherReviewMessage(error.code === "23505"
-        ? "A teacher review already exists for this Student ID. Open Teacher reviews to edit the existing record."
-        : "The teacher review could not be recorded. Check the fields and teacher permissions.");
+      setTeacherReviewMessage(
+        "The review could not be saved. Check the fields and teacher permissions.",
+      );
       return;
     }
-    reviewForm.reset();
-    setTeacherReviewMessage("Teacher review recorded.");
-    await loadDashboard(activeTable);
+    setTeacherReviewMessage("Review and follow-up saved.");
+    await loadTeacherReviews();
+  }
+
+  async function loadTeacherReviews() {
+    const { data, error } = await supabase
+      .from("teacher_progress_reviews")
+      .select("*")
+      .order("updated_at", { ascending: false });
+    if (error) {
+      setTeacherReviews([]);
+      setTeacherReviewMessage("Teacher follow-up records could not be loaded.");
+      return;
+    }
+    setTeacherReviews((data ?? []) as ActivityRecord[]);
   }
 
   async function login(e: any) {
@@ -1692,6 +1699,9 @@ function Admin() {
       return;
     }
     setRecords((recordResult.data ?? []) as ActivityRecord[]);
+    if (table === "week2_progress_reviews") {
+      await loadTeacherReviews();
+    }
     setCounts(
       Object.fromEntries(
         activityTables.map(({ table }, index) => [
@@ -2067,30 +2077,7 @@ function Admin() {
           </p>
         )}
       </section>
-      <details className="teacher-review-entry">
-        <summary>
-          <div><span>Week 2 compulsory review</span><h2>Record Teacher Review</h2></div>
-          <span>Open review form <ChevronDown aria-hidden="true" /></span>
-        </summary>
-        <form onSubmit={createTeacherReview}>
-          <div className="teacher-review-grid">
-            <label>Student name<input name="student_name" required maxLength={100} /></label>
-            <label>Student ID<input name="student_id" required minLength={3} maxLength={40} /></label>
-            <Team name="team_name" label="Team" />
-            <Choice label="Implementation claim" name="claim_status" options={["Verified","Partially verified","Not demonstrated","Different from pre-check"]} />
-            <Choice label="Demonstration outcome" name="demonstration_outcome" options={["Worked on target system","Worked with limitations","Partial demonstration","Could not demonstrate","Not applicable"]} />
-            <Choice label="Method explanation" name="method_explanation" options={["Clear and credible","Mostly clear","Limited explanation","Could not explain"]} />
-            <Choice label="Evidence quality" name="evidence_quality" options={["Strong and traceable","Adequate","Partial","No usable evidence"]} />
-            <Choice label="Individual contribution" name="contribution_verification" options={["Clearly verified","Partly verified","Needs further evidence","Not verified"]} />
-            <Choice label="Progress Report alignment" name="report_alignment" options={["Consistent","Minor update needed","Significant update needed","Not checked"]} />
-            <Choice label="Follow-up priority" name="follow_up_priority" options={["No follow-up","Implementation","Integration","Testing","Evidence","Documentation","Team contribution","Urgent intervention"]} />
-          </div>
-          <label>Teacher note (optional)<textarea name="teacher_note" maxLength={400} placeholder="Record only the evidence gap or agreed follow-up." /></label>
-          {teacherReviewMessage && <p className="admin-alert" role="status">{teacherReviewMessage}</p>}
-          <button disabled={teacherReviewBusy}>{teacherReviewBusy ? "Recording…" : "Record review"}</button>
-        </form>
-      </details>
-      <div className="metric-grid" aria-label="Activity record views">
+      <div className="metric-grid" aria-label="Activity record views">      <div className="metric-grid" aria-label="Activity record views">
         {activityTables.map(({ table, label }) => (
           <button
             key={table}
@@ -2114,11 +2101,15 @@ function Admin() {
             <div className="eyebrow">Activity records</div>
             <h2 id="activity-heading">{activeActivity.title}</h2>
             <p>{activeActivity.description}</p>
-            {activeTable !== "week1_pulse" && (
+            {activeTable === "week2_progress_reviews" ? (
+              <p className="admin-management-note">
+                Open one student at a time to compare the pre-check with the live demo and code, then save private feedback and follow-up.
+              </p>
+            ) : activeTable !== "week1_pulse" ? (
               <p className="admin-management-note">
                 Teachers can correct invalid details or remove a test submission.
               </p>
-            )}
+            ) : null}
           </div>
           <div className="admin-record-actions">
             <button
@@ -2215,6 +2206,125 @@ function Admin() {
         )}
         {dataStatus === "success" &&
           records.length > 0 &&
+          activeTable === "week2_progress_reviews" && (
+            <div className="student-review-list" aria-label="Student implementation reviews">
+              {records.map((student) => {
+                const studentId = String(student.student_id);
+                const review = teacherReviews.find(
+                  (item) => String(item.student_id).toLowerCase() === studentId.toLowerCase(),
+                );
+                const isOpen = openReviewStudentId === studentId;
+                const status = String(review?.follow_up_status ?? "Not reviewed");
+                const followUpActions = Array.isArray(review?.follow_up_actions)
+                  ? review.follow_up_actions.map(String)
+                  : [];
+                return (
+                  <article className={`student-review-card ${isOpen ? "open" : ""}`} key={student.id}>
+                    <button
+                      type="button"
+                      className="student-review-summary"
+                      aria-expanded={isOpen}
+                      onClick={() => {
+                        setTeacherReviewMessage("");
+                        setOpenReviewStudentId(isOpen ? null : studentId);
+                      }}
+                    >
+                      <span className="student-review-identity">
+                        <b>{String(student.student_name)}</b>
+                        <small>{studentId} · {String(student.team_name)}</small>
+                      </span>
+                      <span className="student-review-deliverable">
+                        <small>Deliverable</small>
+                        <b>{String(student.deliverable_area)}</b>
+                      </span>
+                      <span className={`follow-up-badge status-${status.toLowerCase().replace(/\s+/g, "-")}`}>
+                        {status}
+                      </span>
+                      <ChevronDown aria-hidden="true" />
+                    </button>
+                    {isOpen && (
+                      <div className="student-review-body">
+                        <section className="student-precheck">
+                          <div className="review-section-heading">
+                            <span>Student submission · Read only</span>
+                            <h3>Implementation Pre-check</h3>
+                          </div>
+                          <dl className="review-evidence-grid">
+                            {[
+                              ["Implementation claim", student.implementation_item],
+                              ["Current state", student.implementation_state],
+                              ["Where to find it", student.work_location],
+                              ["Evidence reference", student.evidence_reference],
+                              ["Demonstration plan", student.demonstration_method],
+                              ["Verification completed", student.verification_level],
+                              ["Method to explain", Array.isArray(student.implementation_methods) ? student.implementation_methods.join(", ") : student.implementation_methods],
+                              ["Remaining issue", student.remaining_issue],
+                              ["Issue details", student.issue_note],
+                              ["Next action", student.next_action],
+                              ["Teacher should verify", student.teacher_verification],
+                            ].map(([label, value]) => (
+                              <div key={String(label)}>
+                                <dt>{String(label)}</dt>
+                                <dd>{formatValue("", value)}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                        </section>
+                        <form className="teacher-follow-up-form" onSubmit={(event) => saveTeacherReview(event, student)}>
+                          <div className="review-section-heading">
+                            <span>Private teacher record</span>
+                            <h3>Review & Follow-up</h3>
+                          </div>
+                          <div className="teacher-review-grid">
+                            <Choice label="Review outcome" name="review_outcome" options={["Verified","Partially verified","Not verified","Unable to demonstrate","Further evidence required"]} />
+                            <Choice label="Demonstration result" name="demonstration_outcome" options={["Worked on target system","Worked with limitations","Partial demonstration","Could not demonstrate","Not applicable"]} />
+                            <Choice label="Method explanation" name="method_explanation" options={["Clear and credible","Mostly clear","Limited explanation","Could not explain"]} />
+                            <Choice label="Evidence quality" name="evidence_quality" options={["Strong and traceable","Adequate","Partial","No usable evidence"]} />
+                            <Choice label="Individual contribution" name="contribution_verification" options={["Clearly verified","Partly verified","Needs further evidence","Not verified"]} />
+                            <Choice label="Progress Report alignment" name="report_alignment" options={["Consistent","Minor update needed","Significant update needed","Not checked"]} />
+                            <Choice label="Follow-up status" name="follow_up_status" options={["Not reviewed","No follow-up needed","Action required","In progress","Recheck next session","Resolved"]} />
+                            <label>
+                              Check again
+                              <select name="recheck_week" defaultValue={String(review?.recheck_week ?? "")}>
+                                <option value="">No scheduled recheck</option>
+                                <option value="2">Week 2</option>
+                                <option value="3">Week 3</option>
+                                <option value="4">Week 4</option>
+                              </select>
+                            </label>
+                          </div>
+                          <label>
+                            Teacher feedback
+                            <textarea name="teacher_feedback" required maxLength={800} defaultValue={String(review?.teacher_feedback ?? "")} placeholder="Record what was verified, what did not match, and the feedback discussed with the student." />
+                          </label>
+                          <fieldset className="choice-checklist follow-up-actions">
+                            <legend>Agreed follow-up action (select all that apply)</legend>
+                            {["No action required","Complete implementation","Fix identified issue","Provide code or commit evidence","Add or run tests","Complete integration","Update Progress Report","Clarify individual contribution","Prepare another demonstration","Other"].map((action) => (
+                              <label key={action}>
+                                <input type="checkbox" name="follow_up_actions" value={action} defaultChecked={followUpActions.includes(action)} />
+                                <span>{action}</span>
+                              </label>
+                            ))}
+                          </fieldset>
+                          <label>
+                            Follow-up note (optional)
+                            <textarea name="follow_up_note" maxLength={400} defaultValue={String(review?.follow_up_note ?? "")} placeholder="Add the concrete action, owner or evidence expected at the next check." />
+                          </label>
+                          {teacherReviewMessage && <p className="admin-alert" role="status">{teacherReviewMessage}</p>}
+                          <div className="review-save-row">
+                            <small>{review ? `Last saved ${formatDateTime(String(review.updated_at))}` : "No teacher review recorded yet"}</small>
+                            <button disabled={teacherReviewBusy}>{teacherReviewBusy ? "Saving…" : review ? "Update review" : "Save review"}</button>
+                          </div>
+                        </form>
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        {dataStatus === "success" &&
+          records.length > 0 &&
           activeTable === "week1_pulse" && (
             <div className="pulse-overview">
               <p className="pulse-privacy-note">
@@ -2255,7 +2365,8 @@ function Admin() {
           )}
         {dataStatus === "success" &&
           records.length > 0 &&
-          activeTable !== "week1_pulse" && (
+          activeTable !== "week1_pulse" &&
+          activeTable !== "week2_progress_reviews" && (
           <div className="admin-table-wrap">
             <table>
               <caption>
