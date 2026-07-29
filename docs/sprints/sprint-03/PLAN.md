@@ -65,7 +65,17 @@ Acceptance:
 
 ## Phase 2 — Week 2 Progress Review and Check-out
 
-Add a two-minute Individual Progress Review before the compulsory Monday review and reuse the ten-question Engagement Check-out with week number 2. The progress review captures current progress, contribution areas, evidence status and reference, next-task clarity, support needs and a conditional discussion note. Week 2 evidence prepares the project demo, method verification and individual discussion.\n\nAcceptance:\n\n- Each Student ID submits one Progress Review and one Week 2 Check-out.\n- Contribution areas support multiple selections.\n- Written notes appear only where evidence needs clarification or a risk/support answer is selected.\n- Students can insert but cannot read or manage submissions.\n- Teachers can review raw evidence and identify review readiness without automated marks.\n- Week 1 records and receipts remain separate and unchanged.\n- Build, migration and RLS verification pass before merge.
+Add a two-minute Individual Progress Review before the compulsory Monday review and reuse the ten-question Engagement Check-out with week number 2. The progress review captures current progress, contribution areas, evidence status and reference, next-task clarity, support needs and a conditional discussion note. Week 2 evidence prepares the project demo, method verification and individual discussion.
+
+Acceptance:
+
+- Each Student ID submits one Progress Review and one Week 2 Check-out.
+- Contribution areas support multiple selections.
+- Written notes appear only where evidence needs clarification or a risk/support answer is selected.
+- Students can insert but cannot read or manage submissions.
+- Teachers can review raw evidence and identify review readiness without automated marks.
+- Week 1 records and receipts remain separate and unchanged.
+- Build, migration and RLS verification pass before merge.
 
 ## Phase 3 — Teacher Review and Week 3 Check-out
 
@@ -148,4 +158,14 @@ Monday discussion questions, but teachers retain final judgement.
 - Surface Action required, In progress and Recheck items in later-week teacher views.
 - Keep a single current review per student while preserving updated timestamps.
 - Provide a compact follow-up queue for Week 3 and Week 4.
-\nPhase 3B acceptance:\n\n- Only a valid Supabase teacher session can call the AI endpoint.\n- `OPENAI_API_KEY` is server-only and absent from browser bundles.\n- Requests exclude name, Student ID, email and team.\n- Project name, description, implementation claim and begun teacher verification are required.\n- Structured output contains current signal, one question, next action and teaching spark.\n- Suggestions remain temporary until the teacher explicitly copies content and saves the review.\n- AI cannot set marks, verification outcome or follow-up status.\n- Generate, edit, regenerate, use and dismiss flows are available.\n
+
+Phase 3B acceptance:
+
+- Only a valid Supabase teacher session can call the AI endpoint.
+- `OPENAI_API_KEY` is server-only and absent from browser bundles.
+- Requests exclude name, Student ID, email and team.
+- Project name, description, implementation claim and begun teacher verification are required.
+- Structured output contains current signal, one question, next action and teaching spark.
+- Suggestions remain temporary until the teacher explicitly copies content and saves the review.
+- AI cannot set marks, verification outcome or follow-up status.
+- Generate, edit, regenerate, use and dismiss flows are available.
