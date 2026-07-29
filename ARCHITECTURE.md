@@ -96,7 +96,7 @@ Current configuration:
 - Output directory: `dist`
 - Root directory: repository root
 
-Production and preview environments require the two Supabase browser variables.
+Production and preview environments require the two Supabase browser variables. AI-enabled environments also require server-only `OPENAI_API_KEY`; `OPENAI_MODEL` is optional.
 
 ## Database model
 
@@ -193,7 +193,7 @@ Database changes do not deploy automatically. They require reviewed SQL to be ru
 - Teacher role assignment is managed through `app_metadata`.
 - The dashboard shows summaries, protected activity records, teacher actions
   and selected-activity CSV export.
-- There is no server-side AI service.
+- The only server-side AI service is the narrow, teacher-triggered Phase 3B teaching suggestion endpoint; it does not persist output or make assessment decisions.
 
 These are intentional first-version constraints. Changes should be driven by validated teaching needs rather than abstract platform ambitions.
 
@@ -206,4 +206,4 @@ Likely next steps:
 3. Introduce a migration convention for database changes.
 4. Add teacher/tutor profile management if role administration becomes frequent.
 5. Evaluate student authentication only after the anonymous workflow is proven.
-6. Add AI through server-side functions only when evidence, privacy and teaching safeguards are defined.
+6. Evaluate the Phase 3B AI teaching suggestion against privacy, usefulness and teacher-control safeguards before expanding AI scope.

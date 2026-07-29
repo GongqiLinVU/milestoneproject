@@ -18,7 +18,10 @@ The current module guides students through a four-week journey:
 
 - Week 1 check-in
 - Class pulse
-- Individual Team Health Check\n- Week 1 Engagement Check-out\n- Week 2 Individual Progress Review\n- Week 2 Engagement Check-out
+- Individual Team Health Check
+- Week 1 Engagement Check-out
+- Week 2 Individual Progress Review
+- Week 2 Engagement Check-out
 - Week 3 Engagement Check-out
 - Week 3 poster peer review
 - Supabase-backed submissions
@@ -36,6 +39,7 @@ The current module guides students through a four-week journey:
 - Teacher edit and confirmed delete for identified activity records
 - Teacher mutations protected by `is_teacher()` UPDATE/DELETE RLS policies
 - Private student-by-student implementation Review & Follow-up with operational status and recheck actions
+- Optional teacher-triggered AI teaching suggestions using de-identified project and verification evidence
 - Teacher-controlled Poster Peer Review opening and closing
 - Export the currently selected activity as a stable UTF-8 CSV; Class Pulse
   exports only aggregate distributions
@@ -124,7 +128,7 @@ the documented production verification:
 - Verify duplicate, self-review and create-once constraints
 - Complete closed/open/closed Peer Review and CSV smoke tests
 
-Students remain unauthenticated and their submissions remain create-once. AI features, student-side editing and major database redesign are intentionally out of scope.
+Students remain unauthenticated and their submissions remain create-once. Phase 3B introduces only a limited, teacher-controlled AI teaching suggestion; broader AI analytics, student-side editing and major database redesign remain out of scope.
 
 See [Sprint 2 roadmap](ROADMAP.md#sprint-2--teacher-operations-and-activity-control),
 the detailed [Sprint 2 plan](docs/sprints/sprint-02/PLAN.md), and the reusable
@@ -133,4 +137,4 @@ the detailed [Sprint 2 plan](docs/sprints/sprint-02/PLAN.md), and the reusable
 
 ### Sprint 3 — continuous engagement evidence
 
-Week 1 uses an individual Team Health Check and a ten-question Engagement Check-out. Week 2 adds an Implementation Pre-check. Phase 3 adds a private teacher Review & Follow-up workflow linked to each Implementation Pre-check, plus a Week 3 Check-out. The Teacher Dashboard retains raw evidence and presents descriptive teaching signals only—never an automatic mark or performance judgement.
+Week 1 uses an individual Team Health Check and a ten-question Engagement Check-out. Week 2 adds an Implementation Pre-check. Phase 3 adds a private teacher Review & Follow-up workflow linked to each Implementation Pre-check, plus a Week 3 Check-out. The Teacher Dashboard retains raw evidence and presents descriptive teaching signals only—never an automatic mark or performance judgement. Phase 3B adds an optional AI suggestion card that a teacher may edit, use as a follow-up, regenerate or dismiss.

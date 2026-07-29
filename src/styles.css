@@ -1450,3 +1450,93 @@ button.danger:hover {
   color: #566078;
   font-size: .88rem;
 }
+
+
+/* Sprint 3 Phase 3B: teacher-controlled AI suggestion */
+.ai-teaching-panel {
+  margin: 1.25rem 0;
+  padding: 1rem;
+  border: 1px solid #cbd8fb;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #f8faff 0%, #f0f7ff 55%, #f6f2ff 100%);
+}
+.ai-teaching-heading {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .85rem;
+}
+.ai-teaching-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  background: #e5e9ff;
+  color: #5547b8;
+}
+.ai-teaching-heading small {
+  color: #665aa8;
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.ai-teaching-heading h4 { margin: .15rem 0 .2rem; font-size: 1.05rem; }
+.ai-teaching-heading p {
+  margin: 0;
+  color: #5e6880;
+  font-size: .82rem;
+  line-height: 1.45;
+}
+.ai-teaching-heading button {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+}
+.ai-teaching-message {
+  margin: .85rem 0 0;
+  color: #4b5670;
+  font-size: .85rem;
+}
+.ai-suggestion-card {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid #d9def3;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, .88);
+}
+.ai-disclaimer {
+  margin: 0 0 .85rem;
+  color: #7a5b18;
+  font-size: .78rem;
+  font-weight: 700;
+}
+.ai-suggestion-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .8rem;
+}
+.ai-suggestion-fields label {
+  color: #4e5870;
+  font-size: .78rem;
+  font-weight: 750;
+}
+.ai-suggestion-fields textarea {
+  min-height: 82px;
+  margin-top: .35rem;
+  background: #fff;
+  font-weight: 500;
+}
+.ai-suggestion-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: .65rem;
+  margin-top: .9rem;
+}
+@media (max-width: 760px) {
+  .ai-teaching-heading { grid-template-columns: auto 1fr; }
+  .ai-teaching-heading button { grid-column: 1 / -1; justify-content: center; }
+  .ai-suggestion-fields { grid-template-columns: 1fr; }
+  .ai-suggestion-actions { align-items: stretch; flex-direction: column; }
+}
