@@ -23,12 +23,12 @@ const supabase = createClient(
     "sb_publishable_-RPm45eBd8_CVaNk4GbXhg_nxOkMrLr",
 );
 const teams = Array.from({ length: 8 }, (_, i) => `Team ${i + 1}`);
-type Kind = "checkin" | "pulse" | "team" | "promise" | "review";
+type Kind = "checkin" | "pulse" | "health" | "checkout" | "review";
 const titles: Record<Kind, string> = {
   checkin: "Week 1 Check-in",
   pulse: "Class Pulse",
-  team: "Team Conversation",
-  promise: "Four-Week Action Plan",
+  health: "Team Health Check",
+  checkout: "Week 1 Engagement Check-out",
   review: "Poster Peer Review",
 };
 function App() {
@@ -220,14 +220,14 @@ function Week1({ open }: { open: (k: Kind) => void }) {
           action={() => open("pulse")}
         />
         <Activity
-          title="Team Conversation"
-          text="What are you proud of, what could stop delivery, and where do you need support?"
-          action={() => open("team")}
+          title="Team Health Check"
+          text="Share your individual view of communication, participation and delivery health."
+          action={() => open("health")}
         />
         <Activity
-          title="Four-Week Action Plan"
-          text="Turn your intended outcome into a concrete next step, success signal and support request."
-          action={() => open("promise")}
+          title="Week 1 Engagement Check-out"
+          text="Record how you participated after Monday and what the teacher should verify next."
+          action={() => open("checkout")}
         />
       </div>
       <blockquote>
@@ -373,10 +373,8 @@ function friendlyError(code: string | undefined, kind: Kind) {
   if (kind === "review" && code === "42501")
     return "Peer review is currently closed. Your response was not submitted.";
   if (code === "23505") {
-    if (kind === "team")
-      return "Your team has already submitted this conversation.";
-    if (kind === "promise" || kind === "checkin")
-      return "This Student ID has already submitted a response.";
+    if (kind === "health" || kind === "checkout" || kind === "checkin")
+      return "This Student ID has already submitted this activity.";
     if (kind === "review") return "You have already reviewed this team.";
   }
   if (code === "42703")
@@ -395,9 +393,7 @@ async function submissionStorageKey(
   const identity =
     kind === "pulse"
       ? "anonymous-class-pulse"
-      : kind === "team"
-        ? normalise(values.team)
-        : kind === "review"
+      : kind === "review"
           ? `${normalise(values.sid)}|${normalise(values.reviewed_team)}`
           : normalise(values.sid);
   const bytes = new TextEncoder().encode(`nit3004|${kind}|${identity}`);
@@ -464,15 +460,30 @@ function submissionReceipt(
       { label: "Main concern", value: text("concern") },
       { label: "AI usage", value: text("ai") },
     ],
-    team: [
+    health: [
       { label: "Team", value: text("team") },
-      { label: "What the team is proud of", value: text("proud") },
-      { label: "Biggest delivery risk", value: text("risk") },
-      { label: "Support needed", value: text("support") },
+      { label: "Communication", value: text("communication") },
+      { label: "Role clarity", value: text("role_clarity") },
+      { label: "Participation balance", value: text("participation_balance") },
+      { label: "Delivery status", value: text("delivery_status") },
+      { label: "Voice in the team", value: text("voice") },
+      { label: "Teacher support", value: text("teacher_support") },
+      { label: "Main issue", value: text("main_issue") },
+      { label: "Details", value: text("risk_note") },
     ],
-    promise: [
+    checkout: [
       { label: "Team", value: text("team") },
-      { label: "Four-week action plan", value: text("promise") },
+      { label: "Participation", value: text("participation_mode") },
+      { label: "Time invested", value: text("time_invested") },
+      { label: "Contribution areas", value: text("contribution_areas") },
+      { label: "Task completion", value: text("task_completion") },
+      { label: "Evidence", value: text("evidence_status") },
+      { label: "Team communication", value: text("team_communication") },
+      { label: "Participation balance", value: text("participation_balance") },
+      { label: "Next task clarity", value: text("next_task_clarity") },
+      { label: "Work status", value: text("work_status") },
+      { label: "Monday discussion focus", value: text("discussion_focus") },
+      { label: "Details", value: text("detail_note") },
     ],
     review: [
       { label: "Reviewer team", value: text("reviewer_team") },
@@ -547,8 +558,7 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
     >;
     const identityReady =
       activeKind === "pulse" ||
-      (activeKind === "team" && Boolean(values.team)) ||
-      ((activeKind === "checkin" || activeKind === "promise") &&
+      ((activeKind === "checkin" || activeKind === "health" || activeKind === "checkout") &&
         Boolean(String(values.sid ?? "").trim())) ||
       (activeKind === "review" &&
         Boolean(String(values.sid ?? "").trim()) &&
@@ -567,10 +577,19 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
   async function submit(e: any) {
     e.preventDefault();
     setMsg("");
-    const v = Object.fromEntries(new FormData(e.currentTarget)) as Record<
+    const formData = new FormData(e.currentTarget);
+    const v = Object.fromEntries(formData) as Record<
       string,
       FormDataEntryValue
     >;
+    const contributionAreas = formData.getAll("contribution_areas").map(String);
+    if (activeKind === "checkout") {
+      if (contributionAreas.length === 0) {
+        setMsg("Select at least one contribution area.");
+        return;
+      }
+      v.contribution_areas = contributionAreas.join(", ");
+    }
     let storageKey = "";
     try {
       storageKey = await submissionStorageKey(activeKind, v);
@@ -602,22 +621,40 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
         ai_usage: v.ai,
       };
     }
-    if (activeKind === "team") {
-      table = "team_conversations";
-      payload = {
-        team_name: v.team,
-        proudest_achievement: v.proud,
-        biggest_delivery_risk: v.risk,
-        support_needed: v.support,
-      };
-    }
-    if (activeKind === "promise") {
-      table = "student_promises";
+    if (activeKind === "health") {
+      table = "team_health_checks";
       payload = {
         student_name: v.name,
         student_id: v.sid,
         team_name: v.team,
-        promise: v.promise,
+        communication: v.communication,
+        role_clarity: v.role_clarity,
+        participation_balance: v.participation_balance,
+        delivery_status: v.delivery_status,
+        voice: v.voice,
+        teacher_support: v.teacher_support,
+        main_issue: v.main_issue,
+        risk_note: v.risk_note || null,
+      };
+    }
+    if (activeKind === "checkout") {
+      table = "weekly_engagement_checkouts";
+      payload = {
+        week_number: 1,
+        student_name: v.name,
+        student_id: v.sid,
+        team_name: v.team,
+        participation_mode: v.participation_mode,
+        time_invested: v.time_invested,
+        contribution_areas: contributionAreas,
+        task_completion: v.task_completion,
+        evidence_status: v.evidence_status,
+        team_communication: v.team_communication,
+        participation_balance: v.participation_balance,
+        next_task_clarity: v.next_task_clarity,
+        work_status: v.work_status,
+        discussion_focus: v.discussion_focus,
+        detail_note: v.detail_note || null,
       };
     }
     if (activeKind === "review") {
@@ -892,6 +929,60 @@ const SelectChoice = ({
     </select>
   </label>
 );
+function Choice({ label, name, options }: { label: string; name: string; options: string[] }) {
+  return <SelectChoice label={label} name={name} placeholder="Select one" options={options} />;
+}
+function TeamHealthFields() {
+  const [risk, setRisk] = useState(false);
+  const assess = (form: HTMLFormElement) => {
+    const data = new FormData(form);
+    setRisk(
+      ["Not yet"].includes(String(data.get("communication"))) ||
+      ["Not clear"].includes(String(data.get("role_clarity"))) ||
+      ["Significant difference"].includes(String(data.get("participation_balance"))) ||
+      ["Blocked"].includes(String(data.get("delivery_status"))) ||
+      ["No"].includes(String(data.get("voice"))) ||
+      ["Yes"].includes(String(data.get("teacher_support"))) ||
+      ["Other"].includes(String(data.get("main_issue")))
+    );
+  };
+  return <div onChange={(event) => assess(event.currentTarget.closest("form") as HTMLFormElement)}>
+    <p className="form-note">Complete this individually. It measures participation temperature, not performance or marks.</p>
+    <Identity />
+    <Choice label="Have you communicated with your team this week?" name="communication" options={["Yes","Not yet"]} />
+    <Choice label="Is your role clear?" name="role_clarity" options={["Clear","Partly clear","Not clear"]} />
+    <Choice label="Is participation balanced?" name="participation_balance" options={["Balanced","Some difference","Significant difference"]} />
+    <Choice label="Current team delivery status" name="delivery_status" options={["On track","Some risk","Blocked"]} />
+    <Choice label="Can you express your view in the team?" name="voice" options={["Yes","Sometimes","No"]} />
+    <Choice label="Does the team need teacher support?" name="teacher_support" options={["No","Maybe","Yes"]} />
+    <Choice label="Main issue" name="main_issue" options={["None","Communication","Participation","Technical","Scope","Time","Other"]} />
+    {risk && <label>Brief details<textarea name="risk_note" required maxLength={200} /><small className="field-hint">Maximum 200 characters</small></label>}
+  </div>;
+}
+function EngagementCheckoutFields() {
+  const [risk, setRisk] = useState(false);
+  const assess = (form: HTMLFormElement) => {
+    const data = new FormData(form);
+    const risky = ["No further participation","Not completed","No clear task was assigned","No communication","Significantly unbalanced","Not clear","At risk","Blocked","Other"];
+    setRisk(Array.from(data.values()).some((value) => risky.includes(String(value))));
+  };
+  const areas = ["Team discussion","Planning or research","UI/UX","Development","Testing","Documentation","Presentation or demo preparation","Team coordination","Other"];
+  return <div onChange={(event) => assess(event.currentTarget.closest("form") as HTMLFormElement)}>
+    <p className="form-note">Complete this after the final Week 1 session, including work completed remotely.</p>
+    <Identity />
+    <Choice label="1. How did you participate after compulsory Monday?" name="participation_mode" options={["Wednesday session","Thursday session","Both sessions","Remote teamwork","Individual work only","No further participation"]} />
+    <Choice label="2. Time invested this week" name="time_invested" options={["Less than 1 hour","1–2 hours","3–5 hours","More than 5 hours"]} />
+    <fieldset className="choice-checklist"><legend>3. Contribution areas (select all that apply)</legend>{areas.map(area => <label key={area}><input type="checkbox" name="contribution_areas" value={area} required={false}/><span>{area}</span></label>)}</fieldset>
+    <Choice label="4. Did you complete your committed task?" name="task_completion" options={["Fully completed","Mostly completed","Partly completed","Not completed","No clear task was assigned"]} />
+    <Choice label="5. Is work evidence available for Monday?" name="evidence_status" options={["Yes, clearly available","Partly available","Not yet","Not applicable this week"]} />
+    <Choice label="6. Team communication this week" name="team_communication" options={["Active and effective","Some communication","Very limited communication","No communication"]} />
+    <Choice label="7. Was team participation balanced?" name="participation_balance" options={["Mostly balanced","Some differences","Significantly unbalanced","Not enough information"]} />
+    <Choice label="8. Is your next task clear?" name="next_task_clarity" options={["Completely clear","Mostly clear","Partly clear","Not clear"]} />
+    <Choice label="9. Current work status" name="work_status" options={["On track","Some difficulty","At risk","Blocked"]} />
+    <Choice label="10. What should the teacher verify on Monday?" name="discussion_focus" options={["My completed work","Technical difficulty","Team communication","Uneven participation","Task or scope clarity","Progress report or documentation","Nothing specific","Other"]} />
+    {risk && <label>Brief details<textarea name="detail_note" required maxLength={200} /><small className="field-hint">Maximum 200 characters</small></label>}
+  </div>;
+}
 function fields(k: Kind) {
   if (k === "checkin")
     return (
@@ -948,33 +1039,8 @@ function fields(k: Kind) {
         </label>
       </>
     );
-  if (k === "team")
-    return (
-      <>
-        <p className="form-note">
-          Submit one shared response per team after discussing these questions
-          together.
-        </p>
-        <Team />
-        <Text label="What are you proud of?" name="proud" maxLength={1200} />
-        <Text label="Biggest delivery risk" name="risk" maxLength={1200} />
-        <Text label="Support needed" name="support" maxLength={1200} />
-      </>
-    );
-  if (k === "promise")
-    return (
-      <>
-        <p className="form-note">
-          Turn your Week 1 goal into a practical delivery plan for your team.
-        </p>
-        <Identity />
-        <Text
-          label="What will you do, what evidence will show success, and what support might you need?"
-          name="promise"
-          maxLength={1000}
-        />
-      </>
-    );
+  if (k === "health") return <TeamHealthFields />;
+  if (k === "checkout") return <EngagementCheckoutFields />;
   return (
     <>
       <p className="form-note">
@@ -1067,51 +1133,41 @@ function Admin() {
       editable: [],
     },
     {
-      table: "team_conversations",
-      label: "Team conversations",
-      title: "Team Conversation records",
-      description:
-        "Review each team’s achievement, delivery risk and requested support.",
-      select:
-        "id, team_name, proudest_achievement, biggest_delivery_risk, support_needed, submitted_by, created_at, updated_at",
+      table: "team_health_checks",
+      label: "Team health",
+      title: "Team Health Check",
+      description: "Review individual responses and each team’s participation temperature.",
+      select: "id, student_name, student_id, team_name, communication, role_clarity, participation_balance, delivery_status, voice, teacher_support, main_issue, risk_note, created_at, updated_at",
       columns: [
-        ["team_name", "Team"],
-        ["proudest_achievement", "Proudest achievement"],
-        ["biggest_delivery_risk", "Biggest delivery risk"],
-        ["support_needed", "Support needed"],
-        ["submitted_by", "Submitted by"],
-        ["created_at", "Created"],
-        ["updated_at", "Updated"],
+        ["student_name", "Name"], ["student_id", "Student ID"], ["team_name", "Team"],
+        ["communication", "Communication"], ["role_clarity", "Role clarity"],
+        ["participation_balance", "Participation balance"], ["delivery_status", "Delivery"],
+        ["voice", "Voice"], ["teacher_support", "Teacher support"], ["main_issue", "Main issue"],
+        ["risk_note", "Details"], ["created_at", "Created"], ["updated_at", "Updated"],
       ],
       editable: [
-        ["team_name", "Team", "team", 0],
-        ["proudest_achievement", "Proudest achievement", "textarea", 1200],
-        ["biggest_delivery_risk", "Biggest delivery risk", "textarea", 1200],
-        ["support_needed", "Support needed", "textarea", 1200],
-        ["submitted_by", "Submitted by", "text", 100],
+        ["student_name", "Name", "text", 100], ["student_id", "Student ID", "text", 40],
+        ["team_name", "Team", "team", 0], ["risk_note", "Details", "textarea", 200],
       ],
     },
     {
-      table: "student_promises",
-      label: "Four-week plans",
-      title: "Four-Week Action Plans",
-      description:
-        "Review how students plan to turn their Week 1 goals into evidence and action.",
-      select:
-        "id, student_name, student_id, team_name, promise, created_at, updated_at",
+      table: "weekly_engagement_checkouts",
+      label: "Week 1 check-outs",
+      title: "Week 1 Engagement Check-out",
+      description: "Review participation outside Monday, evidence readiness and Monday discussion focus.",
+      select: "id, week_number, student_name, student_id, team_name, participation_mode, time_invested, contribution_areas, task_completion, evidence_status, team_communication, participation_balance, next_task_clarity, work_status, discussion_focus, detail_note, created_at, updated_at",
       columns: [
-        ["student_name", "Name"],
-        ["student_id", "Student ID"],
-        ["team_name", "Team"],
-        ["promise", "Action plan"],
-        ["created_at", "Created"],
-        ["updated_at", "Updated"],
+        ["student_name", "Name"], ["student_id", "Student ID"], ["team_name", "Team"],
+        ["participation_mode", "Participation"], ["time_invested", "Time invested"],
+        ["contribution_areas", "Contribution areas"], ["task_completion", "Task completion"],
+        ["evidence_status", "Evidence"], ["team_communication", "Communication"],
+        ["participation_balance", "Participation balance"], ["next_task_clarity", "Next task"],
+        ["work_status", "Work status"], ["discussion_focus", "Monday focus"],
+        ["detail_note", "Details"], ["created_at", "Created"], ["updated_at", "Updated"],
       ],
       editable: [
-        ["student_name", "Name", "text", 100],
-        ["student_id", "Student ID", "text", 40],
-        ["team_name", "Team", "team", 0],
-        ["promise", "Action plan", "textarea", 1000],
+        ["student_name", "Name", "text", 100], ["student_id", "Student ID", "text", 40],
+        ["team_name", "Team", "team", 0], ["detail_note", "Details", "textarea", 200],
       ],
     },
     {
@@ -1519,6 +1575,63 @@ function Admin() {
   const pulseCount = (field: string, value: string) =>
     records.filter((record) => String(record[field]) === value).length;
 
+  const teamTemperatures =
+    activeTable === "team_health_checks"
+      ? teams.map((team) => {
+          const teamRecords = records.filter((record) => record.team_name === team);
+          const riskPoints = teamRecords.reduce((total, record) => {
+            const points = [
+              record.communication === "Not yet" ? 2 : 0,
+              record.role_clarity === "Not clear"
+                ? 2
+                : record.role_clarity === "Partly clear"
+                  ? 1
+                  : 0,
+              record.participation_balance === "Significant difference"
+                ? 2
+                : record.participation_balance === "Some difference"
+                  ? 1
+                  : 0,
+              record.delivery_status === "Blocked"
+                ? 2
+                : record.delivery_status === "Some risk"
+                  ? 1
+                  : 0,
+              record.voice === "No" ? 2 : record.voice === "Sometimes" ? 1 : 0,
+              record.teacher_support === "Yes"
+                ? 2
+                : record.teacher_support === "Maybe"
+                  ? 1
+                  : 0,
+            ];
+            return total + points.reduce((sum, point) => sum + point, 0);
+          }, 0);
+          const score =
+            teamRecords.length === 0
+              ? null
+              : Math.round(
+                  100 - (riskPoints / (teamRecords.length * 12)) * 100,
+                );
+          const level =
+            score === null
+              ? "insufficient"
+              : score >= 75
+                ? "warm"
+                : score >= 50
+                  ? "cool"
+                  : "cold";
+          const label =
+            level === "warm"
+              ? "Stable"
+              : level === "cool"
+                ? "Watch"
+                : level === "cold"
+                  ? "Attention"
+                  : "No data";
+          return { team, count: teamRecords.length, level, label, score };
+        })
+      : [];
+
   if (authChecking)
     return (
       <main className="admin-login">
@@ -1728,6 +1841,41 @@ function Admin() {
             </button>
           </div>
         )}
+        {dataStatus === "success" && activeTable === "team_health_checks" && records.length > 0 && (
+          <div className="temperature-grid" aria-label="Team participation temperature">
+            <div className="temperature-legend" aria-label="Temperature ranges">
+              <span className="warm">75–100 Stable</span>
+              <span className="cool">50–74 Watch</span>
+              <span className="cold">0–49 Attention</span>
+              <span className="insufficient">No responses</span>
+            </div>
+            {teamTemperatures.map(({ team, count, level, label, score }) => (
+              <article className={`temperature-card ${level}`} key={team}>
+                <div
+                  className="thermometer"
+                  role="img"
+                  aria-label={`${team}: ${score === null ? "no data" : `${score}, ${label}`}`}
+                >
+                  <span style={{ height: `${score === null ? 8 : Math.max(score, 8)}%` }} />
+                </div>
+                <div>
+                  <b>{team}</b>
+                  <strong>{score === null ? "—" : score} · {label}</strong>
+                  <small>
+                    {count === 0
+                      ? "No student responses"
+                      : `${count} student ${count === 1 ? "response · Early signal" : "responses"}`}
+                  </small>
+                </div>
+              </article>
+            ))}
+            <p className="temperature-note">
+              Colour reflects the answers received; response count shows coverage.
+              A single response is an early signal, not a whole-team conclusion.
+              Participation temperature is descriptive only and is not an assessment result.
+            </p>
+          </div>
+        )}
         {dataStatus === "success" && records.length === 0 && (
           <div className="admin-state" role="status">
             <b>No {activeActivity.label} records yet</b>
@@ -1863,7 +2011,7 @@ function Admin() {
                   ) : type === "textarea" ? (
                     <textarea name={field} defaultValue={String(editRecord[field] ?? "")} maxLength={maxLength} required={field !== "additional_feedback"} />
                   ) : (
-                    <input name={field} defaultValue={String(editRecord[field] ?? "")} maxLength={maxLength} required={field !== "submitted_by"} />
+                    <input name={field} defaultValue={String(editRecord[field] ?? "")} maxLength={maxLength} required />
                   )}
                 </label>
               ))}

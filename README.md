@@ -128,3 +128,8 @@ Students remain unauthenticated and their submissions remain create-once. AI fea
 See [Sprint 2 roadmap](ROADMAP.md#sprint-2--teacher-operations-and-activity-control),
 the detailed [Sprint 2 plan](docs/sprints/sprint-02/PLAN.md), and the reusable
 [session start protocol](prompts/START_SESSION.md).
+
+
+### Sprint 3 — continuous engagement evidence
+
+Week 1 now uses an individual Team Health Check and a ten-question Engagement Check-out. The Teacher Dashboard groups health responses by team as a participation temperature and retains each student’s original answers. Temperature is a descriptive teaching signal, never a mark or automated performance judgement.

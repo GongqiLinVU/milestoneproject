@@ -214,3 +214,8 @@ These expansions should only begin after the NIT3004 workflow is stable and demo
 - Phases divide one Sprint into reviewable sessions and focused Draft PRs.
 - `docs/sprints/sprint-xx/PLAN.md` defines scope, while `HANDOFF.md` records
   verified progress and evidence.
+
+
+### Sprint 3 Phase 1 — Week 1 Engagement Loop
+
+Implemented in PR #18: individual Team Health Check, Week 1 Engagement Check-out, Team Participation Temperature, create-only student access and teacher-only review. Historical Team Conversation and Four-Week Action Plan records are retained.

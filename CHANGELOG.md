@@ -115,3 +115,12 @@ The project currently uses simple milestone-based versions while the production 
 - Generic activity schema redesign
 - AI teaching assistant
 - Risk prediction
+
+
+## 2026-07-29 — Sprint 3 Phase 1
+
+- Replaced the Week 1 Team Conversation student entry with an individual Team Health Check.
+- Replaced the Four-Week Action Plan student entry with a ten-question Week 1 Engagement Check-out.
+- Added risk-triggered notes limited to 200 characters.
+- Added Team Participation Temperature and raw response review to the Teacher Dashboard.
+- Added shared Week 1–3 engagement schema with student create-only and teacher-only management policies.
