@@ -946,7 +946,7 @@ function TeamHealthFields() {
       ["Other"].includes(String(data.get("main_issue")))
     );
   };
-  return <div onChange={(event) => assess(event.currentTarget.closest("form")!)}>
+  return <div onChange={(event) => assess(event.currentTarget.closest("form") as HTMLFormElement)}>
     <p className="form-note">Complete this individually. It measures participation temperature, not performance or marks.</p>
     <Identity />
     <Choice label="Have you communicated with your team this week?" name="communication" options={["Yes","Not yet"]} />
@@ -967,7 +967,7 @@ function EngagementCheckoutFields() {
     setRisk(Array.from(data.values()).some((value) => risky.includes(String(value))));
   };
   const areas = ["Team discussion","Planning or research","UI/UX","Development","Testing","Documentation","Presentation or demo preparation","Team coordination","Other"];
-  return <div onChange={(event) => assess(event.currentTarget.closest("form")!)}>
+  return <div onChange={(event) => assess(event.currentTarget.closest("form") as HTMLFormElement)}>
     <p className="form-note">Complete this after the final Week 1 session, including work completed remotely.</p>
     <Identity />
     <Choice label="1. How did you participate after compulsory Monday?" name="participation_mode" options={["Wednesday session","Thursday session","Both sessions","Remote teamwork","Individual work only","No further participation"]} />
