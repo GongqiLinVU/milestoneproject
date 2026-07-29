@@ -584,6 +584,10 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
     >;
     const contributionAreas = formData.getAll("contribution_areas").map(String);
     if (activeKind === "checkout") {
+      if (contributionAreas.length === 0) {
+        setMsg("Select at least one contribution area.");
+        return;
+      }
       v.contribution_areas = contributionAreas.join(", ");
     }
     let storageKey = "";
@@ -1571,6 +1575,28 @@ function Admin() {
   const pulseCount = (field: string, value: string) =>
     records.filter((record) => String(record[field]) === value).length;
 
+  const teamTemperatures =
+    activeTable === "team_health_checks"
+      ? teams.map((team) => {
+          const teamRecords = records.filter((record) => record.team_name === team);
+          const severe = teamRecords.some((record) =>
+            record.delivery_status === "Blocked" ||
+            record.teacher_support === "Yes" ||
+            record.communication === "Not yet" ||
+            record.voice === "No"
+          );
+          const concern = teamRecords.some((record) =>
+            record.delivery_status === "Some risk" ||
+            record.teacher_support === "Maybe" ||
+            record.role_clarity === "Not clear" ||
+            record.participation_balance === "Significant difference"
+          );
+          const level = teamRecords.length < 2 ? "insufficient" : severe ? "cold" : concern ? "cool" : "warm";
+          const label = level === "warm" ? "Warm" : level === "cool" ? "Cool" : level === "cold" ? "Cold" : "Insufficient data";
+          return { team, count: teamRecords.length, level, label };
+        })
+      : [];
+
   if (authChecking)
     return (
       <main className="admin-login">
@@ -1778,6 +1804,17 @@ function Admin() {
             >
               Try again
             </button>
+          </div>
+        )}
+        {dataStatus === "success" && activeTable === "team_health_checks" && records.length > 0 && (
+          <div className="temperature-grid" aria-label="Team participation temperature">
+            {teamTemperatures.map(({ team, count, level, label }) => (
+              <article className={`temperature-card ${level}`} key={team}>
+                <div className="thermometer" aria-hidden="true"><span /></div>
+                <div><b>{team}</b><strong>{label}</strong><small>{count} student {count === 1 ? "response" : "responses"}</small></div>
+              </article>
+            ))}
+            <p className="temperature-note">Participation temperature is a descriptive teaching signal only. It is not a performance score or assessment result.</p>
           </div>
         )}
         {dataStatus === "success" && records.length === 0 && (
