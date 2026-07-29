@@ -1138,3 +1138,73 @@ button.danger:hover {
     padding: 10px;
   }
 }
+
+
+/* Course Journey collapsible overview */
+.journey-collapsible {
+  padding-top: 34px;
+  padding-bottom: 34px;
+  scroll-margin-top: 90px;
+}
+.journey-collapsible details {
+  width: 100%;
+}
+.journey-collapsible summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  cursor: pointer;
+  list-style: none;
+}
+.journey-collapsible summary::-webkit-details-marker {
+  display: none;
+}
+.journey-collapsible summary > div > span {
+  color: #167659;
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.journey-collapsible summary h2 {
+  margin: 7px 0 0;
+  font-family: "Manrope", sans-serif;
+  font-size: clamp(1.45rem, 3vw, 2.25rem);
+  letter-spacing: -.035em;
+}
+.journey-expand {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 15px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: #536158;
+  background: #fff;
+  font-size: .82rem;
+  font-weight: 750;
+}
+.journey-expand svg {
+  width: 18px;
+  height: 18px;
+  transition: transform .2s ease;
+}
+.journey-collapsible details[open] .journey-expand svg {
+  transform: rotate(180deg);
+}
+.journey-content {
+  padding-top: 32px;
+}
+@media (max-width: 620px) {
+  .journey-collapsible summary {
+    align-items: flex-start;
+  }
+  .journey-expand > span {
+    display: none;
+  }
+  .journey-expand {
+    padding: 10px;
+  }
+}
