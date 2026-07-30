@@ -1,6 +1,6 @@
 # Sprint 3 — Continuous Engagement and Teaching Review
 
-**Status: Active — Phase 3C-1 complete; Phase 3C-2 in progress**
+**Status: Active — Phase 3C-1 and 3C-2 complete; Phase 3C-3 planned**
 
 ## Teaching problem
 
@@ -212,25 +212,31 @@ Acceptance:
 
 - Add a teacher-managed roster scoped to `block_id`.
 - Support manual entry and CSV import of Student ID, name, VU email and team.
-- Add a private lookup using Student ID plus VU email.
+- Add a private lookup using Student ID; email remains optional roster contact
+  information and is not used for matching.
 - Return only the matched student's block, team number, project name and
   teammates' preferred names; never return a class list, IDs or email addresses.
 - Add server-side rate limiting and generic mismatch responses to reduce roster
   enumeration.
-- Auto-fill the verified team in later forms while keeping student accounts out
-  of scope. This follows after roster lookup is production-validated so existing
-  form submission behaviour is not changed in the same release.
+- Remove editable own-team fields from identified Week 1–4 activities.
+- On submission, resolve and store the verified team from the private roster
+  using `block_id + Student ID`; reject an unmatched Student ID with a clear
+  message.
+- For cross-team review, ask only for the target team. Resolve the reviewer's
+  own team from the roster and retain the self-review database constraint.
 
 3C-2 first-release acceptance:
 
 - Teacher selects a teaching block and sees only that block's roster.
 - Teacher can add/update one student or import the documented CSV columns.
-- Student ID and VU email are unique within a block but reusable in later blocks.
-- Find My Team accepts Student ID + VU email and returns only the matching team,
+- Student ID is unique within a block and reusable in later blocks; email is
+  optional.
+- Find My Team accepts Student ID and returns only the matching team,
   optional project, and teammates' preferred names.
 - Browser roles cannot read the roster directly.
-- The lookup endpoint uses a server-only service role, hashes lookup identifiers,
-  limits attempts, disables caching and returns one generic mismatch response.
+- The lookup endpoint calls a least-privilege Supabase RPC with the publishable
+  key, hashes lookup identifiers, limits attempts, disables caching and returns
+  one generic mismatch response. No service-role key is required.
 - No student account is introduced and no existing weekly form is blocked.
 
 ### Phase 3C-3 — Week-specific engagement journey
