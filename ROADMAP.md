@@ -166,7 +166,7 @@ make every summary traceable to submitted evidence.
 ### Delivery sequence
 
 1. Team & Project foundation
-2. Week-specific engagement journey
+2. NIT3004 recovery and week-specific engagement journey
 3. Week 3–4 follow-up continuity
 4. Three-week trajectory and teaching analytics
 5. Export, privacy and production validation
@@ -174,8 +174,9 @@ make every summary traceable to submitted evidence.
 Detailed scope, acceptance criteria and the current handoff are stored in
 `docs/sprints/sprint-04/`. Sprint 4 Phase 1 establishes block-scoped formal
 teams, a Project Catalogue and one current project per team. The current
-`2026 · 2B1` cohort uses teacher assignment; future blocks may enable team-level
-student selection during Check-in.
+`2026 · 2B1` cohort uses teacher assignment; future NIT3003 blocks may enable team-level student selection during Check-in.
+NIT3004 restores the inherited team/project and validates the approximately 80%
+entry baseline rather than selecting a new project.
 
 ### Deferred future scope
 
