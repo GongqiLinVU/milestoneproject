@@ -127,49 +127,62 @@ Detailed scope, Phase acceptance criteria and the current handoff are stored in
 - `npm run build`, migration verification and production smoke tests pass.
 - README, AI context, architecture, roadmap and changelog are synchronised with the implemented behaviour.
 
-## Sprint 3 — Week 2 Review and Teaching Analytics
+## Sprint 3 — Continuous Engagement, Review and Reusable Cohorts
 
-**Status: Active — Phase 3C-2 team allocation in progress**
+**Status: Closed at the agreed delivery boundary on 30 July 2026**
 
-Sprint 3 combines the original Teaching Analytics direction with classroom
-feedback gathered on 27 July 2026. The current shared, long-text Team
-Conversation had low participation, and teachers need structured individual
-evidence before Week 2 reviews plus a place to record feedback and follow-up.
+Sprint 3 delivered the core Week 1–3 evidence and teacher-review workflow, then
+expanded the platform for repeatable teaching blocks and roster-authoritative
+team allocation.
 
-Planned delivery sequence:
+Delivered:
 
-1. Replace Team Conversation with an individual, selection-first Team Health
-   Check and team response summaries.
-2. Add a short Week 2 Individual Progress Review completed before the teacher
-   meeting.
-3. Add teacher-only review outcome, feedback, agreed action and follow-up.
-4. Add completion, team health, disagreement and follow-up analytics that drill
-   down to submitted evidence.
-6. Add authorised export, privacy verification and production hardening.
+- Week 1 individual Team Health Check and Engagement Check-out
+- Week 2 Implementation Pre-check and Engagement Check-out
+- private Teacher Review and Follow-up with Week 3 Check-out
+- limited teacher-controlled AI suggestion pilot with advisory-only guardrails
+- reusable teaching blocks with existing records backfilled to `2026 · 2B1`
+- teacher-managed block roster and CSV import
+- private Find My Team lookup using Student ID and a least-privilege RPC
+- explicit block-scoped submissions and activity records
+- automatic own-team assignment from `block_id + Student ID`
+- target-team-only cross-team review forms
 
-Most student questions use selections. Short text is conditional or optional.
-Analytics remain descriptive and must not infer marks or performance without
-sufficient evidence.
+The remaining planned work was intentionally moved to Sprint 4 rather than
+extending Sprint 3 further. Sprint 3's completed plan and evidence remain in
+`docs/sprints/sprint-03/`.
 
-Detailed scope, Phase acceptance criteria and activation rules are stored in
-`docs/sprints/sprint-03/`. Sprint 2 was production validated on 27 July 2026. Sprint 3 is now the active
-Sprint; new Sessions should begin with Phase 1 unless the user explicitly
-changes priority.
+## Sprint 4 — Weekly Journey, Follow-up and Teaching Analytics
 
-## Sprint 4 — Student identity and team management
+**Status: Active — Phase 1 planned**
 
-**Status: Planned**
+### Goal
 
-Potential scope:
+Complete the reusable Week 1–4 teaching journey on top of the Sprint 3 block,
+roster and review foundation. Keep student interactions quick and
+selection-first, keep teacher judgement separate from student self-report, and
+make every summary traceable to submitted evidence.
 
-- Student authentication using approved university identity options
-- Student profile
-- Team membership
-- Controlled resubmission or correction workflow
-- Additional teacher-managed activity windows
-- Tutor and coordinator roles
+### Delivery sequence
 
-The current anonymous submission workflow should remain available until authenticated student onboarding is proven usable.
+1. Week-specific engagement journey
+2. Week 3–4 follow-up continuity
+3. Three-week trajectory and teaching analytics
+4. Export, privacy and production validation
+
+Detailed scope, acceptance criteria and the current handoff are stored in
+`docs/sprints/sprint-04/`. New sessions should begin with Sprint 4 Phase 1
+unless the user explicitly changes priority.
+
+### Deferred future scope
+
+The following ideas are not part of Sprint 4:
+
+- student authentication and profiles
+- controlled student resubmission
+- tutor and coordinator roles
+- generic multi-course administration
+- additional teacher-managed activity windows beyond the current journey
 
 ## Sprint 5 — AI-assisted teaching
 
