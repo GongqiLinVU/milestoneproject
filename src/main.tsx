@@ -66,12 +66,19 @@ function App() {
   const [form, setForm] = useState<Kind | null>(null);
   const [live, setLive] = useState<boolean | null>(null);
   const [peerReviewOpen, setPeerReviewOpen] = useState<boolean | null>(null);
+  const [activeBlock, setActiveBlock] = useState("");
   useEffect(() => {
     supabase
       .from("portal_health")
       .select("status")
       .limit(1)
       .then(({ error }) => setLive(!error));
+    supabase
+      .from("teaching_blocks")
+      .select("academic_year, block_code")
+      .eq("status", "active")
+      .single()
+      .then(({ data }) => setActiveBlock(data ? `${data.academic_year} · ${data.block_code}` : ""));
     supabase
       .from("activity_settings")
       .select("is_open")
@@ -99,7 +106,7 @@ function App() {
         <section className="hero">
           <div>
             <div className="eyebrow">
-              Applied Project II · Four-week delivery studio
+              Applied Project II · {activeBlock || "Four-week delivery studio"}
             </div>
             <h1>
               Build less.
