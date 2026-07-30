@@ -17,6 +17,10 @@ The project currently uses simple milestone-based versions while the production 
   roster-derived Project Snapshot.
 - Preserved existing Week 1 evidence and imported nonblank legacy roster
   project names into the new foundation.
+- Recorded assignment origin and continuation so current 2B1 projects are
+  explicitly recognised as NIT3003 work resumed in NIT3004.
+- Restricted future student project selection semantics to NIT3003; NIT3004
+  restores the existing team/project and begins from an 80% entry baseline.
 
 ## [0.2.0] — 2026-07-26
 
