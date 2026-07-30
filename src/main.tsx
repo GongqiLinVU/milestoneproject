@@ -66,7 +66,7 @@ function App() {
   const [form, setForm] = useState<Kind | null>(null);
   const [live, setLive] = useState<boolean | null>(null);
   const [peerReviewOpen, setPeerReviewOpen] = useState<boolean | null>(null);
-  const [activeBlock, setActiveBlock] = useState("");
+  const [activeBlock, setActiveBlock] = useState<{ id: string; label: string } | null>(null);
   useEffect(() => {
     supabase
       .from("portal_health")
@@ -75,10 +75,16 @@ function App() {
       .then(({ error }) => setLive(!error));
     supabase
       .from("teaching_blocks")
-      .select("academic_year, block_code")
+      .select("id, academic_year, block_code")
       .eq("status", "active")
       .single()
-      .then(({ data }) => setActiveBlock(data ? `${data.academic_year} · ${data.block_code}` : ""));
+      .then(({ data }) =>
+        setActiveBlock(
+          data
+            ? { id: data.id, label: `${data.academic_year} · ${data.block_code}` }
+            : null,
+        ),
+      );
     supabase
       .from("activity_settings")
       .select("is_open")
@@ -106,7 +112,7 @@ function App() {
         <section className="hero">
           <div>
             <div className="eyebrow">
-              Applied Project II · {activeBlock || "Four-week delivery studio"}
+              Applied Project II · {activeBlock?.label || "Four-week delivery studio"}
             </div>
             <h1>
               Build less.
@@ -155,7 +161,13 @@ function App() {
       <footer>
         NIT3004 Engineering Studio · Learn to deliver like an engineer.
       </footer>
-      <Modal key={form ?? "closed"} kind={form} close={() => setForm(null)} />
+      <Modal
+        key={form ?? "closed"}
+        kind={form}
+        blockId={activeBlock?.id || ""}
+        blockLabel={activeBlock?.label || ""}
+        close={() => setForm(null)}
+      />
     </>
   );
 }
@@ -548,6 +560,7 @@ function friendlyError(code: string | undefined, kind: Kind) {
 async function submissionStorageKey(
   kind: Kind,
   values: Record<string, FormDataEntryValue>,
+  blockId: string,
 ) {
   const normalise = (value: FormDataEntryValue | undefined) =>
     String(value ?? "")
@@ -559,7 +572,9 @@ async function submissionStorageKey(
       : kind === "review"
           ? `${normalise(values.sid)}|${normalise(values.reviewed_team)}`
           : normalise(values.sid);
-  const bytes = new TextEncoder().encode(`nit3004|${kind}|${identity}`);
+  const bytes = new TextEncoder().encode(
+    `nit3004|${blockId || "no-active-block"}|${kind}|${identity}`,
+  );
   const digest = await crypto.subtle.digest("SHA-256", bytes);
   const hash = Array.from(new Uint8Array(digest))
     .map((byte) => byte.toString(16).padStart(2, "0"))
@@ -730,7 +745,17 @@ function readSubmissionReceipt(key: string): SubmissionReceipt | null {
   return { submittedAt: stored, answers: [] };
 }
 
-function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
+function Modal({
+  kind,
+  blockId,
+  blockLabel,
+  close,
+}: {
+  kind: Kind | null;
+  blockId: string;
+  blockLabel: string;
+  close: () => void;
+}) {
   const [msg, setMsg] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [storedSubmission, setStoredSubmission] =
@@ -743,7 +768,7 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
     setStoredSubmission(null);
     if (kind !== "pulse") return;
     let cancelled = false;
-    submissionStorageKey(kind, {})
+    submissionStorageKey(kind, {}, blockId)
       .then((key) => {
         const receipt = readSubmissionReceipt(key);
         if (!cancelled && receipt) setStoredSubmission(receipt);
@@ -754,7 +779,7 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
     return () => {
       cancelled = true;
     };
-  }, [kind]);
+  }, [kind, blockId]);
   if (!kind) return null;
   const activeKind = kind;
   async function checkStoredSubmission(form: HTMLFormElement) {
@@ -774,7 +799,7 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
       return;
     }
     try {
-      const key = await submissionStorageKey(activeKind, values);
+      const key = await submissionStorageKey(activeKind, values, blockId);
       setStoredSubmission(readSubmissionReceipt(key));
     } catch {
       setStoredSubmission(null);
@@ -806,7 +831,7 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
     }
     let storageKey = "";
     try {
-      storageKey = await submissionStorageKey(activeKind, v);
+      storageKey = await submissionStorageKey(activeKind, v, blockId);
       const receipt = readSubmissionReceipt(storageKey);
       if (receipt) {
         setStoredSubmission(receipt);
@@ -915,6 +940,11 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
         highest_priority: v.priority,
       };
     }
+    if (!blockId) {
+      setMsg("No active teaching block is available. Please tell your teacher.");
+      return;
+    }
+    payload.block_id = blockId;
     const { error } = await supabase.from(table).insert(payload);
     if (error) {
       setMsg(friendlyError(error.code, activeKind));
@@ -941,7 +971,9 @@ function Modal({ kind, close }: { kind: Kind | null; close: () => void }) {
         <button className="close" onClick={close} aria-label="Close form">
           ×
         </button>
-        <div className="eyebrow">Student interaction</div>
+        <div className="eyebrow">
+          Student interaction{blockLabel ? ` · ${blockLabel}` : ""}
+        </div>
         <h2>{titles[kind]}</h2>
         <form
           onSubmit={submit}
@@ -1374,6 +1406,12 @@ function fields(k: Kind) {
   );
 }
 function Admin() {
+  type TeachingBlock = {
+    id: string;
+    academic_year: number;
+    block_code: string;
+    status: string;
+  };
   const activityTables = [
     {
       table: "student_checkins",
@@ -1526,6 +1564,8 @@ function Admin() {
   );
   const [activeTable, setActiveTable] =
     useState<ActivityTable>("student_checkins");
+  const [teachingBlocks, setTeachingBlocks] = useState<TeachingBlock[]>([]);
+  const [selectedBlockId, setSelectedBlockId] = useState("");
   const [adminView, setAdminView] = useState<"overview" | "roster" | "peer" | "records">("overview");
   const [records, setRecords] = useState<ActivityRecord[]>([]);
   const [editRecord, setEditRecord] = useState<ActivityRecord | null>(null);
@@ -1580,7 +1620,7 @@ function Admin() {
 
   useEffect(() => {
     if (sessionUser?.isTeacher) {
-      void loadDashboard();
+      void initialiseDashboard();
       void loadPeerReviewSetting();
     } else {
       setDataStatus("idle");
@@ -1591,8 +1631,30 @@ function Admin() {
       );
       setPeerReviewOpen(null);
       setPeerReviewMessage("");
+      setTeachingBlocks([]);
+      setSelectedBlockId("");
     }
   }, [sessionUser?.email, sessionUser?.isTeacher]);
+
+  async function initialiseDashboard() {
+    const { data, error } = await supabase
+      .from("teaching_blocks")
+      .select("id, academic_year, block_code, status")
+      .order("academic_year", { ascending: false });
+    if (error) {
+      setDataStatus("error");
+      setDataMessage("Teaching blocks could not be loaded.");
+      return;
+    }
+    const blocks = (data ?? []) as TeachingBlock[];
+    const initialBlockId =
+      blocks.find((block) => block.status === "active")?.id ||
+      blocks[0]?.id ||
+      "";
+    setTeachingBlocks(blocks);
+    setSelectedBlockId(initialBlockId);
+    if (initialBlockId) await loadDashboard(activeTable, initialBlockId);
+  }
 
   async function loadPeerReviewSetting() {
     setPeerReviewMessage("");
@@ -1803,6 +1865,7 @@ function Admin() {
       return;
     }
     const payload = {
+      block_id: selectedBlockId,
       student_name: String(student.student_name),
       student_id: String(student.student_id),
       team_name: String(student.team_name),
@@ -1820,7 +1883,7 @@ function Admin() {
     };
     const { error } = await supabase
       .from("teacher_progress_reviews")
-      .upsert(payload, { onConflict: "student_id" });
+      .upsert(payload, { onConflict: "block_id,student_id" });
     setTeacherReviewBusy(false);
     if (error) {
       setTeacherReviewMessage(
@@ -1829,13 +1892,14 @@ function Admin() {
       return;
     }
     setTeacherReviewMessage("Review and follow-up saved.");
-    await loadTeacherReviews();
+    await loadTeacherReviews(selectedBlockId);
   }
 
-  async function loadTeacherReviews() {
+  async function loadTeacherReviews(blockId: string = selectedBlockId) {
     const { data, error } = await supabase
       .from("teacher_progress_reviews")
       .select("*")
+      .eq("block_id", blockId)
       .order("updated_at", { ascending: false });
     if (error) {
       setTeacherReviews([]);
@@ -1863,32 +1927,27 @@ function Admin() {
     }
   }
 
-  async function loadDashboard(table: ActivityTable = activeTable) {
+  async function loadDashboard(
+    table: ActivityTable = activeTable,
+    blockId: string = selectedBlockId,
+  ) {
+    if (!blockId) return;
     const requestId = ++requestSequence.current;
     setDataStatus("loading");
     setDataMessage("");
     setRecords([]);
     const activity = activityTables.find((item) => item.table === table)!;
-    const activityClient = supabase as unknown as {
-      from: (tableName: string) => {
-        select: (columns: string) => {
-          order: (
-            column: string,
-            options: { ascending: boolean },
-          ) => Promise<{
-            data: ActivityRecord[] | null;
-            error: { message: string } | null;
-          }>;
-        };
-      };
-    };
     const [recordResult, ...countResults] = await Promise.all([
-      activityClient
+      supabase
         .from(table)
         .select(activity.select)
+        .eq("block_id", blockId)
         .order("created_at", { ascending: false }),
       ...activityTables.map(({ table: countTable }) =>
-        supabase.from(countTable).select("*", { count: "exact", head: true }),
+        supabase
+          .from(countTable)
+          .select("*", { count: "exact", head: true })
+          .eq("block_id", blockId),
       ),
     ]);
     const firstError =
@@ -1902,9 +1961,9 @@ function Admin() {
       );
       return;
     }
-    setRecords((recordResult.data ?? []) as ActivityRecord[]);
+    setRecords((recordResult.data ?? []) as unknown as ActivityRecord[]);
     if (table === "week2_progress_reviews") {
-      await loadTeacherReviews();
+      await loadTeacherReviews(blockId);
     }
     setCounts(
       Object.fromEntries(
@@ -1989,6 +2048,9 @@ function Admin() {
   const activeActivity = activityTables.find(
     (activity) => activity.table === activeTable,
   )!;
+  const selectedBlock = teachingBlocks.find(
+    (block) => block.id === selectedBlockId,
+  );
   const ratingFields = new Set([
     "confidence",
     "problem_clarity",
@@ -2033,9 +2095,17 @@ function Admin() {
         }),
       );
     } else {
-      headings = activeActivity.columns.map(([, label]) => label);
+      headings = [
+        "Academic year",
+        "Teaching block",
+        ...activeActivity.columns.map(([, label]) => label),
+      ];
       rows = records.map((record) =>
-        activeActivity.columns.map(([field]) => record[field] ?? ""),
+        [
+          selectedBlock?.academic_year ?? "",
+          selectedBlock?.block_code ?? "",
+          ...activeActivity.columns.map(([field]) => record[field] ?? ""),
+        ],
       );
     }
 
@@ -2316,6 +2386,24 @@ function Admin() {
             <div className="eyebrow">Activity records</div>
             <h2 id="activity-heading">{activeActivity.title}</h2>
             <p>{activeActivity.description}</p>
+            <label className="admin-block-filter">
+              Teaching block
+              <select
+                value={selectedBlockId}
+                onChange={(event) => {
+                  const nextBlockId = event.target.value;
+                  setSelectedBlockId(nextBlockId);
+                  void loadDashboard(activeTable, nextBlockId);
+                }}
+              >
+                {teachingBlocks.map((block) => (
+                  <option key={block.id} value={block.id}>
+                    {block.academic_year} · {block.block_code}
+                    {block.status === "active" ? " — Active" : ""}
+                  </option>
+                ))}
+              </select>
+            </label>
             {activeTable === "week2_progress_reviews" ? (
               <p className="admin-management-note">
                 Open one student at a time to compare the pre-check with the live demo and code, then save private feedback and follow-up.
@@ -2344,7 +2432,7 @@ function Admin() {
             <button
               className="secondary"
               type="button"
-              onClick={() => void loadDashboard()}
+              onClick={() => void loadDashboard(activeTable, selectedBlockId)}
               disabled={dataStatus === "loading"}
             >
               <RefreshCw
@@ -2369,7 +2457,7 @@ function Admin() {
             <button
               type="button"
               className="secondary"
-              onClick={() => void loadDashboard()}
+              onClick={() => void loadDashboard(activeTable, selectedBlockId)}
             >
               Try again
             </button>
