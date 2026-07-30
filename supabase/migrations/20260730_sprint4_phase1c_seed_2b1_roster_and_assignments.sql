@@ -10,67 +10,65 @@
 
 begin;
 
-create temporary table seed_2b1_roster (
-  team_number smallint not null,
-  student_id text not null,
-  full_name text not null,
-  preferred_name text not null
-) on commit drop;
-
-insert into seed_2b1_roster (
-  team_number,
-  student_id,
-  full_name,
-  preferred_name
-)
-values
-  (1, 'REPLACE_TEAM1_THIEN_STUDENT_ID',       'Thien Hong',                  'Thien'),
-  (1, 'REPLACE_TEAM1_BABATUNDJI_STUDENT_ID',  'Babatundji Williams-Fulwood', 'Babatundji'),
-  (1, 'REPLACE_TEAM1_MANH_STUDENT_ID',        'Manh La',                     'Manh'),
-
-  (2, 'REPLACE_TEAM2_SAMUEL_STUDENT_ID',      'Samuel Macdonald',            'Samuel'),
-  (2, 'REPLACE_TEAM2_YUSUF_STUDENT_ID',       'Yusuf Servare',               'Yusuf'),
-  (2, 'REPLACE_TEAM2_ASIM_STUDENT_ID',        'Asim Mir',                    'Asim'),
-
-  (3, 'REPLACE_TEAM3_ZUBAIR_STUDENT_ID',      'Zubair Shah',                 'Zubair'),
-  (3, 'REPLACE_TEAM3_ZACHARY_STUDENT_ID',     'Zachary G Arena',             'Zachary'),
-  (3, 'REPLACE_TEAM3_MITCHELL_STUDENT_ID',    'Mitchell Herden',             'Mitchell'),
-
-  (4, 'REPLACE_TEAM4_SITHUM_STUDENT_ID',      'Sithum Hans Abayasinghe',     'Sithum'),
-  (4, 'REPLACE_TEAM4_UMAR_STUDENT_ID',        'Umar Kamal',                   'Umar'),
-  (4, 'REPLACE_TEAM4_KUNAL_STUDENT_ID',       'Kunal Singh',                  'Kunal'),
-  (4, 'REPLACE_TEAM4_TYLAH_STUDENT_ID',       'Tylah Sokolovski',             'Tylah'),
-
-  (5, 'REPLACE_TEAM5_PRAVEEN_STUDENT_ID',     'Praveen Bashwal',              'Praveen'),
-  (5, 'REPLACE_TEAM5_BAO_STUDENT_ID',         'Bao Tran',                     'Bao'),
-  (5, 'REPLACE_TEAM5_SAHIL_STUDENT_ID',       'Sahil Bahad Devkota',          'Sahil');
-
+-- Keep the seed data inside one PL/pgSQL block. This avoids relying on a
+-- temporary table, which may disappear if Supabase SQL Editor reruns only part
+-- of the script after an error.
 do $$
+declare
+  v_block_id uuid;
+  v_roster jsonb := $roster$
+  [
+    {"team_number":1,"student_id":"REPLACE_TEAM1_THIEN_STUDENT_ID","full_name":"Thien Hong","preferred_name":"Thien"},
+    {"team_number":1,"student_id":"REPLACE_TEAM1_BABATUNDJI_STUDENT_ID","full_name":"Babatundji Williams-Fulwood","preferred_name":"Babatundji"},
+    {"team_number":1,"student_id":"REPLACE_TEAM1_MANH_STUDENT_ID","full_name":"Manh La","preferred_name":"Manh"},
+
+    {"team_number":2,"student_id":"REPLACE_TEAM2_SAMUEL_STUDENT_ID","full_name":"Samuel Macdonald","preferred_name":"Samuel"},
+    {"team_number":2,"student_id":"REPLACE_TEAM2_YUSUF_STUDENT_ID","full_name":"Yusuf Servare","preferred_name":"Yusuf"},
+    {"team_number":2,"student_id":"REPLACE_TEAM2_ASIM_STUDENT_ID","full_name":"Asim Mir","preferred_name":"Asim"},
+
+    {"team_number":3,"student_id":"REPLACE_TEAM3_ZUBAIR_STUDENT_ID","full_name":"Zubair Shah","preferred_name":"Zubair"},
+    {"team_number":3,"student_id":"REPLACE_TEAM3_ZACHARY_STUDENT_ID","full_name":"Zachary G Arena","preferred_name":"Zachary"},
+    {"team_number":3,"student_id":"REPLACE_TEAM3_MITCHELL_STUDENT_ID","full_name":"Mitchell Herden","preferred_name":"Mitchell"},
+
+    {"team_number":4,"student_id":"REPLACE_TEAM4_SITHUM_STUDENT_ID","full_name":"Sithum Hans Abayasinghe","preferred_name":"Sithum"},
+    {"team_number":4,"student_id":"REPLACE_TEAM4_UMAR_STUDENT_ID","full_name":"Umar Kamal","preferred_name":"Umar"},
+    {"team_number":4,"student_id":"REPLACE_TEAM4_KUNAL_STUDENT_ID","full_name":"Kunal Singh","preferred_name":"Kunal"},
+    {"team_number":4,"student_id":"REPLACE_TEAM4_TYLAH_STUDENT_ID","full_name":"Tylah Sokolovski","preferred_name":"Tylah"},
+
+    {"team_number":5,"student_id":"REPLACE_TEAM5_PRAVEEN_STUDENT_ID","full_name":"Praveen Bashwal","preferred_name":"Praveen"},
+    {"team_number":5,"student_id":"REPLACE_TEAM5_BAO_STUDENT_ID","full_name":"Bao Tran","preferred_name":"Bao"},
+    {"team_number":5,"student_id":"REPLACE_TEAM5_SAHIL_STUDENT_ID","full_name":"Sahil Bahad Devkota","preferred_name":"Sahil"}
+  ]
+  $roster$::jsonb;
 begin
   if exists (
     select 1
-    from seed_2b1_roster
-    where student_id like 'REPLACE_%'
+    from jsonb_to_recordset(v_roster) as seed(
+      team_number smallint,
+      student_id text,
+      full_name text,
+      preferred_name text
+    )
+    where seed.student_id like 'REPLACE_%'
   ) then
     raise exception
       'Replace every REPLACE_*_STUDENT_ID placeholder before running this script.';
   end if;
 
   if exists (
-    select lower(trim(student_id))
-    from seed_2b1_roster
-    group by lower(trim(student_id))
+    select lower(trim(seed.student_id))
+    from jsonb_to_recordset(v_roster) as seed(
+      team_number smallint,
+      student_id text,
+      full_name text,
+      preferred_name text
+    )
+    group by lower(trim(seed.student_id))
     having count(*) > 1
   ) then
     raise exception 'Student IDs in the seed list must be unique.';
   end if;
-end
-$$;
 
-do $$
-declare
-  v_block_id uuid;
-begin
   select id
     into v_block_id
   from public.teaching_blocks
@@ -98,7 +96,12 @@ begin
     lower(trim(seed.student_id)) || '@live.vu.edu.au',
     seed.team_number,
     null
-  from seed_2b1_roster seed
+  from jsonb_to_recordset(v_roster) as seed(
+    team_number smallint,
+    student_id text,
+    full_name text,
+    preferred_name text
+  )
   on conflict (block_id, student_id) do update
   set
     full_name = excluded.full_name,
