@@ -25,7 +25,8 @@ Establish only the reusable identities needed by current teaching:
 - a teacher-managed, block-scoped Project Catalogue
 - exactly one current project assignment per team
 - a block mode of `teacher_assigned` or `student_selection`
-- a short team-level student Project Proposal path
+- assignment origin and continuation markers for the NIT3003 → NIT3004 handoff
+- a short team-level student Project Proposal path for NIT3003
 - project identity captured on later activity submissions
 
 Rollout:
@@ -34,8 +35,10 @@ Rollout:
 - Existing roster project names are imported into catalogue and assignment
   records without changing Week 1 evidence.
 - The teacher creates and links the five current team projects.
-- A future block may enable `student_selection`; one team member selects during
-  Check-in and teammates see the same project.
+- A future NIT3003 block may enable `student_selection`; one team member selects
+  during Check-in and teammates see the same project.
+- NIT3004 restores the existing team/project, records it as a continuation and
+  does not ask students to select a new project.
 - Teacher confirmation prevents later student overwrites.
 
 Acceptance:
@@ -60,11 +63,22 @@ Not included in Phase 1:
 - student accounts
 - generic course/activity configuration
 
-## Phase 2 — Week-specific engagement journey
+## Phase 2 — NIT3004 recovery and week-specific engagement journey
 
 Replace repeated generic questions with a short common pulse plus week-specific
 readiness questions. Week 4 receives a brief Final Delivery Check. Normal
 completion remains selection-first with at most one optional note.
+
+The four-week sequence is grounded in the real course handoff:
+
+- Week 1 — Project Recovery & Team Health: confirm access to the inherited
+  project, team continuity, realistic remaining work and blockers after the break.
+- Week 2 — 80% Entry Baseline & Project Review: verify the running prototype,
+  traceable evidence, technical explanation and remaining delivery scope.
+- Week 3 — Completion Quality: integration, testing, bug fixing, report evidence
+  and individual contribution evidence.
+- Week 4 — Final Delivery Readiness: presentation, demo fallback, individual
+  speaking readiness and final submission state.
 
 ## Phase 3 — Week 3–4 follow-up continuity
 
