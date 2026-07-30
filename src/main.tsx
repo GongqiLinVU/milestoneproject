@@ -22,7 +22,7 @@ import {
   Users,
 } from "lucide-react";
 import "./styles.css";
-import { FindMyTeam, RosterManager } from "./TeamAllocation";
+import { FindMyTeam, ProjectManager, RosterManager } from "./TeamAllocation";
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL ||
     "https://gwihaizxivclamzehupk.supabase.co",
@@ -932,6 +932,54 @@ function Modal({
       setMsg("No active teaching block is available. Please tell your teacher.");
       return;
     }
+    if (activeKind === "checkin") {
+      const { data: projectContext, error: projectContextError } = await supabase.rpc(
+        "get_project_checkin_context",
+        { p_student_id: String(v.sid) },
+      );
+      if (projectContextError) {
+        setMsg("We could not match this Student ID to the current class roster. Check the ID or ask your teacher.");
+        return;
+      }
+      if (
+        projectContext?.setupMode === "student_selection" &&
+        !projectContext?.project &&
+        !v.project_choice &&
+        !v.proposal_title
+      ) {
+        setMsg("Choose a published project or submit your team’s project idea before completing Check-in.");
+        return;
+      }
+    }
+    if (activeKind === "checkin" && v.project_choice) {
+      const { error } = await supabase.rpc("select_team_project", {
+        p_student_id: String(v.sid),
+        p_project_id: String(v.project_choice),
+      });
+      if (error) {
+        setMsg(error.message.includes("confirmed")
+          ? "Your teacher has already confirmed this team project. Refresh the form to see it."
+          : "The team project could not be selected. Check your Student ID or ask your teacher.");
+        return;
+      }
+    }
+    if (activeKind === "checkin" && v.proposal_title) {
+      const { error } = await supabase.rpc("submit_team_project_proposal", {
+        p_student_id: String(v.sid),
+        p_title: String(v.proposal_title),
+        p_problem: String(v.proposal_problem),
+        p_target_users: String(v.proposal_target_users),
+        p_proposed_solution: String(v.proposal_solution),
+        p_category: String(v.proposal_category),
+        p_note: String(v.proposal_note || "") || null,
+      });
+      if (error) {
+        setMsg(error.code === "23505"
+          ? "Your team already has a project proposal awaiting teacher review."
+          : "The project proposal could not be submitted. Check your Student ID or ask your teacher.");
+        return;
+      }
+    }
     payload.block_id = blockId;
     const { error } = await supabase.from(table).insert(payload);
     if (error) {
@@ -1242,6 +1290,28 @@ function EngagementCheckoutFields({ week = 1 }: { week?: 1 | 2 | 3 }) {
     {risk && <label>Brief details<textarea name="detail_note" required maxLength={200} /><small className="field-hint">Maximum 200 characters</small></label>}
   </div>;
 }
+function ProjectSnapshotIdentity() {
+  const [context, setContext] = useState<ProjectCheckinContext | null>(null);
+  const [message, setMessage] = useState("");
+  async function load(studentId: string) {
+    if (studentId.trim().length < 3) return;
+    setMessage("Finding your team project…");
+    const { data, error } = await supabase.rpc("get_project_checkin_context", { p_student_id: studentId });
+    if (error) {
+      setContext(null);
+      setMessage("Student ID could not be matched to the active class roster.");
+      return;
+    }
+    setContext(data as ProjectCheckinContext);
+    setMessage("");
+  }
+  return <>
+    <label>Your name<input name="name" required maxLength={100}/></label>
+    <label>Student ID<input name="sid" required minLength={3} maxLength={40} onBlur={(event) => void load(event.target.value)}/></label>
+    {message && <p className="form-note">{message}</p>}
+    {context?.project ? <section className="checkin-project-context"><small>{context.teamName} · Project snapshot</small><h3>{context.project.title}</h3><p>{context.project.description}</p><span>{context.project.category} · {context.project.targetUsers}</span></section> : context && <p className="admin-alert error">No project is connected to {context.teamName} yet. Ask your teacher before submitting this pre-check.</p>}
+  </>;
+}
 function ProgressReviewFields() {
   const [needsDetail, setNeedsDetail] = useState(false);
   const methods = ["Architecture or component structure","Core logic or algorithm","Data flow","Database design","API or external service integration","Security or access control","Testing method","UI/UX decision","Hardware integration","Other"];
@@ -1252,14 +1322,7 @@ function ProgressReviewFields() {
   };
   return <div onChange={(event) => assess(event.currentTarget.closest("form") as HTMLFormElement)}>
     <p className="form-note">Choose one concrete personal implementation for the compulsory Week 2 review. Be ready to show it, explain the method and verify the result.</p>
-    <Identity />
-    <section className="project-context-fields">
-      <div className="review-section-heading"><span>Project snapshot</span><h3>Give the review enough context.</h3></div>
-      <label>Project name<input name="project_name" required maxLength={120} placeholder="Use the same project name across your team" /></label>
-      <Choice label="Project area" name="project_area" options={["Web","Mobile","AI","Data","IoT","Cybersecurity","Game","Other"]} />
-      <label>Project description<textarea name="project_description" required maxLength={300} placeholder="What does the project do, and what problem does it address?" /><small className="field-hint">Maximum 300 characters</small></label>
-      <label>Target user or problem (optional)<input name="target_user_problem" maxLength={150} placeholder="Who benefits, or what specific problem is being solved?" /></label>
-    </section>
+    <ProjectSnapshotIdentity />
     <Choice label="1. Which deliverable are you mainly responsible for?" name="deliverable_area" options={["Frontend / UI","Backend / API","Database","Authentication / Security","Hardware / Integration","Testing","Documentation","Project coordination","Other"]} />
     <label>2. What specific item have you personally implemented?<textarea name="implementation_item" required maxLength={200} placeholder="One concrete function, component, test result or document — not your general role." /><small className="field-hint">Maximum 200 characters</small></label>
     <Choice label="3. What is its current implementation state?" name="implementation_state" options={["Implemented and verified","Implemented but not fully verified","Partially implemented","Designed but not implemented","Blocked"]} />
@@ -1274,18 +1337,74 @@ function ProgressReviewFields() {
     <Choice label="10. What should the teacher verify during Monday’s review?" name="teacher_verification" options={["Whether the function works","My implementation method","My individual contribution","Integration with the team project","Testing and evidence","Current blocker","Progress Report accuracy","Other"]} />
   </div>;
 }
+type ProjectCheckinContext = {
+  setupMode: "teacher_assigned" | "student_selection";
+  teamName: string;
+  assignmentStatus: "student_selected" | "teacher_confirmed" | null;
+  project: { id: string; title: string; problem: string; targetUsers: string; description: string; category: string; difficulty: string } | null;
+  availableProjects: Array<{ id: string; title: string; problem: string; targetUsers: string; description: string; category: string; difficulty: string }>;
+};
+function CheckinFields() {
+  const [context, setContext] = useState<ProjectCheckinContext | null>(null);
+  const [lookupMessage, setLookupMessage] = useState("");
+  const [lookupBusy, setLookupBusy] = useState(false);
+  const [proposeOwn, setProposeOwn] = useState(false);
+
+  async function loadProject(studentId: string) {
+    if (studentId.trim().length < 3) return;
+    setLookupBusy(true);
+    setLookupMessage("");
+    setContext(null);
+    const { data, error } = await supabase.rpc("get_project_checkin_context", {
+      p_student_id: studentId,
+    });
+    setLookupBusy(false);
+    if (error) {
+      setLookupMessage("Student ID could not be matched to the active class roster.");
+      return;
+    }
+    setContext(data as ProjectCheckinContext);
+  }
+
+  return <>
+    <label>Your name<input name="name" required maxLength={100} /></label>
+    <label>Student ID<input name="sid" required minLength={3} maxLength={40} onBlur={(event) => void loadProject(event.target.value)} /></label>
+    {lookupBusy && <p className="form-note">Finding your team project…</p>}
+    {lookupMessage && <p className="admin-alert error" role="alert">{lookupMessage}</p>}
+    {context && <section className="checkin-project-context">
+      <small>{context.teamName} · Team project</small>
+      {context.project ? <>
+        <h3>{context.project.title}</h3>
+        <p>{context.project.description}</p>
+        <span>{context.project.category} · {context.project.difficulty}{context.assignmentStatus === "teacher_confirmed" ? " · Teacher confirmed" : " · Team selected"}</span>
+      </> : context.setupMode === "teacher_assigned" ? <>
+        <h3>Project assignment pending</h3>
+        <p>Your teacher will connect the project for this team. You can complete Check-in now.</p>
+      </> : <>
+        <h3>Choose one project for your team</h3>
+        <p>One team member can select on behalf of the whole team. Other members will see the same selection.</p>
+        {!proposeOwn && <label>Published projects<select name="project_choice" required defaultValue=""><option value="" disabled>Select a project</option>{context.availableProjects.map((project) => <option key={project.id} value={project.id}>{project.title} · {project.category}</option>)}</select></label>}
+        <label className="project-proposal-toggle"><input type="checkbox" checked={proposeOwn} onChange={(event) => setProposeOwn(event.target.checked)}/><span>Our team wants to propose its own idea</span></label>
+        {proposeOwn && <div className="project-proposal-fields">
+          <label>Project title<input name="proposal_title" required maxLength={120}/></label>
+          <label>Problem to solve<textarea name="proposal_problem" required maxLength={600}/></label>
+          <label>Target users<input name="proposal_target_users" required maxLength={300}/></label>
+          <label>Proposed solution<textarea name="proposal_solution" required maxLength={800}/></label>
+          <Choice label="Category" name="proposal_category" options={["Web","Mobile","AI","Data","IoT","Cybersecurity","Game","Other"]}/>
+          <label>Optional note<textarea name="proposal_note" maxLength={300}/></label>
+        </div>}
+      </>}
+    </section>}
+    <Text
+      label="What do you want to achieve in these four weeks?"
+      name="goal"
+      maxLength={800}
+    />
+  </>;
+}
 function fields(k: Kind) {
   if (k === "checkin")
-    return (
-      <>
-        <Identity />
-        <Text
-          label="What do you want to achieve in these four weeks?"
-          name="goal"
-          maxLength={800}
-        />
-      </>
-    );
+    return <CheckinFields />;
   if (k === "pulse")
     return (
       <>
@@ -1552,7 +1671,7 @@ function Admin() {
     useState<ActivityTable>("student_checkins");
   const [teachingBlocks, setTeachingBlocks] = useState<TeachingBlock[]>([]);
   const [selectedBlockId, setSelectedBlockId] = useState("");
-  const [adminView, setAdminView] = useState<"overview" | "roster" | "peer" | "records">("overview");
+  const [adminView, setAdminView] = useState<"overview" | "roster" | "projects" | "peer" | "records">("overview");
   const [records, setRecords] = useState<ActivityRecord[]>([]);
   const [editRecord, setEditRecord] = useState<ActivityRecord | null>(null);
   const [deleteRecord, setDeleteRecord] = useState<ActivityRecord | null>(null);
@@ -2295,12 +2414,14 @@ function Admin() {
         <aside className="admin-sidebar" aria-label="Teacher dashboard sections">
           <button type="button" className={adminView === "overview" ? "active" : ""} onClick={() => setAdminView("overview")}><ListChecks size={18}/><span><b>Overview</b><small>Activity snapshot</small></span></button>
           <button type="button" className={adminView === "roster" ? "active" : ""} onClick={() => setAdminView("roster")}><Users size={18}/><span><b>Blocks & roster</b><small>Students and teams</small></span></button>
+          <button type="button" className={adminView === "projects" ? "active" : ""} onClick={() => setAdminView("projects")}><Rocket size={18}/><span><b>Project setup</b><small>Catalogue & assignments</small></span></button>
           <button type="button" className={adminView === "records" ? "active" : ""} onClick={() => setAdminView("records")}><ClipboardCheck size={18}/><span><b>Activity records</b><small>Review submissions</small></span></button>
           <button type="button" className={adminView === "peer" ? "active" : ""} onClick={() => setAdminView("peer")}><Presentation size={18}/><span><b>Peer review</b><small>Week 3 control</small></span></button>
           <a href="/" className="admin-sidebar-home">Back to student portal</a>
         </aside>
         <div className="admin-content">
       <div hidden={adminView !== "roster"}><RosterManager /></div>
+      <div hidden={adminView !== "projects"}><ProjectManager /></div>
       <section hidden={adminView !== "peer"} className="activity-control" aria-labelledby="peer-review-control-title">
         <div>
           <div className="eyebrow">Week 3 activity</div>
