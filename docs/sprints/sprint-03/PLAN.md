@@ -1,6 +1,6 @@
 # Sprint 3 — Continuous Engagement and Teaching Review
 
-**Status: Active — Phases 1–3B complete; Phase 3C in progress**
+**Status: Active — Phase 3C-1 complete; Phase 3C-2 in progress**
 
 ## Teaching problem
 
@@ -218,7 +218,20 @@ Acceptance:
 - Add server-side rate limiting and generic mismatch responses to reduce roster
   enumeration.
 - Auto-fill the verified team in later forms while keeping student accounts out
-  of scope.
+  of scope. This follows after roster lookup is production-validated so existing
+  form submission behaviour is not changed in the same release.
+
+3C-2 first-release acceptance:
+
+- Teacher selects a teaching block and sees only that block's roster.
+- Teacher can add/update one student or import the documented CSV columns.
+- Student ID and VU email are unique within a block but reusable in later blocks.
+- Find My Team accepts Student ID + VU email and returns only the matching team,
+  optional project, and teammates' preferred names.
+- Browser roles cannot read the roster directly.
+- The lookup endpoint uses a server-only service role, hashes lookup identifiers,
+  limits attempts, disables caching and returns one generic mismatch response.
+- No student account is introduced and no existing weekly form is blocked.
 
 ### Phase 3C-3 — Week-specific engagement journey
 
