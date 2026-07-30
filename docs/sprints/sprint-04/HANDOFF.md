@@ -15,7 +15,7 @@ students in five teams and is already using Week 1.
 
 The stable core is:
 
-`Teaching Block → Team → Team Project Assignment → Week 1–4 evidence`
+`NIT3003 project origin → Teaching Block → Team → Team Project Assignment → NIT3004 Week 1–4 evidence`
 
 Projects are separated from assignments so several teams may use one project
 while every team has at most one current project.
@@ -23,7 +23,9 @@ while every team has at most one current project.
 ### Rollout rules
 
 - `2026 · 2B1`: teacher creates projects and connects each team.
-- Future blocks: teacher may enable student selection at Check-in.
+- Future NIT3003 blocks: teacher may enable student selection at Check-in.
+- NIT3004 blocks restore the existing project rather than asking students to
+  select again; current assignments are marked as NIT3003 continuations.
 - Student selection is team-level; teacher confirmation locks it.
 - Students with their own idea submit a short team proposal.
 - Approved proposals become published projects and confirmed assignments.
@@ -62,5 +64,7 @@ while every team has at most one current project.
 
 ## Next phase
 
-After Phase 1 is deployed and validated, continue with Phase 2 — Week-specific
-Engagement Journey. Do not combine it into this PR.
+After Phase 1 and the continuity patch are deployed and validated, continue with
+Phase 2 — NIT3004 Recovery and Week-specific Engagement Journey. Its sequence is
+Project Recovery & Team Health, 80% Entry Baseline & Project Review, Completion
+Quality and Final Delivery Readiness. Do not combine Phase 2 into this PR.
