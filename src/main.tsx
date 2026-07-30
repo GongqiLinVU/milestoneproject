@@ -22,6 +22,7 @@ import {
   Users,
 } from "lucide-react";
 import "./styles.css";
+import { FindMyTeam, RosterManager } from "./TeamAllocation";
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL ||
     "https://gwihaizxivclamzehupk.supabase.co",
@@ -90,6 +91,7 @@ function App() {
           <a href="#journey">Journey</a>
           <a href="#weekly">Weekly Check-in</a>
           <a href="#deliverables">Deliverables</a>
+          <a href="/find-my-team">Find My Team</a>
           <a href="/admin">Teacher</a>
         </nav>
       </header>
@@ -116,6 +118,7 @@ function App() {
               <button className="secondary" onClick={() => setForm("checkin")}>
                 Start Week 1 check-in
               </button>
+              <a className="secondary" href="/find-my-team">Find my team</a>
             </div>
             <div className={"status " + (live ? "ok" : "")}>
               <span></span>
@@ -2224,6 +2227,7 @@ function Admin() {
           {authMessage}
         </p>
       )}
+      <RosterManager />
       <section className="activity-control" aria-labelledby="peer-review-control-title">
         <div>
           <div className="eyebrow">Week 3 activity</div>
@@ -2831,6 +2835,6 @@ function Admin() {
 }
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    {location.pathname.startsWith("/admin") ? <Admin /> : <App />}
+    {location.pathname.startsWith("/admin") ? <Admin /> : location.pathname.startsWith("/find-my-team") ? <FindMyTeam /> : <App />}
   </StrictMode>,
 );
