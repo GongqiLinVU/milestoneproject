@@ -106,6 +106,9 @@ Import this GitHub repository into Vercel and configure:
 - Output directory: `dist`
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_PUBLISHABLE_KEY`
+- `FIND_MY_TEAM_SALT` (server-only random value used to hash lookup attempts)
+
+`Find My Team` uses the publishable key to call a restricted database function. It does not require or use a Supabase service-role key.
 
 Every push to `main` triggers a production deployment.
 
