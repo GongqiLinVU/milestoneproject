@@ -1,6 +1,6 @@
 # Sprint 3 — Continuous Engagement and Teaching Review
 
-**Status: Active — Phase 3C-1 and 3C-2 complete; Phase 3C-3 planned**
+**Status: Closed at the agreed delivery boundary on 30 July 2026**
 
 ## Teaching problem
 
@@ -255,3 +255,22 @@ The reusable relationship is:
 Longer-term comparison between blocks must use aggregated, preferably
 de-identified teaching signals. Individual student records are operational
 teaching evidence, not performance analytics across cohorts.
+
+
+## Sprint closure — 30 July 2026
+
+Sprint 3 was closed after the reusable-block, roster, Find My Team and
+roster-authoritative activity-team workflow reached production. This is an
+agreed scope boundary, not a claim that every originally planned Phase was
+implemented.
+
+Completed delivery is recorded in the Sprint 3 handoff and merged PRs #18–#27.
+The following unstarted work moved to Sprint 4:
+
+- Phase 3C-3 — Week-specific engagement journey
+- Phase 3C follow-up continuity across Weeks 3–4
+- Phase 4 — Three-week trajectory and teaching analytics
+- Phase 5 — Export, privacy and production validation
+
+Future implementation must use `docs/sprints/sprint-04/PLAN.md`; this Sprint 3
+plan remains a frozen historical record.
