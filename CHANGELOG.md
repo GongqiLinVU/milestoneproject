@@ -4,6 +4,21 @@ All notable changes to Engineering Studio Platform will be recorded here.
 
 The project currently uses simple milestone-based versions while the production workflow is being established.
 
+## Sprint 4 Phase 2 — NIT3004 continuity journey
+
+- Replaced repeated Week 1–3 generic check-outs with a short common pulse and
+  week-specific readiness checks.
+- Reframed Week 1 around inherited project access, NIT3003 team continuity and
+  remaining-work clarity after the break.
+- Added a Week 2 80% entry-baseline pulse while retaining the detailed
+  Implementation Pre-check for evidence and method verification.
+- Added Week 3 completion-quality checks for product, testing, report and
+  presentation readiness.
+- Added a Week 4 Final Delivery Check for rehearsal, demo fallback, individual
+  speaking readiness and final submission.
+- Preserved historical generic evidence and labelled it explicitly in Teacher
+  Activity records and CSV exports.
+
 ## Sprint 4 Phase 1 — Team & Project foundation
 
 - Added formal block-scoped teams derived from the private roster.

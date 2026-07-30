@@ -154,7 +154,7 @@ extending Sprint 3 further. Sprint 3's completed plan and evidence remain in
 
 ## Sprint 4 — Weekly Journey, Follow-up and Teaching Analytics
 
-**Status: Active — Phase 1 planned**
+**Status: Active — Phase 2 implemented locally**
 
 ### Goal
 
@@ -177,6 +177,12 @@ teams, a Project Catalogue and one current project per team. The current
 `2026 · 2B1` cohort uses teacher assignment; future NIT3003 blocks may enable team-level student selection during Check-in.
 NIT3004 restores the inherited team/project and validates the approximately 80%
 entry baseline rather than selecting a new project.
+
+Phase 2 now provides a short comparable Week 1–3 pulse, NIT3004 recovery and
+80% baseline questions, completion-quality checks and a Week 4 Final Delivery
+Check. Historical generic check-out evidence remains readable. The migration,
+role-based database checks and deployment smoke tests must pass before Phase 2
+is marked complete.
 
 ### Deferred future scope
 

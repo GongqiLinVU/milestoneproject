@@ -30,7 +30,7 @@ const supabase = createClient(
     "sb_publishable_-RPm45eBd8_CVaNk4GbXhg_nxOkMrLr",
 );
 const teams = Array.from({ length: 8 }, (_, i) => `Team ${i + 1}`);
-type Kind = "checkin" | "pulse" | "health" | "checkout" | "progress" | "checkout2" | "checkout3" | "review";
+type Kind = "checkin" | "pulse" | "health" | "checkout" | "progress" | "checkout2" | "checkout3" | "checkout4" | "review";
 type AiSuggestionStage = "starting" | "closing";
 type AiDiscussionPath = {
   title: string;
@@ -60,6 +60,7 @@ const titles: Record<Kind, string> = {
   progress: "Week 2 Implementation Pre-check",
   checkout2: "Week 2 Engagement Check-out",
   checkout3: "Week 3 Engagement Check-out",
+  checkout4: "Week 4 Final Delivery Check",
   review: "Poster Peer Review",
 };
 function App() {
@@ -389,8 +390,8 @@ function WeeklyHub({
             <div className="week4-placeholders">
               <article>
                 <ListChecks />
-                <div><span>Preparation</span><h3>Presentation Checklist</h3><p>Final content, demo readiness, evidence, timing and team handover checks will be added here.</p></div>
-                <b>To be confirmed</b>
+                <div><span>Preparation</span><h3>Final Delivery Check</h3><p>Confirm presentation, demo fallback, speaking role and final submission readiness.</p></div>
+                <button type="button" onClick={() => open("checkout4")}>Open activity <ArrowRight size={16} /></button>
               </article>
               <article>
                 <Presentation />
@@ -548,7 +549,7 @@ function friendlyError(code: string | undefined, kind: Kind) {
   if (kind === "review" && code === "42501")
     return "Peer review is currently closed. Your response was not submitted.";
   if (code === "23505") {
-    if (kind === "health" || kind === "checkout" || kind === "checkout2" || kind === "checkout3" || kind === "progress" || kind === "checkin")
+    if (kind === "health" || kind === "checkout" || kind === "checkout2" || kind === "checkout3" || kind === "checkout4" || kind === "progress" || kind === "checkin")
       return "This Student ID has already submitted this activity.";
     if (kind === "review") return "You have already reviewed this team.";
   }
@@ -604,6 +605,46 @@ const ratingText = (value: FormDataEntryValue | undefined) => {
     ? `${number} — ${labels[number - 1]}`
     : String(value ?? "");
 };
+
+function engagementReceipt(
+  week: 1 | 2 | 3 | 4,
+  text: (name: string) => string,
+) {
+  const common = [
+    { label: "Participation", value: text("participation_mode") },
+    ...(week <= 3
+      ? [
+          { label: "Weekly progress", value: text("weekly_status") },
+          { label: "Teacher support", value: text("support_need") },
+        ]
+      : []),
+  ];
+  const weekly = {
+    1: [
+      { label: "Project access", value: text("project_access") },
+      { label: "Team continuity", value: text("team_continuity") },
+      { label: "Remaining work", value: text("remaining_work_clarity") },
+    ],
+    2: [
+      { label: "Implementation progress", value: text("implementation_progress") },
+      { label: "Evidence readiness", value: text("evidence_readiness") },
+      { label: "Demo readiness", value: text("demo_readiness") },
+    ],
+    3: [
+      { label: "Product readiness", value: text("product_readiness") },
+      { label: "Testing readiness", value: text("testing_readiness") },
+      { label: "Report readiness", value: text("report_readiness") },
+      { label: "Presentation readiness", value: text("presentation_readiness") },
+    ],
+    4: [
+      { label: "Presentation readiness", value: text("presentation_readiness") },
+      { label: "Demo fallback", value: text("demo_backup_readiness") },
+      { label: "Speaking role", value: text("speaking_role_readiness") },
+      { label: "Final submission", value: text("final_submission_status") },
+    ],
+  };
+  return [...common, ...weekly[week], { label: "Optional note", value: text("detail_note") }];
+}
 
 function submissionReceipt(
   kind: Kind,
@@ -665,45 +706,10 @@ function submissionReceipt(
       { label: "Next action", value: text("next_action") },
       { label: "Teacher verification", value: text("teacher_verification") },
     ],
-    checkout: [
-      { label: "Participation", value: text("participation_mode") },
-      { label: "Time invested", value: text("time_invested") },
-      { label: "Contribution areas", value: text("contribution_areas") },
-      { label: "Task completion", value: text("task_completion") },
-      { label: "Evidence", value: text("evidence_status") },
-      { label: "Team communication", value: text("team_communication") },
-      { label: "Participation balance", value: text("participation_balance") },
-      { label: "Next task clarity", value: text("next_task_clarity") },
-      { label: "Work status", value: text("work_status") },
-      { label: "Monday discussion focus", value: text("discussion_focus") },
-      { label: "Details", value: text("detail_note") },
-    ],
-    checkout3: [
-      { label: "Participation", value: text("participation_mode") },
-      { label: "Time invested", value: text("time_invested") },
-      { label: "Contribution areas", value: text("contribution_areas") },
-      { label: "Task completion", value: text("task_completion") },
-      { label: "Evidence", value: text("evidence_status") },
-      { label: "Team communication", value: text("team_communication") },
-      { label: "Participation balance", value: text("participation_balance") },
-      { label: "Next task clarity", value: text("next_task_clarity") },
-      { label: "Work status", value: text("work_status") },
-      { label: "Monday discussion focus", value: text("discussion_focus") },
-      { label: "Details", value: text("detail_note") },
-    ],
-    checkout2: [
-      { label: "Participation", value: text("participation_mode") },
-      { label: "Time invested", value: text("time_invested") },
-      { label: "Contribution areas", value: text("contribution_areas") },
-      { label: "Task completion", value: text("task_completion") },
-      { label: "Evidence", value: text("evidence_status") },
-      { label: "Team communication", value: text("team_communication") },
-      { label: "Participation balance", value: text("participation_balance") },
-      { label: "Next task clarity", value: text("next_task_clarity") },
-      { label: "Work status", value: text("work_status") },
-      { label: "Monday discussion focus", value: text("discussion_focus") },
-      { label: "Details", value: text("detail_note") },
-    ],
+    checkout: engagementReceipt(1, text),
+    checkout2: engagementReceipt(2, text),
+    checkout3: engagementReceipt(3, text),
+    checkout4: engagementReceipt(4, text),
     review: [
       { label: "Reviewed team", value: text("reviewed_team") },
       { label: "Problem clarity", value: ratingText(values.problem) },
@@ -786,7 +792,7 @@ function Modal({
     >;
     const identityReady =
       activeKind === "pulse" ||
-      ((activeKind === "checkin" || activeKind === "health" || activeKind === "checkout" || activeKind === "checkout2" || activeKind === "checkout3" || activeKind === "progress") &&
+      ((activeKind === "checkin" || activeKind === "health" || activeKind === "checkout" || activeKind === "checkout2" || activeKind === "checkout3" || activeKind === "checkout4" || activeKind === "progress") &&
         Boolean(String(values.sid ?? "").trim())) ||
       (activeKind === "review" &&
         Boolean(String(values.sid ?? "").trim()) &&
@@ -810,15 +816,7 @@ function Modal({
       string,
       FormDataEntryValue
     >;
-    const contributionAreas = formData.getAll("contribution_areas").map(String);
     const implementationMethods = formData.getAll("implementation_methods").map(String);
-    if (activeKind === "checkout" || activeKind === "checkout2" || activeKind === "checkout3") {
-      if (contributionAreas.length === 0) {
-        setMsg("Select at least one contribution area.");
-        return;
-      }
-      v.contribution_areas = contributionAreas.join(", ");
-    }
     if (activeKind === "progress") {
       if (implementationMethods.length === 0) {
         setMsg("Select at least one implementation method to explain.");
@@ -871,22 +869,28 @@ function Modal({
         risk_note: v.risk_note || null,
       };
     }
-    if (activeKind === "checkout" || activeKind === "checkout2" || activeKind === "checkout3") {
+    if (activeKind === "checkout" || activeKind === "checkout2" || activeKind === "checkout3" || activeKind === "checkout4") {
       table = "weekly_engagement_checkouts";
       payload = {
-        week_number: activeKind === "checkout3" ? 3 : activeKind === "checkout2" ? 2 : 1,
+        week_number: activeKind === "checkout4" ? 4 : activeKind === "checkout3" ? 3 : activeKind === "checkout2" ? 2 : 1,
         student_name: v.name,
         student_id: v.sid,
         participation_mode: v.participation_mode,
-        time_invested: v.time_invested,
-        contribution_areas: contributionAreas,
-        task_completion: v.task_completion,
-        evidence_status: v.evidence_status,
-        team_communication: v.team_communication,
-        participation_balance: v.participation_balance,
-        next_task_clarity: v.next_task_clarity,
-        work_status: v.work_status,
-        discussion_focus: v.discussion_focus,
+        weekly_status: v.weekly_status || null,
+        support_need: v.support_need || null,
+        project_access: v.project_access || null,
+        team_continuity: v.team_continuity || null,
+        remaining_work_clarity: v.remaining_work_clarity || null,
+        implementation_progress: v.implementation_progress || null,
+        evidence_readiness: v.evidence_readiness || null,
+        demo_readiness: v.demo_readiness || null,
+        product_readiness: v.product_readiness || null,
+        testing_readiness: v.testing_readiness || null,
+        report_readiness: v.report_readiness || null,
+        presentation_readiness: v.presentation_readiness || null,
+        demo_backup_readiness: v.demo_backup_readiness || null,
+        speaking_role_readiness: v.speaking_role_readiness || null,
+        final_submission_status: v.final_submission_status || null,
         detail_note: v.detail_note || null,
       };
     }
@@ -1266,28 +1270,38 @@ function TeamHealthFields() {
     {risk && <label>Brief details<textarea name="risk_note" required maxLength={200} /><small className="field-hint">Maximum 200 characters</small></label>}
   </div>;
 }
-function EngagementCheckoutFields({ week = 1 }: { week?: 1 | 2 | 3 }) {
-  const [risk, setRisk] = useState(false);
-  const assess = (form: HTMLFormElement) => {
-    const data = new FormData(form);
-    const risky = ["No further participation","Not completed","No clear task was assigned","No communication","Significantly unbalanced","Not clear","At risk","Blocked","Other"];
-    setRisk(Array.from(data.values()).some((value) => risky.includes(String(value))));
-  };
-  const areas = ["Team discussion","Planning or research","UI/UX","Development","Testing","Documentation","Presentation or demo preparation","Team coordination","Other"];
-  return <div onChange={(event) => assess(event.currentTarget.closest("form") as HTMLFormElement)}>
-    <p className="form-note">Complete this after the final Week {week} session, including work completed remotely.</p>
+function EngagementCheckoutFields({ week = 1 }: { week?: 1 | 2 | 3 | 4 }) {
+  return <div>
+    <p className="form-note">{week === 4 ? "Complete this before your final presentation and submission." : `Complete this after the final Week ${week} session, including work completed remotely.`}</p>
     <Identity />
-    <Choice label="1. How did you participate after compulsory Monday?" name="participation_mode" options={["Wednesday session","Thursday session","Both sessions","Remote teamwork","Individual work only","No further participation"]} />
-    <Choice label="2. Time invested this week" name="time_invested" options={["Less than 1 hour","1–2 hours","3–5 hours","More than 5 hours"]} />
-    <fieldset className="choice-checklist"><legend>3. Contribution areas (select all that apply)</legend>{areas.map(area => <label key={area}><input type="checkbox" name="contribution_areas" value={area} required={false}/><span>{area}</span></label>)}</fieldset>
-    <Choice label="4. Did you complete your committed task?" name="task_completion" options={["Fully completed","Mostly completed","Partly completed","Not completed","No clear task was assigned"]} />
-    <Choice label="5. Is work evidence available for Monday?" name="evidence_status" options={["Yes, clearly available","Partly available","Not yet","Not applicable this week"]} />
-    <Choice label="6. Team communication this week" name="team_communication" options={["Active and effective","Some communication","Very limited communication","No communication"]} />
-    <Choice label="7. Was team participation balanced?" name="participation_balance" options={["Mostly balanced","Some differences","Significantly unbalanced","Not enough information"]} />
-    <Choice label="8. Is your next task clear?" name="next_task_clarity" options={["Completely clear","Mostly clear","Partly clear","Not clear"]} />
-    <Choice label="9. Current work status" name="work_status" options={["On track","Some difficulty","At risk","Blocked"]} />
-    <Choice label="10. What should the teacher verify on Monday?" name="discussion_focus" options={["My completed work","Technical difficulty","Team communication","Uneven participation","Task or scope clarity","Progress report or documentation","Nothing specific","Other"]} />
-    {risk && <label>Brief details<textarea name="detail_note" required maxLength={200} /><small className="field-hint">Maximum 200 characters</small></label>}
+    <Choice label={week === 4 ? "How have you participated in final preparation?" : "1. How did you participate after compulsory Monday?"} name="participation_mode" options={week === 4 ? ["Team rehearsal","Demo preparation","Final document work","Individual presentation preparation","Multiple preparation activities","Not yet participated"] : ["Wednesday session","Thursday session","Both sessions","Remote teamwork","Individual work only","No further participation"]} />
+    {week <= 3 && <>
+      <Choice label="2. Overall progress this week" name="weekly_status" options={["On track","Some difficulty","At risk","Blocked"]} />
+      <Choice label="3. Do you need teacher support?" name="support_need" options={["No support needed","A quick check would help","Yes, support needed"]} />
+    </>}
+    {week === 1 && <>
+      <Choice label="4. Can the team access the inherited project resources?" name="project_access" options={["All key resources accessible","Most resources accessible","Important resources missing","Project cannot be resumed yet"]} />
+      <Choice label="5. Has the NIT3003 team continued into NIT3004?" name="team_continuity" options={["Same team","Minor membership change","Major membership change","Team continuity is unclear"]} />
+      <Choice label="6. Has the team identified the remaining work after the break?" name="remaining_work_clarity" options={["Clear and agreed","Mostly clear","Still being reviewed","Not clear"]} />
+    </>}
+    {week === 2 && <>
+      <Choice label="4. How far has the planned implementation progressed?" name="implementation_progress" options={["Working and integrated","Working independently","Partly working","Not working yet","Blocked"]} />
+      <Choice label="5. Is your evidence easy to trace?" name="evidence_readiness" options={["Clear and traceable","Mostly traceable","Partial evidence","No usable evidence yet"]} />
+      <Choice label="6. Are you ready to demonstrate progress?" name="demo_readiness" options={["Ready now","Ready with minor preparation","Partly ready","Not ready"]} />
+    </>}
+    {week === 3 && <>
+      <Choice label="4. Is the core product ready for final delivery?" name="product_readiness" options={["Ready","Minor fixes remaining","Major work remaining","Blocked"]} />
+      <Choice label="5. Is testing evidence ready?" name="testing_readiness" options={["Ready and traceable","Mostly ready","Partial","Not ready"]} />
+      <Choice label="6. Is the final report ready?" name="report_readiness" options={["Ready","Minor edits remaining","Major sections remaining","Not ready"]} />
+      <Choice label="7. Is the presentation and demo ready?" name="presentation_readiness" options={["Ready and rehearsed","Ready but not rehearsed","Partly ready","Not ready"]} />
+    </>}
+    {week === 4 && <>
+      <Choice label="Is the presentation ready and rehearsed?" name="presentation_readiness" options={["Ready and rehearsed","Ready but not rehearsed","Partly ready","Not ready"]} />
+      <Choice label="Is there a fallback if the live demo fails?" name="demo_backup_readiness" options={["Fallback tested","Fallback prepared","Fallback planned only","No fallback"]} />
+      <Choice label="Is your individual speaking role ready?" name="speaking_role_readiness" options={["Ready and rehearsed","Ready but not rehearsed","Partly ready","No speaking role agreed"]} />
+      <Choice label="Final submission status" name="final_submission_status" options={["Submitted","Ready to submit","Final checks in progress","Not ready"]} />
+    </>}
+    <label>Optional note<textarea name="detail_note" maxLength={200} /><small className="field-hint">Add only what the teacher needs to know. Maximum 200 characters.</small></label>
   </div>;
 }
 function ProjectSnapshotIdentity() {
@@ -1454,6 +1468,7 @@ function fields(k: Kind) {
   if (k === "progress") return <ProgressReviewFields />;
   if (k === "checkout2") return <EngagementCheckoutFields week={2} />;
   if (k === "checkout3") return <EngagementCheckoutFields week={3} />;
+  if (k === "checkout4") return <EngagementCheckoutFields week={4} />;
   return (
     <>
       <p className="form-note">
@@ -1595,15 +1610,21 @@ function Admin() {
       table: "weekly_engagement_checkouts",
       label: "Weekly check-outs",
       title: "Weekly Engagement Check-outs",
-      description: "Review Week 1–3 participation outside Monday, evidence readiness and the next compulsory discussion focus.",
-      select: "id, week_number, student_name, student_id, team_name, participation_mode, time_invested, contribution_areas, task_completion, evidence_status, team_communication, participation_balance, next_task_clarity, work_status, discussion_focus, detail_note, created_at, updated_at",
+      description: "Review the Week 1–4 common pulse and week-specific readiness evidence. Legacy responses remain available.",
+      select: "id, week_number, student_name, student_id, team_name, participation_mode, weekly_status, support_need, project_access, team_continuity, remaining_work_clarity, implementation_progress, evidence_readiness, demo_readiness, product_readiness, testing_readiness, report_readiness, presentation_readiness, demo_backup_readiness, speaking_role_readiness, final_submission_status, time_invested, contribution_areas, task_completion, evidence_status, team_communication, participation_balance, next_task_clarity, work_status, discussion_focus, detail_note, created_at, updated_at",
       columns: [
         ["week_number", "Week"], ["student_name", "Name"], ["student_id", "Student ID"], ["team_name", "Team"],
-        ["participation_mode", "Participation"], ["time_invested", "Time invested"],
-        ["contribution_areas", "Contribution areas"], ["task_completion", "Task completion"],
-        ["evidence_status", "Evidence"], ["team_communication", "Communication"],
-        ["participation_balance", "Participation balance"], ["next_task_clarity", "Next task"],
-        ["work_status", "Work status"], ["discussion_focus", "Monday focus"],
+        ["participation_mode", "Participation"], ["weekly_status", "Weekly progress"], ["support_need", "Teacher support"],
+        ["project_access", "W1 project access"], ["team_continuity", "W1 team continuity"], ["remaining_work_clarity", "W1 remaining work"],
+        ["implementation_progress", "W2 implementation"], ["evidence_readiness", "W2 evidence"], ["demo_readiness", "W2 demo readiness"],
+        ["product_readiness", "W3 product"], ["testing_readiness", "W3 testing"], ["report_readiness", "W3 report"],
+        ["presentation_readiness", "Presentation readiness"], ["demo_backup_readiness", "W4 demo fallback"],
+        ["speaking_role_readiness", "W4 speaking role"], ["final_submission_status", "W4 submission"],
+        ["time_invested", "Legacy: time invested"], ["contribution_areas", "Legacy: contribution areas"],
+        ["task_completion", "Legacy: task completion"], ["evidence_status", "Legacy: evidence"],
+        ["team_communication", "Legacy: communication"], ["participation_balance", "Legacy: participation balance"],
+        ["next_task_clarity", "Legacy: next task"], ["work_status", "Legacy: work status"],
+        ["discussion_focus", "Legacy: Monday focus"],
         ["detail_note", "Details"], ["created_at", "Created"], ["updated_at", "Updated"],
       ],
       editable: [
