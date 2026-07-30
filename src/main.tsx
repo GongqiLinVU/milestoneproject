@@ -554,6 +554,10 @@ function friendlyError(code: string | undefined, kind: Kind) {
   }
   if (code === "42703")
     return "This activity is temporarily unavailable. Please tell your teacher.";
+  if (code === "P0001")
+    return "We could not match this Student ID to the current class roster. Check the ID or ask your teacher.";
+  if (kind === "review" && code === "23514")
+    return "You cannot review your own team.";
   return "We could not record your response. Please check your answers and try again.";
 }
 
@@ -611,7 +615,6 @@ function submissionReceipt(
     Array<{ label: string; value: string }>
   > = {
     checkin: [
-      { label: "Team", value: text("team") },
       { label: "Four-week goal", value: text("goal") },
     ],
     pulse: [
@@ -639,7 +642,6 @@ function submissionReceipt(
       { label: "AI usage", value: text("ai") },
     ],
     health: [
-      { label: "Team", value: text("team") },
       { label: "Communication", value: text("communication") },
       { label: "Role clarity", value: text("role_clarity") },
       { label: "Participation balance", value: text("participation_balance") },
@@ -650,7 +652,6 @@ function submissionReceipt(
       { label: "Details", value: text("risk_note") },
     ],
     progress: [
-      { label: "Team", value: text("team") },
       { label: "Deliverable area", value: text("deliverable_area") },
       { label: "Implementation claim", value: text("implementation_item") },
       { label: "Implementation state", value: text("implementation_state") },
@@ -665,7 +666,6 @@ function submissionReceipt(
       { label: "Teacher verification", value: text("teacher_verification") },
     ],
     checkout: [
-      { label: "Team", value: text("team") },
       { label: "Participation", value: text("participation_mode") },
       { label: "Time invested", value: text("time_invested") },
       { label: "Contribution areas", value: text("contribution_areas") },
@@ -679,7 +679,6 @@ function submissionReceipt(
       { label: "Details", value: text("detail_note") },
     ],
     checkout3: [
-      { label: "Team", value: text("team") },
       { label: "Participation", value: text("participation_mode") },
       { label: "Time invested", value: text("time_invested") },
       { label: "Contribution areas", value: text("contribution_areas") },
@@ -693,7 +692,6 @@ function submissionReceipt(
       { label: "Details", value: text("detail_note") },
     ],
     checkout2: [
-      { label: "Team", value: text("team") },
       { label: "Participation", value: text("participation_mode") },
       { label: "Time invested", value: text("time_invested") },
       { label: "Contribution areas", value: text("contribution_areas") },
@@ -707,7 +705,6 @@ function submissionReceipt(
       { label: "Details", value: text("detail_note") },
     ],
     review: [
-      { label: "Reviewer team", value: text("reviewer_team") },
       { label: "Reviewed team", value: text("reviewed_team") },
       { label: "Problem clarity", value: ratingText(values.problem) },
       { label: "Working product", value: ratingText(values.product) },
@@ -848,7 +845,6 @@ function Modal({
       payload = {
         student_name: v.name,
         student_id: v.sid,
-        team_name: v.team,
         goal: v.goal,
       };
     }
@@ -865,7 +861,6 @@ function Modal({
       payload = {
         student_name: v.name,
         student_id: v.sid,
-        team_name: v.team,
         communication: v.communication,
         role_clarity: v.role_clarity,
         participation_balance: v.participation_balance,
@@ -882,7 +877,6 @@ function Modal({
         week_number: activeKind === "checkout3" ? 3 : activeKind === "checkout2" ? 2 : 1,
         student_name: v.name,
         student_id: v.sid,
-        team_name: v.team,
         participation_mode: v.participation_mode,
         time_invested: v.time_invested,
         contribution_areas: contributionAreas,
@@ -901,7 +895,6 @@ function Modal({
       payload = {
         student_name: v.name,
         student_id: v.sid,
-        team_name: v.team,
         project_name: v.project_name,
         project_area: v.project_area,
         project_description: v.project_description,
@@ -921,15 +914,10 @@ function Modal({
       };
     }
     if (activeKind === "review") {
-      if (v.reviewer_team === v.reviewed_team) {
-        setMsg("You cannot review your own team.");
-        return;
-      }
       table = "poster_reviews";
       payload = {
         reviewer_name: v.name,
         reviewer_student_id: v.sid,
-        reviewer_team: v.reviewer_team,
         reviewed_team: v.reviewed_team,
         problem_clarity: +v.problem,
         working_product: +v.product,
@@ -1098,7 +1086,6 @@ const Identity = () => (
       Student ID
       <input name="sid" required minLength={3} maxLength={40} />
     </label>
-    <Team />
   </>
 );
 function Rating({
@@ -1362,7 +1349,6 @@ function fields(k: Kind) {
         Student ID
         <input name="sid" required minLength={3} maxLength={40} />
       </label>
-      <Team name="reviewer_team" label="Your team (from team)" />
       <Team name="reviewed_team" label="Team being reviewed (to team)" />
       {[
         ["Problem clarity", "problem"],
