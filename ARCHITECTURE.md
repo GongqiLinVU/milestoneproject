@@ -20,6 +20,21 @@ PostgreSQL + Row Level Security
 
 GitHub is the source of truth for application code, database schema and project documentation. Vercel deploys the frontend from the `main` branch.
 
+## Team and project foundation
+
+`teaching_blocks` owns the rollout mode (`teacher_assigned` or
+`student_selection`). `teams` provides a stable block-scoped identity derived
+from private roster team numbers. `projects` is a block-scoped catalogue, while
+`team_project_assignments` enforces one current project per team. A project may
+be assigned to several teams.
+
+Student browsers never select directly from roster, team, assignment or
+proposal tables. Restricted functions validate Student ID against the active
+block before returning the matched team's project context, accepting a
+team-level selection or recording a short proposal. Teachers manage the source
+tables through RLS-protected Dashboard views. New identified activities
+snapshot the current `project_id`; historical rows remain unchanged.
+
 ## Runtime components
 
 ### Student portal

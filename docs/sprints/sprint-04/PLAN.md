@@ -1,106 +1,86 @@
-# Sprint 4 — Weekly Journey, Follow-up and Teaching Analytics
+# Sprint 4 — Project Foundation, Weekly Journey and Teaching Analytics
 
-**Status: Active — Phase 1 planned**
+**Status: Active — Phase 1 in progress**
 
 ## Origin and boundary
 
-Sprint 4 carries forward only the unstarted work from Sprint 3. It builds on the
-production block, roster, private lookup, automatic team assignment, weekly
-evidence and Teacher Review foundation delivered in Sprint 3.
-
-Completed Sprint 3 behaviour is not reimplemented or redesigned unless a defect
-prevents Sprint 4 acceptance criteria from being met.
+Sprint 4 builds on the production block, roster, private lookup, automatic team
+assignment, weekly evidence and Teacher Review foundation delivered in Sprint 3.
+The first live cohort already has 18 students in five teams and started Week 1,
+so rollout safety and fast teacher setup take priority over platform
+generality.
 
 ## Goal
 
-Complete a coherent Week 1–4 teaching journey that is quick for students,
-operationally useful for teachers and reusable across teaching blocks.
-Student-facing questions remain selection-first. Teacher judgement remains
-private and separate from student self-report. Analytics remain descriptive,
-evidence-linked and never assign marks or unsupported performance labels.
+Create a stable `Teaching Block → Team → Project Assignment` foundation, then
+complete a coherent Week 1–4 teaching journey. Students should not repeatedly
+type project information. Teacher judgement stays private and analytics remain
+descriptive, evidence-linked and non-grading.
 
-## Phase 1 — Week-specific engagement journey
+## Phase 1 — Team & Project foundation
 
-Replace repeated generic weekly questions with a short common pulse plus
-week-specific readiness questions:
+Establish only the reusable identities needed by current teaching:
 
-- Week 1: project direction, role clarity and team alignment
-- Week 2: implementation, demonstration and traceable evidence
-- Week 3: completion, testing, report and presentation readiness
-- Week 4: final presentation readiness and delivery confirmation where needed
+- formal block-scoped teams derived from the private roster
+- a teacher-managed, block-scoped Project Catalogue
+- exactly one current project assignment per team
+- a block mode of `teacher_assigned` or `student_selection`
+- a short team-level student Project Proposal path
+- project identity captured on later activity submissions
 
-Keep a small common pulse across Weeks 1–3 for longitudinal comparison. Prefer
-selections and quick actions, with at most one optional short note. Student forms
-must not ask for own-team information; block and team continue to resolve from
-the active block and roster.
+Rollout:
 
-Acceptance:
-
-- Each week has a clear teaching purpose and does not repeat another activity's
-  evidence.
-- Normal completion requires no written response.
-- Existing submissions and receipts remain readable and correctly labelled.
-- Duplicate prevention stays scoped to block, Student ID and week.
-- Unmatched Student IDs are rejected without exposing roster data.
-- Teacher Activity records and CSV retain block and roster-derived team context.
-- Database changes include idempotent migration, schema synchronisation, grants,
-  RLS, verification queries and rollback guidance.
-- Production build and role-based smoke tests pass before merge.
-
-## Phase 2 — Week 3–4 follow-up continuity
-
-Surface Teacher Review items with Action required, In progress or Recheck next
-session in later-week teacher views. Keep a single current review per student,
-preserve updated timestamps and isolate every queue by teaching block.
+- `2026 · 2B1` remains `teacher_assigned`.
+- Existing roster project names are imported into catalogue and assignment
+  records without changing Week 1 evidence.
+- The teacher creates and links the five current team projects.
+- A future block may enable `student_selection`; one team member selects during
+  Check-in and teammates see the same project.
+- Teacher confirmation prevents later student overwrites.
 
 Acceptance:
 
-- Follow-up queues never mix blocks.
-- Private review details remain collapsed by default and one student opens at a
-  time.
-- Teachers can move an item through existing operational statuses without
-  changing student evidence.
-- AI suggestions remain optional, temporary and advisory.
-- Week 4 provides a practical closure path for unresolved items.
+- One team has no more than one current project; multiple teams may use the same
+  project.
+- Student project lookup never exposes the roster or another team's members.
+- Current students are not required to reselect or re-enter project details.
+- Week 2 shows a roster-derived, read-only Project Snapshot.
+- A proposal approval creates a published project and confirmed assignment.
+- Existing activity data remains readable; new identified submissions capture
+  `project_id` when available.
+- Migration is idempotent and includes grants, RLS, verification queries and
+  rollback guidance.
+- Production build and role-based database checks pass before merge.
 
-## Phase 3 — Three-week trajectory and teaching analytics
+Not included in Phase 1:
 
-Show per-student Week 1–3 trajectories, Team Participation Temperature,
-completion, evidence readiness, disagreement and follow-up queues. Every summary
-must drill down to the submitted evidence used to produce it.
+- project capacity, exclusivity or recommendation
+- project versioning
+- multi-stage approval or generic workflow
+- student accounts
+- generic course/activity configuration
 
-Acceptance:
+## Phase 2 — Week-specific engagement journey
 
-- Missing data is distinct from a negative answer.
-- Filters and counts are scoped to the teacher-selected block.
-- Team summaries show response coverage and do not hide disagreement.
-- No automated mark, disciplinary decision or unsupported performance label is
-  produced.
-- Sensitive individual evidence remains teacher-only.
+Replace repeated generic questions with a short common pulse plus week-specific
+readiness questions. Week 4 receives a brief Final Delivery Check. Normal
+completion remains selection-first with at most one optional note.
 
-## Phase 4 — Export, privacy and production validation
+## Phase 3 — Week 3–4 follow-up continuity
 
-Stabilise teacher-authorised exports and verify the complete Sprint 4 journey.
+Surface unresolved Teacher Review work in later-week teacher views, isolated by
+teaching block and linked to evidence.
 
-Acceptance:
+## Phase 4 — Three-week trajectory and teaching analytics
 
-- Export headings and values are stable, explicit and block-scoped.
-- Anonymous Class Pulse data remains aggregate-only.
-- Conditional fields, duplicate rules and roster matching are verified.
-- Anonymous and authenticated non-teacher users cannot read protected evidence.
-- All required migrations, RLS checks, production builds and Vercel smoke tests
-  pass.
-- README, AI context, architecture, roadmap, changelog and Sprint handoff match
-  verified production behaviour.
+Show completion, evidence readiness, participation temperature and follow-up
+queues with drill-down to submitted evidence. Missing data must remain distinct
+from negative evidence.
 
-## Out of scope
+## Phase 5 — Export, privacy and production validation
 
-- student authentication or profiles
-- controlled student resubmission
-- tutor or coordinator roles
-- generic multi-course administration
-- automatic grading or risk prediction
-- expansion of the AI pilot beyond teacher-triggered advisory suggestions
+Stabilise block/team/project-aware exports and verify the complete Sprint 4
+journey, RLS boundaries and production deployment.
 
 ## Delivery rules
 

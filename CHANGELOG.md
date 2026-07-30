@@ -4,6 +4,20 @@ All notable changes to Engineering Studio Platform will be recorded here.
 
 The project currently uses simple milestone-based versions while the production workflow is being established.
 
+## Sprint 4 Phase 1 — Team & Project foundation
+
+- Added formal block-scoped teams derived from the private roster.
+- Added teacher-managed Project Catalogue, one current project per team and
+  team-level student proposals.
+- Added block rollout modes: current `2026 · 2B1` stays teacher-assigned while
+  future blocks may enable student selection during Check-in.
+- Added restricted student project context, selection and proposal functions
+  without opening direct roster or assignment reads.
+- Changed Week 2 project context from repeated student entry to a
+  roster-derived Project Snapshot.
+- Preserved existing Week 1 evidence and imported nonblank legacy roster
+  project names into the new foundation.
+
 ## [0.2.0] — 2026-07-26
 
 ### Added

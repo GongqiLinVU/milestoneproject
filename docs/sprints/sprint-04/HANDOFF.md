@@ -1,54 +1,66 @@
 # Sprint 4 Handoff
 
-**Status: Active — Phase 1 planned**
+**Status: Active — Phase 1 implemented locally; Draft PR pending**
 
 ## Starting point
 
-Sprint 3 was closed at an agreed delivery boundary on 30 July 2026. Its
-production foundation includes:
-
-- Week 1–3 engagement evidence and weekly tabs
-- Week 2 Implementation Pre-check
-- private Teacher Review and Follow-up
-- optional teacher-controlled AI suggestions
-- reusable teaching blocks and `2026 · 2B1` historical backfill
-- teacher-managed roster and CSV import
-- Student ID-only Find My Team through a least-privilege RPC
-- explicit block-scoped submissions
-- roster-authoritative automatic team assignment
+Sprint 3 closed on 30 July 2026 with reusable teaching blocks, a private roster,
+Student ID-only Find My Team, roster-authoritative activity team assignment,
+Week 1–3 evidence and private Teacher Review. The first live cohort has 18
+students in five teams and is already using Week 1.
 
 ## Current Phase
 
-**Phase 1 — Week-specific engagement journey**
+**Phase 1 — Team & Project foundation**
 
-Before implementation, inspect the latest forms, table constraints, receipts,
-Teacher Activity records, analytics and CSV mappings. Confirm which current
-common questions remain useful across Weeks 1–3 and which questions should be
-week-specific.
+The stable core is:
 
-Deliver only Phase 1:
+`Teaching Block → Team → Team Project Assignment → Week 1–4 evidence`
 
-- short common pulse for longitudinal comparison
-- Week 1 direction/alignment questions
-- Week 2 implementation/evidence questions
-- Week 3 completion/testing/report/presentation questions
-- clear Week 4 presentation readiness or delivery confirmation where required
-- no own-team field in student forms
-- block-scoped roster-derived team storage
-- migration/schema/RLS and production verification where data changes
+Projects are separated from assignments so several teams may use one project
+while every team has at most one current project.
+
+### Rollout rules
+
+- `2026 · 2B1`: teacher creates projects and connects each team.
+- Future blocks: teacher may enable student selection at Check-in.
+- Student selection is team-level; teacher confirmation locks it.
+- Students with their own idea submit a short team proposal.
+- Approved proposals become published projects and confirmed assignments.
+- Students never read the private roster directly.
+
+### Phase 1 delivery
+
+- Add formal teams derived from roster team numbers.
+- Add projects, team assignments and proposals.
+- Add block-level `teacher_assigned` / `student_selection`.
+- Backfill existing nonblank roster project names safely.
+- Add Teacher Dashboard Project setup.
+- Add Check-in project lookup, selection and proposal path.
+- Replace Week 2 project re-entry with a read-only snapshot.
+- Capture project identity on new identified activity evidence.
+- Preserve old submissions and current Week 1 usage.
 
 ## Acceptance gate
 
-- normal student completion requires selections, not written comments
-- no duplicated evidence between weekly activities
-- old submissions remain correctly labelled and available
-- duplicate and receipt behaviour remains block-aware
-- teacher records and CSV keep block/team context
-- build and role-based database smoke tests pass
-- a focused Draft PR is created and not merged without approval
+- current block remains teacher-assigned after migration
+- five live teams can be connected without student action
+- future student selection cannot expose roster data or cross blocks
+- one current assignment per team is enforced in the database
+- teacher-confirmed assignments cannot be overwritten through student RPC
+- build, diff and SQL structure checks pass
+- focused Draft PR is created and not merged without approval
 
-## Session protocol
+## Local verification
 
-Start the next session with:
+- TypeScript and Vite production build passed on 30 July 2026.
+- `git diff --check` passed.
+- Schema structure checks confirmed one canonical definition for each new
+  project RPC and the formal teams table.
+- The existing bundle-size warning remains and is not a Phase 1 functional
+  failure.
 
-> 请读取 GitHub 仓库 GongqiLinVU/milestoneproject 的最新 main，并按照 prompts/START_SESSION.md 开始 Sprint 4 Phase 1。开始修改前先汇报当前状态、Sprint 3 的关闭证据、本 Phase 范围、数据库与隐私影响及验收标准。一次只执行一个 Phase，完成后创建 Draft PR，未经我确认不要合并。
+## Next phase
+
+After Phase 1 is deployed and validated, continue with Phase 2 — Week-specific
+Engagement Journey. Do not combine it into this PR.
