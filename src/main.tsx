@@ -22,6 +22,7 @@ import {
   Users,
 } from "lucide-react";
 import "./styles.css";
+import { FindMyTeam, RosterManager } from "./TeamAllocation";
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL ||
     "https://gwihaizxivclamzehupk.supabase.co",
@@ -65,12 +66,19 @@ function App() {
   const [form, setForm] = useState<Kind | null>(null);
   const [live, setLive] = useState<boolean | null>(null);
   const [peerReviewOpen, setPeerReviewOpen] = useState<boolean | null>(null);
+  const [activeBlock, setActiveBlock] = useState("");
   useEffect(() => {
     supabase
       .from("portal_health")
       .select("status")
       .limit(1)
       .then(({ error }) => setLive(!error));
+    supabase
+      .from("teaching_blocks")
+      .select("academic_year, block_code")
+      .eq("status", "active")
+      .single()
+      .then(({ data }) => setActiveBlock(data ? `${data.academic_year} · ${data.block_code}` : ""));
     supabase
       .from("activity_settings")
       .select("is_open")
@@ -90,6 +98,7 @@ function App() {
           <a href="#journey">Journey</a>
           <a href="#weekly">Weekly Check-in</a>
           <a href="#deliverables">Deliverables</a>
+          <a href="/find-my-team">Find My Team</a>
           <a href="/admin">Teacher</a>
         </nav>
       </header>
@@ -97,7 +106,7 @@ function App() {
         <section className="hero">
           <div>
             <div className="eyebrow">
-              Applied Project II · Four-week delivery studio
+              Applied Project II · {activeBlock || "Four-week delivery studio"}
             </div>
             <h1>
               Build less.
@@ -116,6 +125,7 @@ function App() {
               <button className="secondary" onClick={() => setForm("checkin")}>
                 Start Week 1 check-in
               </button>
+              <a className="secondary" href="/find-my-team">Find my team</a>
             </div>
             <div className={"status " + (live ? "ok" : "")}>
               <span></span>
@@ -1516,6 +1526,7 @@ function Admin() {
   );
   const [activeTable, setActiveTable] =
     useState<ActivityTable>("student_checkins");
+  const [adminView, setAdminView] = useState<"overview" | "roster" | "peer" | "records">("overview");
   const [records, setRecords] = useState<ActivityRecord[]>([]);
   const [editRecord, setEditRecord] = useState<ActivityRecord | null>(null);
   const [deleteRecord, setDeleteRecord] = useState<ActivityRecord | null>(null);
@@ -2224,7 +2235,17 @@ function Admin() {
           {authMessage}
         </p>
       )}
-      <section className="activity-control" aria-labelledby="peer-review-control-title">
+      <div className="admin-shell">
+        <aside className="admin-sidebar" aria-label="Teacher dashboard sections">
+          <button type="button" className={adminView === "overview" ? "active" : ""} onClick={() => setAdminView("overview")}><ListChecks size={18}/><span><b>Overview</b><small>Activity snapshot</small></span></button>
+          <button type="button" className={adminView === "roster" ? "active" : ""} onClick={() => setAdminView("roster")}><Users size={18}/><span><b>Blocks & roster</b><small>Students and teams</small></span></button>
+          <button type="button" className={adminView === "records" ? "active" : ""} onClick={() => setAdminView("records")}><ClipboardCheck size={18}/><span><b>Activity records</b><small>Review submissions</small></span></button>
+          <button type="button" className={adminView === "peer" ? "active" : ""} onClick={() => setAdminView("peer")}><Presentation size={18}/><span><b>Peer review</b><small>Week 3 control</small></span></button>
+          <a href="/" className="admin-sidebar-home">Back to student portal</a>
+        </aside>
+        <div className="admin-content">
+      <div hidden={adminView !== "roster"}><RosterManager /></div>
+      <section hidden={adminView !== "peer"} className="activity-control" aria-labelledby="peer-review-control-title">
         <div>
           <div className="eyebrow">Week 3 activity</div>
           <h2 id="peer-review-control-title">Poster Peer Review</h2>
@@ -2270,7 +2291,7 @@ function Admin() {
           </p>
         )}
       </section>
-      <div className="metric-grid" aria-label="Activity record views">
+      <div hidden={adminView === "roster" || adminView === "peer"} className="metric-grid" aria-label="Activity record views">
         {activityTables.map(({ table, label }) => (
           <button
             key={table}
@@ -2280,6 +2301,7 @@ function Admin() {
             onClick={() => {
               if (table === activeTable) return;
               setActiveTable(table);
+              setAdminView("records");
               void loadDashboard(table);
             }}
           >
@@ -2288,7 +2310,7 @@ function Admin() {
           </button>
         ))}
       </div>
-      <section className="admin-records" aria-labelledby="activity-heading">
+      <section hidden={adminView !== "records"} className="admin-records" aria-labelledby="activity-heading">
         <div className="admin-records-heading">
           <div>
             <div className="eyebrow">Activity records</div>
@@ -2771,6 +2793,8 @@ function Admin() {
           </div>
         )}
       </section>
+        </div>
+      </div>
       {editRecord && (
         <div className="modal" role="presentation">
           <div className="dialog admin-action-dialog" role="dialog" aria-modal="true" aria-labelledby="edit-record-title">
@@ -2831,6 +2855,6 @@ function Admin() {
 }
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    {location.pathname.startsWith("/admin") ? <Admin /> : <App />}
+    {location.pathname.startsWith("/admin") ? <Admin /> : location.pathname.startsWith("/find-my-team") ? <FindMyTeam /> : <App />}
   </StrictMode>,
 );

@@ -129,7 +129,7 @@ Detailed scope, Phase acceptance criteria and the current handoff are stored in
 
 ## Sprint 3 — Week 2 Review and Teaching Analytics
 
-**Status: Active — Phase 3C multi-block foundation in progress**
+**Status: Active — Phase 3C-2 team allocation in progress**
 
 Sprint 3 combines the original Teaching Analytics direction with classroom
 feedback gathered on 27 July 2026. The current shared, long-text Team
