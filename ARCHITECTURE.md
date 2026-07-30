@@ -28,6 +28,13 @@ from private roster team numbers. `projects` is a block-scoped catalogue, while
 `team_project_assignments` enforces one current project per team. A project may
 be assigned to several teams.
 
+The current course lifecycle spans two units: NIT3003 establishes the team,
+project and prototype; NIT3004 resumes that work after a break at an expected
+approximately 80% completion baseline. Assignments therefore record
+`origin_unit` and `continued_from_previous_unit`. Projects remain block-scoped
+in this rollout-safe version; the platform records continuity without adding a
+generic cross-course workflow or project-version system.
+
 Student browsers never select directly from roster, team, assignment or
 proposal tables. Restricted functions validate Student ID against the active
 block before returning the matched team's project context, accepting a
