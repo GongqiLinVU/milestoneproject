@@ -730,3 +730,79 @@ revoke all on public.team_lookup_attempts from anon, authenticated;
 -- 4. duplicate Student ID or email inside one block fails.
 -- 5. service-role lookup returns only the matched team and teammate names.
 -- 6. audit rows are inaccessible to browser roles.
+
+-- Identified student activities derive their team from the private roster.
+create or replace function public.assign_activity_team_from_roster()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_student_id text;
+  v_team_name text;
+  v_team_column text;
+begin
+  v_student_id := lower(trim(
+    case
+      when tg_table_name = 'poster_reviews'
+        then to_jsonb(new) ->> 'reviewer_student_id'
+      else to_jsonb(new) ->> 'student_id'
+    end
+  ));
+
+  select concat('Team ', roster.team_number)
+  into v_team_name
+  from public.student_roster roster
+  where roster.block_id = new.block_id
+    and roster.student_id = v_student_id
+  limit 1;
+
+  if v_team_name is null then
+    raise exception using
+      errcode = 'P0001',
+      message = 'Student ID is not present in the selected teaching block roster';
+  end if;
+
+  v_team_column := case
+    when tg_table_name = 'poster_reviews' then 'reviewer_team'
+    else 'team_name'
+  end;
+
+  new := jsonb_populate_record(
+    new,
+    jsonb_build_object(v_team_column, v_team_name)
+  );
+  return new;
+end;
+$$;
+
+revoke all on function public.assign_activity_team_from_roster() from public;
+
+do $$
+declare
+  table_name text;
+begin
+  foreach table_name in array array[
+    'student_checkins',
+    'team_health_checks',
+    'weekly_engagement_checkouts',
+    'week2_progress_reviews',
+    'poster_reviews'
+  ]
+  loop
+    execute format(
+      'drop trigger if exists assign_activity_team_from_roster on public.%I',
+      table_name
+    );
+    execute format(
+      'create trigger assign_activity_team_from_roster
+       before insert on public.%I
+       for each row execute function public.assign_activity_team_from_roster()',
+      table_name
+    );
+  end loop;
+end $$;
+
+comment on function public.assign_activity_team_from_roster() is
+'Assigns team_name/reviewer_team from the private block roster before identified student activity inserts.';
