@@ -219,24 +219,62 @@ create table if not exists public.team_health_checks (
 
 create table if not exists public.weekly_engagement_checkouts (
   id uuid primary key default gen_random_uuid(),
-  week_number smallint not null check (week_number between 1 and 3),
+  week_number smallint not null check (week_number between 1 and 4),
   student_name text not null check (char_length(student_name) between 1 and 100),
   student_id text not null,
   team_name text not null check (team_name ~ '^Team [1-8]$'),
   participation_mode text not null,
-  time_invested text not null,
-  contribution_areas text[] not null check (cardinality(contribution_areas) > 0),
-  task_completion text not null,
-  evidence_status text not null,
-  team_communication text not null,
-  participation_balance text not null,
-  next_task_clarity text not null,
-  work_status text not null,
-  discussion_focus text not null,
+  weekly_status text,
+  support_need text,
+  project_access text,
+  team_continuity text,
+  remaining_work_clarity text,
+  implementation_progress text,
+  evidence_readiness text,
+  demo_readiness text,
+  product_readiness text,
+  testing_readiness text,
+  report_readiness text,
+  presentation_readiness text,
+  demo_backup_readiness text,
+  speaking_role_readiness text,
+  final_submission_status text,
+  time_invested text,
+  contribution_areas text[] check (contribution_areas is null or cardinality(contribution_areas) > 0),
+  task_completion text,
+  evidence_status text,
+  team_communication text,
+  participation_balance text,
+  next_task_clarity text,
+  work_status text,
+  discussion_focus text,
   detail_note text check (detail_note is null or char_length(detail_note) <= 200),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  constraint weekly_engagement_student_week_key unique (student_id, week_number)
+  constraint weekly_engagement_student_week_key unique (student_id, week_number),
+  constraint weekly_engagement_new_journey_check check (
+    (weekly_status is null and time_invested is not null)
+    or
+    (
+      week_number between 1 and 3
+      and weekly_status is not null
+      and support_need is not null
+      and case week_number
+        when 1 then project_access is not null and team_continuity is not null and remaining_work_clarity is not null
+        when 2 then implementation_progress is not null and evidence_readiness is not null and demo_readiness is not null
+        when 3 then product_readiness is not null and testing_readiness is not null and report_readiness is not null and presentation_readiness is not null
+        else false
+      end
+    )
+    or
+    (
+      week_number = 4
+      and presentation_readiness is not null
+      and demo_backup_readiness is not null
+      and speaking_role_readiness is not null
+      and final_submission_status is not null
+    )
+  )
 );
 
 alter table public.team_health_checks enable row level security;

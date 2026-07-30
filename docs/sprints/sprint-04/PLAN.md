@@ -1,6 +1,6 @@
 # Sprint 4 — Project Foundation, Weekly Journey and Teaching Analytics
 
-**Status: Active — Phase 1 in progress**
+**Status: Active — Phase 2 implemented locally**
 
 ## Origin and boundary
 
@@ -79,6 +79,19 @@ The four-week sequence is grounded in the real course handoff:
   and individual contribution evidence.
 - Week 4 — Final Delivery Readiness: presentation, demo fallback, individual
   speaking readiness and final submission state.
+
+Acceptance:
+
+- Week 1 checks access to inherited project resources, team continuity and
+  remaining-work clarity after the break.
+- Week 2 provides a short 80% baseline pulse without duplicating the detailed
+  Implementation Pre-check or teacher demo review.
+- Week 3 focuses on integration, testing, report and presentation completion.
+- Week 4 provides an actionable final delivery check.
+- Normal completion requires selections only; one short note remains optional.
+- Existing Week 1–3 rows remain readable and new submissions retain
+  roster-derived team and project context.
+- Week 4 is block-scoped and follows the same duplicate and privacy rules.
 
 ## Phase 3 — Week 3–4 follow-up continuity
 

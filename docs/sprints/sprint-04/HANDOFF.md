@@ -1,6 +1,6 @@
 # Sprint 4 Handoff
 
-**Status: Active — Phase 1 implemented locally; Draft PR pending**
+**Status: Active — Phase 2 implemented locally; Draft PR pending**
 
 ## Starting point
 
@@ -11,46 +11,43 @@ students in five teams and is already using Week 1.
 
 ## Current Phase
 
-**Phase 1 — Team & Project foundation**
+**Phase 2 — NIT3004 Recovery and Week-specific Engagement Journey**
 
-The stable core is:
+Implemented on `agent/sprint4-phase2-continuity-journey`:
 
-`NIT3003 project origin → Teaching Block → Team → Team Project Assignment → NIT3004 Week 1–4 evidence`
+- replaces the repeated Week 1–3 generic check-out with a three-item common
+  pulse: participation, weekly status and support need
+- Week 1 checks inherited project access, NIT3003 team continuity and whether
+  remaining work is understood after the break
+- Week 2 checks implementation, traceable evidence and demo readiness as the
+  quick 80% entry baseline; the detailed Implementation Pre-check remains the
+  evidence and method-verification activity
+- Week 3 checks product, testing, report and presentation readiness
+- Week 4 adds a Final Delivery Check for rehearsal, demo fallback, speaking role
+  and submission status
+- all normal paths are selection-only with one optional 200-character note
+- legacy generic Week 1–3 evidence remains readable
+- Teacher Activity records and CSV include the new fields plus labelled legacy
+  fields
 
-Projects are separated from assignments so several teams may use one project
-while every team has at most one current project.
+Database delivery:
 
-### Rollout rules
-
-- `2026 · 2B1`: teacher creates projects and connects each team.
-- Future NIT3003 blocks: teacher may enable student selection at Check-in.
-- NIT3004 blocks restore the existing project rather than asking students to
-  select again; current assignments are marked as NIT3003 continuations.
-- Student selection is team-level; teacher confirmation locks it.
-- Students with their own idea submit a short team proposal.
-- Approved proposals become published projects and confirmed assignments.
-- Students never read the private roster directly.
-
-### Phase 1 delivery
-
-- Add formal teams derived from roster team numbers.
-- Add projects, team assignments and proposals.
-- Add block-level `teacher_assigned` / `student_selection`.
-- Backfill existing nonblank roster project names safely.
-- Add Teacher Dashboard Project setup.
-- Add Check-in project lookup, selection and proposal path.
-- Replace Week 2 project re-entry with a read-only snapshot.
-- Capture project identity on new identified activity evidence.
-- Preserve old submissions and current Week 1 usage.
+- migration:
+  `supabase/migrations/20260730_sprint4_phase2_continuity_journey.sql`
+- canonical final state synchronised in `supabase/schema.sql`
+- Week 4 is permitted by the weekly evidence constraint
+- existing grants, RLS, roster assignment trigger, block-scoped duplicate rule
+  and Phase 1 project snapshot trigger remain unchanged
 
 ## Acceptance gate
 
-- current block remains teacher-assigned after migration
-- five live teams can be connected without student action
-- future student selection cannot expose roster data or cross blocks
-- one current assignment per team is enforced in the database
-- teacher-confirmed assignments cannot be overwritten through student RPC
-- build, diff and SQL structure checks pass
+- normal student completion requires no written response
+- no project selection or repeated project description appears in NIT3004
+- old submissions remain readable and correctly labelled
+- duplicate, roster, block and project context remain authoritative
+- anonymous and non-teacher users cannot read protected evidence
+- teacher records and CSV remain block/team/project-aware
+- build, SQL checks and role-based smoke tests pass
 - focused Draft PR is created and not merged without approval
 
 ## Local verification
@@ -64,7 +61,5 @@ while every team has at most one current project.
 
 ## Next phase
 
-After Phase 1 and the continuity patch are deployed and validated, continue with
-Phase 2 — NIT3004 Recovery and Week-specific Engagement Journey. Its sequence is
-Project Recovery & Team Health, 80% Entry Baseline & Project Review, Completion
-Quality and Final Delivery Readiness. Do not combine Phase 2 into this PR.
+After Phase 2 is deployed and validated, continue with Phase 3 — Week 3–4
+follow-up continuity. Do not combine Phase 3 into this PR.
