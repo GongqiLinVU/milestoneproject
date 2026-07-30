@@ -6,7 +6,7 @@ type ResponseLike = { status: (code: number) => ResponseLike; json: (body: unkno
 
 const normalise = (value: unknown) => String(value ?? "").trim().toLowerCase();
 const hash = (value: string, salt: string) => createHash("sha256").update(`${salt}|${value}`).digest("hex");
-const genericMismatch = "We could not match those details in the active block. Check your Student ID and VU email, or ask your teacher.";
+const genericMismatch = "We could not find that Student ID in the active block. Check the ID or ask your teacher.";
 
 export default async function handler(req: RequestLike, res: ResponseLike) {
   res.setHeader("Cache-Control", "no-store");
@@ -19,15 +19,14 @@ export default async function handler(req: RequestLike, res: ResponseLike) {
 
   const body = (req.body && typeof req.body === "object" ? req.body : {}) as Record<string, unknown>;
   const studentId = normalise(body.studentId);
-  const email = normalise(body.email);
-  if (studentId.length < 3 || studentId.length > 40 || email.length < 5 || email.length > 160) {
+  if (studentId.length < 3 || studentId.length > 40) {
     return res.status(404).json({ error: genericMismatch });
   }
 
   const forwarded = req.headers["x-forwarded-for"];
   const ip = (Array.isArray(forwarded) ? forwarded[0] : forwarded?.split(",")[0]) || req.socket?.remoteAddress || "unknown";
   const requesterHash = hash(ip.trim(), salt);
-  const identityHash = hash(`${studentId}|${email}`, salt);
+  const identityHash = hash(studentId, salt);
   const supabase = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
   const windowStart = new Date(Date.now() - 15 * 60 * 1000).toISOString();
 
@@ -51,7 +50,6 @@ export default async function handler(req: RequestLike, res: ResponseLike) {
     .select("id, block_id, team_number, project_name, preferred_name, full_name")
     .eq("block_id", block.id)
     .eq("student_id", studentId)
-    .eq("vu_email", email)
     .maybeSingle();
 
   await supabase.from("team_lookup_attempts").insert({
