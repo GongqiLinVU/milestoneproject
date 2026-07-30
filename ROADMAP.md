@@ -129,7 +129,7 @@ Detailed scope, Phase acceptance criteria and the current handoff are stored in
 
 ## Sprint 3 — Week 2 Review and Teaching Analytics
 
-**Status: Active — Phase 3B in progress**
+**Status: Active — Phase 3C multi-block foundation in progress**
 
 Sprint 3 combines the original Teaching Analytics direction with classroom
 feedback gathered on 27 July 2026. The current shared, long-text Team
@@ -229,6 +229,21 @@ Implemented in PR #18: individual Team Health Check, Week 1 Engagement Check-out
 - Keep teacher judgement and feedback separate for Phase 3.
 
 
-### Sprint 3 Phase 3B — AI Teaching Suggestion (in progress)
+### Sprint 3 Phase 3B — AI Teaching Suggestion (completed)
 
 A narrow teacher-controlled pilot adds one structured teaching suggestion inside the private Review & Follow-up. The server excludes student identity, requires a teacher session, does not persist AI output automatically and never changes marks, verification or follow-up status.
+
+
+### Sprint 3 Phase 3C — Reusable blocks, teams and weekly engagement
+
+Delivery order:
+
+1. Multi-block foundation: academic year + block, active/archive lifecycle,
+   existing `2026 · 2B1` backfill and block-scoped duplicate rules.
+2. Team allocation and private Find My Team: teacher roster management, CSV
+   import and Student ID + VU email lookup without public class lists.
+3. Week-specific engagement: a comparable common pulse plus different Week 1,
+   Week 2 and Week 3 readiness questions.
+
+This expands reusable cohort management without introducing student accounts or
+a generic multi-course administration framework.
