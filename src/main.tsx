@@ -1688,6 +1688,12 @@ function Admin() {
   const [counts, setCounts] = useState<Record<string, number | null>>(
     Object.fromEntries(activityTables.map(({ table }) => [table, null])),
   );
+  const [overviewCounts, setOverviewCounts] = useState({
+    students: null as number | null,
+    teams: null as number | null,
+    projects: null as number | null,
+    assignedTeams: null as number | null,
+  });
   const [activeTable, setActiveTable] =
     useState<ActivityTable>("student_checkins");
   const [teachingBlocks, setTeachingBlocks] = useState<TeachingBlock[]>([]);
@@ -1755,6 +1761,12 @@ function Admin() {
       setCounts(
         Object.fromEntries(activityTables.map(({ table }) => [table, null])),
       );
+      setOverviewCounts({
+        students: null,
+        teams: null,
+        projects: null,
+        assignedTeams: null,
+      });
       setPeerReviewOpen(null);
       setPeerReviewMessage("");
       setTeachingBlocks([]);
@@ -1779,7 +1791,34 @@ function Admin() {
       "";
     setTeachingBlocks(blocks);
     setSelectedBlockId(initialBlockId);
-    if (initialBlockId) await loadDashboard(activeTable, initialBlockId);
+    if (initialBlockId) {
+      await Promise.all([
+        loadDashboard(activeTable, initialBlockId),
+        loadOverview(initialBlockId),
+      ]);
+    }
+  }
+
+  async function loadOverview(blockId: string) {
+    const [studentsResult, teamsResult, projectsResult, assignmentsResult] =
+      await Promise.all([
+        supabase.from("student_roster").select("*", { count: "exact", head: true }).eq("block_id", blockId),
+        supabase.from("teams").select("*", { count: "exact", head: true }).eq("block_id", blockId),
+        supabase.from("projects").select("*", { count: "exact", head: true }).eq("block_id", blockId),
+        supabase.from("teams").select("id, assignment:team_project_assignments(id)").eq("block_id", blockId),
+      ]);
+    if (studentsResult.error || teamsResult.error || projectsResult.error || assignmentsResult.error) {
+      setOverviewCounts({ students: null, teams: null, projects: null, assignedTeams: null });
+      return;
+    }
+    setOverviewCounts({
+      students: studentsResult.count ?? 0,
+      teams: teamsResult.count ?? 0,
+      projects: projectsResult.count ?? 0,
+      assignedTeams: (assignmentsResult.data ?? []).filter(
+        (team) => Array.isArray(team.assignment) && team.assignment.length > 0,
+      ).length,
+    });
   }
 
   async function loadPeerReviewSetting() {
@@ -2433,7 +2472,7 @@ function Admin() {
       )}
       <div className="admin-shell">
         <aside className="admin-sidebar" aria-label="Teacher dashboard sections">
-          <button type="button" className={adminView === "overview" ? "active" : ""} onClick={() => setAdminView("overview")}><ListChecks size={18}/><span><b>Overview</b><small>Activity snapshot</small></span></button>
+          <button type="button" className={adminView === "overview" ? "active" : ""} onClick={() => setAdminView("overview")}><ListChecks size={18}/><span><b>Overview</b><small>Block snapshot</small></span></button>
           <button type="button" className={adminView === "roster" ? "active" : ""} onClick={() => setAdminView("roster")}><Users size={18}/><span><b>Blocks & roster</b><small>Students and teams</small></span></button>
           <button type="button" className={adminView === "projects" ? "active" : ""} onClick={() => setAdminView("projects")}><Rocket size={18}/><span><b>Project setup</b><small>Catalogue & assignments</small></span></button>
           <button type="button" className={adminView === "records" ? "active" : ""} onClick={() => setAdminView("records")}><ClipboardCheck size={18}/><span><b>Activity records</b><small>Review submissions</small></span></button>
@@ -2441,6 +2480,59 @@ function Admin() {
           <a href="/" className="admin-sidebar-home">Back to student portal</a>
         </aside>
         <div className="admin-content">
+      <section hidden={adminView !== "overview"} className="admin-overview" aria-labelledby="overview-title">
+        <div className="admin-overview-heading">
+          <div>
+            <div className="eyebrow">Teaching block overview</div>
+            <h2 id="overview-title">Your block at a glance.</h2>
+            <p>Stable course information for planning, review and future block-level analysis.</p>
+          </div>
+          <label className="admin-block-filter">
+            Teaching block
+            <select
+              value={selectedBlockId}
+              onChange={(event) => {
+                const nextBlockId = event.target.value;
+                setSelectedBlockId(nextBlockId);
+                void Promise.all([
+                  loadDashboard(activeTable, nextBlockId),
+                  loadOverview(nextBlockId),
+                ]);
+              }}
+            >
+              {teachingBlocks.map((block) => (
+                <option key={block.id} value={block.id}>
+                  {block.academic_year} · {block.block_code}
+                  {block.status === "active" ? " — Active" : ""}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <div className="overview-stat-grid">
+          {[
+            ["Students", overviewCounts.students, "Current roster"],
+            ["Teams", overviewCounts.teams, "Established groups"],
+            ["Projects", overviewCounts.projects, "Project catalogue"],
+            ["Assigned teams", overviewCounts.assignedTeams, "Teams linked to a project"],
+          ].map(([label, value, note]) => (
+            <article key={label}>
+              <span>{label}</span>
+              <b>{value ?? "—"}</b>
+              <small>{note}</small>
+            </article>
+          ))}
+        </div>
+        <section className="ai-block-insights" aria-labelledby="ai-block-insights-title">
+          <div className="ai-block-insights-icon"><Sparkles aria-hidden="true" /></div>
+          <div>
+            <span>Future intelligence layer</span>
+            <h3 id="ai-block-insights-title">AI Block Insights</h3>
+            <p>This space is reserved for block-level patterns, teaching reflections and suggested follow-up actions based on student, team, project and activity evidence.</p>
+          </div>
+          <strong>Coming soon</strong>
+        </section>
+      </section>
       <div hidden={adminView !== "roster"}><RosterManager /></div>
       <div hidden={adminView !== "projects"}><ProjectManager /></div>
       <section hidden={adminView !== "peer"} className="activity-control" aria-labelledby="peer-review-control-title">
@@ -2489,7 +2581,7 @@ function Admin() {
           </p>
         )}
       </section>
-      <div hidden={adminView === "roster" || adminView === "projects" || adminView === "peer"} className="metric-grid" aria-label="Activity record views">
+      <div hidden={adminView !== "records"} className="metric-grid" aria-label="Activity record views">
         {activityTables.map(({ table, label }) => (
           <button
             key={table}
