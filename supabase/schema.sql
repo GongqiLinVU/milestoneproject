@@ -869,6 +869,9 @@ create table if not exists public.team_project_assignments (
     check (selection_status in ('student_selected','teacher_confirmed')),
   selected_by_student_id text,
   confirmed_at timestamptz,
+  origin_unit text not null default 'NIT3004'
+    check (origin_unit in ('NIT3003', 'NIT3004')),
+  continued_from_previous_unit boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (team_id)
