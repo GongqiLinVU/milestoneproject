@@ -1,6 +1,6 @@
 # Sprint 3 — Continuous Engagement and Teaching Review
 
-**Status: Active — Phases 1–2 complete; Phase 3 in progress**
+**Status: Active — Phases 1–3B complete; Phase 3C in progress**
 
 ## Teaching problem
 
@@ -172,3 +172,67 @@ Phase 3B acceptance:
 - AI cannot set marks, verification outcome or follow-up status.
 - Starting and closing suggestions can be generated, edited, regenerated and dismissed independently.
 - Only the closing suggestion can be copied into the formal follow-up note.
+
+
+## Phase 3C — Reusable Cohorts and Weekly Engagement Journey
+
+Class delivery repeats across four blocks each academic year: `1B1`, `1B4`,
+`2B1` and `2B4`. Each block has a different roster and team allocation.
+Sprint 3C therefore introduces cohort identity before changing the weekly
+questions. Existing `2026 · 2B1` classroom records must be retained and
+assigned to the initial active teaching block.
+
+### Phase 3C-1 — Multi-block foundation
+
+- Add `teaching_blocks` with academic year, block code, dates and lifecycle
+  status.
+- Seed `2026 · 2B1` as the active block for migration of existing records.
+- Scope activity settings and every identified student/team activity to a
+  `block_id`.
+- Replace global duplicate rules with block-scoped uniqueness.
+- Keep current production forms working during migration by defaulting new
+  inserts to the single active block.
+- Allow only one active block at a time in the first version.
+- Keep archived blocks teacher-readable and prevent records leaking between
+  dashboard block selections.
+
+Acceptance:
+
+- Existing production rows are retained and linked to `2026 · 2B1`.
+- The same Student ID may submit the same activity in a later block.
+- The same team number may be reused in every block.
+- Duplicate submissions remain rejected within one block.
+- Existing student forms continue to insert into the active block without
+  requiring student authentication.
+- Teachers can read teaching blocks; public users can read only the minimal
+  active-block identity required by the portal.
+- Migration, RLS checks and production smoke tests pass before merge.
+
+### Phase 3C-2 — Team allocation and Find My Team
+
+- Add a teacher-managed roster scoped to `block_id`.
+- Support manual entry and CSV import of Student ID, name, VU email and team.
+- Add a private lookup using Student ID plus VU email.
+- Return only the matched student's block, team number, project name and
+  teammates' preferred names; never return a class list, IDs or email addresses.
+- Add server-side rate limiting and generic mismatch responses to reduce roster
+  enumeration.
+- Auto-fill the verified team in later forms while keeping student accounts out
+  of scope.
+
+### Phase 3C-3 — Week-specific engagement journey
+
+- Retain a short common pulse across Weeks 1–3 for longitudinal comparison.
+- Week 1 focuses on project direction, role clarity and team alignment.
+- Week 2 focuses on implementation, demonstration and traceable evidence.
+- Week 3 focuses on completion, testing, report and presentation readiness.
+- Carry unresolved teacher follow-up within the same block only.
+- Prefer selections and quick actions; keep one optional short note.
+
+The reusable relationship is:
+
+`Teaching block → roster → teams → weekly submissions → teacher review`
+
+Longer-term comparison between blocks must use aggregated, preferably
+de-identified teaching signals. Individual student records are operational
+teaching evidence, not performance analytics across cohorts.
