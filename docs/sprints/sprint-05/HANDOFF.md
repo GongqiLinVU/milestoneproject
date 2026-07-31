@@ -1,6 +1,6 @@
 # Sprint 5 Handoff
 
-**Status: Phase 1 merged; Phase 2 implemented in Draft PR**
+**Status: Phase 1–2 merged; Phase 3 implemented in Draft PR**
 
 ## Production starting point
 
@@ -113,6 +113,39 @@ Phase 2 requires a short reviewed design before implementation. It must resolve:
 - Revoked the retired anonymous Find My Team RPC at Phase 2 rollout.
 - Documented the security decision, role matrix, deployment and rollback.
 - `npm run build` passes; the existing Vite bundle-size advisory remains.
+
+## Phase 3 confirmed design and implementation
+
+- `/` remains a public Landing Page for course information.
+- `/student` is the authenticated Student Portal.
+- Weekly activities are not shown publicly.
+- Login proves identity; Session Check-in separately proves attendance.
+- A teacher opens one studio session for a selected block.
+- An activated student can use the Student Portal at any time; Session Check-in
+  is a separate action available only while the teacher has an open session.
+- The old Week 1 Check-in remains historical activation evidence and is not
+  reused as recurring attendance.
+- Authenticated identity supplies Name and Student ID to normal activity
+  submissions; students do not re-enter or override roster identity.
+- Added `studio_sessions` and `student_session_checkins`, role-scoped RLS,
+  authenticated session RPCs, teacher control and attendance count.
+- Added read-only Teacher Session History with per-session attendance detail and
+  CSV export, plus student-only My Attendance history.
+- Closed sessions and their Check-ins remain preserved and cannot be reopened or
+  used for advance/late Check-in.
+- Added an idempotent Phase 3 migration with verification and rollback guidance.
+- Added per-student `Prepare account` for safe testing without provisioning the
+  full class.
+- Added teacher `Reset password`: it rotates the Auth password, returns a
+  one-time temporary credential, sets the account back to `ready`, and preserves
+  all roster, Check-in, attendance and activity evidence.
+- `npm run build` passes; the existing Vite bundle-size advisory remains.
+- Refined recurring sessions into an editable ten-session block plan with
+  optional automatic start/end windows plus manual open/close controls.
+- Moved live Student Check-in into a compact attention button and added a
+  dedicated student Sessions history view.
+- Expanded My Project from a title-only context to the assigned Project
+  Catalogue detail, with an explicit legacy-roster fallback.
 
 ## Reusable prompt for the new session
 

@@ -1447,6 +1447,13 @@ grant execute on function public.find_student_team(text, text, text) to anon;
 -- Keep this marker aligned with the idempotent migration; production rollout
 -- applies the migration before deploying the Phase 2 frontend and endpoints.
 
+-- Sprint 5 Phase 3 authenticated session check-in is applied by:
+-- supabase/migrations/20260731_sprint5_phase3_session_portal.sql
+-- The migration creates teacher-opened studio sessions, student attendance
+-- evidence, role-scoped RLS and authenticated student RPCs. Its latest
+-- idempotent form also adds scheduled start/end windows, the student session
+-- history RPC and full Project Catalogue fields in student context.
+
 alter table public.teams enable row level security;
 alter table public.projects enable row level security;
 alter table public.team_project_assignments enable row level security;

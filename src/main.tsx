@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { createClient } from "@supabase/supabase-js";
 import {
   ArrowRight,
+  CalendarPlus,
   CheckCircle2,
   ChevronDown,
   CircleHelp,
@@ -64,17 +65,83 @@ const titles: Record<Kind, string> = {
   checkout4: "Week 4 Final Delivery Check",
   review: "Poster Peer Review",
 };
-function App() {
-  const [form, setForm] = useState<Kind | null>(null);
+function PublicLanding() {
   const [live, setLive] = useState<boolean | null>(null);
+  useEffect(() => {
+    supabase.from("portal_health").select("status").limit(1).then(({ error }) => setLive(!error));
+  }, []);
+  return <>
+    <header>
+      <a className="brand" href="#top">NIT3004 <span>Engineering Studio</span></a>
+      <nav><a href="#journey">Journey</a><a href="#deliverables">Deliverables</a><a href="/student">Student Login</a><a href="/admin">Teacher</a></nav>
+    </header>
+    <main id="top">
+      <section className="hero">
+        <div>
+          <div className="eyebrow">Applied Project II · Four-week delivery studio</div>
+          <h1>Build less.<br/>Deliver <em>better.</em></h1>
+          <p>Course information stays open to everyone. Students can log in at any time to view their project, weekly activities and attendance. Session Check-in appears only when your teacher opens a studio session.</p>
+          <div className="actions">
+            <a className="primary" href="/student">Student Login <ArrowRight size={18}/></a>
+            <a className="secondary" href="#journey">Explore the journey</a>
+          </div>
+          <div className={"status " + (live ? "ok" : "")}><span></span>{live === null ? "Checking live data…" : live ? "Live data connected" : "Database setup required"}</div>
+        </div>
+        <div className="hero-card"><b>4 Weeks</b><span>1 Mission</span><span>1 Product</span><span>1 Team</span><small>∞ possibilities</small></div>
+      </section>
+      <Journey/><Studio/><Deliverables/>
+    </main>
+    <footer>NIT3004 Engineering Studio · Learn to deliver like an engineer.</footer>
+  </>;
+}
+
+type AuthenticatedStudent = {
+  studentId: string; studentName: string; teamName: string; projectName: string | null;
+  projectProblem: string | null; projectDescription: string | null; projectTargetUsers: string | null;
+  projectExpectedOutcomes: string | null; projectCategory: string | null; projectDifficulty: string | null;
+  projectSource: "catalogue" | "roster" | "none";
+};
+type StudentSessionRecord = { sessionId: string; title: string; sessionDate: string; startsAt: string | null; endsAt: string | null; checkedInAt: string | null; status: string };
+
+function StudentSessions() {
+  const [sessions, setSessions] = useState<StudentSessionRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    let active = true;
+    const refresh = async () => {
+      const { data, error: historyError } = await supabase.rpc("get_my_session_history");
+      if (!active) return;
+      if (historyError) {
+        setError("Attendance history could not be loaded. Please refresh or tell your teacher.");
+      } else {
+        setSessions((data as StudentSessionRecord[] | null) || []);
+        setError("");
+      }
+      setLoading(false);
+    };
+    const handleVisibility = () => document.visibilityState === "visible" && void refresh();
+    void refresh();
+    window.addEventListener("student-session-checkin", refresh);
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      active = false;
+      window.removeEventListener("student-session-checkin", refresh);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, []);
+  return <section id="sessions" className="portal-panel portal-section student-sessions">
+    <Head label="Sessions" title="Your attendance history." text="This is the same attendance record your teacher sees. Check-in is available only while the current session is open."/>
+    {loading ? <p className="empty-state">Loading sessions…</p> : error ? <p className="empty-state error-state" role="alert">{error}</p> : sessions.length ? <div className="attendance-history">
+      {sessions.map(item => <article key={item.sessionId}><div><b>{item.title}</b><span>{new Date(`${item.sessionDate}T00:00:00`).toLocaleDateString()}</span></div>{item.checkedInAt ? <strong>Checked in · {new Date(item.checkedInAt).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</strong> : <span>Not checked in</span>}</article>)}
+    </div> : <p className="empty-state">No sessions have been prepared for this block yet.</p>}
+  </section>;
+}
+function StudentPortal({ student }: { student: AuthenticatedStudent }) {
+  const [form, setForm] = useState<Kind | null>(null);
   const [peerReviewOpen, setPeerReviewOpen] = useState<boolean | null>(null);
   const [activeBlock, setActiveBlock] = useState<{ id: string; label: string } | null>(null);
   useEffect(() => {
-    supabase
-      .from("portal_health")
-      .select("status")
-      .limit(1)
-      .then(({ error }) => setLive(!error));
     supabase
       .from("teaching_blocks")
       .select("id, academic_year, block_code")
@@ -99,73 +166,38 @@ function App() {
   return (
     <>
       <header>
-        <a className="brand" href="#top">
+        <a className="brand" href="/">
           NIT3004 <span>Engineering Studio</span>
         </a>
         <nav>
-          <a href="#journey">Journey</a>
-          <a href="#weekly">Weekly Check-in</a>
-          <a href="#deliverables">Deliverables</a>
-          <a href="/admin">Teacher</a>
+          <a href="#weekly">This Week</a>
+          <a href="#my-project">My Project</a>
+          <a href="#sessions">Sessions</a>
+          <a href="#get-help">Get Help</a>
         </nav>
       </header>
-      <main id="top">
-        <section className="hero">
-          <div>
-            <div className="eyebrow">
-              Applied Project II · {activeBlock?.label || "Four-week delivery studio"}
-            </div>
-            <h1>
-              Build less.
-              <br />
-              Deliver <em>better.</em>
-            </h1>
-            <p>
-              You already know how to build software. Now learn how to align a
-              team, prove progress, validate readiness and deliver with
-              confidence.
-            </p>
-            <div className="actions">
-              <a className="primary" href="#journey">
-                Explore the journey <ArrowRight size={18} />
-              </a>
-              <button className="secondary" onClick={() => setForm("checkin")}>
-                Start Week 1 check-in
-              </button>
-            </div>
-            <div className={"status " + (live ? "ok" : "")}>
-              <span></span>
-              {live === null
-                ? "Checking live data…"
-                : live
-                  ? "Live data connected"
-                  : "Database setup required"}
-            </div>
-          </div>
-          <div className="hero-card">
-            <b>4 Weeks</b>
-            <span>1 Mission</span>
-            <span>1 Product</span>
-            <span>1 Team</span>
-            <small>∞ possibilities</small>
-          </div>
-        </section>
-        <Journey />
-        <Studio />
-        <WeeklyHub
+      <main id="top" className="student-portal-main">
+        <section className="portal-intro"><div className="eyebrow">Authenticated student portal</div><h1>This Week</h1><p>{activeBlock?.label || "Your active teaching block"} · Complete only the activity that matters now.</p></section>
+        <div className="portal-section portal-weekly-section"><WeeklyHub
           open={setForm}
           peerReviewOpen={peerReviewOpen}
-        />
-        <Deliverables />
+        /></div>
+        <section id="my-project" className="portal-panel portal-section"><Head label="My Project" title={student.projectName || "Project not assigned"} text={student.projectDescription || (student.projectSource === "roster" ? "This project name came from the roster but is not yet linked to the Project Catalogue. Ask your teacher to complete the team assignment." : "Your teacher has not assigned a catalogue project to this team yet.")}/>
+          <div className="student-project-summary"><div><span>Student</span><b>{student.studentName}</b><small>{student.studentId}</small></div><div><span>Team</span><b>{student.teamName}</b><small>Roster assignment</small></div><div><span>Project</span><b>{student.projectName || "Pending"}</b><small>{student.projectCategory || "Catalogue assignment pending"}{student.projectDifficulty ? ` · ${student.projectDifficulty}` : ""}</small></div></div>
+          {student.projectSource === "catalogue" && <div className="project-detail-grid"><article><span>Problem</span><p>{student.projectProblem || "Not specified"}</p></article><article><span>Target users</span><p>{student.projectTargetUsers || "Not specified"}</p></article><article className="wide"><span>Expected outcomes</span><p>{student.projectExpectedOutcomes || "Not specified"}</p></article></div>}
+        </section>
+        <StudentSessions/>
+        <section id="get-help" className="portal-panel portal-section"><Head label="Get Help" title="Bring one clear question." text="Use the support choices inside the current weekly activity so your teacher can connect help to the right evidence and session."/></section>
       </main>
       <footer>
-        NIT3004 Engineering Studio · Learn to deliver like an engineer.
+        NIT3004 Engineering Studio · Student Portal
       </footer>
       <Modal
         key={form ?? "closed"}
         kind={form}
         blockId={activeBlock?.id || ""}
         blockLabel={activeBlock?.label || ""}
+        student={student}
         close={() => setForm(null)}
       />
     </>
@@ -750,11 +782,13 @@ function Modal({
   kind,
   blockId,
   blockLabel,
+  student,
   close,
 }: {
   kind: Kind | null;
   blockId: string;
   blockLabel: string;
+  student: AuthenticatedStudent;
   close: () => void;
 }) {
   const [msg, setMsg] = useState("");
@@ -814,6 +848,8 @@ function Modal({
       string,
       FormDataEntryValue
     >;
+    v.name = student.studentName;
+    v.sid = student.studentId;
     const implementationMethods = formData.getAll("implementation_methods").map(String);
     if (activeKind === "progress") {
       if (implementationMethods.length === 0) {
@@ -1067,7 +1103,8 @@ function Modal({
             </>
           ) : (
             <>
-              {fields(kind)}
+              <div className="authenticated-identity"><b>{student.studentName}</b><span>{student.studentId} · {student.teamName}</span></div>
+              {fields(kind, student)}
               {msg && (
                 <p
                   className={"form-status " + (submitted ? "success" : "")}
@@ -1126,7 +1163,9 @@ const Text = ({
     <small className="field-hint">Maximum {maxLength} characters</small>
   </label>
 );
-const Identity = () => (
+const Identity = ({ student }: { student?: AuthenticatedStudent }) => student ? (
+  <><input type="hidden" name="name" value={student.studentName}/><input type="hidden" name="sid" value={student.studentId}/></>
+) : (
   <>
     <label>
       Name
@@ -1241,7 +1280,7 @@ const SelectChoice = ({
 function Choice({ label, name, options, defaultValue = "" }: { label: string; name: string; options: string[]; defaultValue?: string }) {
   return <SelectChoice label={label} name={name} placeholder="Select one" options={options} defaultValue={defaultValue} />;
 }
-function TeamHealthFields() {
+function TeamHealthFields({ student }: { student?: AuthenticatedStudent }) {
   const [risk, setRisk] = useState(false);
   const assess = (form: HTMLFormElement) => {
     const data = new FormData(form);
@@ -1257,7 +1296,7 @@ function TeamHealthFields() {
   };
   return <div onChange={(event) => assess(event.currentTarget.closest("form") as HTMLFormElement)}>
     <p className="form-note">Complete this individually. It measures participation temperature, not performance or marks.</p>
-    <Identity />
+    <Identity student={student} />
     <Choice label="Have you communicated with your team this week?" name="communication" options={["Yes","Not yet"]} />
     <Choice label="Is your role clear?" name="role_clarity" options={["Clear","Partly clear","Not clear"]} />
     <Choice label="Is participation balanced?" name="participation_balance" options={["Balanced","Some difference","Significant difference"]} />
@@ -1268,10 +1307,10 @@ function TeamHealthFields() {
     {risk && <label>Brief details<textarea name="risk_note" required maxLength={200} /><small className="field-hint">Maximum 200 characters</small></label>}
   </div>;
 }
-function EngagementCheckoutFields({ week = 1 }: { week?: 1 | 2 | 3 | 4 }) {
+function EngagementCheckoutFields({ week = 1, student }: { week?: 1 | 2 | 3 | 4; student?: AuthenticatedStudent }) {
   return <div>
     <p className="form-note">{week === 4 ? "Complete this before your final presentation and submission." : `Complete this after the final Week ${week} session, including work completed remotely.`}</p>
-    <Identity />
+    <Identity student={student} />
     <Choice label={week === 4 ? "How have you participated in final preparation?" : "1. How did you participate after compulsory Monday?"} name="participation_mode" options={week === 4 ? ["Team rehearsal","Demo preparation","Final document work","Individual presentation preparation","Multiple preparation activities","Not yet participated"] : ["Wednesday session","Thursday session","Both sessions","Remote teamwork","Individual work only","No further participation"]} />
     {week <= 3 && <>
       <Choice label="2. Overall progress this week" name="weekly_status" options={["On track","Some difficulty","At risk","Blocked"]} />
@@ -1302,7 +1341,7 @@ function EngagementCheckoutFields({ week = 1 }: { week?: 1 | 2 | 3 | 4 }) {
     <label>Optional note<textarea name="detail_note" maxLength={200} /><small className="field-hint">Add only what the teacher needs to know. Maximum 200 characters.</small></label>
   </div>;
 }
-function ProjectSnapshotIdentity() {
+function ProjectSnapshotIdentity({ student }: { student?: AuthenticatedStudent }) {
   const [context, setContext] = useState<ProjectCheckinContext | null>(null);
   const [message, setMessage] = useState("");
   async function load(studentId: string) {
@@ -1317,14 +1356,14 @@ function ProjectSnapshotIdentity() {
     setContext(data as ProjectCheckinContext);
     setMessage("");
   }
+  useEffect(() => { if (student) void load(student.studentId); }, [student?.studentId]);
   return <>
-    <label>Your name<input name="name" required maxLength={100}/></label>
-    <label>Student ID<input name="sid" required minLength={3} maxLength={40} onBlur={(event) => void load(event.target.value)}/></label>
+    <Identity student={student}/>
     {message && <p className="form-note">{message}</p>}
     {context?.project ? <section className="checkin-project-context"><small>{context.teamName} · Project snapshot</small><h3>{context.project.title}</h3><p>{context.project.description}</p><span>{context.project.category} · {context.project.targetUsers}</span></section> : context && <p className="admin-alert error">No project is connected to {context.teamName} yet. Ask your teacher before submitting this pre-check.</p>}
   </>;
 }
-function ProgressReviewFields() {
+function ProgressReviewFields({ student }: { student?: AuthenticatedStudent }) {
   const [needsDetail, setNeedsDetail] = useState(false);
   const methods = ["Architecture or component structure","Core logic or algorithm","Data flow","Database design","API or external service integration","Security or access control","Testing method","UI/UX decision","Hardware integration","Other"];
   const assess = (form: HTMLFormElement) => {
@@ -1334,7 +1373,7 @@ function ProgressReviewFields() {
   };
   return <div onChange={(event) => assess(event.currentTarget.closest("form") as HTMLFormElement)}>
     <p className="form-note">Choose one concrete personal implementation for the compulsory Week 2 review. Be ready to show it, explain the method and verify the result.</p>
-    <ProjectSnapshotIdentity />
+    <ProjectSnapshotIdentity student={student} />
     <Choice label="1. Which deliverable are you mainly responsible for?" name="deliverable_area" options={["Frontend / UI","Backend / API","Database","Authentication / Security","Hardware / Integration","Testing","Documentation","Project coordination","Other"]} />
     <label>2. What specific item have you personally implemented?<textarea name="implementation_item" required maxLength={200} placeholder="One concrete function, component, test result or document — not your general role." /><small className="field-hint">Maximum 200 characters</small></label>
     <Choice label="3. What is its current implementation state?" name="implementation_state" options={["Implemented and verified","Implemented but not fully verified","Partially implemented","Designed but not implemented","Blocked"]} />
@@ -1414,7 +1453,7 @@ function CheckinFields() {
     />
   </>;
 }
-function fields(k: Kind) {
+function fields(k: Kind, student?: AuthenticatedStudent) {
   if (k === "checkin")
     return <CheckinFields />;
   if (k === "pulse")
@@ -1461,26 +1500,19 @@ function fields(k: Kind) {
         </label>
       </>
     );
-  if (k === "health") return <TeamHealthFields />;
-  if (k === "checkout") return <EngagementCheckoutFields week={1} />;
-  if (k === "progress") return <ProgressReviewFields />;
-  if (k === "checkout2") return <EngagementCheckoutFields week={2} />;
-  if (k === "checkout3") return <EngagementCheckoutFields week={3} />;
-  if (k === "checkout4") return <EngagementCheckoutFields week={4} />;
+  if (k === "health") return <TeamHealthFields student={student} />;
+  if (k === "checkout") return <EngagementCheckoutFields week={1} student={student} />;
+  if (k === "progress") return <ProgressReviewFields student={student} />;
+  if (k === "checkout2") return <EngagementCheckoutFields week={2} student={student} />;
+  if (k === "checkout3") return <EngagementCheckoutFields week={3} student={student} />;
+  if (k === "checkout4") return <EngagementCheckoutFields week={4} student={student} />;
   return (
     <>
       <p className="form-note">
         Review another team. Choose the option that best matches the evidence
         you saw—no written comment is required.
       </p>
-      <label>
-        Reviewer name
-        <input name="name" required maxLength={100} />
-      </label>
-      <label>
-        Student ID
-        <input name="sid" required minLength={3} maxLength={40} />
-      </label>
+      <Identity student={student}/>
       <Team name="reviewed_team" label="Team being reviewed (to team)" />
       {[
         ["Problem clarity", "problem"],
@@ -1523,6 +1555,54 @@ function fields(k: Kind) {
     </>
   );
 }
+type StudioSessionRow = { id:string; title:string; session_date:string; status:"scheduled"|"open"|"closed"; starts_at:string|null; ends_at:string|null; opened_at:string|null; closed_at:string|null };
+type AttendanceRow = { session_id:string; student_id:string; checked_in_at:string };
+
+function StudioSessionControl({ blockId }: { blockId: string }) {
+  const [sessions, setSessions] = useState<StudioSessionRow[]>([]);
+  const [attendance, setAttendance] = useState<AttendanceRow[]>([]);
+  const [editing, setEditing] = useState<StudioSessionRow | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+
+  async function load() {
+    if (!blockId) return;
+    const { data } = await supabase.from("studio_sessions").select("id,title,session_date,status,starts_at,ends_at,opened_at,closed_at").eq("block_id", blockId).order("session_date");
+    const next = (data as StudioSessionRow[] | null) || [];
+    setSessions(next);
+    const ids = next.map(item => item.id);
+    if (!ids.length) return setAttendance([]);
+    const { data: checkins } = await supabase.from("student_session_checkins").select("session_id,student_id,checked_in_at").in("session_id", ids).order("checked_in_at");
+    setAttendance((checkins as AttendanceRow[] | null) || []);
+  }
+
+  useEffect(() => { void load(); }, [blockId]);
+
+  function effectiveStatus(item:StudioSessionRow){const now=Date.now();if(item.status==="closed"||(item.ends_at&&new Date(item.ends_at).getTime()<=now))return "closed";if(item.status==="open"||(item.starts_at&&new Date(item.starts_at).getTime()<=now&&(!item.ends_at||new Date(item.ends_at).getTime()>now)))return "open";return "scheduled";}
+  async function prepareTen() {
+    if (sessions.length >= 10) return setMessage("This block already has 10 or more sessions.");
+    setBusy(true);setMessage("");
+    const { data:block }=await supabase.from("teaching_blocks").select("starts_on").eq("id",blockId).single();
+    const base=new Date(block?.starts_on || new Date().toISOString().slice(0,10));
+    const rows=Array.from({length:10-sessions.length},(_,index)=>{const date=new Date(base);date.setDate(date.getDate()+(sessions.length+index)*7);return{block_id:blockId,title:`Session ${sessions.length+index+1}`,session_date:date.toISOString().slice(0,10),status:"scheduled"};});
+    const {error}=await supabase.from("studio_sessions").insert(rows);setMessage(error?"The 10-session plan could not be prepared.":"A 10-session block plan is ready. Edit dates and add automatic check-in times when known.");await load();setBusy(false);
+  }
+  async function save(event:FormEvent<HTMLFormElement>){event.preventDefault();if(!editing)return;setBusy(true);setMessage("");const values=Object.fromEntries(new FormData(event.currentTarget));const starts=String(values.starts_at||"");const ends=String(values.ends_at||"");if(starts&&ends&&new Date(ends)<=new Date(starts)){setBusy(false);return setMessage("End time must be after start time.");}const{error}=await supabase.from("studio_sessions").update({title:String(values.title).trim(),session_date:String(values.session_date),starts_at:starts?new Date(starts).toISOString():null,ends_at:ends?new Date(ends).toISOString():null,status:editing.status==="closed"?"closed":"scheduled",opened_at:editing.status==="closed"?editing.opened_at:null}).eq("id",editing.id);setMessage(error?"Session changes could not be saved.":"Session schedule updated.");if(!error)setEditing(null);await load();setBusy(false);}
+  async function setState(item:StudioSessionRow,next:"open"|"closed"){setBusy(true);setMessage("");const now=new Date().toISOString();const{error}=await supabase.from("studio_sessions").update(next==="open"?{status:"open",opened_at:now,closed_at:null}:{status:"closed",closed_at:now}).eq("id",item.id);setMessage(error?(next==="open"?"Close any other open session before opening this one.":"The session could not be closed."):(next==="open"?"Session check-in is open now.":"Session closed. Attendance history is preserved."));await load();setBusy(false);}
+  function download(item:StudioSessionRow){const rows=attendance.filter(row=>row.session_id===item.id);const csv=["Student ID,Checked in at",...rows.map(row=>`"${row.student_id}","${new Date(row.checked_in_at).toLocaleString()}"`)];const url=URL.createObjectURL(new Blob([csv.join("\n")],{type:"text/csv"}));const link=document.createElement("a");link.href=url;link.download=`${item.title.replace(/[^a-z0-9]+/gi,"-").toLowerCase()}-attendance.csv`;link.click();URL.revokeObjectURL(url);
+  }
+
+  return <section className="session-manager">
+    <div className="session-manager-heading"><div>
+      <div className="eyebrow">Authenticated attendance</div>
+      <h2>Studio Sessions</h2><p>Prepare the block once, then edit each session. A scheduled window opens and closes Check-in automatically; manual controls remain available.</p>
+    </div><button disabled={busy||!blockId||sessions.length>=10} onClick={()=>void prepareTen()}><CalendarPlus size={17}/> Prepare {Math.max(0,10-sessions.length)} sessions</button></div>
+    {message && <p className="admin-alert" role="status">{message}</p>}
+    <div className="teacher-session-list">{sessions.map(item=>{const state=effectiveStatus(item),checkins=attendance.filter(row=>row.session_id===item.id);return <article key={item.id} className={`teacher-session ${state}`}><div className="teacher-session-summary"><div><span className={`activity-control-status ${state}`}>{state}</span><h3>{item.title}</h3><p>{new Date(`${item.session_date}T00:00:00`).toLocaleDateString()} · {checkins.length} checked in</p>{item.starts_at&&<small>{new Date(item.starts_at).toLocaleString()} → {item.ends_at?new Date(item.ends_at).toLocaleString():"manual close"}</small>}</div><div className="teacher-session-actions"><button className="secondary compact" onClick={()=>setEditing(item)} disabled={busy}><Pencil size={15}/> Edit</button>{state==="open"?<button className="danger compact" onClick={()=>void setState(item,"closed")} disabled={busy}>Close</button>:state!=="closed"&&<button className="compact" onClick={()=>void setState(item,"open")} disabled={busy}>Open now</button>}<button className="secondary compact" onClick={()=>download(item)} disabled={!checkins.length}><Download size={15}/> CSV</button></div></div>{checkins.length>0&&<details><summary>View attendance</summary><table><thead><tr><th>Student ID</th><th>Check-in time</th></tr></thead><tbody>{checkins.map(row=><tr key={`${row.session_id}-${row.student_id}`}><td>{row.student_id}</td><td>{new Date(row.checked_in_at).toLocaleString()}</td></tr>)}</tbody></table></details>}</article>})}{!sessions.length&&<p className="empty-state">No sessions prepared yet. Create the standard 10-session plan to begin.</p>}</div>
+    {editing&&<div className="modal"><form className="dialog session-edit-dialog" onSubmit={save}><button type="button" className="close" onClick={()=>setEditing(null)}>×</button><div className="eyebrow">Edit session</div><h2>{editing.title}</h2><label>Title<input name="title" defaultValue={editing.title} required maxLength={120}/></label><label>Session date<input name="session_date" type="date" defaultValue={editing.session_date} required/></label><label>Automatic start (optional)<input name="starts_at" type="datetime-local" defaultValue={editing.starts_at?new Date(new Date(editing.starts_at).getTime()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16):""}/></label><label>Automatic end (optional)<input name="ends_at" type="datetime-local" defaultValue={editing.ends_at?new Date(new Date(editing.ends_at).getTime()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16):""}/></label><p>Leave both times empty to use Open now / Close manually.</p><div className="admin-dialog-actions"><button type="button" className="secondary" onClick={()=>setEditing(null)}>Cancel</button><button disabled={busy}>{busy?"Saving…":"Save session"}</button></div></form></div>}
+  </section>;
+}
+
 function Admin() {
   type TeachingBlock = {
     id: string;
@@ -1686,7 +1766,7 @@ function Admin() {
     useState<ActivityTable>("student_checkins");
   const [teachingBlocks, setTeachingBlocks] = useState<TeachingBlock[]>([]);
   const [selectedBlockId, setSelectedBlockId] = useState("");
-  const [adminView, setAdminView] = useState<"overview" | "roster" | "projects" | "peer" | "records">("overview");
+  const [adminView, setAdminView] = useState<"overview" | "roster" | "projects" | "sessions" | "peer" | "records">("overview");
   const [records, setRecords] = useState<ActivityRecord[]>([]);
   const [editRecord, setEditRecord] = useState<ActivityRecord | null>(null);
   const [deleteRecord, setDeleteRecord] = useState<ActivityRecord | null>(null);
@@ -2432,6 +2512,7 @@ function Admin() {
           <button type="button" className={adminView === "overview" ? "active" : ""} onClick={() => setAdminView("overview")}><ListChecks size={18}/><span><b>Overview</b><small>Block snapshot</small></span></button>
           <button type="button" className={adminView === "roster" ? "active" : ""} onClick={() => setAdminView("roster")}><Users size={18}/><span><b>Blocks & roster</b><small>Students and teams</small></span></button>
           <button type="button" className={adminView === "projects" ? "active" : ""} onClick={() => setAdminView("projects")}><Rocket size={18}/><span><b>Project setup</b><small>Catalogue & assignments</small></span></button>
+          <button type="button" className={adminView === "sessions" ? "active" : ""} onClick={() => setAdminView("sessions")}><ClipboardCheck size={18}/><span><b>Session check-in</b><small>Open attendance</small></span></button>
           <button type="button" className={adminView === "records" ? "active" : ""} onClick={() => setAdminView("records")}><ClipboardCheck size={18}/><span><b>Activity records</b><small>Review submissions</small></span></button>
           <button type="button" className={adminView === "peer" ? "active" : ""} onClick={() => setAdminView("peer")}><Presentation size={18}/><span><b>Peer review</b><small>Week 3 control</small></span></button>
           <a href="/" className="admin-sidebar-home">Back to student portal</a>
@@ -2492,6 +2573,7 @@ function Admin() {
       </section>
       <div hidden={adminView !== "roster"}><RosterManager /></div>
       <div hidden={adminView !== "projects"}><ProjectManager /></div>
+      <div hidden={adminView !== "sessions"}><StudioSessionControl blockId={selectedBlockId}/></div>
       <section hidden={adminView !== "peer"} className="activity-control" aria-labelledby="peer-review-control-title">
         <div>
           <div className="eyebrow">Week 3 activity</div>
@@ -3161,6 +3243,10 @@ function Admin() {
 }
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    {location.pathname.startsWith("/admin") ? <Admin /> : <StudentAccess><App /></StudentAccess>}
+    {location.pathname.startsWith("/admin")
+      ? <Admin />
+      : location.pathname.startsWith("/student")
+        ? <StudentAccess>{(student) => <StudentPortal student={student}/>}</StudentAccess>
+        : <PublicLanding />}
   </StrictMode>,
 );

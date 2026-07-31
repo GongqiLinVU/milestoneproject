@@ -172,12 +172,36 @@ Acceptance:
 - teacher login and dashboard access continue to work
 - migrations are idempotent and documented with verification and rollback
 
-## Phase 3 — Authenticated student journey refactor
+Testing-stage account controls:
 
-Use authenticated context to remove repeated identity work.
+- teacher may prepare one selected student's missing account without provisioning
+  the whole block
+- teacher may reset one existing student's password to a new one-time temporary
+  credential; the account returns to required activation
+- reset preserves the Auth user, Student ID, roster links, Check-ins, session
+  attendance and activity evidence
+- previous passwords become invalid immediately and temporary credentials are
+  returned only in the current response/download
+
+## Phase 3 — Public landing, session check-in and student portal
+
+Keep general course information public while moving student-specific work behind
+an authenticated session check-in.
 
 Scope:
 
+- keep `/` as a public Landing Page with course introduction, four-week journey,
+  deliverables and clear Student/Teacher entry points
+- move the authenticated experience to `/student`
+- add teacher-opened studio sessions; only one session may be open per block
+- allow activated students to log in and use their Student Portal at any time;
+  Session Check-in is a separate teacher-controlled action
+- show Check-in only while the teacher has an open session; students cannot
+  pre-check-in, select another date, reopen history or check in after closure
+- record each student's attendance once per session without reusing or changing
+  the historical Week 1 activation Check-in
+- preserve a read-only Session History for teachers, including attendance lists
+  and CSV export, and show each student only their own My Attendance history
 - resolve Student, Teaching Block, Team and Project during activation and after
   every later login
 - expose the same read-only team/project context through My Project rather than
@@ -194,9 +218,36 @@ Scope:
 
 Acceptance:
 
+- unauthenticated visitors can read the Landing Page without seeing weekly
+  activities or protected student context
+- `/student` requires roster-prepared login; no open registration is introduced
+- without a teacher-opened session, the student can still use the portal but
+  sees that Session Check-in is unavailable
+- students cannot check in before the teacher opens a session, and historical
+  sessions cannot be reopened or used for late check-in
+- teacher and student history views refer to the same preserved attendance
+  records; students see only their own records
+- the same student cannot create duplicate attendance for one session
+- a student cannot check in to another block or a closed session
 - login creates visible value immediately
 - the normal weekly path does not repeat known identity fields
 - students cannot switch or overwrite roster-authoritative team/project context
+
+### Phase 3 session-management refinement
+
+- Replace the full-width Student Portal attendance banner with a compact,
+  attention state shown only when a session is actually open and the student
+  has not checked in.
+- Add `Sessions` to the student navigation and show the student's immutable
+  attendance history from the same records used by the teacher.
+- Allow a teacher to prepare the standard ten-session block plan in one action,
+  then edit each title, date and optional automatic start/end window.
+- Support both scheduled windows and explicit `Open now` / `Close` controls.
+- Preserve closed sessions and attendance as read-only history; preparing a new
+  plan never overwrites old records.
+- Resolve full Project Catalogue content for My Project: problem, description,
+  target users, expected outcomes, category and difficulty. When only a legacy
+  roster project name exists, show that the catalogue assignment is incomplete.
 - the interface remains usable on mobile and does not reproduce the teacher
   dashboard
 - legacy evidence remains available to teachers

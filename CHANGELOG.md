@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased — Sprint 5 Phase 3
+
+- Restored a public course Landing Page and moved protected student work to
+  `/student`.
+- Added teacher-opened studio sessions and authenticated, idempotent attendance.
+- Added editable ten-session block planning, automatic attendance windows,
+  student Sessions history and full Project Catalogue detail in My Project.
+- Moved weekly activities behind Session Check-in and reused roster identity in
+  activity submissions.
+
 All notable changes to Engineering Studio Platform will be recorded here.
 
 ## Unreleased — Sprint 5 Phase 2
