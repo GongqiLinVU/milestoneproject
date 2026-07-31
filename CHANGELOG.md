@@ -4,6 +4,17 @@ All notable changes to Engineering Studio Platform will be recorded here.
 
 The project currently uses simple milestone-based versions while the production workflow is being established.
 
+## Sprint 4 Phase 3 — Week 3–4 follow-up continuity
+
+- Added Week 1–4 filtering to Teacher Weekly Check-out records and filtered CSV
+  exports.
+- Added a Week 3 and Week 4 follow-up queue based on unresolved private Teacher
+  Reviews in the selected teaching block.
+- Distinguished submitted evidence from missing check-outs without treating
+  missing data as a negative result.
+- Linked follow-up items back to the original Week 2 evidence and private
+  review.
+
 ## Sprint 4 Phase 2 — NIT3004 continuity journey
 
 - Replaced repeated Week 1–3 generic check-outs with a short common pulse and

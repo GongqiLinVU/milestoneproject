@@ -1,6 +1,6 @@
 # Sprint 4 Handoff
 
-**Status: Active — Phase 2 implemented locally; Draft PR pending**
+**Status: Active — Phase 3 implemented locally; Draft PR pending**
 
 ## Starting point
 
@@ -9,7 +9,7 @@ Student ID-only Find My Team, roster-authoritative activity team assignment,
 Week 1–3 evidence and private Teacher Review. The first live cohort has 18
 students in five teams and is already using Week 1.
 
-## Current Phase
+## Completed Phase
 
 **Phase 2 — NIT3004 Recovery and Week-specific Engagement Journey**
 
@@ -59,7 +59,31 @@ Database delivery:
 - The existing bundle-size warning remains and is not a Phase 1 functional
   failure.
 
+## Current phase
+
+**Phase 3 — Week 3–4 Follow-up Continuity**
+
+Implemented on `agent/sprint4-phase3-followup-continuity`:
+
+- adds Week 1–4 filtering to Teacher Weekly Check-out records
+- surfaces unresolved private Teacher Reviews in Week 3 and Week 4
+- carries forward reviews with no explicit recheck week, plus work due by the
+  selected week
+- distinguishes selected-week check-out `Submitted` from `Missing`
+- links each queue item back to the student’s Week 2 evidence and private review
+- excludes `Resolved` and `No follow-up needed` reviews
+- reuses existing block-scoped review and evidence data; no migration is needed
+
+Acceptance gate:
+
+- follow-up queue is visible only in Week 3 and Week 4 views
+- selected block boundaries apply to both reviews and check-out evidence
+- missing check-outs are labelled as missing, not interpreted as poor evidence
+- CSV export follows the selected week filter
+- production build and diff checks pass
+- focused Draft PR is created and not merged without approval
+
 ## Next phase
 
-After Phase 2 is deployed and validated, continue with Phase 3 — Week 3–4
-follow-up continuity. Do not combine Phase 3 into this PR.
+After Phase 3 is deployed and validated, continue with Phase 4 — Three-week
+trajectory and teaching analytics. Do not combine Phase 4 into this PR.
