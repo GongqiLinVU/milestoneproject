@@ -1,5 +1,18 @@
 # System Architecture
 
+## Student delivery surfaces
+
+- Public Landing Page (`/`): course journey and deliverables only.
+- Student Portal (`/student`): Supabase-authenticated activation, teacher-opened
+  Session Check-in, roster context and weekly activities.
+- Teacher Dashboard (`/admin`): account preparation, session control, roster,
+  projects and activity evidence.
+
+`studio_sessions` defines the teacher-controlled attendance window.
+`student_session_checkins` links the authenticated student, active block and
+session with one immutable first check-in timestamp. RLS and security-definer
+RPC validation prevent cross-student and cross-block attendance.
+
 ## Overview
 
 Engineering Studio Platform is a browser-based teaching application with a React frontend, Supabase backend services and Vercel hosting.
