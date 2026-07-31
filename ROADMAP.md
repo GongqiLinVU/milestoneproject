@@ -152,51 +152,57 @@ The remaining planned work was intentionally moved to Sprint 4 rather than
 extending Sprint 3 further. Sprint 3's completed plan and evidence remain in
 `docs/sprints/sprint-03/`.
 
-## Sprint 4 — Weekly Journey, Follow-up and Teaching Analytics
+## Sprint 4 — Project Foundation and Weekly Continuity
 
-**Status: Active — Phase 2 implemented locally**
+**Status: Closed at the agreed Phase 3 boundary on 31 July 2026**
+
+Delivered:
+
+- block-scoped formal teams, Project Catalogue and team project assignments
+- NIT3003 → NIT3004 project continuation
+- a selection-first Week 1–4 recovery and readiness journey
+- roster-derived team and project context
+- Week 3–4 teacher follow-up continuity linked to original Week 2 evidence
+- Project Setup pagination, stacked layout and explicit assignment saving
+
+The former Phase 4 trajectory/analytics work and Phase 5 export/privacy validation
+were intentionally moved to Sprint 5. Detailed historical scope and evidence
+remain in `docs/sprints/sprint-04/`.
+
+## Sprint 5 — Student Identity and Experience Simplification
+
+**Status: Planned — ready for a new session**
 
 ### Goal
 
-Complete the reusable Week 1–4 teaching journey on top of the Sprint 3 block,
-roster and review foundation. Keep student interactions quick and
-selection-first, keep teacher judgement separate from student self-report, and
-make every summary traceable to submitted evidence.
+Reduce the platform's student-facing complexity while introducing enough
+identity to associate students reliably with their block, team, project and
+evidence.
+
+### Confirmed direction
+
+- retire Class Pulse and Team Conversation from the active experience
+- preserve their historical data
+- provide roster-based student login without open registration
+- use unique activation credentials rather than a shared default password
+- automatically resolve Student, Block, Team and Project after login
+- remove repeated identity fields and consolidate the student journey
+- carry forward Sprint 4 trajectory, export, privacy and production validation
 
 ### Delivery sequence
 
-1. Team & Project foundation
-2. NIT3004 recovery and week-specific engagement journey
-3. Week 3–4 follow-up continuity
-4. Three-week trajectory and teaching analytics
+1. Activity cleanup and minimal information architecture
+2. Student authentication foundation and security design
+3. Authenticated student journey refactor
+4. Trajectory and teaching analytics
 5. Export, privacy and production validation
 
-Detailed scope, acceptance criteria and the current handoff are stored in
-`docs/sprints/sprint-04/`. Sprint 4 Phase 1 establishes block-scoped formal
-teams, a Project Catalogue and one current project per team. The current
-`2026 · 2B1` cohort uses teacher assignment; future NIT3003 blocks may enable team-level student selection during Check-in.
-NIT3004 restores the inherited team/project and validates the approximately 80%
-entry baseline rather than selecting a new project.
+Detailed scope, security constraints, acceptance criteria and the new-session
+handoff are stored in `docs/sprints/sprint-05/`.
 
-Phase 2 now provides a short comparable Week 1–3 pulse, NIT3004 recovery and
-80% baseline questions, completion-quality checks and a Week 4 Final Delivery
-Check. Historical generic check-out evidence remains readable. The migration,
-role-based database checks and deployment smoke tests must pass before Phase 2
-is marked complete.
+## Sprint 6 — AI-assisted teaching
 
-### Deferred future scope
-
-The following ideas are not part of Sprint 4:
-
-- student authentication and profiles
-- controlled student resubmission
-- tutor and coordinator roles
-- generic multi-course administration
-- additional teacher-managed activity windows beyond the current journey
-
-## Sprint 5 — AI-assisted teaching
-
-**Status: Future**
+**Status: Future — renumbered from the former Sprint 5**
 
 Potential scope:
 
