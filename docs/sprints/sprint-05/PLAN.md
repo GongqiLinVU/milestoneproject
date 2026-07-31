@@ -154,11 +154,16 @@ Security constraints:
 - teachers retain access through the existing teacher role check
 - existing historical submissions must be mapped conservatively; ambiguous
   records are not silently claimed by an account
+- an existing Week 1 Check-in matched uniquely by Student ID is linked to the
+  activated account and is not resubmitted; only students without a valid
+  existing Check-in complete the short Week 1 recovery check
 
 Acceptance:
 
 - an imported roster student can activate, set a personal password, confirm
-  roster-derived context, complete Week 1 Check-in and later log in
+  roster-derived context and later log in
+- a student with an existing valid Week 1 Check-in sees it recognised and does
+  not repeat it; a student without one completes it during activation
 - Find My Team is no longer required as a separate public lookup
 - an unlisted user cannot self-register
 - the session resolves exactly one current student context or presents a safe,
