@@ -11,7 +11,9 @@ The production platform already has:
 
 - teaching blocks and private roster management
 - formal teams, Project Catalogue and one project assignment per team
-- private Student ID-based team lookup
+- private Student ID-based team lookup, to be retired after authenticated context
+  replaces it
+- Week 1 Check-in, to become the first-use Account Activation & Check-in flow
 - Week 1–4 selection-first evidence
 - private Teacher Review and Week 3–4 follow-up continuity
 - teacher authentication and block-scoped operations
@@ -26,8 +28,13 @@ The production platform already has:
 - Do not offer open registration.
 - Students use roster-prepared identities based on Student ID.
 - Do not use a shared initial password.
+- Week 1 Check-in becomes Account Activation & Check-in: unique initial
+  credential, personal password setup, roster context confirmation and a short
+  Week 1 recovery check in one first-use journey.
 - Login must automatically associate Student, Block, Team and Project and remove
   repeated identity fields from later activities.
+- Remove standalone Find My Team once the authenticated My Project context is
+  available; students must not complete both paths.
 - The former Sprint 4 Phase 4–5 work moves into Sprint 5.
 - The former AI-assisted teaching Sprint 5 becomes Sprint 6.
 
@@ -48,8 +55,12 @@ Do not implement student authentication in the same PR.
 
 ## Phase 1 acceptance
 
-- Class Pulse and Team Conversation disappear from current student activities.
-- They no longer appear as active teacher metrics or primary record navigation.
+- Class Pulse, Team Conversation and the standalone Find My Team entry disappear
+  from current student navigation.
+- Week 1 Check-in remains operational until Phase 2 replaces it with Account
+  Activation & Check-in.
+- The retired activities no longer appear as active teacher metrics or primary
+  record navigation.
 - Historical rows remain untouched.
 - Other activity records, teacher login, exports and production build continue
   to work.
@@ -61,7 +72,9 @@ Phase 2 requires a short reviewed design before implementation. It must resolve:
 
 - Student ID to Auth identity mapping
 - unique activation credentials and delivery
-- first-login password change
+- first-use Account Activation & Check-in sequence
+- first-login personal password setup after unique credential verification
+- roster-derived Name, Block, Team and Project confirmation
 - password recovery
 - roster import/provisioning lifecycle
 - duplicate/cross-block identity
