@@ -172,12 +172,21 @@ Acceptance:
 - teacher login and dashboard access continue to work
 - migrations are idempotent and documented with verification and rollback
 
-## Phase 3 — Authenticated student journey refactor
+## Phase 3 — Public landing, session check-in and student portal
 
-Use authenticated context to remove repeated identity work.
+Keep general course information public while moving student-specific work behind
+an authenticated session check-in.
 
 Scope:
 
+- keep `/` as a public Landing Page with course introduction, four-week journey,
+  deliverables and clear Student/Teacher entry points
+- move the authenticated experience to `/student`
+- add teacher-opened studio sessions; only one session may be open per block
+- require an activated student to confirm attendance for the open session before
+  weekly activities appear
+- record each student's attendance once per session without reusing or changing
+  the historical Week 1 activation Check-in
 - resolve Student, Teaching Block, Team and Project during activation and after
   every later login
 - expose the same read-only team/project context through My Project rather than
@@ -194,6 +203,13 @@ Scope:
 
 Acceptance:
 
+- unauthenticated visitors can read the Landing Page without seeing weekly
+  activities or protected student context
+- `/student` requires roster-prepared login; no open registration is introduced
+- without a teacher-opened session, the student sees a safe waiting state rather
+  than weekly activities
+- the same student cannot create duplicate attendance for one session
+- a student cannot check in to another block or a closed session
 - login creates visible value immediately
 - the normal weekly path does not repeat known identity fields
 - students cannot switch or overwrite roster-authoritative team/project context
