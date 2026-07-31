@@ -96,9 +96,15 @@ function PublicLanding() {
 
 type AuthenticatedStudent = { studentId: string; studentName: string; teamName: string; projectName: string | null };
 function StudentPortal({ student }: { student: AuthenticatedStudent }) {
+  type AttendanceRow = {
+    id: string;
+    checked_in_at: string;
+    studio_sessions: { title: string; session_date: string; status: string } | null;
+  };
   const [form, setForm] = useState<Kind | null>(null);
   const [peerReviewOpen, setPeerReviewOpen] = useState<boolean | null>(null);
   const [activeBlock, setActiveBlock] = useState<{ id: string; label: string } | null>(null);
+  const [attendanceHistory, setAttendanceHistory] = useState<AttendanceRow[]>([]);
   useEffect(() => {
     supabase
       .from("teaching_blocks")
@@ -106,53 +112,51 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
       .eq("status", "active")
       .single()
       .then(({ data }) =>
-        setActiveBlock(
-          data
-            ? { id: data.id, label: `${data.academic_year} · ${data.block_code}` }
-            : null,
-        ),
+        setActiveBlock(data ? { id: data.id, label: `${data.academic_year} · ${data.block_code}` } : null),
       );
     supabase
       .from("activity_settings")
       .select("is_open")
       .eq("setting_key", "poster_peer_review")
       .single()
-      .then(({ data, error }) =>
-        setPeerReviewOpen(error ? false : Boolean(data?.is_open)),
-      );
-  }, []);
+      .then(({ data, error }) => setPeerReviewOpen(error ? false : Boolean(data?.is_open)));
+    supabase
+      .from("student_session_checkins")
+      .select("id, checked_in_at, studio_sessions(title, session_date, status)")
+      .eq("student_id", student.studentId)
+      .order("checked_in_at", { ascending: false })
+      .then(({ data }) => setAttendanceHistory((data as unknown as AttendanceRow[]) || []));
+  }, [student.studentId]);
   return (
     <>
       <header>
-        <a className="brand" href="/">
-          NIT3004 <span>Engineering Studio</span>
-        </a>
-        <nav>
-          <a href="#weekly">This Week</a>
-          <a href="#my-project">My Project</a>
-          <a href="#get-help">Get Help</a>
-        </nav>
+        <a className="brand" href="/">NIT3004 <span>Engineering Studio</span></a>
+        <nav><a href="#weekly">This Week</a><a href="#my-project">My Project</a><a href="#attendance">My Attendance</a><a href="#get-help">Get Help</a></nav>
       </header>
       <main id="top">
-        <section className="portal-intro"><div className="eyebrow">Authenticated student portal</div><h1>This Week</h1><p>{activeBlock?.label || "Your active teaching block"} · Complete only the activity that matters now.</p></section>
-        <WeeklyHub
-          open={setForm}
-          peerReviewOpen={peerReviewOpen}
-        />
-        <section id="my-project" className="portal-panel"><Head label="My Project" title="Your team context stays connected." text="Your roster-authoritative team and project are shown in the secure session bar. Activity forms will progressively stop asking for information the platform already knows."/></section>
+        <section className="portal-intro"><div className="eyebrow">Authenticated student portal</div><h1>This Week</h1><p>{activeBlock?.label || "Your active teaching block"} · You can review your project at any time. Session Check-in appears only after your teacher opens it.</p></section>
+        <WeeklyHub open={setForm} peerReviewOpen={peerReviewOpen} />
+        <section id="my-project" className="portal-panel">
+          <Head label="My Project" title={student.projectName || "Project assignment pending"} text="This information comes from the teacher-managed roster and project assignment."/>
+          <div className="student-project-summary">
+            <div><span>Student</span><b>{student.studentName}</b><small>{student.studentId}</small></div>
+            <div><span>Team</span><b>{student.teamName}</b><small>{activeBlock?.label || "Active teaching block"}</small></div>
+            <div><span>Project</span><b>{student.projectName || "Not assigned yet"}</b><small>Read-only project context</small></div>
+          </div>
+        </section>
+        <section id="attendance" className="portal-panel">
+          <Head label="My Attendance" title="Your Session Check-in history." text="Each record is linked to the specific session opened by your teacher."/>
+          {attendanceHistory.length ? <div className="attendance-history">
+            {attendanceHistory.map((row) => <article key={row.id}>
+              <div><b>{row.studio_sessions?.title || "Studio session"}</b><span>{row.studio_sessions?.session_date || "Date unavailable"}</span></div>
+              <div><strong>Checked in</strong><time dateTime={row.checked_in_at}>{new Date(row.checked_in_at).toLocaleString()}</time></div>
+            </article>)}
+          </div> : <p className="empty-state">No Session Check-in history yet.</p>}
+        </section>
         <section id="get-help" className="portal-panel"><Head label="Get Help" title="Bring one clear question." text="Use the support choices inside the current weekly activity so your teacher can connect help to the right evidence and session."/></section>
       </main>
-      <footer>
-        NIT3004 Engineering Studio · Student Portal
-      </footer>
-      <Modal
-        key={form ?? "closed"}
-        kind={form}
-        blockId={activeBlock?.id || ""}
-        blockLabel={activeBlock?.label || ""}
-        student={student}
-        close={() => setForm(null)}
-      />
+      <footer>NIT3004 Engineering Studio · Student Portal</footer>
+      <Modal key={form ?? "closed"} kind={form} blockId={activeBlock?.id || ""} blockLabel={activeBlock?.label || ""} student={student} close={() => setForm(null)} />
     </>
   );
 }
@@ -1516,19 +1520,49 @@ type OpenStudioSession = {
 };
 
 function StudioSessionControl({ blockId }: { blockId: string }) {
+  type SessionHistoryRow = {
+    id: string;
+    title: string;
+    session_date: string;
+    status: string;
+    opened_at: string;
+    closed_at: string | null;
+  };
+  type CheckinRow = { id: string; session_id: string; student_id: string; checked_in_at: string };
   const [openSession, setOpenSession] = useState<OpenStudioSession | null>(null);
   const [attendance, setAttendance] = useState(0);
+  const [history, setHistory] = useState<SessionHistoryRow[]>([]);
+  const [checkins, setCheckins] = useState<CheckinRow[]>([]);
+  const [expandedSessionId, setExpandedSessionId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
 
   async function load() {
-    if (!blockId) return;
-    const { data } = await supabase.from("studio_sessions").select("id, title, session_date, opened_at").eq("block_id", blockId).eq("status", "open").maybeSingle();
-    setOpenSession((data as OpenStudioSession | null) || null);
-    if (data?.id) {
-      const { count } = await supabase.from("student_session_checkins").select("id", { count: "exact", head: true }).eq("session_id", data.id);
-      setAttendance(count || 0);
-    } else setAttendance(0);
+    if (!blockId) {
+      setOpenSession(null); setAttendance(0); setHistory([]); setCheckins([]);
+      return;
+    }
+    const { data: sessions } = await supabase
+      .from("studio_sessions")
+      .select("id, title, session_date, status, opened_at, closed_at")
+      .eq("block_id", blockId)
+      .order("opened_at", { ascending: false });
+    const sessionRows = (sessions as SessionHistoryRow[]) || [];
+    setHistory(sessionRows);
+    const current = sessionRows.find((row) => row.status === "open") || null;
+    setOpenSession(current);
+    if (sessionRows.length) {
+      const { data: attendanceRows } = await supabase
+        .from("student_session_checkins")
+        .select("id, session_id, student_id, checked_in_at")
+        .in("session_id", sessionRows.map((row) => row.id))
+        .order("checked_in_at", { ascending: true });
+      const rows = (attendanceRows as CheckinRow[]) || [];
+      setCheckins(rows);
+      setAttendance(current ? rows.filter((row) => row.session_id === current.id).length : 0);
+    } else {
+      setCheckins([]); setAttendance(0);
+    }
   }
 
   useEffect(() => { void load(); }, [blockId]);
@@ -1537,12 +1571,10 @@ function StudioSessionControl({ blockId }: { blockId: string }) {
     event.preventDefault(); setBusy(true); setMessage("");
     const values = Object.fromEntries(new FormData(event.currentTarget));
     const { error } = await supabase.from("studio_sessions").insert({
-      block_id: blockId,
-      title: String(values.title).trim(),
-      session_date: String(values.session_date),
-      status: "open",
+      block_id: blockId, title: String(values.title).trim(),
+      session_date: String(values.session_date), status: "open",
     });
-    setMessage(error ? "The session could not be opened. Close the existing session or check teacher permissions." : "Session check-in is now open.");
+    setMessage(error ? "The session could not be opened. Close the existing session or check teacher permissions." : "Session Check-in is now open.");
     await load(); setBusy(false);
   }
 
@@ -1554,26 +1586,54 @@ function StudioSessionControl({ blockId }: { blockId: string }) {
     await load(); setBusy(false);
   }
 
+  function exportAttendance(session: SessionHistoryRow) {
+    const rows = checkins.filter((row) => row.session_id === session.id);
+    const csv = [
+      ["Session", "Session date", "Student ID", "Checked in at"],
+      ...rows.map((row) => [session.title, session.session_date, row.student_id, row.checked_in_at]),
+    ].map((row) => row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url; link.download = `attendance-${session.session_date}.csv`; link.click();
+    URL.revokeObjectURL(url);
+  }
+
   return <section className="activity-control session-control">
     <div>
       <div className="eyebrow">Authenticated attendance</div>
       <h2>Studio Session Check-in</h2>
-      <p>Open one session for the selected block. Students must sign in and confirm attendance before weekly activities appear.</p>
+      <p>Students may log in at any time. Check-in is available only while you have explicitly opened the current session.</p>
     </div>
     {openSession ? <div className="session-open-card">
-      <span className="activity-control-status open">Open</span>
+      <span className="activity-control-status open">Open now</span>
       <h3>{openSession.title}</h3>
       <p>{openSession.session_date} · {attendance} checked in</p>
       <button className="danger" disabled={busy} onClick={() => void close()}>{busy ? "Closing…" : "Close session"}</button>
     </div> : <form onSubmit={open} className="session-open-form">
       <label>Session title<input name="title" required maxLength={120} placeholder="Week 2 Monday Studio"/></label>
       <label>Session date<input name="session_date" type="date" required defaultValue={new Date().toISOString().slice(0, 10)}/></label>
-      <button disabled={busy || !blockId}>{busy ? "Opening…" : "Open session check-in"}</button>
+      <button disabled={busy || !blockId}>{busy ? "Opening…" : "Open Session Check-in"}</button>
     </form>}
     {message && <p className="admin-alert" role="status">{message}</p>}
+    <div className="session-history">
+      <div className="session-history-heading"><div><div className="eyebrow">Preserved records</div><h3>Session History</h3></div><span>{history.length} session{history.length === 1 ? "" : "s"}</span></div>
+      {!history.length ? <p className="empty-state">No sessions have been opened for this block yet.</p> : history.map((session) => {
+        const rows = checkins.filter((row) => row.session_id === session.id);
+        const expanded = expandedSessionId === session.id;
+        return <article key={session.id}>
+          <button className="session-history-summary" type="button" onClick={() => setExpandedSessionId(expanded ? null : session.id)} aria-expanded={expanded}>
+            <div><b>{session.title}</b><span>{session.session_date} · {session.status === "open" ? "Open" : "Closed"}</span></div>
+            <strong>{rows.length} checked in</strong>
+          </button>
+          {expanded && <div className="session-attendance-detail">
+            <div className="session-attendance-actions"><span>Historical records are read-only.</span><button className="secondary compact" type="button" onClick={() => exportAttendance(session)}><Download size={15}/>Export CSV</button></div>
+            {rows.length ? <table><thead><tr><th>Student ID</th><th>Checked in at</th></tr></thead><tbody>{rows.map((row) => <tr key={row.id}><td>{row.student_id}</td><td>{new Date(row.checked_in_at).toLocaleString()}</td></tr>)}</tbody></table> : <p className="empty-state">No students checked in.</p>}
+          </div>}
+        </article>;
+      })}
+    </div>
   </section>;
 }
-
 function Admin() {
   type TeachingBlock = {
     id: string;
