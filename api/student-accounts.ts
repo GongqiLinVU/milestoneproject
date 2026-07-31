@@ -7,8 +7,7 @@ const publishableKey =
   process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const password = () =>
-  `Vu!${randomBytes(12).toString("base64url")}9a`;
+const password = () => `Vu!${randomBytes(12).toString("base64url")}9a`;
 
 async function teacher(token: string) {
   if (!url || !publishableKey) return false;
@@ -30,9 +29,18 @@ export default async function handler(req: any, res: any) {
   if (!url || !serviceKey) {
     return res.status(503).json({ error: "Student account provisioning is not configured." });
   }
+
   const blockId = String(req.body?.blockId || "");
+  const action = String(req.body?.action || "prepare");
+  const requestedStudentId = String(req.body?.studentId || "").trim().toLowerCase();
   if (!/^[0-9a-f-]{36}$/i.test(blockId)) {
     return res.status(400).json({ error: "Select a valid teaching block." });
+  }
+  if (!["prepare", "reset"].includes(action)) {
+    return res.status(400).json({ error: "Unsupported account action." });
+  }
+  if (action === "reset" && !requestedStudentId) {
+    return res.status(400).json({ error: "Select one student account to reset." });
   }
 
   const admin = createClient(url, serviceKey, {
@@ -45,19 +53,54 @@ export default async function handler(req: any, res: any) {
     .order("student_id");
   if (rosterError) return res.status(500).json({ error: "Roster could not be loaded." });
 
-  const ids = (roster || []).map((row) => row.student_id);
-  const { data: existing } = ids.length
-    ? await admin.from("student_accounts").select("student_id").in("student_id", ids)
-    : { data: [] as Array<{ student_id: string }> };
-  const prepared = new Set((existing || []).map((row) => row.student_id));
-  const pending = (roster || []).filter((row) => !prepared.has(row.student_id));
+  const selectedRoster = requestedStudentId
+    ? (roster || []).filter((row) => row.student_id === requestedStudentId)
+    : (roster || []);
+  if (requestedStudentId && selectedRoster.length !== 1) {
+    return res.status(404).json({ error: "The selected student is not in this teaching block." });
+  }
 
+  const ids = selectedRoster.map((row) => row.student_id);
+  const { data: existing } = ids.length
+    ? await admin.from("student_accounts").select("student_id, auth_user_id, status").in("student_id", ids)
+    : { data: [] as Array<{ student_id: string; auth_user_id: string; status: string }> };
+  const accounts = new Map((existing || []).map((row) => [row.student_id, row]));
+
+  if (action === "reset") {
+    const row = selectedRoster[0];
+    const account = accounts.get(row.student_id);
+    if (!account) {
+      return res.status(409).json({ error: "Prepare this student account before resetting its password." });
+    }
+    const initialPassword = password();
+    const { error: authError } = await admin.auth.admin.updateUserById(account.auth_user_id, {
+      password: initialPassword,
+    });
+    if (authError) {
+      return res.status(409).json({ error: "The temporary password could not be created." });
+    }
+    const { error: statusError } = await admin
+      .from("student_accounts")
+      .update({ status: "ready", activated_at: null })
+      .eq("student_id", row.student_id);
+    if (statusError) {
+      return res.status(500).json({ error: "Password changed, but activation status could not be reset. Contact support before sharing it." });
+    }
+    return res.status(200).json({
+      action: "reset",
+      credentials: [{ studentId: row.student_id, name: row.full_name, initialPassword }],
+    });
+  }
+
+  const pending = selectedRoster.filter((row) => !accounts.has(row.student_id));
   const invalid = pending.filter(
     (row) => !row.vu_email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.vu_email),
   );
   if (invalid.length) {
     return res.status(409).json({
-      error: "Every pending student needs a valid, unique VU email before accounts are prepared.",
+      error: requestedStudentId
+        ? "This student needs a valid, unique VU email before the account is prepared."
+        : "Every pending student needs a valid, unique VU email before accounts are prepared.",
       studentIds: invalid.map((row) => row.student_id),
     });
   }
@@ -87,11 +130,7 @@ export default async function handler(req: any, res: any) {
       await admin.auth.admin.deleteUser(created.user.id);
       return res.status(409).json({ error: `Account link failed for ${row.student_id}.`, credentials });
     }
-    credentials.push({
-      studentId: row.student_id,
-      name: row.full_name,
-      initialPassword,
-    });
+    credentials.push({ studentId: row.student_id, name: row.full_name, initialPassword });
   }
-  return res.status(200).json({ credentials });
+  return res.status(200).json({ action: "prepare", credentials });
 }
