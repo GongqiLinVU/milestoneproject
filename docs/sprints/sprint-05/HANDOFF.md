@@ -1,6 +1,6 @@
 # Sprint 5 Handoff
 
-**Status: Phase 1 merged; Phase 2 implemented in Draft PR**
+**Status: Phase 1–2 merged; Phase 3 implemented in Draft PR**
 
 ## Production starting point
 
@@ -112,6 +112,24 @@ Phase 2 requires a short reviewed design before implementation. It must resolve:
   RPCs and role-scoped RLS in an idempotent migration.
 - Revoked the retired anonymous Find My Team RPC at Phase 2 rollout.
 - Documented the security decision, role matrix, deployment and rollback.
+- `npm run build` passes; the existing Vite bundle-size advisory remains.
+
+## Phase 3 confirmed design and implementation
+
+- `/` remains a public Landing Page for course information.
+- `/student` is the authenticated Student Portal.
+- Weekly activities are not shown publicly.
+- Login proves identity; Session Check-in separately proves attendance.
+- A teacher opens one studio session for a selected block.
+- An activated student must confirm the open session before weekly activities
+  become available.
+- The old Week 1 Check-in remains historical activation evidence and is not
+  reused as recurring attendance.
+- Authenticated identity supplies Name and Student ID to normal activity
+  submissions; students do not re-enter or override roster identity.
+- Added `studio_sessions` and `student_session_checkins`, role-scoped RLS,
+  authenticated session RPCs, teacher control and attendance count.
+- Added an idempotent Phase 3 migration with verification and rollback guidance.
 - `npm run build` passes; the existing Vite bundle-size advisory remains.
 
 ## Reusable prompt for the new session
