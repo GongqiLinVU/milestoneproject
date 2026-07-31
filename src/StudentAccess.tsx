@@ -9,6 +9,7 @@ const supabase = createClient(
 
 type Context = {
   status: "ready" | "activated";
+  studentId: string;
   studentName: string;
   blockLabel: string;
   teamName: string;
@@ -16,13 +17,21 @@ type Context = {
   checkinRecognised: boolean;
 };
 
-export function StudentAccess({ children }: { children: ReactNode }) {
+type StudioSession = {
+  sessionId: string;
+  title: string;
+  sessionDate: string;
+  checkedInAt: string | null;
+};
+
+export function StudentAccess({ children }: { children: ReactNode | ((context: Context) => ReactNode) }) {
   const [session, setSession] = useState<Session | null>(null);
   const [context, setContext] = useState<Context | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [recovering, setRecovering] = useState(false);
+  const [studioSession, setStudioSession] = useState<StudioSession | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -37,11 +46,26 @@ export function StudentAccess({ children }: { children: ReactNode }) {
   }, []);
   useEffect(() => {
     if (!session) return setContext(null);
-    supabase.rpc("get_my_student_context").then(({ data, error }) => {
+    supabase.rpc("get_my_student_context").then(async ({ data, error }) => {
       if (error) setMessage("Your roster context could not be resolved. Ask your teacher to check the active block.");
-      else setContext(data as Context);
+      else {
+        setContext(data as Context);
+        const { data: sessionData } = await supabase.rpc("get_my_open_studio_session");
+        setStudioSession((sessionData as StudioSession | null) || null);
+      }
     });
   }, [session]);
+
+  async function checkInToSession() {
+    if (!studioSession) return;
+    setBusy(true); setMessage("");
+    const { data, error } = await supabase.rpc("check_in_to_studio_session", {
+      p_session_id: studioSession.sessionId,
+    });
+    if (error) setMessage("Check-in could not be completed. Ask your teacher to confirm that this session is still open.");
+    else setStudioSession({ ...studioSession, checkedInAt: String(data) });
+    setBusy(false);
+  }
 
   async function login(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -123,7 +147,7 @@ export function StudentAccess({ children }: { children: ReactNode }) {
         void recover(String(new FormData(form || undefined).get("student_id") || ""));
       }}>Forgot password</button>
     </form>
-    <a href="/admin">Teacher login</a>
+    <a href="/">Back to course information</a>
   </section></main>;
   if (!context) return <main className="student-access"><p>{message || "Loading your project context…"}</p><button className="secondary" onClick={() => void supabase.auth.signOut()}>Sign out</button></main>;
   if (context.status === "ready") return <main className="student-access"><section className="access-card">
@@ -137,5 +161,25 @@ export function StudentAccess({ children }: { children: ReactNode }) {
       {message && <p className="admin-alert" role="status">{message}</p>}<button disabled={busy}>{busy ? "Activating…" : "Activate and continue"}</button>
     </form>
   </section></main>;
-  return <><div className="student-session-bar"><span>{context.studentName} · {context.teamName} · {context.projectName || "Project pending"}</span><button className="secondary compact" onClick={() => void supabase.auth.signOut()}><LogOut size={15}/>Sign out</button></div>{children}</>;
+  if (!studioSession) return <main className="student-access"><section className="access-card">
+    <div className="eyebrow">Student Portal</div>
+    <h1>No session is open</h1>
+    <p>Your account is ready, but weekly activities open only after your teacher starts a studio session. Return here during class.</p>
+    <a className="secondary" href="/">View course information</a>
+    <button className="secondary" onClick={() => void supabase.auth.signOut()}>Sign out</button>
+  </section></main>;
+  if (studioSession && !studioSession.checkedInAt) return <main className="student-access"><section className="access-card">
+    <div className="eyebrow">Session Check-in</div>
+    <h1>Welcome, {context.studentName}</h1>
+    <p>Your teacher has opened today’s studio session. Confirm your attendance before entering your weekly activities.</p>
+    <dl>
+      <div><dt>Session</dt><dd>{studioSession.title}</dd></div>
+      <div><dt>Date</dt><dd>{studioSession.sessionDate}</dd></div>
+      <div><dt>Team</dt><dd>{context.teamName}</dd></div>
+    </dl>
+    {message && <p className="admin-alert" role="status">{message}</p>}
+    <button disabled={busy} onClick={() => void checkInToSession()}>{busy ? "Checking in…" : "Confirm check-in"}</button>
+    <button className="secondary" onClick={() => void supabase.auth.signOut()}>Sign out</button>
+  </section></main>;
+  return <><div className="student-session-bar"><span>{context.studentName} · {context.teamName} · {context.projectName || "Project pending"}</span><button className="secondary compact" onClick={() => void supabase.auth.signOut()}><LogOut size={15}/>Sign out</button></div>{typeof children === "function" ? children(context) : children}</>;
 }
