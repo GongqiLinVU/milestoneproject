@@ -1,89 +1,53 @@
 # Sprint 4 Handoff
 
-**Status: Active — Phase 3 implemented locally; Draft PR pending**
+**Status: Closed at the agreed Phase 3 boundary on 31 July 2026**
 
-## Starting point
+## Production baseline
 
-Sprint 3 closed on 30 July 2026 with reusable teaching blocks, a private roster,
-Student ID-only Find My Team, roster-authoritative activity team assignment,
-Week 1–3 evidence and private Teacher Review. The first live cohort has 18
-students in five teams and is already using Week 1.
+Sprint 4 was delivered through Phase 3. The latest Phase 3 change was merged in
+PR #35 with merge commit `9047090`.
 
-## Completed Phase
+Production now includes:
 
-**Phase 2 — NIT3004 Recovery and Week-specific Engagement Journey**
+- block-scoped formal teams, Project Catalogue and team project assignments
+- NIT3003 → NIT3004 project continuity
+- a selection-first Week 1–4 student journey
+- roster-derived team and project context
+- teacher Week 1–4 evidence filtering
+- Week 3–4 unresolved follow-up queues linked to Week 2 evidence
+- Project Setup pagination, stacked layout and explicit assignment saving
 
-Implemented on `agent/sprint4-phase2-continuity-journey`:
+## Product review decision
 
-- replaces the repeated Week 1–3 generic check-out with a three-item common
-  pulse: participation, weekly status and support need
-- Week 1 checks inherited project access, NIT3003 team continuity and whether
-  remaining work is understood after the break
-- Week 2 checks implementation, traceable evidence and demo readiness as the
-  quick 80% entry baseline; the detailed Implementation Pre-check remains the
-  evidence and method-verification activity
-- Week 3 checks product, testing, report and presentation readiness
-- Week 4 adds a Final Delivery Check for rehearsal, demo fallback, speaking role
-  and submission status
-- all normal paths are selection-only with one optional 200-character note
-- legacy generic Week 1–3 evidence remains readable
-- Teacher Activity records and CSV include the new fields plus labelled legacy
-  fields
+After the basic workflow became complete, the activity experience was reviewed.
+Two low-value activities will be removed from the active experience:
 
-Database delivery:
+- Class Pulse
+- Team Conversation
 
-- migration:
-  `supabase/migrations/20260730_sprint4_phase2_continuity_journey.sql`
-- canonical final state synchronised in `supabase/schema.sql`
-- Week 4 is permitted by the weekly evidence constraint
-- existing grants, RLS, roster assignment trigger, block-scoped duplicate rule
-  and Phase 1 project snapshot trigger remain unchanged
+They should not remain as student tasks merely because their original database
+tables and historical records exist. Historical data must be preserved unless a
+separate, explicitly approved retention decision is made.
 
-## Acceptance gate
+The next foundation is roster-based student authentication without open
+registration. Login must reduce later work by automatically resolving the
+student, teaching block, team and project.
 
-- normal student completion requires no written response
-- no project selection or repeated project description appears in NIT3004
-- old submissions remain readable and correctly labelled
-- duplicate, roster, block and project context remain authoritative
-- anonymous and non-teacher users cannot read protected evidence
-- teacher records and CSV remain block/team/project-aware
-- build, SQL checks and role-based smoke tests pass
-- focused Draft PR is created and not merged without approval
+## Deferred work
 
-## Local verification
+The former Sprint 4 Phase 4 and Phase 5 move to Sprint 5:
 
-- TypeScript and Vite production build passed on 30 July 2026.
-- `git diff --check` passed.
-- Schema structure checks confirmed one canonical definition for each new
-  project RPC and the formal teams table.
-- The existing bundle-size warning remains and is not a Phase 1 functional
-  failure.
+- trajectory and teaching analytics
+- export hardening
+- privacy, RLS and production validation
 
-## Current phase
+## Continue in Sprint 5
 
-**Phase 3 — Week 3–4 Follow-up Continuity**
+Read:
 
-Implemented on `agent/sprint4-phase3-followup-continuity`:
+- `docs/sprints/sprint-05/PLAN.md`
+- `docs/sprints/sprint-05/HANDOFF.md`
 
-- adds Week 1–4 filtering to Teacher Weekly Check-out records
-- surfaces unresolved private Teacher Reviews in Week 3 and Week 4
-- carries forward reviews with no explicit recheck week, plus work due by the
-  selected week
-- distinguishes selected-week check-out `Submitted` from `Missing`
-- links each queue item back to the student’s Week 2 evidence and private review
-- excludes `Resolved` and `No follow-up needed` reviews
-- reuses existing block-scoped review and evidence data; no migration is needed
-
-Acceptance gate:
-
-- follow-up queue is visible only in Week 3 and Week 4 views
-- selected block boundaries apply to both reviews and check-out evidence
-- missing check-outs are labelled as missing, not interpreted as poor evidence
-- CSV export follows the selected week filter
-- production build and diff checks pass
-- focused Draft PR is created and not merged without approval
-
-## Next phase
-
-After Phase 3 is deployed and validated, continue with Phase 4 — Three-week
-trajectory and teaching analytics. Do not combine Phase 4 into this PR.
+Do not reopen Sprint 4 or implement the old Phase 4 directly. Sprint 5 begins
+with activity cleanup and an authentication design gate before any login code is
+written.
