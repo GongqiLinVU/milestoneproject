@@ -161,25 +161,20 @@ export function StudentAccess({ children }: { children: ReactNode | ((context: C
       {message && <p className="admin-alert" role="status">{message}</p>}<button disabled={busy}>{busy ? "Activating…" : "Activate and continue"}</button>
     </form>
   </section></main>;
-  if (!studioSession) return <main className="student-access"><section className="access-card">
-    <div className="eyebrow">Student Portal</div>
-    <h1>No session is open</h1>
-    <p>Your account is ready, but weekly activities open only after your teacher starts a studio session. Return here during class.</p>
-    <a className="secondary" href="/">View course information</a>
-    <button className="secondary" onClick={() => void supabase.auth.signOut()}>Sign out</button>
-  </section></main>;
-  if (studioSession && !studioSession.checkedInAt) return <main className="student-access"><section className="access-card">
-    <div className="eyebrow">Session Check-in</div>
-    <h1>Welcome, {context.studentName}</h1>
-    <p>Your teacher has opened today’s studio session. Confirm your attendance before entering your weekly activities.</p>
-    <dl>
-      <div><dt>Session</dt><dd>{studioSession.title}</dd></div>
-      <div><dt>Date</dt><dd>{studioSession.sessionDate}</dd></div>
-      <div><dt>Team</dt><dd>{context.teamName}</dd></div>
-    </dl>
-    {message && <p className="admin-alert" role="status">{message}</p>}
-    <button disabled={busy} onClick={() => void checkInToSession()}>{busy ? "Checking in…" : "Confirm check-in"}</button>
-    <button className="secondary" onClick={() => void supabase.auth.signOut()}>Sign out</button>
-  </section></main>;
-  return <><div className="student-session-bar"><span>{context.studentName} · {context.teamName} · {context.projectName || "Project pending"}</span><button className="secondary compact" onClick={() => void supabase.auth.signOut()}><LogOut size={15}/>Sign out</button></div>{typeof children === "function" ? children(context) : children}</>;
+  return <>
+    <div className="student-session-bar">
+      <span>{context.studentName} · {context.teamName} · {context.projectName || "Project pending"}</span>
+      <button className="secondary compact" onClick={() => void supabase.auth.signOut()}><LogOut size={15}/>Sign out</button>
+    </div>
+    <section className={`portal-session-notice ${studioSession ? "open" : "closed"}`}>
+      {!studioSession ? <>
+        <div><div className="eyebrow">Session Check-in</div><b>No session is currently open</b><p>You can still use your Student Portal. Check-in will appear here after your teacher opens a session.</p></div>
+      </> : <>
+        <div><div className="eyebrow">Session Check-in · Open now</div><b>{studioSession.title}</b><p>{studioSession.sessionDate} · {studioSession.checkedInAt ? `Checked in at ${new Date(studioSession.checkedInAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : "Check-in is available only while this session remains open."}</p></div>
+        {!studioSession.checkedInAt && <button disabled={busy} onClick={() => void checkInToSession()}>{busy ? "Checking in…" : "Check in now"}</button>}
+      </>}
+      {message && <p className="admin-alert" role="status">{message}</p>}
+    </section>
+    {typeof children === "function" ? children(context) : children}
+  </>;
 }
