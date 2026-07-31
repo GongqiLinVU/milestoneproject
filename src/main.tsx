@@ -22,7 +22,7 @@ import {
   Users,
 } from "lucide-react";
 import "./styles.css";
-import { FindMyTeam, ProjectManager, RosterManager } from "./TeamAllocation";
+import { ProjectManager, RosterManager } from "./TeamAllocation";
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL ||
     "https://gwihaizxivclamzehupk.supabase.co",
@@ -105,7 +105,6 @@ function App() {
           <a href="#journey">Journey</a>
           <a href="#weekly">Weekly Check-in</a>
           <a href="#deliverables">Deliverables</a>
-          <a href="/find-my-team">Find My Team</a>
           <a href="/admin">Teacher</a>
         </nav>
       </header>
@@ -132,7 +131,6 @@ function App() {
               <button className="secondary" onClick={() => setForm("checkin")}>
                 Start Week 1 check-in
               </button>
-              <a className="secondary" href="/find-my-team">Find my team</a>
             </div>
             <div className={"status " + (live ? "ok" : "")}>
               <span></span>
@@ -332,7 +330,6 @@ function WeeklyHub({
               </div>
             </div>
             <div className="activity-grid">
-              <Activity icon={Presentation} badge="Class signal" title="Class Pulse" text="Share an anonymous snapshot of confidence, concerns and AI use." action={() => open("pulse")} />
               <Activity icon={HeartPulse} badge="Individual view" title="Team Health Check" text="Reflect on communication, participation and delivery health." action={() => open("health")} />
               <Activity icon={ClipboardCheck} badge="End of week" title="Week 1 Engagement Check-out" text="Record participation beyond Monday and prepare for the next conversation." action={() => open("checkout")} />
             </div>
@@ -1556,16 +1553,6 @@ function Admin() {
       ],
     },
     {
-      table: "week1_pulse",
-      label: "Class pulse",
-      title: "Class Pulse overview",
-      description:
-        "See anonymous class-level patterns without exposing individual responses.",
-      select: "id, ai_usage, confidence, concern",
-      columns: [],
-      editable: [],
-    },
-    {
       table: "team_health_checks",
       label: "Team health",
       title: "Team Health Check",
@@ -2103,15 +2090,16 @@ function Admin() {
     setDataMessage("");
     setRecords([]);
     const activity = activityTables.find((item) => item.table === table)!;
+    const selectColumns: string = activity.select;
     const [recordResult, ...countResults] = await Promise.all([
       supabase
-        .from(table)
-        .select(activity.select)
+        .from(table as "student_checkins")
+        .select(selectColumns)
         .eq("block_id", blockId)
         .order("created_at", { ascending: false }),
       ...activityTables.map(({ table: countTable }) =>
         supabase
-          .from(countTable)
+          .from(countTable as "student_checkins")
           .select("*", { count: "exact", head: true })
           .eq("block_id", blockId),
       ),
@@ -2166,7 +2154,7 @@ function Admin() {
 
   async function saveRecord(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!editRecord || activeTable === "week1_pulse") return;
+    if (!editRecord) return;
     setMutationBusy(true);
     setMutationMessage("");
     const values = Object.fromEntries(new FormData(event.currentTarget));
@@ -2190,7 +2178,7 @@ function Admin() {
   }
 
   async function confirmDelete() {
-    if (!deleteRecord || activeTable === "week1_pulse") return;
+    if (!deleteRecord) return;
     setMutationBusy(true);
     setMutationMessage("");
     const { error } = await supabase
@@ -2245,37 +2233,20 @@ function Admin() {
     if (dataStatus !== "success" || records.length === 0)
       return;
 
-    let headings: string[];
-    let rows: unknown[][];
-    if (activeTable === "week1_pulse") {
-      headings = ["Category", "Response", "Count", "Percentage"];
-      rows = pulseGroups.flatMap(({ title, field, options }) =>
-        options.map(([value, label]) => {
-          const count = pulseCount(field, value);
-          return [
-            title,
-            label,
-            count,
-            Math.round((count / records.length) * 100),
-          ];
-        }),
-      );
-    } else {
-      const exportRecords =
-        activeTable === "weekly_engagement_checkouts" ? visibleRecords : records;
-      headings = [
-        "Academic year",
-        "Teaching block",
-        ...activeActivity.columns.map(([, label]) => label),
-      ];
-      rows = exportRecords.map((record) =>
-        [
-          selectedBlock?.academic_year ?? "",
-          selectedBlock?.block_code ?? "",
-          ...activeActivity.columns.map(([field]) => record[field] ?? ""),
-        ],
-      );
-    }
+    const exportRecords =
+      activeTable === "weekly_engagement_checkouts" ? visibleRecords : records;
+    const headings = [
+      "Academic year",
+      "Teaching block",
+      ...activeActivity.columns.map(([, label]) => label),
+    ];
+    const rows = exportRecords.map((record) =>
+      [
+        selectedBlock?.academic_year ?? "",
+        selectedBlock?.block_code ?? "",
+        ...activeActivity.columns.map(([field]) => record[field] ?? ""),
+      ],
+    );
 
     const csv = [
       headings.map(csvCell).join(","),
@@ -2294,43 +2265,6 @@ function Admin() {
     link.remove();
     URL.revokeObjectURL(url);
   };
-  const pulseGroups = [
-    {
-      title: "Delivery confidence",
-      field: "confidence",
-      options: [
-        ["1", "Not confident yet"],
-        ["2", "Slightly confident"],
-        ["3", "Moderately confident"],
-        ["4", "Confident"],
-        ["5", "Very confident"],
-      ],
-    },
-    {
-      title: "Main concern",
-      field: "concern",
-      options: [
-        ["Working product", "Working product"],
-        ["Documentation", "Documentation"],
-        ["Presentation", "Presentation"],
-        ["Teamwork", "Teamwork"],
-        ["Testing", "Testing"],
-        ["Time", "Time"],
-      ],
-    },
-    {
-      title: "AI usage",
-      field: "ai_usage",
-      options: [
-        ["Rarely", "Rarely"],
-        ["Weekly", "Weekly"],
-        ["Daily", "Daily"],
-        ["It is part of almost every task", "Almost every task"],
-      ],
-    },
-  ] as const;
-  const pulseCount = (field: string, value: string) =>
-    records.filter((record) => String(record[field]) === value).length;
   const visibleRecords =
     activeTable === "weekly_engagement_checkouts" && checkoutWeekFilter !== "all"
       ? records.filter((record) => Number(record.week_number) === checkoutWeekFilter)
@@ -2650,11 +2584,11 @@ function Admin() {
               <p className="admin-management-note">
                 Open one student at a time to compare the pre-check with the live demo and code, then save private feedback and follow-up.
               </p>
-            ) : activeTable !== "week1_pulse" ? (
+            ) : (
               <p className="admin-management-note">
                 Teachers can correct invalid details or remove a test submission.
               </p>
-            ) : null}
+            )}
           </div>
           <div className="admin-record-actions">
             <button
@@ -3100,48 +3034,7 @@ function Admin() {
             </div>
           )}
         {dataStatus === "success" &&
-          records.length > 0 &&
-          activeTable === "week1_pulse" && (
-            <div className="pulse-overview">
-              <p className="pulse-privacy-note">
-                Anonymous overview · individual submissions and timestamps are
-                intentionally hidden.
-              </p>
-              <div className="pulse-chart-grid">
-                {pulseGroups.map(({ title, field, options }) => (
-                  <section key={field} className="pulse-chart">
-                    <h3>{title}</h3>
-                    {options.map(([value, label]) => {
-                      const count = pulseCount(field, value);
-                      const percentage = Math.round(
-                        (count / records.length) * 100,
-                      );
-                      return (
-                        <div className="pulse-bar-row" key={value}>
-                          <div className="pulse-bar-label">
-                            <span>{label}</span>
-                            <b>
-                              {count} · {percentage}%
-                            </b>
-                          </div>
-                          <div
-                            className="pulse-bar-track"
-                            role="img"
-                            aria-label={`${label}: ${count} responses, ${percentage}%`}
-                          >
-                            <span style={{ width: `${percentage}%` }} />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </section>
-                ))}
-              </div>
-            </div>
-          )}
-        {dataStatus === "success" &&
           visibleRecords.length > 0 &&
-          activeTable !== "week1_pulse" &&
           activeTable !== "week2_progress_reviews" && (
           <div className="admin-table-wrap">
             <table>
@@ -3267,6 +3160,6 @@ function Admin() {
 }
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    {location.pathname.startsWith("/admin") ? <Admin /> : location.pathname.startsWith("/find-my-team") ? <FindMyTeam /> : <App />}
+    {location.pathname.startsWith("/admin") ? <Admin /> : <App />}
   </StrictMode>,
 );
