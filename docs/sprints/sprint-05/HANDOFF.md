@@ -130,6 +130,11 @@ Phase 2 requires a short reviewed design before implementation. It must resolve:
 - Added `studio_sessions` and `student_session_checkins`, role-scoped RLS,
   authenticated session RPCs, teacher control and attendance count.
 - Added an idempotent Phase 3 migration with verification and rollback guidance.
+- Added per-student `Prepare account` for safe testing without provisioning the
+  full class.
+- Added teacher `Reset password`: it rotates the Auth password, returns a
+  one-time temporary credential, sets the account back to `ready`, and preserves
+  all roster, Check-in, attendance and activity evidence.
 - `npm run build` passes; the existing Vite bundle-size advisory remains.
 
 ## Reusable prompt for the new session
