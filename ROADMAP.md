@@ -171,7 +171,12 @@ remain in `docs/sprints/sprint-04/`.
 
 ## Sprint 5 — Student Identity and Experience Simplification
 
-**Status: In progress — Phase 1 merged; Phase 2 Draft PR**
+**Status: In progress — Phase 1–2 merged; Phase 3 Draft PR**
+
+Phase 3 uses a two-surface student experience: public course information at
+`/`, and roster-authenticated Session Check-in plus weekly activities at
+`/student`. Recurring attendance is separate from the historical Week 1
+activation Check-in.
 
 ### Goal
 
