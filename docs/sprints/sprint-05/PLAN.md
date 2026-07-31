@@ -172,6 +172,17 @@ Acceptance:
 - teacher login and dashboard access continue to work
 - migrations are idempotent and documented with verification and rollback
 
+Testing-stage account controls:
+
+- teacher may prepare one selected student's missing account without provisioning
+  the whole block
+- teacher may reset one existing student's password to a new one-time temporary
+  credential; the account returns to required activation
+- reset preserves the Auth user, Student ID, roster links, Check-ins, session
+  attendance and activity evidence
+- previous passwords become invalid immediately and temporary credentials are
+  returned only in the current response/download
+
 ## Phase 3 — Public landing, session check-in and student portal
 
 Keep general course information public while moving student-specific work behind
