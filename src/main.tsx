@@ -174,18 +174,24 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
         </a>
         <nav>
           <a href="#weekly">This Week</a>
-          {student.studioSession && (
-            student.studioSession.checkedInAt
-              ? <a className="nav-session-status complete" href="#sessions" aria-label={`${student.studioSession.title}, checked in`}><CheckCircle2 size={16}/><span>{student.studioSession.title}</span><b>Checked in</b></a>
-              : <button className="nav-session-status attention" disabled={student.sessionCheckinBusy} onClick={() => void student.checkInToSession?.()} aria-label={`Check in to ${student.studioSession.title}`}><span>{student.studioSession.title}</span><b>{student.sessionCheckinBusy ? "Checking in…" : "Check in"}</b></button>
-          )}
           <a href="#my-project">My Project</a>
           <a href="#sessions">Sessions</a>
           <a href="#get-help">Get Help</a>
         </nav>
       </header>
       <main id="top" className="student-portal-main">
-        <section className="portal-intro"><div className="eyebrow">Authenticated student portal</div><h1>This Week</h1><p>{activeBlock?.label || "Your active teaching block"} · Complete only the activity that matters now.</p></section>
+        <section className="portal-intro">
+          <div className="eyebrow">Authenticated student portal</div>
+          <div className="portal-title-row">
+            <h1>This Week</h1>
+            {student.studioSession && (
+              student.studioSession.checkedInAt
+                ? <a className="nav-session-status complete" href="#sessions" aria-label={`${student.studioSession.title}, checked in`}><CheckCircle2 size={16}/><span>{student.studioSession.title}</span><b>Checked in</b></a>
+                : <button className="nav-session-status attention" disabled={student.sessionCheckinBusy} onClick={() => void student.checkInToSession?.()} aria-label={`Check in to ${student.studioSession.title}`}><span>{student.studioSession.title}</span><b>{student.sessionCheckinBusy ? "Checking in…" : "Check in"}</b></button>
+            )}
+          </div>
+          <p>{activeBlock?.label || "Your active teaching block"} · Complete only the activity that matters now.</p>
+        </section>
         <div className="portal-section portal-weekly-section"><WeeklyHub
           open={setForm}
           peerReviewOpen={peerReviewOpen}
@@ -1566,7 +1572,15 @@ function fields(k: Kind, student?: AuthenticatedStudent) {
 type StudioSessionRow = { id:string; title:string; session_date:string; status:"scheduled"|"open"|"closed"; starts_at:string|null; ends_at:string|null; opened_at:string|null; closed_at:string|null };
 type AttendanceRow = { session_id:string; student_id:string; checked_in_at:string };
 
-function StudioSessionControl({ blockId }: { blockId: string }) {
+function StudioSessionControl({
+  blockId,
+  blocks,
+  onBlockChange,
+}: {
+  blockId: string;
+  blocks: Array<{ id: string; academic_year: number; block_code: string; status: string }>;
+  onBlockChange: (blockId: string) => void;
+}) {
   const [sessions, setSessions] = useState<StudioSessionRow[]>([]);
   const [attendance, setAttendance] = useState<AttendanceRow[]>([]);
   const [editing, setEditing] = useState<StudioSessionRow | null>(null);
@@ -1584,7 +1598,13 @@ function StudioSessionControl({ blockId }: { blockId: string }) {
     setAttendance((checkins as AttendanceRow[] | null) || []);
   }
 
-  useEffect(() => { void load(); }, [blockId]);
+  useEffect(() => {
+    setEditing(null);
+    setMessage("");
+    void load();
+  }, [blockId]);
+
+  const selectedBlock = blocks.find(block => block.id === blockId);
 
   function effectiveStatus(item:StudioSessionRow){const now=Date.now();if(item.status==="closed"||(item.ends_at&&new Date(item.ends_at).getTime()<=now))return "closed";if(item.status==="open"||(item.starts_at&&new Date(item.starts_at).getTime()<=now&&(!item.ends_at||new Date(item.ends_at).getTime()>now)))return "open";return "scheduled";}
   async function prepareTen() {
@@ -1603,8 +1623,8 @@ function StudioSessionControl({ blockId }: { blockId: string }) {
   return <section className="session-manager">
     <div className="session-manager-heading"><div>
       <div className="eyebrow">Authenticated attendance</div>
-      <h2>Studio Sessions</h2><p>Prepare the block once, then edit each session. A scheduled window opens and closes Check-in automatically; manual controls remain available.</p>
-    </div><button disabled={busy||!blockId||sessions.length>=10} onClick={()=>void prepareTen()}><CalendarPlus size={17}/> Prepare {Math.max(0,10-sessions.length)} sessions</button></div>
+      <h2>Studio Sessions{selectedBlock ? ` · ${selectedBlock.academic_year} ${selectedBlock.block_code}` : ""}</h2><p>Prepare the selected block once, then edit each session. A scheduled window opens and closes Check-in automatically; manual controls remain available.</p>
+    </div><div className="session-manager-actions"><label className="admin-block-filter">Teaching block<select value={blockId} onChange={event=>onBlockChange(event.target.value)} disabled={busy}>{blocks.map(block=><option key={block.id} value={block.id}>{block.academic_year} · {block.block_code}{block.status==="active"?" — Active":""}</option>)}</select></label><button disabled={busy||!blockId||sessions.length>=10} onClick={()=>void prepareTen()}><CalendarPlus size={17}/> Prepare {Math.max(0,10-sessions.length)} sessions</button></div></div>
     {message && <p className="admin-alert" role="status">{message}</p>}
     <div className="teacher-session-list">{sessions.map(item=>{const state=effectiveStatus(item),checkins=attendance.filter(row=>row.session_id===item.id);return <article key={item.id} className={`teacher-session ${state}`}><div className="teacher-session-summary"><div><span className={`activity-control-status ${state}`}>{state}</span><h3>{item.title}</h3><p>{new Date(`${item.session_date}T00:00:00`).toLocaleDateString()} · {checkins.length} checked in</p>{item.starts_at&&<small>{new Date(item.starts_at).toLocaleString()} → {item.ends_at?new Date(item.ends_at).toLocaleString():"manual close"}</small>}</div><div className="teacher-session-actions"><button className="secondary compact" onClick={()=>setEditing(item)} disabled={busy}><Pencil size={15}/> Edit</button>{state==="open"?<button className="danger compact" onClick={()=>void setState(item,"closed")} disabled={busy}>Close</button>:state!=="closed"&&<button className="compact" onClick={()=>void setState(item,"open")} disabled={busy}>Open now</button>}<button className="secondary compact" onClick={()=>download(item)} disabled={!checkins.length}><Download size={15}/> CSV</button></div></div>{checkins.length>0&&<details><summary>View attendance</summary><table><thead><tr><th>Student ID</th><th>Check-in time</th></tr></thead><tbody>{checkins.map(row=><tr key={`${row.session_id}-${row.student_id}`}><td>{row.student_id}</td><td>{new Date(row.checked_in_at).toLocaleString()}</td></tr>)}</tbody></table></details>}</article>})}{!sessions.length&&<p className="empty-state">No sessions prepared yet. Create the standard 10-session plan to begin.</p>}</div>
     {editing&&<div className="modal"><form className="dialog session-edit-dialog" onSubmit={save}><button type="button" className="close" onClick={()=>setEditing(null)}>×</button><div className="eyebrow">Edit session</div><h2>{editing.title}</h2><label>Title<input name="title" defaultValue={editing.title} required maxLength={120}/></label><label>Session date<input name="session_date" type="date" defaultValue={editing.session_date} required/></label><label>Automatic start (optional)<input name="starts_at" type="datetime-local" defaultValue={editing.starts_at?new Date(new Date(editing.starts_at).getTime()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16):""}/></label><label>Automatic end (optional)<input name="ends_at" type="datetime-local" defaultValue={editing.ends_at?new Date(new Date(editing.ends_at).getTime()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16):""}/></label><p>Leave both times empty to use Open now / Close manually.</p><div className="admin-dialog-actions"><button type="button" className="secondary" onClick={()=>setEditing(null)}>Cancel</button><button disabled={busy}>{busy?"Saving…":"Save session"}</button></div></form></div>}
@@ -2581,7 +2601,7 @@ function Admin() {
       </section>
       <div hidden={adminView !== "roster"}><RosterManager /></div>
       <div hidden={adminView !== "projects"}><ProjectManager /></div>
-      <div hidden={adminView !== "sessions"}><StudioSessionControl blockId={selectedBlockId}/></div>
+      <div hidden={adminView !== "sessions"}><StudioSessionControl blockId={selectedBlockId} blocks={teachingBlocks} onBlockChange={setSelectedBlockId}/></div>
       <section hidden={adminView !== "peer"} className="activity-control" aria-labelledby="peer-review-control-title">
         <div>
           <div className="eyebrow">Week 3 activity</div>
