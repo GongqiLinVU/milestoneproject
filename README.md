@@ -17,7 +17,6 @@ The current module guides students through a four-week journey:
 ### Student portal
 
 - Week 1 check-in
-- Class pulse
 - Individual Team Health Check
 - Week 1 Engagement Check-out
 - Week 2 Individual Progress Review
@@ -32,17 +31,15 @@ The current module guides students through a four-week journey:
 
 - Supabase email/password authentication
 - Teacher-only access through `app_metadata.role = teacher`
-- RLS-protected summary counts for all activity types
+- RLS-protected records and counts for current activities
 - Restored authenticated sessions with explicit sign-out and access status
 - Clickable activity panels with detailed records for identified activities
-- Anonymous Class Pulse charts for confidence, concerns and AI usage
 - Teacher edit and confirmed delete for identified activity records
 - Teacher mutations protected by `is_teacher()` UPDATE/DELETE RLS policies
 - Private student-by-student implementation Review & Follow-up with operational status and recheck actions
 - Optional teacher-triggered AI teaching suggestions using de-identified project and verification evidence
 - Teacher-controlled Poster Peer Review opening and closing
-- Export the currently selected activity as a stable UTF-8 CSV; Class Pulse
-  exports only aggregate distributions
+- Export the currently selected activity as a stable UTF-8 CSV
 - Accessible loading, empty, refresh and actionable error states
 
 ## Technology stack
@@ -106,9 +103,6 @@ Import this GitHub repository into Vercel and configure:
 - Output directory: `dist`
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_PUBLISHABLE_KEY`
-- `FIND_MY_TEAM_SALT` (server-only random value used to hash lookup attempts)
-
-`Find My Team` uses the publishable key to call a restricted database function. It does not require or use a Supabase service-role key.
 
 Every push to `main` triggers a production deployment.
 
@@ -124,17 +118,13 @@ Every push to `main` triggers a production deployment.
 
 ## Current priority
 
-Sprint 1 is working in production. Sprint 2 Phase 5 is implemented and awaits
-the documented production verification:
+Sprint 5 simplifies the student experience. Phase 1 retires Class Pulse, Team
+Conversation and the standalone Find My Team page from current navigation while
+preserving historical database records. Week 1 Check-in remains available until
+Phase 2 replaces it with Account Activation & Check-in.
 
-- Verify the role and RLS access matrix
-- Verify duplicate, self-review and create-once constraints
-- Complete closed/open/closed Peer Review and CSV smoke tests
-
-Students remain unauthenticated and their submissions remain create-once. Phase 3B introduces only a limited, teacher-controlled AI teaching suggestion; broader AI analytics, student-side editing and major database redesign remain out of scope.
-
-See [Sprint 2 roadmap](ROADMAP.md#sprint-2--teacher-operations-and-activity-control),
-the detailed [Sprint 2 plan](docs/sprints/sprint-02/PLAN.md), and the reusable
+See the [Sprint 5 plan](docs/sprints/sprint-05/PLAN.md), current
+[handoff](docs/sprints/sprint-05/HANDOFF.md), and reusable
 [session start protocol](prompts/START_SESSION.md).
 
 
