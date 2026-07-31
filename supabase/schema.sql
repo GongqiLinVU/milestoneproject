@@ -1450,7 +1450,9 @@ grant execute on function public.find_student_team(text, text, text) to anon;
 -- Sprint 5 Phase 3 authenticated session check-in is applied by:
 -- supabase/migrations/20260731_sprint5_phase3_session_portal.sql
 -- The migration creates teacher-opened studio sessions, student attendance
--- evidence, role-scoped RLS and the two authenticated student RPCs.
+-- evidence, role-scoped RLS and authenticated student RPCs. Its latest
+-- idempotent form also adds scheduled start/end windows, the student session
+-- history RPC and full Project Catalogue fields in student context.
 
 alter table public.teams enable row level security;
 alter table public.projects enable row level security;
