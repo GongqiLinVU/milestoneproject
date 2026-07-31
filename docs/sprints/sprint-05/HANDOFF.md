@@ -121,14 +121,18 @@ Phase 2 requires a short reviewed design before implementation. It must resolve:
 - Weekly activities are not shown publicly.
 - Login proves identity; Session Check-in separately proves attendance.
 - A teacher opens one studio session for a selected block.
-- An activated student must confirm the open session before weekly activities
-  become available.
+- An activated student can use the Student Portal at any time; Session Check-in
+  is a separate action available only while the teacher has an open session.
 - The old Week 1 Check-in remains historical activation evidence and is not
   reused as recurring attendance.
 - Authenticated identity supplies Name and Student ID to normal activity
   submissions; students do not re-enter or override roster identity.
 - Added `studio_sessions` and `student_session_checkins`, role-scoped RLS,
   authenticated session RPCs, teacher control and attendance count.
+- Added read-only Teacher Session History with per-session attendance detail and
+  CSV export, plus student-only My Attendance history.
+- Closed sessions and their Check-ins remain preserved and cannot be reopened or
+  used for advance/late Check-in.
 - Added an idempotent Phase 3 migration with verification and rollback guidance.
 - Added per-student `Prepare account` for safe testing without provisioning the
   full class.
