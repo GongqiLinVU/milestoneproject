@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import "./styles.css";
 import { ProjectManager, RosterManager } from "./TeamAllocation";
+import { StudentAccess } from "./StudentAccess";
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL ||
     "https://gwihaizxivclamzehupk.supabase.co",
@@ -3160,6 +3161,6 @@ function Admin() {
 }
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    {location.pathname.startsWith("/admin") ? <Admin /> : <App />}
+    {location.pathname.startsWith("/admin") ? <Admin /> : <StudentAccess><App /></StudentAccess>}
   </StrictMode>,
 );
