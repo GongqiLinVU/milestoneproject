@@ -50,7 +50,13 @@ begin
     raise exception using errcode = 'P0001', message = 'Student account is not available';
   end if;
 
-  select roster, block into v_roster, v_block
+  if (select count(*) from public.student_roster roster
+      join public.teaching_blocks block on block.id = roster.block_id
+      where roster.student_id = v_account.student_id and block.status = 'active') > 1 then
+    raise exception using errcode = 'P0001', message = 'Student belongs to more than one active block';
+  end if;
+
+  select roster.* into v_roster
   from public.student_roster roster
   join public.teaching_blocks block on block.id = roster.block_id
   where roster.student_id = v_account.student_id and block.status = 'active'
@@ -59,11 +65,10 @@ begin
   if v_roster.id is null then
     raise exception using errcode = 'P0001', message = 'No active roster context is available';
   end if;
-  if (select count(*) from public.student_roster roster
-      join public.teaching_blocks block on block.id = roster.block_id
-      where roster.student_id = v_account.student_id and block.status = 'active') <> 1 then
-    raise exception using errcode = 'P0001', message = 'Student belongs to more than one active block';
-  end if;
+
+  select * into v_block
+  from public.teaching_blocks
+  where id = v_roster.block_id;
 
   select project.title into v_project_name
   from public.teams team
