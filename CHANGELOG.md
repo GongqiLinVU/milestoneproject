@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased — Sprint 5 Phase 4A
+
+- Reframed the teacher Activity Records area as one block-aware Activity
+  Management workspace with Weekly Activities, Student Records and Presentation
+  Order tabs.
+- Hid retired Student Check-in records from current activity navigation while
+  preserving the historical database rows.
+- Moved the existing Poster Peer Review control into Weekly Activities and kept
+  the four current evidence types in Student Records.
+- Expanded the Sprint 5 plan for weekly activation, the Week 2 wizard,
+  presentation-order publishing and later trajectory analytics.
+
 ## Unreleased — Sprint 5 Phase 3
 
 - Restored a public course Landing Page and moved protected student work to

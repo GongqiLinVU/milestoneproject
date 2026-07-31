@@ -1,6 +1,6 @@
 # Sprint 5 — Student Identity and Experience Simplification
 
-**Status: Planned — ready for a new session**
+**Status: In progress — Phase 1–3 merged; Phase 4A underway**
 
 ## Origin
 
@@ -253,18 +253,67 @@ Acceptance:
 - legacy evidence remains available to teachers
 - focused production and role-based tests pass
 
-## Phase 4 — Trajectory and teaching analytics
+## Phase 4 — Activity management, trajectory and teaching analytics
 
-Carry forward the former Sprint 4 Phase 4 on the authenticated model.
+Phase 4 first makes weekly activity delivery intentional and manageable, then
+builds analytics on the resulting authenticated evidence.
 
-Scope:
+### Phase 4A — Weekly Activity Experience & Management
+
+Replace the ageing Activity Records page with one block-aware teacher workspace.
+
+Teacher information architecture:
+
+1. **Weekly Activities** — activate or close Week 1–4 for the selected block
+2. **Student Records** — review only current activity types and retained evidence
+3. **Presentation Order** — prepare, reorder and publish the selected block's
+   Week 4 presentation sequence
+
+Current records are Team Health Check, Week 2 Implementation Pre-check, Weekly
+Engagement Check-outs and Poster Peer Review. Retired Student Check-in, Class
+Pulse and Team Conversation rows remain in the database for audit, but are not
+shown as current activities.
+
+Weekly activity rules:
+
+- every Teaching Block has an independent Week 1–4 open/closed state
+- all weeks are closed by default and a teacher manually activates the week
+- activation opens that week's student activities, including Engagement
+- students may see locked future weeks but cannot open or submit them
+- submission authorization is enforced by the database, not only the UI
+- closing or reopening a week never removes historical submissions
+- the existing standalone Poster Peer Review control is absorbed into the Week
+  3 activity state
+
+Week 2 Implementation Pre-check becomes a six-step wizard: Project Context, My
+Contribution, Implementation Status, Evidence & Verification, Blockers & Next
+Step, and Review & Submit. It shows progress, supports Back/Continue, retains a
+local draft and creates the formal record only at final submission.
+
+Presentation Order is block-based. It starts in natural Team-number order,
+supports drag or move controls, keeps Draft separate from Published, and exposes
+only the latest published snapshot to students in Week 4.
+
+Delivery is split into focused Draft PRs:
+
+1. Activity Management layout and current Student Records
+2. Weekly activation and Week 2 wizard
+3. Presentation Order management and publication
+
+### Phase 4B — Student and Team trajectory foundation
 
 - show trajectory across available Week 1–4 evidence
-- distinguish missing evidence from negative evidence
+- distinguish Submitted, Missing and Not required
 - keep summaries descriptive, evidence-linked and non-grading
-- provide drill-down to underlying records
-- reserve the AI Block Insights area for Sprint 6; do not add speculative AI
-  output in this Phase
+- support block, team, project and student filtering
+- provide drill-down to the underlying record
+
+### Phase 4C — Block teaching analytics and drill-down
+
+- summarise block-level participation and completion patterns
+- compare session attendance with activity completion without scoring students
+- surface unresolved support and teacher follow-up continuity
+- reserve AI Block Insights for Sprint 6; do not add speculative AI output here
 
 ## Phase 5 — Export, privacy and production validation
 

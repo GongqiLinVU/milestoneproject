@@ -1,6 +1,25 @@
 # Sprint 5 Handoff
 
-**Status: Phase 1–2 merged; Phase 3 implemented in Draft PR**
+**Status: Phase 1–3 merged; Phase 4A implementation started**
+
+## Phase 4A current boundary
+
+The first focused Phase 4A change establishes the Activity Management
+information architecture without changing the database:
+
+- the teacher sidebar has one Activity Management entry
+- the workspace uses Weekly Activities, Student Records and Presentation Order
+  tabs instead of separate vertically stacked pages
+- Student Records shows only Team Health, Week 2 Implementation Pre-check,
+  Weekly Engagement and Poster Peer Review as current evidence
+- historical Student Check-in rows remain stored but are hidden from current
+  activity operations
+- the existing Poster Peer Review switch is retained inside Weekly Activities
+
+The next focused change must add block-based Week 1–4 activation and the Week 2
+wizard with an idempotent migration. The third change implements block-based
+Presentation Order draft and publication. Do not treat the preview cards in the
+first change as functional weekly activation or publishing.
 
 ## Production starting point
 
