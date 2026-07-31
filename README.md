@@ -103,6 +103,8 @@ Import this GitHub repository into Vercel and configure:
 - Output directory: `dist`
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_PUBLISHABLE_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` (server-only; required by student account
+  provisioning/login/recovery endpoints)
 
 Every push to `main` triggers a production deployment.
 

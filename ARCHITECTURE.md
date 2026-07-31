@@ -182,6 +182,12 @@ The public browser may insert permitted activity records. It must not be able to
 
 Teacher access is based on an authenticated JWT and the `teacher` app metadata role.
 
+Student Auth accounts are prepared from the teacher-reviewed roster by a
+server-only endpoint. Student ID is the login-facing key; the roster VU email is
+the Supabase Auth identity. `student_accounts` links that global Student ID to
+one Auth UID, while authenticated RPCs resolve exactly one active roster,
+team and project context. Service-role credentials never enter the browser.
+
 Teacher policies allow protected reads and controlled update/delete operations
 through `is_teacher()`. The dashboard can export only the currently loaded,
 RLS-authorised current activity records. Retired historical tables retain their

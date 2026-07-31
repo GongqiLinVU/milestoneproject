@@ -1442,6 +1442,11 @@ $$;
 revoke all on function public.find_student_team(text, text, text) from public;
 grant execute on function public.find_student_team(text, text, text) to anon;
 
+-- Sprint 5 Phase 2 student authentication is applied by:
+-- supabase/migrations/20260731_sprint5_phase2_student_auth.sql
+-- Keep this marker aligned with the idempotent migration; production rollout
+-- applies the migration before deploying the Phase 2 frontend and endpoints.
+
 alter table public.teams enable row level security;
 alter table public.projects enable row level security;
 alter table public.team_project_assignments enable row level security;

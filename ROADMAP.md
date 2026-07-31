@@ -171,7 +171,7 @@ remain in `docs/sprints/sprint-04/`.
 
 ## Sprint 5 — Student Identity and Experience Simplification
 
-**Status: In progress — Phase 1 Draft PR**
+**Status: In progress — Phase 1 merged; Phase 2 Draft PR**
 
 ### Goal
 
@@ -193,6 +193,11 @@ Phase 1 removes Class Pulse and standalone Find My Team entry points from the
 student UI and removes Class Pulse from current teacher Activity Records. Team
 Conversation was already retired from the active UI in Sprint 3. Historical
 `week1_pulse` and `team_conversations` rows and policies remain unchanged.
+
+Phase 2 adds roster-prepared student accounts, individual activation
+credentials, first-use password change, legacy Check-in recognition and a
+student-only active block/team/project context. Open registration remains
+disabled and the service-role key remains server-only.
 
 ### Delivery sequence
 
