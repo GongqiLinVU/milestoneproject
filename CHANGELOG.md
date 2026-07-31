@@ -2,6 +2,14 @@
 
 All notable changes to Engineering Studio Platform will be recorded here.
 
+## Unreleased — Sprint 5 Phase 2
+
+### Added
+
+- Teacher-controlled preparation of unique student activation accounts.
+- Student ID login, password recovery and Account Activation & Check-in.
+- Student account RLS, authenticated project context and legacy Check-in links.
+
 ## Unreleased — Sprint 5 Phase 1
 
 ### Changed
