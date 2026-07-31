@@ -1640,28 +1640,6 @@ function Admin() {
   };
   const activityTables = [
     {
-      table: "student_checkins",
-      label: "Student check-ins",
-      title: "Student Check-in records",
-      description: "Review each student’s team and intended four-week outcome.",
-      select:
-        "id, student_name, student_id, team_name, goal, created_at, updated_at",
-      columns: [
-        ["student_name", "Name"],
-        ["student_id", "Student ID"],
-        ["team_name", "Team"],
-        ["goal", "Four-week goal"],
-        ["created_at", "Created"],
-        ["updated_at", "Updated"],
-      ],
-      editable: [
-        ["student_name", "Name", "text", 100],
-        ["student_id", "Student ID", "text", 40],
-        ["team_name", "Team", "team", 0],
-        ["goal", "Four-week goal", "textarea", 800],
-      ],
-    },
-    {
       table: "team_health_checks",
       label: "Team health",
       title: "Team Health Check",
@@ -1791,10 +1769,11 @@ function Admin() {
     assignedTeams: null as number | null,
   });
   const [activeTable, setActiveTable] =
-    useState<ActivityTable>("student_checkins");
+    useState<ActivityTable>("team_health_checks");
   const [teachingBlocks, setTeachingBlocks] = useState<TeachingBlock[]>([]);
   const [selectedBlockId, setSelectedBlockId] = useState("");
-  const [adminView, setAdminView] = useState<"overview" | "roster" | "projects" | "sessions" | "peer" | "records">("overview");
+  const [adminView, setAdminView] = useState<"overview" | "roster" | "projects" | "sessions" | "records">("overview");
+  const [activityWorkspace, setActivityWorkspace] = useState<"weekly" | "records" | "presentation">("records");
   const [records, setRecords] = useState<ActivityRecord[]>([]);
   const [editRecord, setEditRecord] = useState<ActivityRecord | null>(null);
   const [deleteRecord, setDeleteRecord] = useState<ActivityRecord | null>(null);
@@ -2541,8 +2520,7 @@ function Admin() {
           <button type="button" className={adminView === "roster" ? "active" : ""} onClick={() => setAdminView("roster")}><Users size={18}/><span><b>Blocks & roster</b><small>Students and teams</small></span></button>
           <button type="button" className={adminView === "projects" ? "active" : ""} onClick={() => setAdminView("projects")}><Rocket size={18}/><span><b>Project setup</b><small>Catalogue & assignments</small></span></button>
           <button type="button" className={adminView === "sessions" ? "active" : ""} onClick={() => setAdminView("sessions")}><ClipboardCheck size={18}/><span><b>Session check-in</b><small>Open attendance</small></span></button>
-          <button type="button" className={adminView === "records" ? "active" : ""} onClick={() => setAdminView("records")}><ClipboardCheck size={18}/><span><b>Activity records</b><small>Review submissions</small></span></button>
-          <button type="button" className={adminView === "peer" ? "active" : ""} onClick={() => setAdminView("peer")}><Presentation size={18}/><span><b>Peer review</b><small>Week 3 control</small></span></button>
+          <button type="button" className={adminView === "records" ? "active" : ""} onClick={() => setAdminView("records")}><ClipboardCheck size={18}/><span><b>Activity management</b><small>Weeks, records & order</small></span></button>
           <a href="/" className="admin-sidebar-home">Back to student portal</a>
         </aside>
         <div className="admin-content">
@@ -2602,7 +2580,25 @@ function Admin() {
       <div hidden={adminView !== "roster"}><RosterManager /></div>
       <div hidden={adminView !== "projects"}><ProjectManager /></div>
       <div hidden={adminView !== "sessions"}><StudioSessionControl blockId={selectedBlockId} blocks={teachingBlocks} onBlockChange={setSelectedBlockId}/></div>
-      <section hidden={adminView !== "peer"} className="activity-control" aria-labelledby="peer-review-control-title">
+      <section hidden={adminView !== "records"} className="activity-workspace" aria-labelledby="activity-workspace-title">
+        <div className="activity-workspace-heading">
+          <div>
+            <div className="eyebrow">Block activity operations</div>
+            <h2 id="activity-workspace-title">Activity Management</h2>
+            <p>Open weekly work, review student evidence and publish the presentation sequence from one workspace.</p>
+          </div>
+          <label className="admin-block-filter">Teaching block<select value={selectedBlockId} onChange={(event)=>{const nextBlockId=event.target.value;setSelectedBlockId(nextBlockId);void loadDashboard(activeTable,nextBlockId);}}>{teachingBlocks.map(block=><option key={block.id} value={block.id}>{block.academic_year} · {block.block_code}{block.status==="active"?" — Active":""}</option>)}</select></label>
+        </div>
+        <div className="activity-workspace-tabs" role="tablist" aria-label="Activity management views">
+          <button type="button" role="tab" aria-selected={activityWorkspace === "weekly"} className={activityWorkspace === "weekly" ? "active" : ""} onClick={()=>setActivityWorkspace("weekly")}><CalendarPlus size={17}/><span><b>Weekly Activities</b><small>Activation and availability</small></span></button>
+          <button type="button" role="tab" aria-selected={activityWorkspace === "records"} className={activityWorkspace === "records" ? "active" : ""} onClick={()=>setActivityWorkspace("records")}><ListChecks size={17}/><span><b>Student Records</b><small>Current evidence only</small></span></button>
+          <button type="button" role="tab" aria-selected={activityWorkspace === "presentation"} className={activityWorkspace === "presentation" ? "active" : ""} onClick={()=>setActivityWorkspace("presentation")}><Presentation size={17}/><span><b>Presentation Order</b><small>Draft and publish</small></span></button>
+        </div>
+      </section>
+      <section hidden={adminView !== "records" || activityWorkspace !== "weekly"} className="weekly-activity-preview" aria-labelledby="weekly-activities-title">
+        <div className="workspace-section-heading"><div><div className="eyebrow">Weekly availability</div><h3 id="weekly-activities-title">Week 1–4 controls</h3><p>Block-based activation will replace individual activity switches in the next focused implementation.</p></div><span className="activity-control-status scheduled">Next PR</span></div>
+        <div className="week-management-grid">{[1,2,3,4].map(week=><article key={week}><span>Week {week}</span><b>{week === 3 ? "Peer review & engagement" : week === 2 ? "Pre-check & engagement" : week === 1 ? "Team health & engagement" : "Final delivery"}</b><small>Weekly activation pending</small></article>)}</div>
+        <div className="activity-control" aria-labelledby="peer-review-control-title">
         <div>
           <div className="eyebrow">Week 3 activity</div>
           <h2 id="peer-review-control-title">Poster Peer Review</h2>
@@ -2647,8 +2643,10 @@ function Admin() {
             {peerReviewMessage}
           </p>
         )}
+        </div>
       </section>
-      <div hidden={adminView !== "records"} className="metric-grid" aria-label="Activity record views">
+      <section hidden={adminView !== "records" || activityWorkspace !== "presentation"} className="workspace-coming-soon" aria-labelledby="presentation-order-title"><Presentation aria-hidden="true"/><div><div className="eyebrow">Week 4 publishing</div><h3 id="presentation-order-title">Presentation Order</h3><p>The next focused implementation will load teams for this block, support draft reordering and publish a student-visible snapshot.</p></div><span className="activity-control-status scheduled">Next PR</span></section>
+      <div hidden={adminView !== "records" || activityWorkspace !== "records"} className="activity-record-picker" aria-label="Current activity record views">
         {activityTables.map(({ table, label }) => (
           <button
             key={table}
@@ -2667,30 +2665,12 @@ function Admin() {
           </button>
         ))}
       </div>
-      <section hidden={adminView !== "records"} className="admin-records" aria-labelledby="activity-heading">
+      <section hidden={adminView !== "records" || activityWorkspace !== "records"} className="admin-records" aria-labelledby="activity-heading">
         <div className="admin-records-heading">
           <div>
-            <div className="eyebrow">Activity records</div>
+            <div className="eyebrow">Student records</div>
             <h2 id="activity-heading">{activeActivity.title}</h2>
             <p>{activeActivity.description}</p>
-            <label className="admin-block-filter">
-              Teaching block
-              <select
-                value={selectedBlockId}
-                onChange={(event) => {
-                  const nextBlockId = event.target.value;
-                  setSelectedBlockId(nextBlockId);
-                  void loadDashboard(activeTable, nextBlockId);
-                }}
-              >
-                {teachingBlocks.map((block) => (
-                  <option key={block.id} value={block.id}>
-                    {block.academic_year} · {block.block_code}
-                    {block.status === "active" ? " — Active" : ""}
-                  </option>
-                ))}
-              </select>
-            </label>
             {activeTable === "week2_progress_reviews" ? (
               <p className="admin-management-note">
                 Open one student at a time to compare the pre-check with the live demo and code, then save private feedback and follow-up.
