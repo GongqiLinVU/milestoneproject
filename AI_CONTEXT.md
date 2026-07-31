@@ -1,5 +1,17 @@
 # AI Context — Engineering Studio Platform
 
+## Sprint 5 Phase 3 student surfaces
+
+- `/` is public course information and never exposes weekly activities or
+  student context.
+- `/student` requires a roster-prepared account and a teacher-opened Session
+  Check-in before activities appear.
+- Login establishes identity; recurring Session Check-in establishes attendance.
+- `student_checkins` remains historical Week 1 activation evidence.
+- `student_session_checkins` stores recurring authenticated attendance.
+- Normal activities reuse authenticated identity instead of asking students to
+  re-enter roster-authoritative Name or Student ID.
+
 This document provides durable project context for ChatGPT, Claude, Codex, Cursor and future contributors.
 
 ## Product purpose
