@@ -48,13 +48,19 @@ snapshot the current `project_id`; historical rows remain unchanged.
 
 The public application provides the four-week journey and activity forms.
 
-Current activities:
+Current activities include:
 
 - Week 1 check-in
-- Class pulse
-- Team conversation
-- Four-week promise
+- Team Health Check
+- weekly engagement check-outs
+- Week 2 Implementation Pre-check
 - Poster peer review
+
+Class Pulse and Team Conversation remain in the database as historical
+activity-specific tables but are retired from current student and teacher
+navigation. The standalone Find My Team route is also retired; its database
+function remains temporarily available until authenticated My Project context
+replaces it in Sprint 5 Phase 2–3.
 
 The first version does not require a student account. Public clients use the Supabase publishable key and may only perform operations allowed by RLS.
 
@@ -178,7 +184,8 @@ Teacher access is based on an authenticated JWT and the `teacher` app metadata r
 
 Teacher policies allow protected reads and controlled update/delete operations
 through `is_teacher()`. The dashboard can export only the currently loaded,
-RLS-authorised records. Class Pulse export remains aggregate-only.
+RLS-authorised current activity records. Retired historical tables retain their
+existing RLS policies but are not primary dashboard navigation.
 
 ### RLS as the primary boundary
 

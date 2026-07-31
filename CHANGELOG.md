@@ -2,6 +2,18 @@
 
 All notable changes to Engineering Studio Platform will be recorded here.
 
+## Unreleased — Sprint 5 Phase 1
+
+### Changed
+
+- Retired Class Pulse and standalone Find My Team from the active student
+  experience.
+- Removed Class Pulse from current teacher Activity Records and CSV choices.
+- Confirmed Team Conversation was already replaced by Team Health Check in
+  Sprint 3.
+- Preserved historical Class Pulse and Team Conversation database records,
+  grants, RLS policies and migrations.
+
 The project currently uses simple milestone-based versions while the production workflow is being established.
 
 ## Sprint 4 Phase 3 — Week 3–4 follow-up continuity

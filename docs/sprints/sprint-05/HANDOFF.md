@@ -1,6 +1,6 @@
 # Sprint 5 Handoff
 
-**Status: Planned — start with Phase 1**
+**Status: Phase 1 implemented in Draft PR — awaiting review**
 
 ## Production starting point
 
@@ -68,6 +68,20 @@ Do not implement student authentication in the same PR.
 - Other activity records, teacher login, exports and production build continue
   to work.
 - Documentation clearly separates retired UI from retained historical data.
+
+## Phase 1 implementation evidence
+
+- Removed the Class Pulse student card and current teacher Activity Records
+  selector, chart and aggregate CSV path.
+- Removed both Find My Team links and the standalone route/component.
+- Confirmed Team Conversation had already been retired from active student and
+  teacher navigation in Sprint 3; Team Health Check remains current.
+- Kept Week 1 Check-in operational.
+- Kept `week1_pulse`, `team_conversations`, `find_student_team`, all historical
+  migrations, grants and RLS policies unchanged.
+- No database migration is required.
+- `npm run build` passes locally. Vite reports only the existing bundle-size
+  advisory.
 
 ## Authentication decision to prepare next
 

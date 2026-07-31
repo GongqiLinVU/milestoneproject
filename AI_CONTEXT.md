@@ -49,8 +49,6 @@ Do not place service-role keys, database passwords or third-party secrets in cli
 
 - Four-week journey: Commit, Prove, Validate, Deliver
 - Week 1 check-in
-- Week 1 class pulse
-- Team conversation
 - Four-week action plan
 - Week 3 poster peer review
 - Health indicator showing Supabase connectivity
@@ -61,8 +59,6 @@ Do not place service-role keys, database passwords or third-party secrets in cli
 - Access restricted to users with `app_metadata.role = teacher`
 - Summary counts for:
   - student check-ins
-  - week 1 pulse submissions
-  - team conversations
   - student promises
   - poster reviews
 - Supabase session restoration and explicit teacher sign-out
@@ -71,8 +67,6 @@ Do not place service-role keys, database passwords or third-party secrets in cli
   timestamps
 - Clickable summary panels that switch between protected record views for all
   five activities, with stable activity-specific fields and states
-- Anonymous Class Pulse distributions; individual pulse rows and timestamps are
-  intentionally not displayed
 - Teacher edit and confirmed delete for identified activity records, protected
   by authenticated grants and `is_teacher()` UPDATE/DELETE RLS policies
 - Teacher-controlled Poster Peer Review state, publicly readable as a single
@@ -153,35 +147,17 @@ Important current rules:
 
 ## Active sprint
 
-**Sprint 2 — Teacher Operations and Activity Control**
+**Sprint 5 — Student Identity and Experience Simplification**
 
-Sprint 1 is working in production. Do not reopen completed Sprint 1 work unless a reproducible regression is found.
-
-Implementation order:
-
-1. Dashboard foundation is implemented in the current Draft PR: preserved
-   summary cards; session restoration; sign-out; access, loading, empty and
-   error states; refresh; and detailed Student Check-in records.
-2. Next, generalise the record view to Class Pulse, Team Conversation,
-   Four-Week Promise and Poster Peer Review.
-3. Teacher-only edit and confirmed delete are implemented for identified
-   activities; Class Pulse remains aggregate-only.
-4. **Open peer review** is implemented in Admin. It is off by default; its
-   state is stored in Supabase, safely readable by the public portal, writable
-   only by teachers, and enforced by the Poster Review INSERT policy. Apply and
-   verify the Phase 4 migration before treating this as production-complete.
-5. CSV export is implemented after record management, with Class Pulse kept
-   aggregate-only; complete the production verification matrix before closing
-   Sprint 2.
-6. Complete role, RLS, migration, build and production smoke tests.
-
-Student submissions remain create-once. Do not add student authentication, student-side editing, AI features, multi-course administration or a major database redesign in Sprint 2.
-
-The temporary hard-coded Peer Review disabled state is only a Sprint 1 safety measure. Sprint 2 must replace it with teacher-controlled runtime state and database enforcement; it must not merely enable the button in frontend code.
+Phase 1 retires Class Pulse, Team Conversation and the standalone Find My Team
+page from the active experience without deleting historical rows. Week 1
+Check-in remains operational until Phase 2 replaces it with Account Activation
+& Check-in. The target student information architecture is **This Week**, **My
+Project** and **Get Help**; authentication is not part of Phase 1.
 
 Detailed scope and acceptance criteria are in
-`docs/sprints/sprint-02/PLAN.md`. Actual progress and evidence belong in
-`docs/sprints/sprint-02/HANDOFF.md`. New sessions must use
+`docs/sprints/sprint-05/PLAN.md`. Actual progress and evidence belong in
+`docs/sprints/sprint-05/HANDOFF.md`. New sessions must use
 `prompts/START_SESSION.md`.
 
 ## Sprint continuity
