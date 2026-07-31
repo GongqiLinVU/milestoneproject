@@ -194,10 +194,14 @@ Scope:
   deliverables and clear Student/Teacher entry points
 - move the authenticated experience to `/student`
 - add teacher-opened studio sessions; only one session may be open per block
-- require an activated student to confirm attendance for the open session before
-  weekly activities appear
+- allow activated students to log in and use their Student Portal at any time;
+  Session Check-in is a separate teacher-controlled action
+- show Check-in only while the teacher has an open session; students cannot
+  pre-check-in, select another date, reopen history or check in after closure
 - record each student's attendance once per session without reusing or changing
   the historical Week 1 activation Check-in
+- preserve a read-only Session History for teachers, including attendance lists
+  and CSV export, and show each student only their own My Attendance history
 - resolve Student, Teaching Block, Team and Project during activation and after
   every later login
 - expose the same read-only team/project context through My Project rather than
@@ -217,8 +221,12 @@ Acceptance:
 - unauthenticated visitors can read the Landing Page without seeing weekly
   activities or protected student context
 - `/student` requires roster-prepared login; no open registration is introduced
-- without a teacher-opened session, the student sees a safe waiting state rather
-  than weekly activities
+- without a teacher-opened session, the student can still use the portal but
+  sees that Session Check-in is unavailable
+- students cannot check in before the teacher opens a session, and historical
+  sessions cannot be reopened or used for late check-in
+- teacher and student history views refer to the same preserved attendance
+  records; students see only their own records
 - the same student cannot create duplicate attendance for one session
 - a student cannot check in to another block or a closed session
 - login creates visible value immediately
