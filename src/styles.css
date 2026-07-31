@@ -1365,6 +1365,102 @@ button.danger:hover {
 }
 .teacher-follow-up-form { background: #fff; }
 .follow-up-actions { margin-top: 1rem; }
+
+/* Sprint 4 Phase 3: later-week teacher follow-up continuity */
+.checkout-week-filter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 1rem 0;
+  padding: .85rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+}
+.checkout-week-filter > span {
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.checkout-week-filter > div { display: flex; flex-wrap: wrap; gap: .45rem; }
+.checkout-week-filter button { min-height: 36px; padding: .45rem .75rem; }
+.checkout-week-filter button.active {
+  color: #fff;
+  border-color: var(--ink);
+  background: var(--ink);
+}
+.follow-up-continuity {
+  margin: 1rem 0 1.4rem;
+  border: 1px solid #d9d4ff;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #faf9ff;
+}
+.follow-up-continuity-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.2rem;
+  border-bottom: 1px solid #e5e1ff;
+}
+.follow-up-continuity-heading h3 { margin: .15rem 0 .25rem; }
+.follow-up-continuity-heading p { margin: 0; color: var(--muted); }
+.follow-up-continuity-heading > strong {
+  flex: 0 0 auto;
+  padding: .35rem .65rem;
+  border-radius: 999px;
+  color: #4d3bc2;
+  background: #ece9ff;
+}
+.follow-up-continuity-list { display: grid; }
+.follow-up-continuity-list article {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) auto auto minmax(220px, 2fr) auto;
+  align-items: center;
+  gap: .8rem;
+  padding: 1rem 1.2rem;
+  border-bottom: 1px solid #e8e5f7;
+}
+.follow-up-continuity-list article:last-child { border-bottom: 0; }
+.follow-up-continuity-identity { display: grid; gap: .15rem; }
+.follow-up-continuity-identity small,
+.follow-up-continuity-detail small { color: var(--muted); }
+.follow-up-continuity-detail p { margin: 0 0 .2rem; font-weight: 650; }
+.week-evidence-state {
+  padding: .3rem .55rem;
+  border-radius: 999px;
+  font-size: .76rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.week-evidence-state.submitted { color: #176b45; background: #e4f6ed; }
+.week-evidence-state.missing { color: #9b3d28; background: #ffebe5; }
+.follow-up-continuity-empty {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  padding: 1.1rem 1.2rem;
+  color: #38614c;
+}
+.follow-up-continuity-empty span { display: grid; gap: .15rem; }
+
+@media (max-width: 1050px) {
+  .follow-up-continuity-list article {
+    grid-template-columns: 1fr auto;
+  }
+  .follow-up-continuity-detail { grid-column: 1 / -1; }
+}
+
+@media (max-width: 640px) {
+  .checkout-week-filter,
+  .follow-up-continuity-heading { align-items: stretch; flex-direction: column; }
+  .follow-up-continuity-list article { grid-template-columns: 1fr; }
+  .follow-up-continuity-detail { grid-column: auto; }
+}
 .review-save-row {
   display: flex;
   align-items: center;

@@ -1711,6 +1711,7 @@ function Admin() {
   const [teacherReviewMessage, setTeacherReviewMessage] = useState("");
   const [teacherReviews, setTeacherReviews] = useState<ActivityRecord[]>([]);
   const [openReviewStudentId, setOpenReviewStudentId] = useState<string | null>(null);
+  const [checkoutWeekFilter, setCheckoutWeekFilter] = useState<number | "all">(3);
   const [aiSuggestions, setAiSuggestions] = useState<Record<string, AiTeachingSuggestion>>({});
   const [aiSuggestionMessages, setAiSuggestionMessages] = useState<Record<string, string>>({});
   const [aiSuggestionBusyId, setAiSuggestionBusyId] = useState<string | null>(null);
@@ -2127,7 +2128,7 @@ function Admin() {
       return;
     }
     setRecords((recordResult.data ?? []) as unknown as ActivityRecord[]);
-    if (table === "week2_progress_reviews") {
+    if (table === "week2_progress_reviews" || table === "weekly_engagement_checkouts") {
       await loadTeacherReviews(blockId);
     }
     setCounts(
@@ -2260,12 +2261,14 @@ function Admin() {
         }),
       );
     } else {
+      const exportRecords =
+        activeTable === "weekly_engagement_checkouts" ? visibleRecords : records;
       headings = [
         "Academic year",
         "Teaching block",
         ...activeActivity.columns.map(([, label]) => label),
       ];
-      rows = records.map((record) =>
+      rows = exportRecords.map((record) =>
         [
           selectedBlock?.academic_year ?? "",
           selectedBlock?.block_code ?? "",
@@ -2328,6 +2331,25 @@ function Admin() {
   ] as const;
   const pulseCount = (field: string, value: string) =>
     records.filter((record) => String(record[field]) === value).length;
+  const visibleRecords =
+    activeTable === "weekly_engagement_checkouts" && checkoutWeekFilter !== "all"
+      ? records.filter((record) => Number(record.week_number) === checkoutWeekFilter)
+      : records;
+  const followUpWeek =
+    activeTable === "weekly_engagement_checkouts" &&
+    (checkoutWeekFilter === 3 || checkoutWeekFilter === 4)
+      ? checkoutWeekFilter
+      : null;
+  const unresolvedFollowUps = followUpWeek
+    ? teacherReviews.filter((review) => {
+        const status = String(review.follow_up_status ?? "Not reviewed");
+        const recheckWeek = review.recheck_week ? Number(review.recheck_week) : null;
+        return (
+          !["No follow-up needed", "Resolved"].includes(status) &&
+          (recheckWeek === null || recheckWeek <= followUpWeek)
+        );
+      })
+    : [];
 
   const teamTemperatures =
     activeTable === "team_health_checks"
@@ -2663,6 +2685,87 @@ function Admin() {
             </button>
           </div>
         </div>
+        {activeTable === "weekly_engagement_checkouts" && (
+          <div className="checkout-week-filter" aria-label="Weekly check-out view">
+            <span>View week</span>
+            <div>
+              {(["all", 1, 2, 3, 4] as const).map((week) => (
+                <button
+                  key={week}
+                  type="button"
+                  className={checkoutWeekFilter === week ? "active" : "secondary"}
+                  aria-pressed={checkoutWeekFilter === week}
+                  onClick={() => setCheckoutWeekFilter(week)}
+                >
+                  {week === "all" ? "All" : `Week ${week}`}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        {dataStatus === "success" && followUpWeek && (
+          <section className="follow-up-continuity" aria-labelledby="follow-up-continuity-title">
+            <div className="follow-up-continuity-heading">
+              <div>
+                <div className="eyebrow">Teacher follow-up continuity</div>
+                <h3 id="follow-up-continuity-title">Week {followUpWeek} follow-up queue</h3>
+                <p>
+                  Unresolved private Teacher Reviews due by this week, matched
+                  against the selected block’s Week {followUpWeek} evidence.
+                </p>
+              </div>
+              <strong>{unresolvedFollowUps.length} open</strong>
+            </div>
+            {unresolvedFollowUps.length === 0 ? (
+              <div className="follow-up-continuity-empty">
+                <CheckCircle2 aria-hidden="true" />
+                <span><b>No unresolved follow-up due.</b>Resolved work and reviews marked “No follow-up needed” stay out of this queue.</span>
+              </div>
+            ) : (
+              <div className="follow-up-continuity-list">
+                {unresolvedFollowUps.map((review) => {
+                  const studentId = String(review.student_id);
+                  const submitted = visibleRecords.some(
+                    (record) =>
+                      String(record.student_id).toLowerCase() === studentId.toLowerCase(),
+                  );
+                  const actions = Array.isArray(review.follow_up_actions)
+                    ? review.follow_up_actions.map(String)
+                    : [];
+                  return (
+                    <article key={review.id}>
+                      <div className="follow-up-continuity-identity">
+                        <b>{String(review.student_name)}</b>
+                        <small>{studentId} · {String(review.team_name)}</small>
+                      </div>
+                      <span className={`follow-up-badge status-${String(review.follow_up_status).toLowerCase().replace(/\s+/g, "-")}`}>
+                        {String(review.follow_up_status)}
+                      </span>
+                      <span className={`week-evidence-state ${submitted ? "submitted" : "missing"}`}>
+                        {submitted ? `Week ${followUpWeek} submitted` : `Week ${followUpWeek} missing`}
+                      </span>
+                      <div className="follow-up-continuity-detail">
+                        <p>{actions.join(" · ") || "Review the agreed follow-up action."}</p>
+                        {Boolean(review.follow_up_note) && <small>{String(review.follow_up_note)}</small>}
+                      </div>
+                      <button
+                        type="button"
+                        className="secondary compact"
+                        onClick={() => {
+                          setActiveTable("week2_progress_reviews");
+                          setOpenReviewStudentId(studentId);
+                          void loadDashboard("week2_progress_reviews", selectedBlockId);
+                        }}
+                      >
+                        Open evidence & review
+                      </button>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        )}
         {dataStatus === "loading" && (
           <div className="admin-state" role="status" aria-live="polite">
             <RefreshCw className="spin" aria-hidden="true" />
@@ -2718,12 +2821,13 @@ function Admin() {
             </p>
           </div>
         )}
-        {dataStatus === "success" && records.length === 0 && (
+        {dataStatus === "success" && visibleRecords.length === 0 && (
           <div className="admin-state" role="status">
             <b>No {activeActivity.label} records yet</b>
             <span>
-              Valid {activeActivity.label.toLowerCase()} submissions will appear
-              here.
+              {activeTable === "weekly_engagement_checkouts" && checkoutWeekFilter !== "all"
+                ? `No Week ${checkoutWeekFilter} check-out has been submitted for this block.`
+                : `Valid ${activeActivity.label.toLowerCase()} submissions will appear here.`}
             </span>
           </div>
         )}
@@ -3036,14 +3140,14 @@ function Admin() {
             </div>
           )}
         {dataStatus === "success" &&
-          records.length > 0 &&
+          visibleRecords.length > 0 &&
           activeTable !== "week1_pulse" &&
           activeTable !== "week2_progress_reviews" && (
           <div className="admin-table-wrap">
             <table>
               <caption>
-                {records.length} {activeActivity.label}{" "}
-                {records.length === 1 ? "record" : "records"}, newest first
+                {visibleRecords.length} {activeActivity.label}{" "}
+                {visibleRecords.length === 1 ? "record" : "records"}, newest first
               </caption>
               <thead>
                 <tr>
@@ -3056,7 +3160,7 @@ function Admin() {
                 </tr>
               </thead>
               <tbody>
-                {records.map((record) => (
+                {visibleRecords.map((record) => (
                   <tr key={record.id}>
                     {activeActivity.columns.map(([field, label]) => (
                       <td

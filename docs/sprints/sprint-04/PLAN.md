@@ -1,6 +1,6 @@
 # Sprint 4 — Project Foundation, Weekly Journey and Teaching Analytics
 
-**Status: Active — Phase 2 implemented locally**
+**Status: Active — Phase 3 in progress**
 
 ## Origin and boundary
 
@@ -97,6 +97,18 @@ Acceptance:
 
 Surface unresolved Teacher Review work in later-week teacher views, isolated by
 teaching block and linked to evidence.
+
+Acceptance:
+
+- Weekly teacher records can be filtered to one Week 1–4 view.
+- Week 3 and Week 4 show unresolved Teacher Reviews due by the selected week.
+- Each follow-up shows whether that student has submitted the selected week’s
+  check-out without treating missing evidence as a negative response.
+- The teacher can return directly to the original Week 2 evidence and private
+  review record.
+- Resolved work and reviews marked `No follow-up needed` stay out of the queue.
+- Follow-up records and evidence are matched only inside the selected teaching
+  block.
 
 ## Phase 4 — Three-week trajectory and teaching analytics
 
