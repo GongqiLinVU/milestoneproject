@@ -11,7 +11,7 @@ declare
   v_account public.student_accounts;
   v_roster public.student_roster;
   v_block public.teaching_blocks;
-  v_project_name text;
+  v_project public.projects%rowtype;
   v_checkin boolean;
 begin
   select * into v_account from public.student_accounts
@@ -35,7 +35,7 @@ begin
 
   select * into v_block from public.teaching_blocks where id = v_roster.block_id;
 
-  select project.title into v_project_name
+  select project.* into v_project
   from public.teams team
   join public.team_project_assignments assignment on assignment.team_id = team.id
   join public.projects project on project.id = assignment.project_id
@@ -51,7 +51,14 @@ begin
     'studentName', coalesce(v_roster.preferred_name, v_roster.full_name),
     'blockLabel', concat(v_block.academic_year, ' · ', v_block.block_code),
     'teamName', concat('Team ', v_roster.team_number),
-    'projectName', v_project_name,
+    'projectName', coalesce(v_project.title, v_roster.project_name),
+    'projectProblem', v_project.problem,
+    'projectDescription', v_project.description,
+    'projectTargetUsers', v_project.target_users,
+    'projectExpectedOutcomes', v_project.expected_outcomes,
+    'projectCategory', v_project.category,
+    'projectDifficulty', v_project.difficulty,
+    'projectSource', case when v_project.id is not null then 'catalogue' when v_roster.project_name is not null then 'roster' else 'none' end,
     'checkinRecognised', v_checkin
   );
 end;
@@ -65,12 +72,25 @@ create table if not exists public.studio_sessions (
   block_id uuid not null references public.teaching_blocks(id) on delete restrict,
   title text not null check (char_length(trim(title)) between 3 and 120),
   session_date date not null,
-  status text not null default 'open' check (status in ('open', 'closed')),
-  opened_at timestamptz not null default now(),
+  status text not null default 'scheduled' check (status in ('scheduled', 'open', 'closed')),
+  starts_at timestamptz,
+  ends_at timestamptz,
+  opened_at timestamptz,
   closed_at timestamptz,
   created_by uuid not null default auth.uid() references auth.users(id) on delete restrict,
   created_at timestamptz not null default now()
 );
+
+alter table public.studio_sessions add column if not exists starts_at timestamptz;
+alter table public.studio_sessions add column if not exists ends_at timestamptz;
+alter table public.studio_sessions alter column opened_at drop not null;
+alter table public.studio_sessions alter column opened_at drop default;
+alter table public.studio_sessions drop constraint if exists studio_sessions_status_check;
+alter table public.studio_sessions add constraint studio_sessions_status_check check (status in ('scheduled', 'open', 'closed')) not valid;
+alter table public.studio_sessions validate constraint studio_sessions_status_check;
+alter table public.studio_sessions drop constraint if exists studio_sessions_schedule_check;
+alter table public.studio_sessions add constraint studio_sessions_schedule_check check (ends_at is null or starts_at is null or ends_at > starts_at) not valid;
+alter table public.studio_sessions validate constraint studio_sessions_schedule_check;
 
 create unique index if not exists studio_sessions_one_open_per_block_idx
   on public.studio_sessions (block_id) where status = 'open';
@@ -134,7 +154,8 @@ begin
 
   select * into v_session
   from public.studio_sessions
-  where block_id = v_roster.block_id and status = 'open'
+  where block_id = v_roster.block_id
+    and (status = 'open' or (status = 'scheduled' and starts_at <= now() and (ends_at is null or ends_at > now())))
   limit 1;
 
   if v_session.id is null then
@@ -157,6 +178,41 @@ $$;
 revoke all on function public.get_my_open_studio_session() from public;
 grant execute on function public.get_my_open_studio_session() to authenticated;
 
+create or replace function public.get_my_session_history()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_account public.student_accounts%rowtype;
+  v_block_id uuid;
+  v_result jsonb;
+begin
+  select * into v_account from public.student_accounts
+  where auth_user_id = auth.uid() and status = 'activated';
+  select roster.block_id into v_block_id from public.student_roster roster
+  join public.teaching_blocks block on block.id = roster.block_id
+  where roster.student_id = v_account.student_id and block.status = 'active' limit 1;
+  if v_block_id is null then return '[]'::jsonb; end if;
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'sessionId', session.id, 'title', session.title, 'sessionDate', session.session_date,
+    'startsAt', session.starts_at, 'endsAt', session.ends_at,
+    'status', case when session.status = 'closed' or (session.ends_at is not null and session.ends_at <= now()) then 'closed'
+      when session.status = 'open' or (session.starts_at <= now() and (session.ends_at is null or session.ends_at > now())) then 'open' else 'scheduled' end,
+    'checkedInAt', checkin.checked_in_at
+  ) order by session.session_date, session.created_at), '[]'::jsonb) into v_result
+  from public.studio_sessions session left join public.student_session_checkins checkin
+    on checkin.session_id = session.id and checkin.auth_user_id = auth.uid()
+  where session.block_id = v_block_id;
+  return v_result;
+end;
+$$;
+
+revoke all on function public.get_my_session_history() from public;
+grant execute on function public.get_my_session_history() to authenticated;
+
 create or replace function public.check_in_to_studio_session(p_session_id uuid)
 returns timestamptz
 language plpgsql
@@ -175,7 +231,8 @@ begin
 
   select * into v_session
   from public.studio_sessions
-  where id = p_session_id and status = 'open';
+  where id = p_session_id
+    and (status = 'open' or (status = 'scheduled' and starts_at <= now() and (ends_at is null or ends_at > now())));
 
   select roster.block_id into v_block_id
   from public.student_roster roster
@@ -211,6 +268,7 @@ grant execute on function public.check_in_to_studio_session(uuid) to authenticat
 -- 3. Check-in is idempotent and the original timestamp is preserved.
 -- 4. Students cannot check in to another block or a closed session.
 -- 5. Students can read only their own check-in; teachers can read the block.
+-- 6. Scheduled sessions cannot be checked into before starts_at or after ends_at.
 --
 -- Rollback:
 -- Close open sessions, revoke both RPCs, then deploy the previous frontend.
