@@ -85,7 +85,10 @@ export function StudentAccess({ children }: { children: ReactNode | ((context: C
       p_session_id: studioSession.sessionId,
     });
     if (error) setMessage("Check-in could not be completed. Ask your teacher to confirm that this session is still open.");
-    else setStudioSession({ ...studioSession, checkedInAt: String(data) });
+    else {
+      setStudioSession({ ...studioSession, checkedInAt: String(data) });
+      window.dispatchEvent(new CustomEvent("student-session-checkin"));
+    }
     setBusy(false);
   }
 
