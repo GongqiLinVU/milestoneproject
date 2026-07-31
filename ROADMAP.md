@@ -171,7 +171,7 @@ remain in `docs/sprints/sprint-04/`.
 
 ## Sprint 5 — Student Identity and Experience Simplification
 
-**Status: Planned — ready for a new session**
+**Status: In progress — Phase 1 Draft PR**
 
 ### Goal
 
@@ -188,6 +188,11 @@ evidence.
 - automatically resolve Student, Block, Team and Project after login
 - remove repeated identity fields and consolidate the student journey
 - carry forward Sprint 4 trajectory, export, privacy and production validation
+
+Phase 1 removes Class Pulse and standalone Find My Team entry points from the
+student UI and removes Class Pulse from current teacher Activity Records. Team
+Conversation was already retired from the active UI in Sprint 3. Historical
+`week1_pulse` and `team_conversations` rows and policies remain unchanged.
 
 ### Delivery sequence
 
