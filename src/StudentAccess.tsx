@@ -22,6 +22,9 @@ type Context = {
   projectDifficulty: string | null;
   projectSource: "catalogue" | "roster" | "none";
   checkinRecognised: boolean;
+  studioSession?: StudioSession | null;
+  checkInToSession?: () => Promise<void>;
+  sessionCheckinBusy?: boolean;
 };
 
 type StudioSession = {
@@ -191,12 +194,14 @@ export function StudentAccess({ children }: { children: ReactNode | ((context: C
       <span>{context.studentName} · {context.teamName} · {context.projectName || "Project pending"}</span>
       <button className="secondary compact" onClick={() => void supabase.auth.signOut()}><LogOut size={15}/>Sign out</button>
     </div>
-    {studioSession && <aside className={`session-checkin-fab ${studioSession.checkedInAt ? "complete" : "attention"}`} aria-live="polite">
-      {studioSession.checkedInAt
-        ? <a href="#sessions"><CheckCircle2 size={18}/> Checked in</a>
-        : <button disabled={busy} onClick={() => void checkInToSession()}><span><b>{busy ? "Checking in…" : "Session open — Check in"}</b><small>{studioSession.title}</small></span></button>}
-    </aside>}
     {message && <p className="student-session-message admin-alert" role="status">{message}</p>}
-    {typeof children === "function" ? children(context) : children}
+    {typeof children === "function"
+      ? children({
+          ...context,
+          studioSession,
+          checkInToSession,
+          sessionCheckinBusy: busy,
+        })
+      : children}
   </>;
 }
