@@ -174,18 +174,24 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
         </a>
         <nav>
           <a href="#weekly">This Week</a>
-          {student.studioSession && (
-            student.studioSession.checkedInAt
-              ? <a className="nav-session-status complete" href="#sessions" aria-label={`${student.studioSession.title}, checked in`}><CheckCircle2 size={16}/><span>{student.studioSession.title}</span><b>Checked in</b></a>
-              : <button className="nav-session-status attention" disabled={student.sessionCheckinBusy} onClick={() => void student.checkInToSession?.()} aria-label={`Check in to ${student.studioSession.title}`}><span>{student.studioSession.title}</span><b>{student.sessionCheckinBusy ? "Checking in…" : "Check in"}</b></button>
-          )}
           <a href="#my-project">My Project</a>
           <a href="#sessions">Sessions</a>
           <a href="#get-help">Get Help</a>
         </nav>
       </header>
       <main id="top" className="student-portal-main">
-        <section className="portal-intro"><div className="eyebrow">Authenticated student portal</div><h1>This Week</h1><p>{activeBlock?.label || "Your active teaching block"} · Complete only the activity that matters now.</p></section>
+        <section className="portal-intro">
+          <div className="eyebrow">Authenticated student portal</div>
+          <div className="portal-title-row">
+            <h1>This Week</h1>
+            {student.studioSession && (
+              student.studioSession.checkedInAt
+                ? <a className="nav-session-status complete" href="#sessions" aria-label={`${student.studioSession.title}, checked in`}><CheckCircle2 size={16}/><span>{student.studioSession.title}</span><b>Checked in</b></a>
+                : <button className="nav-session-status attention" disabled={student.sessionCheckinBusy} onClick={() => void student.checkInToSession?.()} aria-label={`Check in to ${student.studioSession.title}`}><span>{student.studioSession.title}</span><b>{student.sessionCheckinBusy ? "Checking in…" : "Check in"}</b></button>
+            )}
+          </div>
+          <p>{activeBlock?.label || "Your active teaching block"} · Complete only the activity that matters now.</p>
+        </section>
         <div className="portal-section portal-weekly-section"><WeeklyHub
           open={setForm}
           peerReviewOpen={peerReviewOpen}
