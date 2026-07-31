@@ -29,8 +29,11 @@ The production platform already has:
 - Students use roster-prepared identities based on Student ID.
 - Do not use a shared initial password.
 - Week 1 Check-in becomes Account Activation & Check-in: unique initial
-  credential, personal password setup, roster context confirmation and a short
-  Week 1 recovery check in one first-use journey.
+  credential, personal password setup, roster context confirmation and, only
+  when no valid prior Check-in exists, a short Week 1 recovery check.
+- Existing Week 1 Check-ins are linked by unique Student ID and are not
+  resubmitted; ambiguous or invalid IDs go to teacher review rather than being
+  matched by name.
 - Login must automatically associate Student, Block, Team and Project and remove
   repeated identity fields from later activities.
 - Remove standalone Find My Team once the authenticated My Project context is
@@ -79,7 +82,8 @@ Phase 2 requires a short reviewed design before implementation. It must resolve:
 - roster import/provisioning lifecycle
 - duplicate/cross-block identity
 - RLS policy matrix
-- legacy anonymous evidence association
+- legacy anonymous evidence association, including recognition of existing
+  Week 1 Check-ins without requiring resubmission
 - migration, verification and rollback
 
 ## Reusable prompt for the new session
