@@ -100,6 +100,9 @@ type AuthenticatedStudent = {
   projectProblem: string | null; projectDescription: string | null; projectTargetUsers: string | null;
   projectExpectedOutcomes: string | null; projectCategory: string | null; projectDifficulty: string | null;
   projectSource: "catalogue" | "roster" | "none";
+  studioSession?: { sessionId: string; title: string; sessionDate: string; checkedInAt: string | null } | null;
+  checkInToSession?: () => Promise<void>;
+  sessionCheckinBusy?: boolean;
 };
 type StudentSessionRecord = { sessionId: string; title: string; sessionDate: string; startsAt: string | null; endsAt: string | null; checkedInAt: string | null; status: string };
 
@@ -171,6 +174,11 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
         </a>
         <nav>
           <a href="#weekly">This Week</a>
+          {student.studioSession && (
+            student.studioSession.checkedInAt
+              ? <a className="nav-session-status complete" href="#sessions" aria-label={`${student.studioSession.title}, checked in`}><CheckCircle2 size={16}/><span>{student.studioSession.title}</span><b>Checked in</b></a>
+              : <button className="nav-session-status attention" disabled={student.sessionCheckinBusy} onClick={() => void student.checkInToSession?.()} aria-label={`Check in to ${student.studioSession.title}`}><span>{student.studioSession.title}</span><b>{student.sessionCheckinBusy ? "Checking in…" : "Check in"}</b></button>
+          )}
           <a href="#my-project">My Project</a>
           <a href="#sessions">Sessions</a>
           <a href="#get-help">Get Help</a>
