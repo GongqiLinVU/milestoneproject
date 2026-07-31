@@ -155,6 +155,11 @@ Check-in remains operational until Phase 2 replaces it with Account Activation
 & Check-in. The target student information architecture is **This Week**, **My
 Project** and **Get Help**; authentication is not part of Phase 1.
 
+Phase 2 introduces teacher-prepared Supabase Auth identities keyed by Student
+ID, unique one-time credentials, required personal-password setup and
+authenticated roster context. `SUPABASE_SERVICE_ROLE_KEY` is server-only.
+Students cannot register, enumerate the roster or choose their block/team.
+
 Detailed scope and acceptance criteria are in
 `docs/sprints/sprint-05/PLAN.md`. Actual progress and evidence belong in
 `docs/sprints/sprint-05/HANDOFF.md`. New sessions must use
