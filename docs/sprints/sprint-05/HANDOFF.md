@@ -1,6 +1,6 @@
 # Sprint 5 Handoff
 
-**Status: Phase 1 implemented in Draft PR — awaiting review**
+**Status: Phase 1 merged; Phase 2 implemented in Draft PR**
 
 ## Production starting point
 
@@ -99,6 +99,20 @@ Phase 2 requires a short reviewed design before implementation. It must resolve:
 - legacy anonymous evidence association, including recognition of existing
   Week 1 Check-ins without requiring resubmission
 - migration, verification and rollback
+
+## Phase 2 implementation evidence
+
+- Added server-only, teacher-authorised roster account provisioning.
+- Added Student ID login translation, non-enumerating password recovery and
+  persistent Supabase student sessions.
+- Added Account Activation & Check-in with personal password setup,
+  roster-derived context and legacy Check-in recognition.
+- Added roster account statuses, pending count and one-time credential CSV.
+- Added `student_accounts`, conservative Check-in linking, authenticated context
+  RPCs and role-scoped RLS in an idempotent migration.
+- Revoked the retired anonymous Find My Team RPC at Phase 2 rollout.
+- Documented the security decision, role matrix, deployment and rollback.
+- `npm run build` passes; the existing Vite bundle-size advisory remains.
 
 ## Reusable prompt for the new session
 
