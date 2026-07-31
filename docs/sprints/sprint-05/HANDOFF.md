@@ -140,6 +140,12 @@ Phase 2 requires a short reviewed design before implementation. It must resolve:
   one-time temporary credential, sets the account back to `ready`, and preserves
   all roster, Check-in, attendance and activity evidence.
 - `npm run build` passes; the existing Vite bundle-size advisory remains.
+- Refined recurring sessions into an editable ten-session block plan with
+  optional automatic start/end windows plus manual open/close controls.
+- Moved live Student Check-in into a compact attention button and added a
+  dedicated student Sessions history view.
+- Expanded My Project from a title-only context to the assigned Project
+  Catalogue detail, with an explicit legacy-roster fallback.
 
 ## Reusable prompt for the new session
 
