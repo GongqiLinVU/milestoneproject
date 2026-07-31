@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { createClient, type Session } from "@supabase/supabase-js";
-import { LogOut } from "lucide-react";
+import { CheckCircle2, LogOut } from "lucide-react";
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL || "https://gwihaizxivclamzehupk.supabase.co",
@@ -14,6 +14,13 @@ type Context = {
   blockLabel: string;
   teamName: string;
   projectName: string | null;
+  projectProblem: string | null;
+  projectDescription: string | null;
+  projectTargetUsers: string | null;
+  projectExpectedOutcomes: string | null;
+  projectCategory: string | null;
+  projectDifficulty: string | null;
+  projectSource: "catalogue" | "roster" | "none";
   checkinRecognised: boolean;
 };
 
@@ -55,6 +62,21 @@ export function StudentAccess({ children }: { children: ReactNode | ((context: C
       }
     });
   }, [session]);
+
+  useEffect(() => {
+    if (!session || context?.status !== "activated") return;
+    const refresh = () => {
+      void supabase.rpc("get_my_open_studio_session").then(({ data }) =>
+        setStudioSession((data as StudioSession | null) || null),
+      );
+    };
+    const timer = window.setInterval(refresh, 30000);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [session, context?.status]);
 
   async function checkInToSession() {
     if (!studioSession) return;
@@ -166,15 +188,12 @@ export function StudentAccess({ children }: { children: ReactNode | ((context: C
       <span>{context.studentName} · {context.teamName} · {context.projectName || "Project pending"}</span>
       <button className="secondary compact" onClick={() => void supabase.auth.signOut()}><LogOut size={15}/>Sign out</button>
     </div>
-    <section className={`portal-session-notice ${studioSession ? "open" : "closed"}`}>
-      {!studioSession ? <>
-        <div><div className="eyebrow">Session Check-in</div><b>No session is currently open</b><p>You can still use your Student Portal. Check-in will appear here after your teacher opens a session.</p></div>
-      </> : <>
-        <div><div className="eyebrow">Session Check-in · Open now</div><b>{studioSession.title}</b><p>{studioSession.sessionDate} · {studioSession.checkedInAt ? `Checked in at ${new Date(studioSession.checkedInAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : "Check-in is available only while this session remains open."}</p></div>
-        {!studioSession.checkedInAt && <button disabled={busy} onClick={() => void checkInToSession()}>{busy ? "Checking in…" : "Check in now"}</button>}
-      </>}
-      {message && <p className="admin-alert" role="status">{message}</p>}
-    </section>
+    {studioSession && <aside className={`session-checkin-fab ${studioSession.checkedInAt ? "complete" : "attention"}`} aria-live="polite">
+      {studioSession.checkedInAt
+        ? <a href="#sessions"><CheckCircle2 size={18}/> Checked in</a>
+        : <button disabled={busy} onClick={() => void checkInToSession()}><span><b>{busy ? "Checking in…" : "Session open — Check in"}</b><small>{studioSession.title}</small></span></button>}
+    </aside>}
+    {message && <p className="student-session-message admin-alert" role="status">{message}</p>}
     {typeof children === "function" ? children(context) : children}
   </>;
 }
