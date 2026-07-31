@@ -232,6 +232,22 @@ Acceptance:
 - login creates visible value immediately
 - the normal weekly path does not repeat known identity fields
 - students cannot switch or overwrite roster-authoritative team/project context
+
+### Phase 3 session-management refinement
+
+- Replace the full-width Student Portal attendance banner with a compact,
+  attention state shown only when a session is actually open and the student
+  has not checked in.
+- Add `Sessions` to the student navigation and show the student's immutable
+  attendance history from the same records used by the teacher.
+- Allow a teacher to prepare the standard ten-session block plan in one action,
+  then edit each title, date and optional automatic start/end window.
+- Support both scheduled windows and explicit `Open now` / `Close` controls.
+- Preserve closed sessions and attendance as read-only history; preparing a new
+  plan never overwrites old records.
+- Resolve full Project Catalogue content for My Project: problem, description,
+  target users, expected outcomes, category and difficulty. When only a legacy
+  roster project name exists, show that the catalogue assignment is incomplete.
 - the interface remains usable on mobile and does not reproduce the teacher
   dashboard
 - legacy evidence remains available to teachers
