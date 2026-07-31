@@ -93,6 +93,36 @@ Before coding, produce a short technical decision covering:
 - RLS policy matrix for anonymous student, authenticated student,
   authenticated non-teacher and teacher roles
 
+### Teacher provisioning workflow
+
+After a teacher imports or updates a roster, the roster area shows an explicit
+**Prepare student accounts** action.
+
+Behaviour:
+
+- the action is enabled only when the selected Teaching Block contains roster
+  students who do not yet have an account
+- the label includes the pending count, for example
+  `Prepare 5 student accounts`
+- clicking it creates accounts and unique one-time initial passwords only for
+  students who are not already provisioned
+- repeated clicks are idempotent and never reset an existing account, personal
+  password or activation state
+- after a later roster import, the action becomes available again only for the
+  newly added students
+- the teacher receives a controlled download/print view containing only the
+  newly created credentials for secure individual distribution
+- initial passwords are not retained or redisplayed as recoverable plaintext;
+  losing one requires an explicit per-student reset action with confirmation
+- duplicate or invalid Student IDs are blocked and reported for teacher
+  correction rather than partially or ambiguously provisioned
+- the roster shows a simple status per student: `Not prepared`, `Ready to
+  activate`, or `Activated`
+
+This remains a deliberate teacher action after import, not an automatic side
+effect of uploading a CSV. That gives the teacher a chance to review roster
+errors before authentication accounts are created.
+
 Preferred UX:
 
 First use — **Account Activation & Check-in**:
