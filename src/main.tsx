@@ -64,17 +64,42 @@ const titles: Record<Kind, string> = {
   checkout4: "Week 4 Final Delivery Check",
   review: "Poster Peer Review",
 };
-function App() {
-  const [form, setForm] = useState<Kind | null>(null);
+function PublicLanding() {
   const [live, setLive] = useState<boolean | null>(null);
+  useEffect(() => {
+    supabase.from("portal_health").select("status").limit(1).then(({ error }) => setLive(!error));
+  }, []);
+  return <>
+    <header>
+      <a className="brand" href="#top">NIT3004 <span>Engineering Studio</span></a>
+      <nav><a href="#journey">Journey</a><a href="#deliverables">Deliverables</a><a href="/student">Session Check-in</a><a href="/admin">Teacher</a></nav>
+    </header>
+    <main id="top">
+      <section className="hero">
+        <div>
+          <div className="eyebrow">Applied Project II · Four-week delivery studio</div>
+          <h1>Build less.<br/>Deliver <em>better.</em></h1>
+          <p>Course information stays open to everyone. Sign in only when you are ready to check in to a studio session and complete your weekly activities.</p>
+          <div className="actions">
+            <a className="primary" href="/student">Session Check-in <ArrowRight size={18}/></a>
+            <a className="secondary" href="#journey">Explore the journey</a>
+          </div>
+          <div className={"status " + (live ? "ok" : "")}><span></span>{live === null ? "Checking live data…" : live ? "Live data connected" : "Database setup required"}</div>
+        </div>
+        <div className="hero-card"><b>4 Weeks</b><span>1 Mission</span><span>1 Product</span><span>1 Team</span><small>∞ possibilities</small></div>
+      </section>
+      <Journey/><Studio/><Deliverables/>
+    </main>
+    <footer>NIT3004 Engineering Studio · Learn to deliver like an engineer.</footer>
+  </>;
+}
+
+type AuthenticatedStudent = { studentId: string; studentName: string; teamName: string; projectName: string | null };
+function StudentPortal({ student }: { student: AuthenticatedStudent }) {
+  const [form, setForm] = useState<Kind | null>(null);
   const [peerReviewOpen, setPeerReviewOpen] = useState<boolean | null>(null);
   const [activeBlock, setActiveBlock] = useState<{ id: string; label: string } | null>(null);
   useEffect(() => {
-    supabase
-      .from("portal_health")
-      .select("status")
-      .limit(1)
-      .then(({ error }) => setLive(!error));
     supabase
       .from("teaching_blocks")
       .select("id, academic_year, block_code")
@@ -99,73 +124,33 @@ function App() {
   return (
     <>
       <header>
-        <a className="brand" href="#top">
+        <a className="brand" href="/">
           NIT3004 <span>Engineering Studio</span>
         </a>
         <nav>
-          <a href="#journey">Journey</a>
-          <a href="#weekly">Weekly Check-in</a>
-          <a href="#deliverables">Deliverables</a>
-          <a href="/admin">Teacher</a>
+          <a href="#weekly">This Week</a>
+          <a href="#my-project">My Project</a>
+          <a href="#get-help">Get Help</a>
         </nav>
       </header>
       <main id="top">
-        <section className="hero">
-          <div>
-            <div className="eyebrow">
-              Applied Project II · {activeBlock?.label || "Four-week delivery studio"}
-            </div>
-            <h1>
-              Build less.
-              <br />
-              Deliver <em>better.</em>
-            </h1>
-            <p>
-              You already know how to build software. Now learn how to align a
-              team, prove progress, validate readiness and deliver with
-              confidence.
-            </p>
-            <div className="actions">
-              <a className="primary" href="#journey">
-                Explore the journey <ArrowRight size={18} />
-              </a>
-              <button className="secondary" onClick={() => setForm("checkin")}>
-                Start Week 1 check-in
-              </button>
-            </div>
-            <div className={"status " + (live ? "ok" : "")}>
-              <span></span>
-              {live === null
-                ? "Checking live data…"
-                : live
-                  ? "Live data connected"
-                  : "Database setup required"}
-            </div>
-          </div>
-          <div className="hero-card">
-            <b>4 Weeks</b>
-            <span>1 Mission</span>
-            <span>1 Product</span>
-            <span>1 Team</span>
-            <small>∞ possibilities</small>
-          </div>
-        </section>
-        <Journey />
-        <Studio />
+        <section className="portal-intro"><div className="eyebrow">Authenticated student portal</div><h1>This Week</h1><p>{activeBlock?.label || "Your active teaching block"} · Complete only the activity that matters now.</p></section>
         <WeeklyHub
           open={setForm}
           peerReviewOpen={peerReviewOpen}
         />
-        <Deliverables />
+        <section id="my-project" className="portal-panel"><Head label="My Project" title="Your team context stays connected." text="Your roster-authoritative team and project are shown in the secure session bar. Activity forms will progressively stop asking for information the platform already knows."/></section>
+        <section id="get-help" className="portal-panel"><Head label="Get Help" title="Bring one clear question." text="Use the support choices inside the current weekly activity so your teacher can connect help to the right evidence and session."/></section>
       </main>
       <footer>
-        NIT3004 Engineering Studio · Learn to deliver like an engineer.
+        NIT3004 Engineering Studio · Student Portal
       </footer>
       <Modal
         key={form ?? "closed"}
         kind={form}
         blockId={activeBlock?.id || ""}
         blockLabel={activeBlock?.label || ""}
+        student={student}
         close={() => setForm(null)}
       />
     </>
@@ -750,11 +735,13 @@ function Modal({
   kind,
   blockId,
   blockLabel,
+  student,
   close,
 }: {
   kind: Kind | null;
   blockId: string;
   blockLabel: string;
+  student: AuthenticatedStudent;
   close: () => void;
 }) {
   const [msg, setMsg] = useState("");
@@ -814,6 +801,8 @@ function Modal({
       string,
       FormDataEntryValue
     >;
+    v.name = student.studentName;
+    v.sid = student.studentId;
     const implementationMethods = formData.getAll("implementation_methods").map(String);
     if (activeKind === "progress") {
       if (implementationMethods.length === 0) {
@@ -1067,7 +1056,8 @@ function Modal({
             </>
           ) : (
             <>
-              {fields(kind)}
+              <div className="authenticated-identity"><b>{student.studentName}</b><span>{student.studentId} · {student.teamName}</span></div>
+              {fields(kind, student)}
               {msg && (
                 <p
                   className={"form-status " + (submitted ? "success" : "")}
@@ -1126,7 +1116,9 @@ const Text = ({
     <small className="field-hint">Maximum {maxLength} characters</small>
   </label>
 );
-const Identity = () => (
+const Identity = ({ student }: { student?: AuthenticatedStudent }) => student ? (
+  <><input type="hidden" name="name" value={student.studentName}/><input type="hidden" name="sid" value={student.studentId}/></>
+) : (
   <>
     <label>
       Name
@@ -1241,7 +1233,7 @@ const SelectChoice = ({
 function Choice({ label, name, options, defaultValue = "" }: { label: string; name: string; options: string[]; defaultValue?: string }) {
   return <SelectChoice label={label} name={name} placeholder="Select one" options={options} defaultValue={defaultValue} />;
 }
-function TeamHealthFields() {
+function TeamHealthFields({ student }: { student?: AuthenticatedStudent }) {
   const [risk, setRisk] = useState(false);
   const assess = (form: HTMLFormElement) => {
     const data = new FormData(form);
@@ -1257,7 +1249,7 @@ function TeamHealthFields() {
   };
   return <div onChange={(event) => assess(event.currentTarget.closest("form") as HTMLFormElement)}>
     <p className="form-note">Complete this individually. It measures participation temperature, not performance or marks.</p>
-    <Identity />
+    <Identity student={student} />
     <Choice label="Have you communicated with your team this week?" name="communication" options={["Yes","Not yet"]} />
     <Choice label="Is your role clear?" name="role_clarity" options={["Clear","Partly clear","Not clear"]} />
     <Choice label="Is participation balanced?" name="participation_balance" options={["Balanced","Some difference","Significant difference"]} />
@@ -1268,10 +1260,10 @@ function TeamHealthFields() {
     {risk && <label>Brief details<textarea name="risk_note" required maxLength={200} /><small className="field-hint">Maximum 200 characters</small></label>}
   </div>;
 }
-function EngagementCheckoutFields({ week = 1 }: { week?: 1 | 2 | 3 | 4 }) {
+function EngagementCheckoutFields({ week = 1, student }: { week?: 1 | 2 | 3 | 4; student?: AuthenticatedStudent }) {
   return <div>
     <p className="form-note">{week === 4 ? "Complete this before your final presentation and submission." : `Complete this after the final Week ${week} session, including work completed remotely.`}</p>
-    <Identity />
+    <Identity student={student} />
     <Choice label={week === 4 ? "How have you participated in final preparation?" : "1. How did you participate after compulsory Monday?"} name="participation_mode" options={week === 4 ? ["Team rehearsal","Demo preparation","Final document work","Individual presentation preparation","Multiple preparation activities","Not yet participated"] : ["Wednesday session","Thursday session","Both sessions","Remote teamwork","Individual work only","No further participation"]} />
     {week <= 3 && <>
       <Choice label="2. Overall progress this week" name="weekly_status" options={["On track","Some difficulty","At risk","Blocked"]} />
@@ -1302,7 +1294,7 @@ function EngagementCheckoutFields({ week = 1 }: { week?: 1 | 2 | 3 | 4 }) {
     <label>Optional note<textarea name="detail_note" maxLength={200} /><small className="field-hint">Add only what the teacher needs to know. Maximum 200 characters.</small></label>
   </div>;
 }
-function ProjectSnapshotIdentity() {
+function ProjectSnapshotIdentity({ student }: { student?: AuthenticatedStudent }) {
   const [context, setContext] = useState<ProjectCheckinContext | null>(null);
   const [message, setMessage] = useState("");
   async function load(studentId: string) {
@@ -1317,14 +1309,14 @@ function ProjectSnapshotIdentity() {
     setContext(data as ProjectCheckinContext);
     setMessage("");
   }
+  useEffect(() => { if (student) void load(student.studentId); }, [student?.studentId]);
   return <>
-    <label>Your name<input name="name" required maxLength={100}/></label>
-    <label>Student ID<input name="sid" required minLength={3} maxLength={40} onBlur={(event) => void load(event.target.value)}/></label>
+    <Identity student={student}/>
     {message && <p className="form-note">{message}</p>}
     {context?.project ? <section className="checkin-project-context"><small>{context.teamName} · Project snapshot</small><h3>{context.project.title}</h3><p>{context.project.description}</p><span>{context.project.category} · {context.project.targetUsers}</span></section> : context && <p className="admin-alert error">No project is connected to {context.teamName} yet. Ask your teacher before submitting this pre-check.</p>}
   </>;
 }
-function ProgressReviewFields() {
+function ProgressReviewFields({ student }: { student?: AuthenticatedStudent }) {
   const [needsDetail, setNeedsDetail] = useState(false);
   const methods = ["Architecture or component structure","Core logic or algorithm","Data flow","Database design","API or external service integration","Security or access control","Testing method","UI/UX decision","Hardware integration","Other"];
   const assess = (form: HTMLFormElement) => {
@@ -1334,7 +1326,7 @@ function ProgressReviewFields() {
   };
   return <div onChange={(event) => assess(event.currentTarget.closest("form") as HTMLFormElement)}>
     <p className="form-note">Choose one concrete personal implementation for the compulsory Week 2 review. Be ready to show it, explain the method and verify the result.</p>
-    <ProjectSnapshotIdentity />
+    <ProjectSnapshotIdentity student={student} />
     <Choice label="1. Which deliverable are you mainly responsible for?" name="deliverable_area" options={["Frontend / UI","Backend / API","Database","Authentication / Security","Hardware / Integration","Testing","Documentation","Project coordination","Other"]} />
     <label>2. What specific item have you personally implemented?<textarea name="implementation_item" required maxLength={200} placeholder="One concrete function, component, test result or document — not your general role." /><small className="field-hint">Maximum 200 characters</small></label>
     <Choice label="3. What is its current implementation state?" name="implementation_state" options={["Implemented and verified","Implemented but not fully verified","Partially implemented","Designed but not implemented","Blocked"]} />
@@ -1414,7 +1406,7 @@ function CheckinFields() {
     />
   </>;
 }
-function fields(k: Kind) {
+function fields(k: Kind, student?: AuthenticatedStudent) {
   if (k === "checkin")
     return <CheckinFields />;
   if (k === "pulse")
@@ -1461,26 +1453,19 @@ function fields(k: Kind) {
         </label>
       </>
     );
-  if (k === "health") return <TeamHealthFields />;
-  if (k === "checkout") return <EngagementCheckoutFields week={1} />;
-  if (k === "progress") return <ProgressReviewFields />;
-  if (k === "checkout2") return <EngagementCheckoutFields week={2} />;
-  if (k === "checkout3") return <EngagementCheckoutFields week={3} />;
-  if (k === "checkout4") return <EngagementCheckoutFields week={4} />;
+  if (k === "health") return <TeamHealthFields student={student} />;
+  if (k === "checkout") return <EngagementCheckoutFields week={1} student={student} />;
+  if (k === "progress") return <ProgressReviewFields student={student} />;
+  if (k === "checkout2") return <EngagementCheckoutFields week={2} student={student} />;
+  if (k === "checkout3") return <EngagementCheckoutFields week={3} student={student} />;
+  if (k === "checkout4") return <EngagementCheckoutFields week={4} student={student} />;
   return (
     <>
       <p className="form-note">
         Review another team. Choose the option that best matches the evidence
         you saw—no written comment is required.
       </p>
-      <label>
-        Reviewer name
-        <input name="name" required maxLength={100} />
-      </label>
-      <label>
-        Student ID
-        <input name="sid" required minLength={3} maxLength={40} />
-      </label>
+      <Identity student={student}/>
       <Team name="reviewed_team" label="Team being reviewed (to team)" />
       {[
         ["Problem clarity", "problem"],
@@ -1523,6 +1508,72 @@ function fields(k: Kind) {
     </>
   );
 }
+type OpenStudioSession = {
+  id: string;
+  title: string;
+  session_date: string;
+  opened_at: string;
+};
+
+function StudioSessionControl({ blockId }: { blockId: string }) {
+  const [openSession, setOpenSession] = useState<OpenStudioSession | null>(null);
+  const [attendance, setAttendance] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+
+  async function load() {
+    if (!blockId) return;
+    const { data } = await supabase.from("studio_sessions").select("id, title, session_date, opened_at").eq("block_id", blockId).eq("status", "open").maybeSingle();
+    setOpenSession((data as OpenStudioSession | null) || null);
+    if (data?.id) {
+      const { count } = await supabase.from("student_session_checkins").select("id", { count: "exact", head: true }).eq("session_id", data.id);
+      setAttendance(count || 0);
+    } else setAttendance(0);
+  }
+
+  useEffect(() => { void load(); }, [blockId]);
+
+  async function open(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setBusy(true); setMessage("");
+    const values = Object.fromEntries(new FormData(event.currentTarget));
+    const { error } = await supabase.from("studio_sessions").insert({
+      block_id: blockId,
+      title: String(values.title).trim(),
+      session_date: String(values.session_date),
+      status: "open",
+    });
+    setMessage(error ? "The session could not be opened. Close the existing session or check teacher permissions." : "Session check-in is now open.");
+    await load(); setBusy(false);
+  }
+
+  async function close() {
+    if (!openSession) return;
+    setBusy(true); setMessage("");
+    const { error } = await supabase.from("studio_sessions").update({ status: "closed", closed_at: new Date().toISOString() }).eq("id", openSession.id);
+    setMessage(error ? "The session could not be closed." : "Session closed. Existing attendance records are preserved.");
+    await load(); setBusy(false);
+  }
+
+  return <section className="activity-control session-control">
+    <div>
+      <div className="eyebrow">Authenticated attendance</div>
+      <h2>Studio Session Check-in</h2>
+      <p>Open one session for the selected block. Students must sign in and confirm attendance before weekly activities appear.</p>
+    </div>
+    {openSession ? <div className="session-open-card">
+      <span className="activity-control-status open">Open</span>
+      <h3>{openSession.title}</h3>
+      <p>{openSession.session_date} · {attendance} checked in</p>
+      <button className="danger" disabled={busy} onClick={() => void close()}>{busy ? "Closing…" : "Close session"}</button>
+    </div> : <form onSubmit={open} className="session-open-form">
+      <label>Session title<input name="title" required maxLength={120} placeholder="Week 2 Monday Studio"/></label>
+      <label>Session date<input name="session_date" type="date" required defaultValue={new Date().toISOString().slice(0, 10)}/></label>
+      <button disabled={busy || !blockId}>{busy ? "Opening…" : "Open session check-in"}</button>
+    </form>}
+    {message && <p className="admin-alert" role="status">{message}</p>}
+  </section>;
+}
+
 function Admin() {
   type TeachingBlock = {
     id: string;
@@ -1686,7 +1737,7 @@ function Admin() {
     useState<ActivityTable>("student_checkins");
   const [teachingBlocks, setTeachingBlocks] = useState<TeachingBlock[]>([]);
   const [selectedBlockId, setSelectedBlockId] = useState("");
-  const [adminView, setAdminView] = useState<"overview" | "roster" | "projects" | "peer" | "records">("overview");
+  const [adminView, setAdminView] = useState<"overview" | "roster" | "projects" | "sessions" | "peer" | "records">("overview");
   const [records, setRecords] = useState<ActivityRecord[]>([]);
   const [editRecord, setEditRecord] = useState<ActivityRecord | null>(null);
   const [deleteRecord, setDeleteRecord] = useState<ActivityRecord | null>(null);
@@ -2432,6 +2483,7 @@ function Admin() {
           <button type="button" className={adminView === "overview" ? "active" : ""} onClick={() => setAdminView("overview")}><ListChecks size={18}/><span><b>Overview</b><small>Block snapshot</small></span></button>
           <button type="button" className={adminView === "roster" ? "active" : ""} onClick={() => setAdminView("roster")}><Users size={18}/><span><b>Blocks & roster</b><small>Students and teams</small></span></button>
           <button type="button" className={adminView === "projects" ? "active" : ""} onClick={() => setAdminView("projects")}><Rocket size={18}/><span><b>Project setup</b><small>Catalogue & assignments</small></span></button>
+          <button type="button" className={adminView === "sessions" ? "active" : ""} onClick={() => setAdminView("sessions")}><ClipboardCheck size={18}/><span><b>Session check-in</b><small>Open attendance</small></span></button>
           <button type="button" className={adminView === "records" ? "active" : ""} onClick={() => setAdminView("records")}><ClipboardCheck size={18}/><span><b>Activity records</b><small>Review submissions</small></span></button>
           <button type="button" className={adminView === "peer" ? "active" : ""} onClick={() => setAdminView("peer")}><Presentation size={18}/><span><b>Peer review</b><small>Week 3 control</small></span></button>
           <a href="/" className="admin-sidebar-home">Back to student portal</a>
@@ -2492,6 +2544,7 @@ function Admin() {
       </section>
       <div hidden={adminView !== "roster"}><RosterManager /></div>
       <div hidden={adminView !== "projects"}><ProjectManager /></div>
+      <div hidden={adminView !== "sessions"}><StudioSessionControl blockId={selectedBlockId}/></div>
       <section hidden={adminView !== "peer"} className="activity-control" aria-labelledby="peer-review-control-title">
         <div>
           <div className="eyebrow">Week 3 activity</div>
@@ -3161,6 +3214,10 @@ function Admin() {
 }
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    {location.pathname.startsWith("/admin") ? <Admin /> : <StudentAccess><App /></StudentAccess>}
+    {location.pathname.startsWith("/admin")
+      ? <Admin />
+      : location.pathname.startsWith("/student")
+        ? <StudentAccess>{(student) => <StudentPortal student={student}/>}</StudentAccess>
+        : <PublicLanding />}
   </StrictMode>,
 );
