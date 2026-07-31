@@ -28,43 +28,6 @@ function Pagination({ total, page, pageSize, onPageChange, onPageSizeChange }: {
   </div>;
 }
 
-export function FindMyTeam() {
-  const [result, setResult] = useState<{ block: string; team: string; projectName: string | null; teammates: string[] } | null>(null);
-  const [message, setMessage] = useState("");
-  const [busy, setBusy] = useState(false);
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setBusy(true); setMessage(""); setResult(null);
-    const values = Object.fromEntries(new FormData(event.currentTarget));
-    try {
-      const response = await fetch("/api/find-my-team", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ studentId: values.student_id }) });
-      const body = await response.json();
-      if (!response.ok) throw new Error(body.error || "Your team could not be found.");
-      setResult(body);
-    } catch (error) { setMessage(error instanceof Error ? error.message : "Your team could not be found."); }
-    finally { setBusy(false); }
-  }
-  return <main className="find-team-page">
-    <a className="brand" href="/">NIT3004 <span>Engineering Studio</span></a>
-    <section className="find-team-card">
-      <div className="eyebrow">Private roster lookup</div><h1>Find My Team</h1>
-      <p>Enter your Student ID. We only show your matched team—never the class roster.</p>
-      <form onSubmit={submit}>
-        <label>Student ID<input name="student_id" autoComplete="off" required maxLength={40} /></label>
-        
-        <button disabled={busy}>{busy ? "Checking…" : "Find my team"}</button>
-      </form>
-      {message && <p className="find-team-message error" role="alert">{message}</p>}
-      {result && <section className="team-match" aria-live="polite">
-        <small>{result.block}</small><h2>{result.team}</h2>
-        {result.projectName && <p><b>Project</b><span>{result.projectName}</span></p>}
-        <div><b>Teammates</b>{result.teammates.length ? <ul>{result.teammates.map((name) => <li key={name}>{name}</li>)}</ul> : <span>No other team members have been added yet.</span>}</div>
-        <a href="/">Continue to weekly activities</a>
-      </section>}
-      <small className="privacy-note">Five attempts are allowed every 15 minutes. If your Student ID is not found, ask your teacher to check the active-block roster.</small>
-    </section>
-  </main>;
-}
-
 export function RosterManager() {
   const [blocks,setBlocks]=useState<Block[]>([]),[blockId,setBlockId]=useState(""),[rows,setRows]=useState<RosterRow[]>([]);
   const [message,setMessage]=useState(""),[busy,setBusy]=useState(false);
