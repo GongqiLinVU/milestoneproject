@@ -44,8 +44,12 @@ Remove Class Pulse and Team Conversation from the active product experience.
 Scope:
 
 - remove their student entry cards, modals and calls to action
-- remove them from teacher Overview metrics and primary Activity Records
-  navigation
+- remove the standalone Find My Team entry because its capability will move into
+  authenticated student context
+- retain Week 1 Check-in temporarily, then convert it into the first-use Account
+  Activation & Check-in journey in Phase 2
+- remove Class Pulse and Team Conversation from teacher Overview metrics and
+  primary Activity Records navigation
 - preserve historical database rows and avoid destructive schema changes
 - verify that shared counts, exports, CSS and activity routing do not leave dead
   links or misleading totals
@@ -60,8 +64,12 @@ Target student navigation:
 
 Acceptance:
 
-- students no longer see Class Pulse or Team Conversation
-- the teacher dashboard no longer presents them as current participation goals
+- students no longer see Class Pulse, Team Conversation or a standalone Find My
+  Team entry
+- Week 1 Check-in remains available until the authenticated activation flow
+  replaces it, so current students are not stranded between phases
+- the teacher dashboard no longer presents the retired activities as current
+  participation goals
 - existing records remain intact
 - no unrelated activity changes are bundled into this Phase
 - production build and focused regression checks pass
@@ -87,13 +95,25 @@ Before coding, produce a short technical decision covering:
 
 Preferred UX:
 
+First use — **Account Activation & Check-in**:
+
+1. enter Student ID and the student's unique one-time initial password
+2. set a personal password
+3. load and confirm read-only Name, Teaching Block, Team and Project context
+4. complete the short Week 1 recovery check
+5. continue into the authenticated student home
+
+Returning use:
+
 - Student ID
-- Password
+- personal password
 - Log in
 - Forgot password
 - no Sign up / Register option
 - persistent browser session
-- first-use activation kept as short as security permits
+
+The activation page replaces the former standalone Week 1 Check-in and Find My
+Team journeys; it must not become three separate student tasks.
 
 Security constraints:
 
@@ -107,7 +127,9 @@ Security constraints:
 
 Acceptance:
 
-- an imported roster student can activate and log in
+- an imported roster student can activate, set a personal password, confirm
+  roster-derived context, complete Week 1 Check-in and later log in
+- Find My Team is no longer required as a separate public lookup
 - an unlisted user cannot self-register
 - the session resolves exactly one current student context or presents a safe,
   actionable error
@@ -121,7 +143,10 @@ Use authenticated context to remove repeated identity work.
 
 Scope:
 
-- resolve Student, Teaching Block, Team and Project after login
+- resolve Student, Teaching Block, Team and Project during activation and after
+  every later login
+- expose the same read-only team/project context through My Project rather than
+  a standalone Find My Team tool
 - stop asking for name, Student ID, team or project in normal activity flows
 - replace the form catalogue with the minimal student navigation agreed in
   Phase 1
