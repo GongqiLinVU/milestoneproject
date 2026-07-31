@@ -106,15 +106,33 @@ type StudentSessionRecord = { sessionId: string; title: string; sessionDate: str
 function StudentSessions() {
   const [sessions, setSessions] = useState<StudentSessionRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   useEffect(() => {
-    supabase.rpc("get_my_session_history").then(({ data }) => {
-      setSessions((data as StudentSessionRecord[] | null) || []);
+    let active = true;
+    const refresh = async () => {
+      const { data, error: historyError } = await supabase.rpc("get_my_session_history");
+      if (!active) return;
+      if (historyError) {
+        setError("Attendance history could not be loaded. Please refresh or tell your teacher.");
+      } else {
+        setSessions((data as StudentSessionRecord[] | null) || []);
+        setError("");
+      }
       setLoading(false);
-    });
+    };
+    const handleVisibility = () => document.visibilityState === "visible" && void refresh();
+    void refresh();
+    window.addEventListener("student-session-checkin", refresh);
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      active = false;
+      window.removeEventListener("student-session-checkin", refresh);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, []);
-  return <section id="sessions" className="portal-panel student-sessions">
+  return <section id="sessions" className="portal-panel portal-section student-sessions">
     <Head label="Sessions" title="Your attendance history." text="This is the same attendance record your teacher sees. Check-in is available only while the current session is open."/>
-    {loading ? <p className="empty-state">Loading sessions…</p> : sessions.length ? <div className="attendance-history">
+    {loading ? <p className="empty-state">Loading sessions…</p> : error ? <p className="empty-state error-state" role="alert">{error}</p> : sessions.length ? <div className="attendance-history">
       {sessions.map(item => <article key={item.sessionId}><div><b>{item.title}</b><span>{new Date(`${item.sessionDate}T00:00:00`).toLocaleDateString()}</span></div>{item.checkedInAt ? <strong>Checked in · {new Date(item.checkedInAt).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</strong> : <span>Not checked in</span>}</article>)}
     </div> : <p className="empty-state">No sessions have been prepared for this block yet.</p>}
   </section>;
@@ -158,18 +176,18 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
           <a href="#get-help">Get Help</a>
         </nav>
       </header>
-      <main id="top">
+      <main id="top" className="student-portal-main">
         <section className="portal-intro"><div className="eyebrow">Authenticated student portal</div><h1>This Week</h1><p>{activeBlock?.label || "Your active teaching block"} · Complete only the activity that matters now.</p></section>
-        <WeeklyHub
+        <div className="portal-section portal-weekly-section"><WeeklyHub
           open={setForm}
           peerReviewOpen={peerReviewOpen}
-        />
-        <section id="my-project" className="portal-panel"><Head label="My Project" title={student.projectName || "Project not assigned"} text={student.projectDescription || (student.projectSource === "roster" ? "This project name came from the roster but is not yet linked to the Project Catalogue. Ask your teacher to complete the team assignment." : "Your teacher has not assigned a catalogue project to this team yet.")}/>
+        /></div>
+        <section id="my-project" className="portal-panel portal-section"><Head label="My Project" title={student.projectName || "Project not assigned"} text={student.projectDescription || (student.projectSource === "roster" ? "This project name came from the roster but is not yet linked to the Project Catalogue. Ask your teacher to complete the team assignment." : "Your teacher has not assigned a catalogue project to this team yet.")}/>
           <div className="student-project-summary"><div><span>Student</span><b>{student.studentName}</b><small>{student.studentId}</small></div><div><span>Team</span><b>{student.teamName}</b><small>Roster assignment</small></div><div><span>Project</span><b>{student.projectName || "Pending"}</b><small>{student.projectCategory || "Catalogue assignment pending"}{student.projectDifficulty ? ` · ${student.projectDifficulty}` : ""}</small></div></div>
           {student.projectSource === "catalogue" && <div className="project-detail-grid"><article><span>Problem</span><p>{student.projectProblem || "Not specified"}</p></article><article><span>Target users</span><p>{student.projectTargetUsers || "Not specified"}</p></article><article className="wide"><span>Expected outcomes</span><p>{student.projectExpectedOutcomes || "Not specified"}</p></article></div>}
         </section>
         <StudentSessions/>
-        <section id="get-help" className="portal-panel"><Head label="Get Help" title="Bring one clear question." text="Use the support choices inside the current weekly activity so your teacher can connect help to the right evidence and session."/></section>
+        <section id="get-help" className="portal-panel portal-section"><Head label="Get Help" title="Bring one clear question." text="Use the support choices inside the current weekly activity so your teacher can connect help to the right evidence and session."/></section>
       </main>
       <footer>
         NIT3004 Engineering Studio · Student Portal
