@@ -1,0 +1,82 @@
+# Sprint 5 Handoff
+
+**Status: Planned — start with Phase 1**
+
+## Production starting point
+
+Use GitHub `main` as the source of truth. Sprint 4 closed through Phase 3 after
+PR #35 merged at `9047090`.
+
+The production platform already has:
+
+- teaching blocks and private roster management
+- formal teams, Project Catalogue and one project assignment per team
+- private Student ID-based team lookup
+- Week 1–4 selection-first evidence
+- private Teacher Review and Week 3–4 follow-up continuity
+- teacher authentication and block-scoped operations
+
+## Confirmed product decisions
+
+- Remove Class Pulse from the active student and teacher experience.
+- Remove Team Conversation from the active student and teacher experience.
+- Preserve both activities' historical records; this is a UI/workflow retirement,
+  not approved data deletion.
+- Add student login.
+- Do not offer open registration.
+- Students use roster-prepared identities based on Student ID.
+- Do not use a shared initial password.
+- Login must automatically associate Student, Block, Team and Project and remove
+  repeated identity fields from later activities.
+- The former Sprint 4 Phase 4–5 work moves into Sprint 5.
+- The former AI-assisted teaching Sprint 5 becomes Sprint 6.
+
+## First session scope
+
+Implement only **Phase 1 — Activity cleanup and information architecture**.
+
+Before changing code:
+
+1. inspect latest `main`, open PRs and production status
+2. find every Class Pulse and Team Conversation entry point, count, route, query,
+   export and style dependency
+3. propose the exact historical-data treatment and minimal student navigation
+4. identify affected files and confirm that no migration is needed
+5. implement a focused Draft PR after the scope is verified
+
+Do not implement student authentication in the same PR.
+
+## Phase 1 acceptance
+
+- Class Pulse and Team Conversation disappear from current student activities.
+- They no longer appear as active teacher metrics or primary record navigation.
+- Historical rows remain untouched.
+- Other activity records, teacher login, exports and production build continue
+  to work.
+- Documentation clearly separates retired UI from retained historical data.
+
+## Authentication decision to prepare next
+
+Phase 2 requires a short reviewed design before implementation. It must resolve:
+
+- Student ID to Auth identity mapping
+- unique activation credentials and delivery
+- first-login password change
+- password recovery
+- roster import/provisioning lifecycle
+- duplicate/cross-block identity
+- RLS policy matrix
+- legacy anonymous evidence association
+- migration, verification and rollback
+
+## Reusable prompt for the new session
+
+> Continue Engineering Studio Platform with Sprint 5. Use the connected GitHub
+> App and latest `main` as the source of truth. Read `AI_CONTEXT.md`,
+> `ROADMAP.md`, `docs/sprints/sprint-05/PLAN.md` and
+> `docs/sprints/sprint-05/HANDOFF.md`. Reconcile documentation with merged PRs
+> and production evidence. Start only Sprint 5 Phase 1: retire Class Pulse and
+> Team Conversation from the active UI while preserving historical data, and
+> confirm the minimal student information architecture. Report scope, affected
+> files, migration impact, acceptance criteria and tests before implementation.
+> Create one focused Draft PR and do not merge without my explicit approval.
