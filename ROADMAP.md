@@ -171,12 +171,12 @@ remain in `docs/sprints/sprint-04/`.
 
 ## Sprint 5 — Student Identity and Experience Simplification
 
-**Status: In progress — Phase 1–3 merged; Phase 4A final delivery underway**
+**Status: Finalisation — Phase 1–4A merged and tested; close-out review pending**
 
-Phase 3 uses a two-surface student experience: public course information at
-`/`, and roster-authenticated Session Check-in plus weekly activities at
-`/student`. Recurring attendance is separate from the historical Week 1
-activation Check-in.
+Sprint 5 now provides a two-surface student experience: public course
+information at `/`, and roster-authenticated Session Check-in plus weekly
+activities at `/student`. Recurring attendance is separate from the historical
+Week 1 activation Check-in.
 
 ### Goal
 
@@ -212,8 +212,9 @@ disabled and the service-role key remains server-only.
 4. Weekly Activity Management and Presentation Order
 5. Focused production regression and Sprint close
 
-Detailed scope, security constraints, acceptance criteria and the new-session
-handoff are stored in `docs/sprints/sprint-05/`.
+Phase 1–4A are merged. The remaining gate is the focused production checklist
+and close-out documentation in `docs/sprints/sprint-05/`; new analytics or
+reporting work starts only in Sprint 6.
 
 ## Sprint 6 — Trajectory, Analytics and AI-assisted Teaching
 
