@@ -1,5 +1,13 @@
 # Changelog
 
+## Sprint 5 Phase 4A — Weekly activation and Week 2 wizard
+
+- Added teacher-controlled Week 1–4 activity activation per Teaching Block.
+- Locked closed weeks in the student portal and enforced the same boundary in
+  database submission policies.
+- Converted Week 2 Implementation Pre-check into a six-step, draft-preserving
+  wizard that writes one formal record only at final submission.
+
 ## Unreleased — Sprint 5 Phase 4A
 
 - Reframed the teacher Activity Records area as one block-aware Activity

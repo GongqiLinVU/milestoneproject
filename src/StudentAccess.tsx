@@ -11,6 +11,7 @@ type Context = {
   status: "ready" | "activated";
   studentId: string;
   studentName: string;
+  blockId: string;
   blockLabel: string;
   teamName: string;
   projectName: string | null;

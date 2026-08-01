@@ -1,6 +1,6 @@
 # Sprint 5 Handoff
 
-**Status: Phase 1–3 merged; Phase 4A implementation started**
+**Status: Phase 1–3 merged; Phase 4A PR 1 merged and PR 2 implemented**
 
 ## Phase 4A current boundary
 
@@ -14,12 +14,15 @@ information architecture without changing the database:
   Weekly Engagement and Poster Peer Review as current evidence
 - historical Student Check-in rows remain stored but are hidden from current
   activity operations
-- the existing Poster Peer Review switch is retained inside Weekly Activities
+- Phase 4A PR 2 implements block-based Week 1–4 activation and replaces the
+  standalone Peer Review switch with the Week 3 state
+- students see closed weeks as locked, and database policies reject direct
+  submissions unless that student's own block/week is active
+- Week 2 Implementation Pre-check is a six-step wizard with progress,
+  Back/Continue navigation, local draft recovery and final-step persistence
 
-The next focused change must add block-based Week 1–4 activation and the Week 2
-wizard with an idempotent migration. The third change implements block-based
-Presentation Order draft and publication. Do not treat the preview cards in the
-first change as functional weekly activation or publishing.
+After PR 2 is tested and merged, the third focused change implements
+block-based Presentation Order draft and publication.
 
 ## Production starting point
 
