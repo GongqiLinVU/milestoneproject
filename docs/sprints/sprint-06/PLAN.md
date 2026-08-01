@@ -44,6 +44,11 @@ Make Poster Peer Review easier and more evidence-based. Students first inspect a
 Team's Poster and project context, then enter feedback for that Team from the
 same Gallery card.
 
+The Poster is not a compressed project report. It is a one-page project
+advertisement: concise, visually clear and persuasive enough to help another
+student understand the problem, solution, key features and project value, then
+want to explore the project and provide useful feedback.
+
 #### Upload ownership
 
 - A logged-in student may upload or replace the current Poster for their own
@@ -60,8 +65,9 @@ same Gallery card.
 |---|---|
 | Preferred format | PDF |
 | Also accepted | PNG, JPG and JPEG |
-| PDF length | Exactly one page |
-| Maximum file size | 15 MB |
+| Page requirement | Exactly one page for every Poster; multi-page content is not accepted |
+| Maximum file size | 5 MB |
+| Recommended page size | A3 or A4 |
 | Image orientation | Portrait or landscape |
 | Recommended quality | Text readable when fitted to a normal desktop screen; images should preferably be at least 1600 px on the long edge |
 | Unsupported files | DOCX, PPTX, multiple-page PDF, animated images and executable/archive formats are rejected |
@@ -69,7 +75,9 @@ same Gallery card.
 | Replacement | Replaces the Team's current version only after the new file passes validation |
 
 The upload control must show these rules before file selection and return a
-specific, student-friendly validation message when a file is rejected.
+specific, student-friendly validation message when a file is rejected. Student
+guidance must emphasise selective communication rather than fitting report-level
+detail onto one page.
 
 #### Storage and preview behaviour
 
@@ -129,7 +137,7 @@ specific, student-friendly validation message when a file is rejected.
 #### Phase 2 acceptance criteria
 
 - A Team student can upload a valid one-page PDF, PNG or JPG no larger than
-  15 MB.
+  5 MB.
 - Invalid type, oversize file and multi-page PDF are rejected before publication
   with clear messages.
 - A student cannot upload for another Team.
