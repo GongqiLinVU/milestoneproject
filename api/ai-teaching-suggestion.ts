@@ -1,3 +1,5 @@
+import { createClient } from "@supabase/supabase-js";
+
 const MAX_BODY_BYTES = 20_000;
 
 type SuggestionStage = "starting" | "closing";
@@ -28,6 +30,9 @@ type TeachingSuggestionRequest = {
     evidenceQuality?: string;
     contributionVerification?: string;
     reportAlignment?: string;
+    conversationNote?: string;
+    followUpStatus?: string;
+    followUpNote?: string;
   };
 };
 
@@ -61,28 +66,23 @@ function normalise(body: TeachingSuggestionRequest) {
       evidenceQuality: text(body.teacherVerification?.evidenceQuality, 100),
       contributionVerification: text(body.teacherVerification?.contributionVerification, 100),
       reportAlignment: text(body.teacherVerification?.reportAlignment, 100),
+      conversationNote: text(body.teacherVerification?.conversationNote, 800),
+      followUpStatus: text(body.teacherVerification?.followUpStatus, 100),
+      followUpNote: text(body.teacherVerification?.followUpNote, 400),
     },
   };
 }
 
 async function isTeacher(token: string) {
   const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  const publishableKey =
-    process.env.SUPABASE_PUBLISHABLE_KEY ||
-    process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  if (!supabaseUrl || !publishableKey) return false;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !serviceKey) return false;
 
-  const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
-    headers: {
-      apikey: publishableKey,
-      Authorization: `Bearer ${token}`,
-    },
+  const admin = createClient(supabaseUrl, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
   });
-  if (!response.ok) return false;
-  const user = (await response.json()) as {
-    app_metadata?: { role?: string };
-  };
-  return user.app_metadata?.role === "teacher";
+  const { data: { user }, error } = await admin.auth.getUser(token);
+  return !error && user?.app_metadata?.role === "teacher";
 }
 
 function outputText(response: any) {

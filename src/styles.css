@@ -1534,12 +1534,24 @@ button.danger:hover {
 .private-record-state svg { transition: transform .2s ease; }
 .private-teacher-record[open] .private-record-state svg { transform: rotate(180deg); }
 .private-teacher-record .teacher-follow-up-form {
+  display: flex;
+  flex-direction: column;
   margin: 0;
   padding: 1.1rem;
   border: 0;
   border-top: 1px solid #e5e9f1;
   border-radius: 0;
 }
+.teacher-follow-up-form > .private-record-note { order: 0; }
+.teacher-follow-up-form > .ai-teaching-panel:not(.ai-after-review) { order: 1; }
+.teacher-follow-up-form > .review-save-toolbar { order: 2; }
+.teacher-follow-up-form > .teacher-review-grid { order: 3; }
+.teacher-follow-up-form > .teacher-conversation-note { order: 4; }
+.teacher-follow-up-form > .follow-up-actions { order: 5; }
+.teacher-follow-up-form > label { order: 6; }
+.teacher-follow-up-form > .admin-alert { order: 7; }
+.teacher-follow-up-form > .review-save-row { order: 8; }
+.teacher-follow-up-form > .ai-after-review { order: 9; }
 .private-record-note {
   margin: 0 0 1rem;
   padding: .7rem .85rem;
@@ -1548,6 +1560,25 @@ button.danger:hover {
   color: #566078;
   font-size: .88rem;
 }
+.review-save-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 1rem;
+  padding: .8rem 1rem;
+  border: 1px solid #d8dfec;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, .96);
+  box-shadow: 0 8px 22px rgba(35, 49, 78, .08);
+  backdrop-filter: blur(8px);
+}
+.review-save-toolbar > div { display: grid; gap: .12rem; }
+.review-save-toolbar small { color: #655ab0; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
+.review-save-toolbar span { color: #6c7889; font-size: .76rem; }
 
 
 /* Sprint 3 Phase 3B: teacher-controlled AI suggestion */
@@ -1664,12 +1695,15 @@ button.danger:hover {
 }
 .ai-checkpoint + .ai-checkpoint { margin-top: .85rem; }
 .ai-checkpoint-closing { border-color: #c9dfd6; background: rgba(245, 253, 249, .82); }
+.ai-after-review.is-locked { background: #f5f7fa; border-color: #d9dee7; }
+.ai-after-review.is-locked .ai-teaching-icon { background: #e8ebf0; color: #7a8292; }
 .ai-checkpoint .ai-teaching-heading {
   grid-template-columns: minmax(0, 1fr) auto;
 }
 .ai-checkpoint-closing .ai-teaching-heading small { color: #2d7a5c; }
 .ai-checkpoint .ai-suggestion-card { background: #fff; }
 @media (max-width: 760px) {
+  .review-save-toolbar { position: static; align-items: stretch; flex-direction: column; }
   .ai-checkpoint .ai-teaching-heading { grid-template-columns: 1fr; }
   .ai-checkpoint .ai-teaching-heading button { grid-column: 1; }
 }
