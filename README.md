@@ -16,16 +16,16 @@ The current module guides students through a four-week journey:
 
 ### Student portal
 
-- Week 1 check-in
-- Individual Team Health Check
-- Week 1 Engagement Check-out
-- Week 2 Individual Progress Review
-- Week 2 Engagement Check-out
-- Week 3 Engagement Check-out
-- Week 3 poster peer review
-- Supabase-backed submissions
-- Duplicate submission prevention
-- Self-review prevention for poster reviews
+- Public course Landing Page and authenticated Student Portal
+- roster-prepared activation, login, recovery and personal password setup
+- roster-derived Block, Team and Project context
+- teacher-opened Session Check-in and personal attendance history
+- block-controlled Week 1–4 activities
+- Team Health, weekly engagement, Week 2 Implementation Pre-check and Poster
+  Peer Review
+- six-step Week 2 wizard with local draft recovery and read-only completion
+- Published Week 4 Presentation Order
+- duplicate and own-team review prevention
 
 ### Teacher dashboard
 
@@ -38,7 +38,9 @@ The current module guides students through a four-week journey:
 - Teacher mutations protected by `is_teacher()` UPDATE/DELETE RLS policies
 - Private student-by-student implementation Review & Follow-up with operational status and recheck actions
 - Optional teacher-triggered AI teaching suggestions using de-identified project and verification evidence
-- Teacher-controlled Poster Peer Review opening and closing
+- block-aware Week 1–4 activation and current Student Records
+- teacher-controlled Week 2 submission reset
+- Draft and Published Presentation Order management
 - Export the currently selected activity as a stable UTF-8 CSV
 - Accessible loading, empty, refresh and actionable error states
 
@@ -120,10 +122,10 @@ Every push to `main` triggers a production deployment.
 
 ## Current priority
 
-Sprint 5 simplifies the student experience. Phase 1 retires Class Pulse, Team
-Conversation and the standalone Find My Team page from current navigation while
-preserving historical database records. Week 1 Check-in remains available until
-Phase 2 replaces it with Account Activation & Check-in.
+Sprint 5 Phase 1–4A are merged and tested. The current gate is the focused
+[Production validation checklist](docs/sprints/sprint-05/FINAL_VALIDATION.md)
+and close-out documentation. Trajectory, Block Teaching Analytics, enhanced
+exports and further AI-assisted teaching work begin in Sprint 6.
 
 See the [Sprint 5 plan](docs/sprints/sprint-05/PLAN.md), current
 [handoff](docs/sprints/sprint-05/HANDOFF.md), and reusable
