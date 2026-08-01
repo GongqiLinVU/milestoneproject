@@ -171,7 +171,7 @@ remain in `docs/sprints/sprint-04/`.
 
 ## Sprint 5 — Student Identity and Experience Simplification
 
-**Status: In progress — Phase 1–2 merged; Phase 3 Draft PR**
+**Status: In progress — Phase 1–3 merged; Phase 4A final delivery underway**
 
 Phase 3 uses a two-surface student experience: public course information at
 `/`, and roster-authenticated Session Check-in plus weekly activities at
@@ -192,7 +192,7 @@ evidence.
 - use unique activation credentials rather than a shared default password
 - automatically resolve Student, Block, Team and Project after login
 - remove repeated identity fields and consolidate the student journey
-- carry forward Sprint 4 trajectory, export, privacy and production validation
+- complete weekly activity management and Week 4 Presentation Order
 
 Phase 1 removes Class Pulse and standalone Find My Team entry points from the
 student UI and removes Class Pulse from current teacher Activity Records. Team
@@ -209,18 +209,21 @@ disabled and the service-role key remains server-only.
 1. Activity cleanup and minimal information architecture
 2. Student authentication foundation and security design
 3. Authenticated student journey refactor
-4. Trajectory and teaching analytics
-5. Export, privacy and production validation
+4. Weekly Activity Management and Presentation Order
+5. Focused production regression and Sprint close
 
 Detailed scope, security constraints, acceptance criteria and the new-session
 handoff are stored in `docs/sprints/sprint-05/`.
 
-## Sprint 6 — AI-assisted teaching
+## Sprint 6 — Trajectory, Analytics and AI-assisted Teaching
 
 **Status: Future — renumbered from the former Sprint 5**
 
 Potential scope:
 
+- Student and Team trajectory across Week 1–4 evidence
+- Block teaching analytics with evidence drill-down
+- Block/team/project/student-aware enhanced exports
 - Weekly evidence summary
 - Common concern clustering
 - Suggested teacher interventions

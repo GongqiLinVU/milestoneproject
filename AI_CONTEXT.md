@@ -212,6 +212,10 @@ Detailed scope and acceptance criteria are in
 `docs/sprints/sprint-05/HANDOFF.md`. New sessions must use
 `prompts/START_SESSION.md`.
 
+Sprint 5 now closes after Phase 4A Presentation Order and focused production
+finalisation. Student/Team Trajectory, Block Teaching Analytics, AI Analytics
+and enhanced exports are grouped into Sprint 6.
+
 ## Sprint continuity
 
 - Sprints form one linear delivery history and all work starts from latest
