@@ -793,6 +793,7 @@ function Modal({
 }) {
   const [msg, setMsg] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [submissionCheckPending, setSubmissionCheckPending] = useState(false);
   const [progressStep, setProgressStep] = useState(1);
   const formRef = useRef<HTMLFormElement>(null);
   const progressDraftKey = `nit3004|${blockId}|progress-draft|${student.studentId}`;
@@ -805,16 +806,25 @@ function Modal({
     setSubmitted(false);
     setProgressStep(1);
     setStoredSubmission(null);
-    if (kind !== "pulse") return;
+    setSubmissionCheckPending(kind === "progress");
     let cancelled = false;
-    submissionStorageKey(kind, {}, blockId)
-      .then((key) => {
-        const receipt = readSubmissionReceipt(key);
-        if (!cancelled && receipt) setStoredSubmission(receipt);
-      })
-      .catch(() => {
-        // Storage is optional and may be unavailable in restricted browsers.
-      });
+    if (kind === "progress") {
+      supabase.rpc("get_my_week2_precheck_submission")
+        .then(({ data, error }) => {
+          if (cancelled) return;
+          if (!error && data) setStoredSubmission(data as SubmissionReceipt);
+          setSubmissionCheckPending(false);
+        });
+    } else if (kind === "pulse") {
+      submissionStorageKey(kind, {}, blockId)
+        .then((key) => {
+          const receipt = readSubmissionReceipt(key);
+          if (!cancelled && receipt) setStoredSubmission(receipt);
+        })
+        .catch(() => {
+          // Storage is optional and may be unavailable in restricted browsers.
+        });
+    }
     return () => {
       cancelled = true;
     };
@@ -1081,10 +1091,15 @@ function Modal({
             }
           }}
         >
-          {storedSubmission ? (
+          {submissionCheckPending ? (
+            <div className="submission-notice" role="status">
+              <b>Checking your submission…</b>
+              <span>Please wait while we check the current teaching block.</span>
+            </div>
+          ) : storedSubmission ? (
             <>
               <div className="submission-notice" role="status">
-                <b>Already submitted from this browser</b>
+                <b>{activeKind === "progress" ? "Pre-check completed" : "Already submitted from this browser"}</b>
                 <span>
                   Recorded{" "}
                   {new Date(storedSubmission.submittedAt).toLocaleString(
@@ -1113,10 +1128,11 @@ function Modal({
                 </p>
               )}
               <p className="receipt-note">
-                This receipt is saved only on this browser. Your name and
-                Student ID are not stored here.
+                {activeKind === "progress"
+                  ? "This is the submitted record for your authenticated account and current teaching block."
+                  : "This receipt is saved only on this browser. Your name and Student ID are not stored here."}
               </p>
-              {activeKind !== "pulse" && (
+              {activeKind !== "pulse" && activeKind !== "progress" && (
                 <button
                   type="button"
                   className="secondary"
@@ -2266,10 +2282,14 @@ function Admin() {
     if (!deleteRecord) return;
     setMutationBusy(true);
     setMutationMessage("");
-    const { error } = await supabase
-      .from(activeTable)
-      .delete()
-      .eq("id", deleteRecord.id);
+    const { error } = activeTable === "week2_progress_reviews"
+      ? await supabase.rpc("teacher_reset_week2_precheck", {
+          p_submission_id: String(deleteRecord.id),
+        })
+      : await supabase
+          .from(activeTable)
+          .delete()
+          .eq("id", deleteRecord.id);
     setMutationBusy(false);
     if (error) {
       setMutationMessage(mutationError(error.code));
@@ -2854,8 +2874,20 @@ function Admin() {
                       <div className="student-review-body">
                         <section className="student-precheck">
                           <div className="review-section-heading">
-                            <span>Student submission · Read only</span>
-                            <h3>Implementation Pre-check</h3>
+                            <div>
+                              <span>Student submission · Read only</span>
+                              <h3>Implementation Pre-check</h3>
+                            </div>
+                            <button
+                              type="button"
+                              className="danger compact"
+                              onClick={() => {
+                                setMutationMessage("");
+                                setDeleteRecord(student);
+                              }}
+                            >
+                              <Trash2 size={15} /> Reset submission
+                            </button>
                           </div>
                           <dl className="review-evidence-grid">
                             {[
@@ -3181,8 +3213,10 @@ function Admin() {
         <div className="modal" role="presentation">
           <div className="dialog admin-action-dialog" role="alertdialog" aria-modal="true" aria-labelledby="delete-record-title">
             <div className="eyebrow">Teacher action</div>
-            <h2 id="delete-record-title">Delete this record?</h2>
-            <p>This permanently removes the selected {activeActivity.label.toLowerCase()} record. This action cannot be undone.</p>
+            <h2 id="delete-record-title">{activeTable === "week2_progress_reviews" ? "Reset this submission?" : "Delete this record?"}</h2>
+            <p>{activeTable === "week2_progress_reviews"
+              ? "This removes the student’s Pre-check and related private teacher follow-up so they can submit again. This action cannot be undone."
+              : `This permanently removes the selected ${activeActivity.label.toLowerCase()} record. This action cannot be undone.`}</p>
             <dl className="delete-summary">
               {activeActivity.columns.slice(0, 3).map(([field, label]) => (
                 <div key={field}><dt>{label}</dt><dd>{formatValue(field, deleteRecord[field])}</dd></div>
@@ -3192,7 +3226,7 @@ function Admin() {
             <div className="admin-dialog-actions">
               <button type="button" className="secondary" onClick={() => setDeleteRecord(null)} disabled={mutationBusy}>Cancel</button>
               <button type="button" className="danger" onClick={confirmDelete} disabled={mutationBusy}>
-                <Trash2 size={16} /> {mutationBusy ? "Deleting…" : "Delete record"}
+                <Trash2 size={16} /> {mutationBusy ? "Updating…" : activeTable === "week2_progress_reviews" ? "Reset submission" : "Delete record"}
               </button>
             </div>
           </div>
