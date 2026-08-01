@@ -31,6 +31,41 @@ This is a real production application, not a disposable demonstration.
 5. **Modular design** — features should be reusable for other courses and studio activities.
 6. **GitHub is the source of truth** — code and durable project documentation live in this repository.
 
+## GitHub workflow and Codex usage discipline
+
+These rules are durable project policy for every new session:
+
+- This project uses the connected GitHub App as the normal GitHub interface.
+- Use a connector-first workflow for repository reads, branches, file writes,
+  commits, pull requests, reviews and merges whenever the GitHub App exposes the
+  required operation.
+- A missing local GitHub CLI (`gh`) is not by itself a blocker and must not
+  trigger a request for the user to install or authenticate it.
+- Local `git` or `gh` is only a fallback when the connected GitHub App cannot
+  perform a necessary operation. State the exact connector gap before asking
+  for a fallback; do not probe credentials or shift authentication work to the
+  user unnecessarily.
+- Start implementation from the latest GitHub `main`. Preserve unrelated local
+  worktrees and never publish stale or mixed changes.
+- Default to one focused deliverable and one Draft PR per session. Record
+  additional ideas in the active Sprint plan instead of expanding the current
+  PR.
+- Reuse verified work, existing branches and prior build evidence when still
+  valid. Do not repeat repository-wide scans, dependency installation, builds
+  or implementation merely because a session changed.
+- Match validation cost to change risk: documentation-only changes need content
+  and diff review; UI changes need focused checks and a production build;
+  migrations, RLS, authentication and cross-module changes need full relevant
+  validation.
+- Prefer lightweight reasoning for status checks, documentation and small UI
+  refinements. Reserve deeper implementation work for database security,
+  migrations, authentication, architecture and difficult defects.
+- Create Draft PRs by default. Merge only after the user confirms testing or
+  explicitly asks to merge.
+- During production use, fix blocking, data-integrity and permission defects
+  promptly; batch minor layout and wording refinements; place new capabilities
+  into a later focused phase or Sprint.
+
 ## Production environment
 
 - Repository: `GongqiLinVU/milestoneproject`
