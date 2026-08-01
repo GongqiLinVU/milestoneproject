@@ -59,7 +59,8 @@ $$;
 revoke all on function public.get_my_weekly_activity_states() from public;
 grant execute on function public.get_my_weekly_activity_states() to authenticated;
 
-create or replace function public.student_can_submit_week(p_block_id uuid, p_week smallint)
+drop function if exists public.student_can_submit_week(uuid, smallint);
+create or replace function public.student_can_submit_week(p_block_id uuid, p_week integer)
 returns boolean language sql stable security definer set search_path = '' as $$
   select exists (
     select 1 from public.student_accounts account
@@ -68,8 +69,8 @@ returns boolean language sql stable security definer set search_path = '' as $$
     where account.auth_user_id = auth.uid() and account.status = 'activated' and setting.is_open
   );
 $$;
-revoke all on function public.student_can_submit_week(uuid, smallint) from public;
-grant execute on function public.student_can_submit_week(uuid, smallint) to authenticated;
+revoke all on function public.student_can_submit_week(uuid, integer) from public;
+grant execute on function public.student_can_submit_week(uuid, integer) to authenticated;
 
 revoke insert on public.team_health_checks, public.weekly_engagement_checkouts, public.week2_progress_reviews, public.poster_reviews from anon;
 
