@@ -94,30 +94,25 @@ Do not place service-role keys, database passwords or third-party secrets in cli
 
 ### Student portal
 
-- Four-week journey: Commit, Prove, Validate, Deliver
-- Week 1 check-in
-- Four-week action plan
-- Week 3 poster peer review
-- Health indicator showing Supabase connectivity
+- Public Landing Page at `/` and authenticated Student Portal at `/student`
+- roster-prepared activation, login, recovery and required personal password
+- roster-derived Block, Team and Project context
+- teacher-opened Session Check-in and personal attendance history
+- block-controlled Week 1–4 activities with database enforcement
+- Team Health, weekly engagement, Week 2 wizard and Poster Peer Review
+- read-only completed Pre-check state and Published Week 4 Presentation Order
 
 ### Teacher dashboard
 
-- Email/password sign-in
-- Access restricted to users with `app_metadata.role = teacher`
-- Summary counts for:
-  - student check-ins
-  - student promises
-  - poster reviews
-- Supabase session restoration and explicit teacher sign-out
-- Clear authenticated, non-teacher, loading, empty and error states
-- Refreshable Student Check-in details showing name, Student ID, team, goal and
-  timestamps
-- Clickable summary panels that switch between protected record views for all
-  five activities, with stable activity-specific fields and states
-- Teacher edit and confirmed delete for identified activity records, protected
-  by authenticated grants and `is_teacher()` UPDATE/DELETE RLS policies
-- Teacher-controlled Poster Peer Review state, publicly readable as a single
-  safe open/closed value and enforced by the review INSERT policy
+- teacher authentication and block-scoped roster, team, project and account
+  operations
+- editable studio-session planning, open/close controls, attendance history and
+  CSV export
+- Weekly Activities, current Student Records and Presentation Order workspace
+- private Teacher Review and follow-up continuity
+- staged Initial AI Review, saved Teacher Review and After-review Summary
+- controlled Week 2 submission reset
+- Draft/Published Presentation Order snapshots
 
 ## Current database tables
 
@@ -185,8 +180,9 @@ Important current rules:
 
 ## Current product decisions
 
-- Students currently submit without an account.
-- Student activity forms are create-only in the first version.
+- Students use roster-prepared accounts; open registration remains disabled.
+- Student activity evidence is normally create-once; narrowly scoped teacher
+  reset is available where the workflow explicitly requires a clean resubmission.
 - Incorrect submissions are intended to be managed by teachers rather than allowing unrestricted student edits.
 - Teacher roles currently use Supabase `app_metadata`.
 - The current database structure remains in place during Sprint 2.
@@ -194,7 +190,7 @@ Important current rules:
 
 ## Active sprint
 
-**Sprint 5 — Student Identity and Experience Simplification**
+**Sprint 5 — Student Identity and Experience Simplification (Finalisation)**
 
 Phase 1 retires Class Pulse, Team Conversation and the standalone Find My Team
 page from the active experience without deleting historical rows. Week 1
@@ -212,8 +208,8 @@ Detailed scope and acceptance criteria are in
 `docs/sprints/sprint-05/HANDOFF.md`. New sessions must use
 `prompts/START_SESSION.md`.
 
-Sprint 5 now closes after Phase 4A Presentation Order and focused production
-finalisation. Student/Team Trajectory, Block Teaching Analytics, AI Analytics
+Phase 1–4A are merged and product-owner tested. Sprint 5 closes after the
+role-based Production checklist and documentation close-out PR. Student/Team Trajectory, Block Teaching Analytics, AI Analytics
 and enhanced exports are grouped into Sprint 6.
 
 ## Sprint continuity
