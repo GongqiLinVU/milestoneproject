@@ -1,6 +1,6 @@
 # Sprint 5 Handoff
 
-**Status: Phase 1–3 merged; Phase 4A PR 1 merged and PR 2 implemented**
+**Status: Phase 1–3 merged; Phase 4A Presentation Order underway**
 
 ## Phase 4A current boundary
 
@@ -21,8 +21,10 @@ information architecture without changing the database:
 - Week 2 Implementation Pre-check is a six-step wizard with progress,
   Back/Continue navigation, local draft recovery and final-step persistence
 
-After PR 2 is tested and merged, the third focused change implements
-block-based Presentation Order draft and publication.
+The third focused change implements block-based Presentation Order draft and
+publication. After it is production-tested, Sprint 5 proceeds only to focused
+regression and documentation finalisation. Trajectory, Block Teaching Analytics,
+AI Analytics and enhanced exports have been moved to Sprint 6.
 
 ## Production starting point
 

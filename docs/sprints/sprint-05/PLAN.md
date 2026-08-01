@@ -1,6 +1,6 @@
 # Sprint 5 — Student Identity and Experience Simplification
 
-**Status: In progress — Phase 1–3 merged; Phase 4A underway**
+**Status: In progress — Phase 1–3 merged; Phase 4A final delivery underway**
 
 ## Origin
 
@@ -300,29 +300,21 @@ Delivery is split into focused Draft PRs:
 2. Weekly activation and Week 2 wizard
 3. Presentation Order management and publication
 
-### Phase 4B — Student and Team trajectory foundation
+### Scope split after Phase 4A
 
-- show trajectory across available Week 1–4 evidence
-- distinguish Submitted, Missing and Not required
-- keep summaries descriptive, evidence-linked and non-grading
-- support block, team, project and student filtering
-- provide drill-down to the underlying record
+Sprint 5 closes after Presentation Order and a focused production finalisation.
+Student/Team Trajectory, Block Teaching Analytics, AI Analytics and enhanced
+block/team/project/student-aware exports move together into Sprint 6. This keeps
+the current Sprint focused on the now-complete operational student journey and
+avoids mixing a new analytics layer into production validation.
 
-### Phase 4C — Block teaching analytics and drill-down
+## Phase 5 — Focused production finalisation
 
-- summarise block-level participation and completion patterns
-- compare session attendance with activity completion without scoring students
-- surface unresolved support and teacher follow-up continuity
-- reserve AI Block Insights for Sprint 6; do not add speculative AI output here
-
-## Phase 5 — Export, privacy and production validation
-
-Carry forward the former Sprint 4 Phase 5 and validate the complete Sprint 5
-journey.
+Validate and document the completed Sprint 5 journey without adding new
+analytics or reporting capabilities.
 
 Scope:
 
-- stabilise block/team/project/student-aware exports
 - verify auth lifecycle, RLS boundaries and teacher access
 - regression-test current student activities, peer review and follow-up
 - verify production deployment and recovery steps
