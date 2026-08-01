@@ -1,6 +1,6 @@
 # Sprint 5 — Student Identity and Experience Simplification
 
-**Status: In progress — Phase 1–3 merged; Phase 4A final delivery underway**
+**Status: Finalisation — Phase 1–4A merged and production-tested; close-out review pending**
 
 ## Origin
 
@@ -20,8 +20,8 @@ Make the student experience simpler even as the platform becomes more complete:
 - add roster-based student login without open registration
 - automatically associate each student with their block, team and project
 - reduce repeated identity fields and consolidate the student journey
-- complete the deferred analytics, export and privacy work on the new identity
-  foundation
+- complete the operational Week 1–4 journey and move analytics and enhanced
+  exports to Sprint 6
 
 ## Product principles
 
@@ -310,6 +310,8 @@ avoids mixing a new analytics layer into production validation.
 
 ## Phase 5 — Focused production finalisation
 
+**Status: In progress — documentation and final production checklist**
+
 Validate and document the completed Sprint 5 journey without adding new
 analytics or reporting capabilities.
 
@@ -319,6 +321,9 @@ Scope:
 - regression-test current student activities, peer review and follow-up
 - verify production deployment and recovery steps
 - synchronise architecture, AI context, roadmap, changelog and Sprint handoff
+- record merged PRs, migration application and user-confirmed Preview evidence
+- complete the role-based Production checklist in `FINAL_VALIDATION.md` before
+  marking Sprint 5 Closed
 
 ## Explicitly out of scope
 
