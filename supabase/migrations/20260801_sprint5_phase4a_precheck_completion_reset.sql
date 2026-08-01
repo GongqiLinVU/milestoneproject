@@ -84,7 +84,7 @@ as $$
 declare
   v_submission public.week2_progress_reviews;
 begin
-  if not public.is_teacher() then
+  if not coalesce(public.is_teacher(), false) then
     raise exception using errcode = '42501', message = 'Teacher access is required';
   end if;
 
