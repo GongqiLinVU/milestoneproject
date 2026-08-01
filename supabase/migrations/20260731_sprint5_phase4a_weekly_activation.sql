@@ -59,8 +59,7 @@ $$;
 revoke all on function public.get_my_weekly_activity_states() from public;
 grant execute on function public.get_my_weekly_activity_states() to authenticated;
 
-drop function if exists public.student_can_submit_week(uuid, smallint);
-create or replace function public.student_can_submit_week(p_block_id uuid, p_week integer)
+create or replace function public.student_can_submit_week_v2(p_block_id uuid, p_week integer)
 returns boolean language sql stable security definer set search_path = '' as $$
   select exists (
     select 1 from public.student_accounts account
@@ -69,27 +68,27 @@ returns boolean language sql stable security definer set search_path = '' as $$
     where account.auth_user_id = auth.uid() and account.status = 'activated' and setting.is_open
   );
 $$;
-revoke all on function public.student_can_submit_week(uuid, integer) from public;
-grant execute on function public.student_can_submit_week(uuid, integer) to authenticated;
+revoke all on function public.student_can_submit_week_v2(uuid, integer) from public;
+grant execute on function public.student_can_submit_week_v2(uuid, integer) to authenticated;
 
 revoke insert on public.team_health_checks, public.weekly_engagement_checkouts, public.week2_progress_reviews, public.poster_reviews from anon;
 
 drop policy if exists "students create team health" on public.team_health_checks;
 create policy "students create team health" on public.team_health_checks for insert to authenticated
-with check (public.student_can_submit_week(block_id, 1));
+with check (public.student_can_submit_week_v2(block_id, 1));
 
 drop policy if exists "students create engagement checkout" on public.weekly_engagement_checkouts;
 create policy "students create engagement checkout" on public.weekly_engagement_checkouts for insert to authenticated
-with check (public.student_can_submit_week(block_id, week_number));
+with check (public.student_can_submit_week_v2(block_id, week_number::integer));
 
 drop policy if exists "students create week2 progress" on public.week2_progress_reviews;
 create policy "students create week2 progress" on public.week2_progress_reviews for insert to authenticated
-with check (public.student_can_submit_week(block_id, 2));
+with check (public.student_can_submit_week_v2(block_id, 2));
 
 drop policy if exists "Students can submit poster reviews" on public.poster_reviews;
 create policy "Students can submit poster reviews" on public.poster_reviews for insert to authenticated
 with check (
-  public.student_can_submit_week(block_id, 3)
+  public.student_can_submit_week_v2(block_id, 3)
   and lower(trim(reviewer_team)) <> lower(trim(reviewed_team))
   and problem_clarity between 1 and 5 and working_product between 1 and 5
   and evidence_testing between 1 and 5 and document_readiness between 1 and 5
