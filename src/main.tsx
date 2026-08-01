@@ -1,4 +1,4 @@
-import { StrictMode, useEffect, useRef, useState, type FormEvent } from "react";
+import { StrictMode, useEffect, useRef, useState, type FormEvent, type MouseEvent } from "react";
 import { createRoot } from "react-dom/client";
 import { createClient } from "@supabase/supabase-js";
 import {
@@ -96,7 +96,7 @@ function PublicLanding() {
 }
 
 type AuthenticatedStudent = {
-  studentId: string; studentName: string; teamName: string; projectName: string | null;
+  studentId: string; studentName: string; blockId: string; blockLabel: string; teamName: string; projectName: string | null;
   projectProblem: string | null; projectDescription: string | null; projectTargetUsers: string | null;
   projectExpectedOutcomes: string | null; projectCategory: string | null; projectDifficulty: string | null;
   projectSource: "catalogue" | "roster" | "none";
@@ -142,30 +142,13 @@ function StudentSessions() {
 }
 function StudentPortal({ student }: { student: AuthenticatedStudent }) {
   const [form, setForm] = useState<Kind | null>(null);
-  const [peerReviewOpen, setPeerReviewOpen] = useState<boolean | null>(null);
-  const [activeBlock, setActiveBlock] = useState<{ id: string; label: string } | null>(null);
+  const [weekStates, setWeekStates] = useState<Record<number, boolean> | null>(null);
   useEffect(() => {
-    supabase
-      .from("teaching_blocks")
-      .select("id, academic_year, block_code")
-      .eq("status", "active")
-      .single()
-      .then(({ data }) =>
-        setActiveBlock(
-          data
-            ? { id: data.id, label: `${data.academic_year} · ${data.block_code}` }
-            : null,
-        ),
-      );
-    supabase
-      .from("activity_settings")
-      .select("is_open")
-      .eq("setting_key", "poster_peer_review")
-      .single()
-      .then(({ data, error }) =>
-        setPeerReviewOpen(error ? false : Boolean(data?.is_open)),
-      );
-  }, []);
+    supabase.rpc("get_my_weekly_activity_states").then(({ data, error }) => {
+      if (error) return setWeekStates({});
+      setWeekStates(Object.fromEntries(((data as Array<{ weekNumber: number; isOpen: boolean }>) || []).map(item => [item.weekNumber, item.isOpen])));
+    });
+  }, [student.blockId]);
   return (
     <>
       <header>
@@ -190,11 +173,11 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
                 : <button className="nav-session-status attention" disabled={student.sessionCheckinBusy} onClick={() => void student.checkInToSession?.()} aria-label={`Check in to ${student.studioSession.title}`}><span>{student.studioSession.title}</span><b>{student.sessionCheckinBusy ? "Checking in…" : "Check in"}</b></button>
             )}
           </div>
-          <p>{activeBlock?.label || "Your active teaching block"} · Complete only the activity that matters now.</p>
+          <p>{student.blockLabel} · Complete only the activity that matters now.</p>
         </section>
         <div className="portal-section portal-weekly-section"><WeeklyHub
           open={setForm}
-          peerReviewOpen={peerReviewOpen}
+          weekStates={weekStates}
         /></div>
         <section id="my-project" className="portal-panel portal-section"><Head label="My Project" title={student.projectName || "Project not assigned"} text={student.projectDescription || (student.projectSource === "roster" ? "This project name came from the roster but is not yet linked to the Project Catalogue. Ask your teacher to complete the team assignment." : "Your teacher has not assigned a catalogue project to this team yet.")}/>
           <div className="student-project-summary"><div><span>Student</span><b>{student.studentName}</b><small>{student.studentId}</small></div><div><span>Team</span><b>{student.teamName}</b><small>Roster assignment</small></div><div><span>Project</span><b>{student.projectName || "Pending"}</b><small>{student.projectCategory || "Catalogue assignment pending"}{student.projectDifficulty ? ` · ${student.projectDifficulty}` : ""}</small></div></div>
@@ -209,8 +192,8 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
       <Modal
         key={form ?? "closed"}
         kind={form}
-        blockId={activeBlock?.id || ""}
-        blockLabel={activeBlock?.label || ""}
+        blockId={student.blockId}
+        blockLabel={student.blockLabel}
         student={student}
         close={() => setForm(null)}
       />
@@ -328,10 +311,10 @@ function Studio() {
 }
 function WeeklyHub({
   open,
-  peerReviewOpen,
+  weekStates,
 }: {
   open: (k: Kind) => void;
-  peerReviewOpen: boolean | null;
+  weekStates: Record<number, boolean> | null;
 }) {
   const [week, setWeek] = useState<1 | 2 | 3 | 4>(1);
   const tabs = [
@@ -365,7 +348,8 @@ function WeeklyHub({
         ))}
       </div>
 
-      <div id={`week-panel-${week}`} className={`week-panel week-${week}`} role="tabpanel">
+      <div id={`week-panel-${week}`} className={`week-panel week-${week} ${weekStates && !weekStates[week] ? "locked" : ""}`} role="tabpanel">
+        {weekStates === null ? <p className="week-lock-notice">Checking weekly availability…</p> : !weekStates[week] ? <div className="week-lock-notice"><b>Week {week} is not active yet.</b><span>Your teacher will activate these activities when the class is ready.</span></div> : null}
         {week === 1 && (
           <>
             <div className="week-panel-intro">
@@ -377,8 +361,8 @@ function WeeklyHub({
               </div>
             </div>
             <div className="activity-grid">
-              <Activity icon={HeartPulse} badge="Individual view" title="Team Health Check" text="Reflect on communication, participation and delivery health." action={() => open("health")} />
-              <Activity icon={ClipboardCheck} badge="End of week" title="Week 1 Engagement Check-out" text="Record participation beyond Monday and prepare for the next conversation." action={() => open("checkout")} />
+              <Activity disabled={!weekStates?.[1]} icon={HeartPulse} badge="Individual view" title="Team Health Check" text="Reflect on communication, participation and delivery health." action={() => open("health")} />
+              <Activity disabled={!weekStates?.[1]} icon={ClipboardCheck} badge="End of week" title="Week 1 Engagement Check-out" text="Record participation beyond Monday and prepare for the next conversation." action={() => open("checkout")} />
             </div>
           </>
         )}
@@ -394,8 +378,8 @@ function WeeklyHub({
               </div>
             </div>
             <div className="activity-grid two-up">
-              <Activity icon={Code2} badge="Before Monday review" title="Implementation Pre-check" text="Identify one implementation, where it can be found, how it works and how you will verify it." action={() => open("progress")} />
-              <Activity icon={ClipboardCheck} badge="End of week" title="Week 2 Engagement Check-out" text="Record participation beyond Monday without repeating implementation evidence." action={() => open("checkout2")} />
+              <Activity disabled={!weekStates?.[2]} icon={Code2} badge="Before Monday review" title="Implementation Pre-check" text="Identify one implementation, where it can be found, how it works and how you will verify it." action={() => open("progress")} />
+              <Activity disabled={!weekStates?.[2]} icon={ClipboardCheck} badge="End of week" title="Week 2 Engagement Check-out" text="Record participation beyond Monday without repeating implementation evidence." action={() => open("checkout2")} />
             </div>
             <p className="week-panel-note">Pre-check responses prepare a verification conversation. They are descriptive evidence, not an automatic mark.</p>
           </>
@@ -412,11 +396,11 @@ function WeeklyHub({
               </div>
             </div>
             <Expo
-              peerReviewOpen={peerReviewOpen}
-              openReview={() => peerReviewOpen && open("review")}
+              peerReviewOpen={Boolean(weekStates?.[3])}
+              openReview={() => weekStates?.[3] && open("review")}
             />
             <div className="activity-grid">
-              <Activity icon={ClipboardCheck} badge="End of week" title="Week 3 Engagement Check-out" text="Record final-delivery participation, evidence readiness and any risk that needs attention before Demo Day." action={() => open("checkout3")} />
+              <Activity disabled={!weekStates?.[3]} icon={ClipboardCheck} badge="End of week" title="Week 3 Engagement Check-out" text="Record final-delivery participation, evidence readiness and any risk that needs attention before Demo Day." action={() => open("checkout3")} />
             </div>
           </>
         )}
@@ -435,7 +419,7 @@ function WeeklyHub({
               <article>
                 <ListChecks />
                 <div><span>Preparation</span><h3>Final Delivery Check</h3><p>Confirm presentation, demo fallback, speaking role and final submission readiness.</p></div>
-                <button type="button" onClick={() => open("checkout4")}>Open activity <ArrowRight size={16} /></button>
+                <button type="button" disabled={!weekStates?.[4]} onClick={() => open("checkout4")}>{weekStates?.[4] ? "Open activity" : "Locked"} {weekStates?.[4] && <ArrowRight size={16} />}</button>
               </article>
               <article>
                 <Presentation />
@@ -568,12 +552,14 @@ function Activity({
   title,
   text,
   action,
+  disabled = false,
 }: {
   icon: typeof ArrowRight;
   badge: string;
   title: string;
   text: string;
   action: () => void;
+  disabled?: boolean;
 }) {
   return (
     <article className="activity-card">
@@ -583,15 +569,15 @@ function Activity({
       </div>
       <h3>{title}</h3>
       <p>{text}</p>
-      <button onClick={action}>
-        Open activity <ArrowRight size={16} />
+      <button onClick={action} disabled={disabled}>
+        {disabled ? "Locked" : "Open activity"} {!disabled && <ArrowRight size={16} />}
       </button>
     </article>
   );
 }
 function friendlyError(code: string | undefined, kind: Kind) {
-  if (kind === "review" && code === "42501")
-    return "Peer review is currently closed. Your response was not submitted.";
+  if (code === "42501")
+    return "This week is currently closed. Your response was not submitted.";
   if (code === "23505") {
     if (kind === "health" || kind === "checkout" || kind === "checkout2" || kind === "checkout3" || kind === "checkout4" || kind === "progress" || kind === "checkin")
       return "This Student ID has already submitted this activity.";
@@ -807,6 +793,9 @@ function Modal({
 }) {
   const [msg, setMsg] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [progressStep, setProgressStep] = useState(1);
+  const formRef = useRef<HTMLFormElement>(null);
+  const progressDraftKey = `nit3004|${blockId}|progress-draft|${student.studentId}`;
   const [storedSubmission, setStoredSubmission] =
     useState<SubmissionReceipt | null>(
       null,
@@ -814,6 +803,7 @@ function Modal({
   useEffect(() => {
     setMsg("");
     setSubmitted(false);
+    setProgressStep(1);
     setStoredSubmission(null);
     if (kind !== "pulse") return;
     let cancelled = false;
@@ -829,6 +819,20 @@ function Modal({
       cancelled = true;
     };
   }, [kind, blockId]);
+  useEffect(() => {
+    if (kind !== "progress") return;
+    try {
+      const draft = JSON.parse(localStorage.getItem(progressDraftKey) || "null") as Record<string, string | string[]> | null;
+      if (!draft || !formRef.current) return;
+      for (const [name, value] of Object.entries(draft)) {
+        const controls = formRef.current.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(`[name="${name}"]`);
+        controls.forEach(control => {
+          if (control instanceof HTMLInputElement && control.type === "checkbox") control.checked = Array.isArray(value) && value.includes(control.value);
+          else control.value = String(value);
+        });
+      }
+    } catch { /* Local draft recovery is optional. */ }
+  }, [kind, progressDraftKey]);
   if (!kind) return null;
   const activeKind = kind;
   async function checkStoredSubmission(form: HTMLFormElement) {
@@ -1048,6 +1052,7 @@ function Modal({
     }
     setStoredSubmission(receipt);
     setSubmitted(true);
+    if (activeKind === "progress") localStorage.removeItem(progressDraftKey);
     setMsg("Response recorded. Thank you.");
   }
   return (
@@ -1064,8 +1069,17 @@ function Modal({
         </div>
         <h2>{titles[kind]}</h2>
         <form
+          ref={formRef}
           onSubmit={submit}
-          onChange={(event) => void checkStoredSubmission(event.currentTarget)}
+          onChange={(event) => {
+            void checkStoredSubmission(event.currentTarget);
+            if (activeKind === "progress") {
+              const data = new FormData(event.currentTarget);
+              const draft: Record<string, string | string[]> = {};
+              data.forEach((value, key) => { const text=String(value); draft[key] = key === "implementation_methods" ? [...(Array.isArray(draft[key]) ? draft[key] as string[] : []), text] : text; });
+              try { localStorage.setItem(progressDraftKey, JSON.stringify(draft)); } catch { /* Optional. */ }
+            }
+          }}
         >
           {storedSubmission ? (
             <>
@@ -1118,7 +1132,7 @@ function Modal({
           ) : (
             <>
               <div className="authenticated-identity"><b>{student.studentName}</b><span>{student.studentId} · {student.teamName}</span></div>
-              {fields(kind, student)}
+              {fields(kind, student, progressStep, setProgressStep)}
               {msg && (
                 <p
                   className={"form-status " + (submitted ? "success" : "")}
@@ -1127,9 +1141,9 @@ function Modal({
                   {msg}
                 </p>
               )}
-              <button disabled={submitted}>
+              {activeKind !== "progress" && <button disabled={submitted}>
                 {submitted ? "Already submitted" : "Submit response"}
-              </button>
+              </button>}
             </>
           )}
         </form>
@@ -1377,7 +1391,7 @@ function ProjectSnapshotIdentity({ student }: { student?: AuthenticatedStudent }
     {context?.project ? <section className="checkin-project-context"><small>{context.teamName} · Project snapshot</small><h3>{context.project.title}</h3><p>{context.project.description}</p><span>{context.project.category} · {context.project.targetUsers}</span></section> : context && <p className="admin-alert error">No project is connected to {context.teamName} yet. Ask your teacher before submitting this pre-check.</p>}
   </>;
 }
-function ProgressReviewFields({ student }: { student?: AuthenticatedStudent }) {
+function ProgressReviewFields({ student, step, setStep }: { student?: AuthenticatedStudent; step: number; setStep: (step:number)=>void }) {
   const [needsDetail, setNeedsDetail] = useState(false);
   const methods = ["Architecture or component structure","Core logic or algorithm","Data flow","Database design","API or external service integration","Security or access control","Testing method","UI/UX decision","Hardware integration","Other"];
   const assess = (form: HTMLFormElement) => {
@@ -1385,21 +1399,22 @@ function ProgressReviewFields({ student }: { student?: AuthenticatedStudent }) {
     const issue = String(data.get("remaining_issue") ?? "");
     setNeedsDetail(!["", "No major issue"].includes(issue));
   };
-  return <div onChange={(event) => assess(event.currentTarget.closest("form") as HTMLFormElement)}>
-    <p className="form-note">Choose one concrete personal implementation for the compulsory Week 2 review. Be ready to show it, explain the method and verify the result.</p>
-    <ProjectSnapshotIdentity student={student} />
-    <Choice label="1. Which deliverable are you mainly responsible for?" name="deliverable_area" options={["Frontend / UI","Backend / API","Database","Authentication / Security","Hardware / Integration","Testing","Documentation","Project coordination","Other"]} />
-    <label>2. What specific item have you personally implemented?<textarea name="implementation_item" required maxLength={200} placeholder="One concrete function, component, test result or document — not your general role." /><small className="field-hint">Maximum 200 characters</small></label>
-    <Choice label="3. What is its current implementation state?" name="implementation_state" options={["Implemented and verified","Implemented but not fully verified","Partially implemented","Designed but not implemented","Blocked"]} />
-    <Choice label="4. Where can your work be found?" name="work_location" options={["GitHub repository / commits","Application or deployed system","Database / backend service","Test records","Design or documentation","Hardware prototype","Not yet available","Other"]} />
-    <label>Evidence reference (optional)<input name="evidence_reference" maxLength={300} placeholder="Branch, commit, page, file, function or demo item" /><small className="field-hint">Do not include passwords or private access details.</small></label>
-    <Choice label="5. How will you demonstrate or verify it?" name="demonstration_method" options={["Run the function live","Show the implemented code and explain it","Run a test case","Show database / API output","Demonstrate hardware integration","Show design / document evidence","Cannot demonstrate it yet"]} />
-    <Choice label="6. What level of verification has been completed?" name="verification_level" options={["Demonstrated successfully on the target system","Integrated with other project components","Tested independently only","Informally checked","Not yet tested"]} />
-    <fieldset className="choice-checklist"><legend>7. Which implementation method should you be ready to explain?</legend>{methods.map(method => <label key={method}><input type="checkbox" name="implementation_methods" value={method} /><span>{method}</span></label>)}</fieldset>
-    <Choice label="8. What is the main remaining issue?" name="remaining_issue" options={["No major issue","Integration incomplete","Testing incomplete","Technical defect","Security or data concern","Dependency on another team member","Scope or time constraint","Implementation not yet working","Other"]} />
-    {needsDetail && <label>Brief issue details<textarea name="issue_note" required maxLength={200} /><small className="field-hint">Explain only what the teacher should verify. Maximum 200 characters.</small></label>}
-    <Choice label="9. What is your next concrete action after the review?" name="next_action" options={["Complete implementation","Integrate components","Fix defects","Add or run tests","Verify security / data","Deploy to target device or environment","Prepare evidence","Update documentation","Other"]} />
-    <Choice label="10. What should the teacher verify during Monday’s review?" name="teacher_verification" options={["Whether the function works","My implementation method","My individual contribution","Integration with the team project","Testing and evidence","Current blocker","Progress Report accuracy","Other"]} />
+  const names = ["Project Context","My Contribution","Implementation Status","Evidence & Verification","Blockers & Next Step","Review & Submit"];
+  const next = (event: MouseEvent<HTMLButtonElement>) => {
+    const panel = event.currentTarget.closest(".wizard-step") as HTMLElement;
+    const invalid = panel.querySelector<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(":invalid");
+    if (invalid) return invalid.reportValidity();
+    setStep(Math.min(6, step + 1));
+  };
+  return <div className="progress-wizard" onChange={(event) => assess(event.currentTarget.closest("form") as HTMLFormElement)}>
+    <div className="wizard-progress"><div><span>Step {step} of 6</span><b>{names[step-1]}</b></div><progress max="6" value={step}/></div>
+    <section className="wizard-step" hidden={step!==1}><p className="form-note">Start with the project context already connected to your team.</p><ProjectSnapshotIdentity student={student} /></section>
+    <section className="wizard-step" hidden={step!==2}><Choice label="Which deliverable are you mainly responsible for?" name="deliverable_area" options={["Frontend / UI","Backend / API","Database","Authentication / Security","Hardware / Integration","Testing","Documentation","Project coordination","Other"]} /><label>What specific item have you personally implemented?<textarea name="implementation_item" required maxLength={200} placeholder="One concrete function, component, test result or document — not your general role." /><small className="field-hint">Maximum 200 characters</small></label></section>
+    <section className="wizard-step" hidden={step!==3}><Choice label="What is its current implementation state?" name="implementation_state" options={["Implemented and verified","Implemented but not fully verified","Partially implemented","Designed but not implemented","Blocked"]} /><Choice label="Where can your work be found?" name="work_location" options={["GitHub repository / commits","Application or deployed system","Database / backend service","Test records","Design or documentation","Hardware prototype","Not yet available","Other"]} /></section>
+    <section className="wizard-step" hidden={step!==4}><label>Evidence reference (optional)<input name="evidence_reference" maxLength={300} placeholder="Branch, commit, page, file, function or demo item" /><small className="field-hint">Do not include passwords or private access details.</small></label><Choice label="How will you demonstrate or verify it?" name="demonstration_method" options={["Run the function live","Show the implemented code and explain it","Run a test case","Show database / API output","Demonstrate hardware integration","Show design / document evidence","Cannot demonstrate it yet"]} /><Choice label="What level of verification has been completed?" name="verification_level" options={["Demonstrated successfully on the target system","Integrated with other project components","Tested independently only","Informally checked","Not yet tested"]} /><fieldset className="choice-checklist"><legend>Which implementation method should you be ready to explain?</legend>{methods.map(method => <label key={method}><input type="checkbox" name="implementation_methods" value={method} /><span>{method}</span></label>)}</fieldset></section>
+    <section className="wizard-step" hidden={step!==5}><Choice label="What is the main remaining issue?" name="remaining_issue" options={["No major issue","Integration incomplete","Testing incomplete","Technical defect","Security or data concern","Dependency on another team member","Scope or time constraint","Implementation not yet working","Other"]} />{needsDetail && <label>Brief issue details<textarea name="issue_note" required maxLength={200} /><small className="field-hint">Explain only what the teacher should verify. Maximum 200 characters.</small></label>}<Choice label="What is your next concrete action after the review?" name="next_action" options={["Complete implementation","Integrate components","Fix defects","Add or run tests","Verify security / data","Deploy to target device or environment","Prepare evidence","Update documentation","Other"]} /><Choice label="What should the teacher verify during Monday’s review?" name="teacher_verification" options={["Whether the function works","My implementation method","My individual contribution","Integration with the team project","Testing and evidence","Current blocker","Progress Report accuracy","Other"]} /></section>
+    <section className="wizard-step wizard-review" hidden={step!==6}><CheckCircle2/><h3>Ready to submit your pre-check</h3><p>Review any step using Back. Your teacher will use this record to guide the live demonstration; it is not an automatic mark.</p></section>
+    <div className="wizard-actions">{step>1&&<button type="button" className="secondary" onClick={()=>setStep(step-1)}>Back</button>}{step<6?<button type="button" onClick={next}>Continue</button>:<button type="submit">Submit pre-check</button>}</div>
   </div>;
 }
 type ProjectCheckinContext = {
@@ -1467,7 +1482,7 @@ function CheckinFields() {
     />
   </>;
 }
-function fields(k: Kind, student?: AuthenticatedStudent) {
+function fields(k: Kind, student?: AuthenticatedStudent, progressStep = 1, setProgressStep: (step:number)=>void = ()=>{}) {
   if (k === "checkin")
     return <CheckinFields />;
   if (k === "pulse")
@@ -1516,7 +1531,7 @@ function fields(k: Kind, student?: AuthenticatedStudent) {
     );
   if (k === "health") return <TeamHealthFields student={student} />;
   if (k === "checkout") return <EngagementCheckoutFields week={1} student={student} />;
-  if (k === "progress") return <ProgressReviewFields student={student} />;
+  if (k === "progress") return <ProgressReviewFields student={student} step={progressStep} setStep={setProgressStep} />;
   if (k === "checkout2") return <EngagementCheckoutFields week={2} student={student} />;
   if (k === "checkout3") return <EngagementCheckoutFields week={3} student={student} />;
   if (k === "checkout4") return <EngagementCheckoutFields week={4} student={student} />;
@@ -1779,9 +1794,9 @@ function Admin() {
   const [deleteRecord, setDeleteRecord] = useState<ActivityRecord | null>(null);
   const [mutationBusy, setMutationBusy] = useState(false);
   const [mutationMessage, setMutationMessage] = useState("");
-  const [peerReviewOpen, setPeerReviewOpen] = useState<boolean | null>(null);
-  const [peerReviewBusy, setPeerReviewBusy] = useState(false);
-  const [peerReviewMessage, setPeerReviewMessage] = useState("");
+  const [weeklyStates, setWeeklyStates] = useState<Record<number, boolean>>({});
+  const [weeklyBusy, setWeeklyBusy] = useState<number | null>(null);
+  const [weeklyMessage, setWeeklyMessage] = useState("");
   const [teacherReviewBusy, setTeacherReviewBusy] = useState(false);
   const [teacherReviewMessage, setTeacherReviewMessage] = useState("");
   const [teacherReviews, setTeacherReviews] = useState<ActivityRecord[]>([]);
@@ -1829,7 +1844,6 @@ function Admin() {
   useEffect(() => {
     if (sessionUser?.isTeacher) {
       void initialiseDashboard();
-      void loadPeerReviewSetting();
     } else {
       setDataStatus("idle");
       setDataMessage("");
@@ -1843,12 +1857,34 @@ function Admin() {
         projects: null,
         assignedTeams: null,
       });
-      setPeerReviewOpen(null);
-      setPeerReviewMessage("");
       setTeachingBlocks([]);
       setSelectedBlockId("");
     }
   }, [sessionUser?.email, sessionUser?.isTeacher]);
+
+  useEffect(() => {
+    if (sessionUser?.isTeacher && selectedBlockId) void loadWeeklyStates(selectedBlockId);
+  }, [sessionUser?.isTeacher, selectedBlockId]);
+
+  async function loadWeeklyStates(blockId: string) {
+    const { data, error } = await supabase.from("weekly_activity_settings").select("week_number,is_open").eq("block_id", blockId).order("week_number");
+    if (error) {
+      setWeeklyStates({});
+      setWeeklyMessage("Weekly controls could not be loaded. Apply the Phase 4A activation migration.");
+      return;
+    }
+    setWeeklyStates(Object.fromEntries((data || []).map(item => [item.week_number, item.is_open])));
+    setWeeklyMessage("");
+  }
+
+  async function setWeeklyState(week: number, isOpen: boolean) {
+    setWeeklyBusy(week); setWeeklyMessage("");
+    const { error } = await supabase.from("weekly_activity_settings").update({ is_open: isOpen }).eq("block_id", selectedBlockId).eq("week_number", week);
+    setWeeklyBusy(null);
+    if (error) return setWeeklyMessage("The weekly activity state could not be changed. Confirm your teacher role and try again.");
+    setWeeklyStates(current => ({ ...current, [week]: isOpen }));
+    setWeeklyMessage(`Week ${week} is now ${isOpen ? "active" : "closed"}. Existing submissions are unchanged.`);
+  }
 
   async function initialiseDashboard() {
     const { data, error } = await supabase
@@ -1895,47 +1931,6 @@ function Admin() {
         (team) => Array.isArray(team.assignment) && team.assignment.length > 0,
       ).length,
     });
-  }
-
-  async function loadPeerReviewSetting() {
-    setPeerReviewMessage("");
-    const { data, error } = await supabase
-      .from("activity_settings")
-      .select("is_open")
-      .eq("setting_key", "poster_peer_review")
-      .single();
-    if (error) {
-      setPeerReviewOpen(null);
-      setPeerReviewMessage(
-        "Peer Review control could not be loaded. Confirm the Phase 4 migration has been applied.",
-      );
-      return;
-    }
-    setPeerReviewOpen(Boolean(data.is_open));
-  }
-
-  async function setPeerReviewState(nextOpen: boolean) {
-    setPeerReviewBusy(true);
-    setPeerReviewMessage("");
-    const { data, error } = await supabase
-      .from("activity_settings")
-      .update({ is_open: nextOpen })
-      .eq("setting_key", "poster_peer_review")
-      .select("is_open")
-      .single();
-    setPeerReviewBusy(false);
-    if (error) {
-      setPeerReviewMessage(
-        "Peer Review could not be changed. Confirm this account has the teacher role and try again.",
-      );
-      return;
-    }
-    setPeerReviewOpen(Boolean(data.is_open));
-    setPeerReviewMessage(
-      data.is_open
-        ? "Peer Review is now open for student submissions."
-        : "Peer Review is now closed. Existing reviews are unchanged.",
-    );
   }
 
   const aiSuggestionKey = (studentId: string, stage: AiSuggestionStage) =>
@@ -2596,54 +2591,9 @@ function Admin() {
         </div>
       </section>
       <section hidden={adminView !== "records" || activityWorkspace !== "weekly"} className="weekly-activity-preview" aria-labelledby="weekly-activities-title">
-        <div className="workspace-section-heading"><div><div className="eyebrow">Weekly availability</div><h3 id="weekly-activities-title">Week 1–4 controls</h3><p>Block-based activation will replace individual activity switches in the next focused implementation.</p></div><span className="activity-control-status scheduled">Next PR</span></div>
-        <div className="week-management-grid">{[1,2,3,4].map(week=><article key={week}><span>Week {week}</span><b>{week === 3 ? "Peer review & engagement" : week === 2 ? "Pre-check & engagement" : week === 1 ? "Team health & engagement" : "Final delivery"}</b><small>Weekly activation pending</small></article>)}</div>
-        <div className="activity-control" aria-labelledby="peer-review-control-title">
-        <div>
-          <div className="eyebrow">Week 3 activity</div>
-          <h2 id="peer-review-control-title">Poster Peer Review</h2>
-          <p>
-            Open or close new student submissions. Existing review records are
-            not changed.
-          </p>
-        </div>
-        <div className="activity-control-action">
-          <span
-            className={`activity-control-status ${
-              peerReviewOpen ? "open" : "closed"
-            }`}
-          >
-            {peerReviewOpen === null
-              ? "Status unavailable"
-              : peerReviewOpen
-                ? "Open"
-                : "Closed"}
-          </span>
-          <button
-            type="button"
-            className={peerReviewOpen ? "danger" : "primary"}
-            disabled={peerReviewBusy || peerReviewOpen === null}
-            onClick={() => void setPeerReviewState(!peerReviewOpen)}
-          >
-            {peerReviewBusy
-              ? "Updating…"
-              : peerReviewOpen
-                ? "Close peer review"
-                : "Open peer review"}
-          </button>
-        </div>
-        {peerReviewMessage && (
-          <p
-            className={`activity-control-message ${
-              peerReviewOpen === null ? "error" : ""
-            }`}
-            role={peerReviewOpen === null ? "alert" : "status"}
-            aria-live="polite"
-          >
-            {peerReviewMessage}
-          </p>
-        )}
-        </div>
+        <div className="workspace-section-heading"><div><div className="eyebrow">Weekly availability</div><h3 id="weekly-activities-title">Week 1–4 controls</h3><p>Activate the whole week when the class is ready. Every activity in that week follows the same block-based state.</p></div></div>
+        <div className="week-management-grid">{[1,2,3,4].map(week=>{const isOpen=Boolean(weeklyStates[week]);return <article key={week} className={isOpen?"open":"closed"}><div><span>Week {week}</span><strong className={`activity-control-status ${isOpen?"open":"closed"}`}>{isOpen?"Active":"Closed"}</strong></div><b>{week === 3 ? "Peer review & engagement" : week === 2 ? "Pre-check & engagement" : week === 1 ? "Team health & engagement" : "Final delivery"}</b><small>{isOpen?"Students in this block can submit now.":"Students see these activities as locked."}</small><button type="button" className={isOpen?"danger":"primary"} disabled={weeklyBusy===week} onClick={()=>void setWeeklyState(week,!isOpen)}>{weeklyBusy===week?"Updating…":isOpen?`Close Week ${week}`:`Activate Week ${week}`}</button></article>})}</div>
+        {weeklyMessage && <p className="activity-control-message" role="status" aria-live="polite">{weeklyMessage}</p>}
       </section>
       <section hidden={adminView !== "records" || activityWorkspace !== "presentation"} className="workspace-coming-soon" aria-labelledby="presentation-order-title"><Presentation aria-hidden="true"/><div><div className="eyebrow">Week 4 publishing</div><h3 id="presentation-order-title">Presentation Order</h3><p>The next focused implementation will load teams for this block, support draft reordering and publish a student-visible snapshot.</p></div><span className="activity-control-status scheduled">Next PR</span></section>
       <div hidden={adminView !== "records" || activityWorkspace !== "records"} className="activity-record-picker" aria-label="Current activity record views">
