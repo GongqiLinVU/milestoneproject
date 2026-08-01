@@ -1,5 +1,18 @@
 # Changelog
 
+## Sprint 5 Finalisation — 2026-08-01
+
+- Completed roster-based student identity, activation, recovery and authenticated
+  Block/Team/Project context.
+- Added studio Session Check-in, attendance history and block session planning.
+- Added block-controlled Week 1–4 activation with database enforcement.
+- Added the Week 2 wizard, completed-state handling and teacher reset.
+- Clarified the Initial AI Review → Teacher Review → After-review Summary flow.
+- Added Draft/Published Week 4 Presentation Order.
+- Moved Trajectory, Block Analytics, enhanced exports and further AI Analytics
+  into Sprint 6.
+- Added the final role-based Production validation checklist.
+
 ## Sprint 5 Phase 4A — Weekly activation and Week 2 wizard
 
 - Added teacher-controlled Week 1–4 activity activation per Teaching Block.
@@ -8,7 +21,7 @@
 - Converted Week 2 Implementation Pre-check into a six-step, draft-preserving
   wizard that writes one formal record only at final submission.
 
-## Unreleased — Sprint 5 Phase 4A
+## Sprint 5 Phase 4A — Activity Management
 
 - Reframed the teacher Activity Records area as one block-aware Activity
   Management workspace with Weekly Activities, Student Records and Presentation
@@ -20,7 +33,7 @@
 - Expanded the Sprint 5 plan for weekly activation, the Week 2 wizard,
   presentation-order publishing and later trajectory analytics.
 
-## Unreleased — Sprint 5 Phase 3
+## Sprint 5 Phase 3 — Authenticated student portal
 
 - Restored a public course Landing Page and moved protected student work to
   `/student`.
@@ -32,7 +45,7 @@
 
 All notable changes to Engineering Studio Platform will be recorded here.
 
-## Unreleased — Sprint 5 Phase 2
+## Sprint 5 Phase 2 — Student authentication
 
 ### Added
 
@@ -40,7 +53,7 @@ All notable changes to Engineering Studio Platform will be recorded here.
 - Student ID login, password recovery and Account Activation & Check-in.
 - Student account RLS, authenticated project context and legacy Check-in links.
 
-## Unreleased — Sprint 5 Phase 1
+## Sprint 5 Phase 1 — Activity cleanup
 
 ### Changed
 

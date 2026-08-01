@@ -1,184 +1,84 @@
 # Sprint 5 Handoff
 
-**Status: Phase 1–3 merged; Phase 4A Presentation Order underway**
+**Status: Finalisation — Phase 1–4A merged and tested; close-out PR pending**
 
-## Phase 4A current boundary
+## Delivered boundary
 
-The first focused Phase 4A change establishes the Activity Management
-information architecture without changing the database:
+Sprint 5 completed the operational student identity and four-week activity
+journey. Analytics and enhanced reporting are intentionally deferred to Sprint
+6.
 
-- the teacher sidebar has one Activity Management entry
-- the workspace uses Weekly Activities, Student Records and Presentation Order
-  tabs instead of separate vertically stacked pages
-- Student Records shows only Team Health, Week 2 Implementation Pre-check,
-  Weekly Engagement and Poster Peer Review as current evidence
-- historical Student Check-in rows remain stored but are hidden from current
-  activity operations
-- Phase 4A PR 2 implements block-based Week 1–4 activation and replaces the
-  standalone Peer Review switch with the Week 3 state
-- students see closed weeks as locked, and database policies reject direct
-  submissions unless that student's own block/week is active
-- Week 2 Implementation Pre-check is a six-step wizard with progress,
-  Back/Continue navigation, local draft recovery and final-step persistence
+Delivered:
 
-The third focused change implements block-based Presentation Order draft and
-publication. After it is production-tested, Sprint 5 proceeds only to focused
-regression and documentation finalisation. Trajectory, Block Teaching Analytics,
-AI Analytics and enhanced exports have been moved to Sprint 6.
+- retired Class Pulse, Team Conversation and standalone Find My Team from the
+  active experience while preserving historical rows
+- roster-prepared student accounts with unique temporary credentials, required
+  personal-password setup, recovery and teacher-controlled reset
+- public Landing Page plus authenticated Student Portal
+- roster-derived Block, Team and Project context without repeated identity entry
+- teacher-managed studio sessions and immutable student attendance
+- block-aware Week 1–4 activity activation enforced in both UI and database
+- six-step Week 2 Implementation Pre-check wizard with local draft recovery
+- completed Pre-check read-only state and teacher-controlled submission reset
+- staged AI teaching flow: Initial AI Review, saved Teacher Review and
+  After-review Summary
+- block-scoped Presentation Order with independent Draft and Published snapshots
 
-## Production starting point
+## Merged delivery evidence
 
-Use GitHub `main` as the source of truth. Sprint 4 closed through Phase 3 after
-PR #35 merged at `9047090`.
+| PR | Delivery | Merge commit |
+|---|---|---|
+| #36–#43 | Sprint 5 Phase 1–3 and Activity Management foundation | See Git history |
+| #44 | Weekly activation and Week 2 wizard | `f9991559` |
+| #45 | Wizard hotfix, completed state and teacher reset | `c1882810` |
+| #46 | AI Review permission and workflow clarification | `5aba582a` |
+| #47 | Presentation Order and Sprint 5/6 scope split | `b909db5d` |
 
-The production platform already has:
+For PR #44–#47, the required migrations were applied where relevant, Preview
+tests were confirmed by the product owner, Vercel checks passed and the tested
+heads were merged without additional changes.
 
-- teaching blocks and private roster management
-- formal teams, Project Catalogue and one project assignment per team
-- private Student ID-based team lookup, to be retired after authenticated context
-  replaces it
-- Week 1 Check-in, to become the first-use Account Activation & Check-in flow
-- Week 1–4 selection-first evidence
-- private Teacher Review and Week 3–4 follow-up continuity
-- teacher authentication and block-scoped operations
+## Security and data decisions
 
-## Confirmed product decisions
+- no open student registration
+- service-role credentials remain server-only
+- RLS and controlled RPCs remain the authorisation boundary
+- students cannot enumerate the roster or choose their own Block, Team or Project
+- activation, password reset and submission reset preserve existing evidence
+- retired activity data is retained rather than destructively deleted
+- weekly activity state and Presentation Order are isolated by Teaching Block
+- AI output is advisory and does not mark students or change teacher records
+  automatically
 
-- Remove Class Pulse from the active student and teacher experience.
-- Remove Team Conversation from the active student and teacher experience.
-- Preserve both activities' historical records; this is a UI/workflow retirement,
-  not approved data deletion.
-- Add student login.
-- Do not offer open registration.
-- Students use roster-prepared identities based on Student ID.
-- Do not use a shared initial password.
-- Week 1 Check-in becomes Account Activation & Check-in: unique initial
-  credential, personal password setup, roster context confirmation and, only
-  when no valid prior Check-in exists, a short Week 1 recovery check.
-- Existing Week 1 Check-ins are linked by unique Student ID and are not
-  resubmitted; ambiguous or invalid IDs go to teacher review rather than being
-  matched by name.
-- Login must automatically associate Student, Block, Team and Project and remove
-  repeated identity fields from later activities.
-- Remove standalone Find My Team once the authenticated My Project context is
-  available; students must not complete both paths.
-- The former Sprint 4 Phase 4–5 work moves into Sprint 5.
-- The former AI-assisted teaching Sprint 5 becomes Sprint 6.
+## Finalisation gate
 
-## First session scope
+Before this Sprint is marked Closed, complete
+[`FINAL_VALIDATION.md`](FINAL_VALIDATION.md):
 
-Implement only **Phase 1 — Activity cleanup and information architecture**.
+1. confirm the production deployment matches merge commit `b909db5d` or later
+2. complete the short teacher, student and permission smoke checks
+3. record any blocking result before merging the close-out PR
+4. merge the close-out PR only when no Sprint 5 blocker remains
 
-Before changing code:
+No new feature, analytics layer or export redesign belongs in this gate.
 
-1. inspect latest `main`, open PRs and production status
-2. find every Class Pulse and Team Conversation entry point, count, route, query,
-   export and style dependency
-3. propose the exact historical-data treatment and minimal student navigation
-4. identify affected files and confirm that no migration is needed
-5. implement a focused Draft PR after the scope is verified
+## Sprint 6 starting boundary
 
-Do not implement student authentication in the same PR.
+Sprint 6 begins from the latest `main` after Sprint 5 closes. Its planned scope
+is:
 
-## Phase 1 acceptance
+- Student and Team Trajectory
+- Block Teaching Analytics
+- block/team/project/student-aware enhanced exports
+- evidence-grounded AI Analytics and teacher assistance
 
-- Class Pulse, Team Conversation and the standalone Find My Team entry disappear
-  from current student navigation.
-- Week 1 Check-in remains operational until Phase 2 replaces it with Account
-  Activation & Check-in.
-- The retired activities no longer appear as active teacher metrics or primary
-  record navigation.
-- Historical rows remain untouched.
-- Other activity records, teacher login, exports and production build continue
-  to work.
-- Documentation clearly separates retired UI from retained historical data.
+Detailed scope belongs in `docs/sprints/sprint-06/`; Sprint 5 remains frozen
+after closure.
 
-## Phase 1 implementation evidence
+## New-session prompt
 
-- Removed the Class Pulse student card and current teacher Activity Records
-  selector, chart and aggregate CSV path.
-- Removed both Find My Team links and the standalone route/component.
-- Confirmed Team Conversation had already been retired from active student and
-  teacher navigation in Sprint 3; Team Health Check remains current.
-- Kept Week 1 Check-in operational.
-- Kept `week1_pulse`, `team_conversations`, `find_student_team`, all historical
-  migrations, grants and RLS policies unchanged.
-- No database migration is required.
-- `npm run build` passes locally. Vite reports only the existing bundle-size
-  advisory.
-
-## Authentication decision to prepare next
-
-Phase 2 requires a short reviewed design before implementation. It must resolve:
-
-- Student ID to Auth identity mapping
-- unique activation credentials and delivery
-- first-use Account Activation & Check-in sequence
-- first-login personal password setup after unique credential verification
-- roster-derived Name, Block, Team and Project confirmation
-- password recovery
-- roster import/provisioning lifecycle
-- duplicate/cross-block identity
-- RLS policy matrix
-- legacy anonymous evidence association, including recognition of existing
-  Week 1 Check-ins without requiring resubmission
-- migration, verification and rollback
-
-## Phase 2 implementation evidence
-
-- Added server-only, teacher-authorised roster account provisioning.
-- Added Student ID login translation, non-enumerating password recovery and
-  persistent Supabase student sessions.
-- Added Account Activation & Check-in with personal password setup,
-  roster-derived context and legacy Check-in recognition.
-- Added roster account statuses, pending count and one-time credential CSV.
-- Added `student_accounts`, conservative Check-in linking, authenticated context
-  RPCs and role-scoped RLS in an idempotent migration.
-- Revoked the retired anonymous Find My Team RPC at Phase 2 rollout.
-- Documented the security decision, role matrix, deployment and rollback.
-- `npm run build` passes; the existing Vite bundle-size advisory remains.
-
-## Phase 3 confirmed design and implementation
-
-- `/` remains a public Landing Page for course information.
-- `/student` is the authenticated Student Portal.
-- Weekly activities are not shown publicly.
-- Login proves identity; Session Check-in separately proves attendance.
-- A teacher opens one studio session for a selected block.
-- An activated student can use the Student Portal at any time; Session Check-in
-  is a separate action available only while the teacher has an open session.
-- The old Week 1 Check-in remains historical activation evidence and is not
-  reused as recurring attendance.
-- Authenticated identity supplies Name and Student ID to normal activity
-  submissions; students do not re-enter or override roster identity.
-- Added `studio_sessions` and `student_session_checkins`, role-scoped RLS,
-  authenticated session RPCs, teacher control and attendance count.
-- Added read-only Teacher Session History with per-session attendance detail and
-  CSV export, plus student-only My Attendance history.
-- Closed sessions and their Check-ins remain preserved and cannot be reopened or
-  used for advance/late Check-in.
-- Added an idempotent Phase 3 migration with verification and rollback guidance.
-- Added per-student `Prepare account` for safe testing without provisioning the
-  full class.
-- Added teacher `Reset password`: it rotates the Auth password, returns a
-  one-time temporary credential, sets the account back to `ready`, and preserves
-  all roster, Check-in, attendance and activity evidence.
-- `npm run build` passes; the existing Vite bundle-size advisory remains.
-- Refined recurring sessions into an editable ten-session block plan with
-  optional automatic start/end windows plus manual open/close controls.
-- Moved live Student Check-in into a compact attention button and added a
-  dedicated student Sessions history view.
-- Expanded My Project from a title-only context to the assigned Project
-  Catalogue detail, with an explicit legacy-roster fallback.
-
-## Reusable prompt for the new session
-
-> Continue Engineering Studio Platform with Sprint 5. Use the connected GitHub
-> App and latest `main` as the source of truth. Read `AI_CONTEXT.md`,
-> `ROADMAP.md`, `docs/sprints/sprint-05/PLAN.md` and
-> `docs/sprints/sprint-05/HANDOFF.md`. Reconcile documentation with merged PRs
-> and production evidence. Start only Sprint 5 Phase 1: retire Class Pulse and
-> Team Conversation from the active UI while preserving historical data, and
-> confirm the minimal student information architecture. Report scope, affected
-> files, migration impact, acceptance criteria and tests before implementation.
-> Create one focused Draft PR and do not merge without my explicit approval.
+> Continue Engineering Studio Platform from latest GitHub `main`. Read
+> `AI_CONTEXT.md`, `ROADMAP.md`, `docs/sprints/sprint-05/HANDOFF.md` and
+> the Sprint 6 plan. Confirm Sprint 5 is Closed before starting one focused
+> Sprint 6 phase. Use the connected GitHub App, create one Draft PR and do not
+> merge without explicit approval.
