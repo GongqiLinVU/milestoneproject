@@ -1401,7 +1401,9 @@ function ProgressReviewFields({ student, step, setStep }: { student?: Authentica
   };
   const names = ["Project Context","My Contribution","Implementation Status","Evidence & Verification","Blockers & Next Step","Review & Submit"];
   const next = (event: MouseEvent<HTMLButtonElement>) => {
-    const panel = event.currentTarget.closest(".wizard-step") as HTMLElement;
+    const wizard = event.currentTarget.closest(".progress-wizard");
+    const panel = wizard?.querySelector<HTMLElement>(".wizard-step:not([hidden])");
+    if (!panel) return;
     const invalid = panel.querySelector<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(":invalid");
     if (invalid) return invalid.reportValidity();
     setStep(Math.min(6, step + 1));
