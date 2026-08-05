@@ -189,7 +189,7 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
         <nav>
           <a href="#weekly">This Week</a>
           <a href="#my-project">My Project</a>
-          <a href="#sessions">Project Journey</a>
+          <a href="#sessions">Sessions</a>
           <a href="#get-help">Get Help</a>
         </nav>
       </header>
