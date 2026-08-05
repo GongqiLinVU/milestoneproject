@@ -1,6 +1,6 @@
 # Sprint 6 Plan — Poster Gallery & Session Work Evidence
 
-**Status:** Planned  
+**Status:** In progress — Phase 2A implemented in Draft PR  
 **Source baseline:** Sprint 5 closed on 1 August 2026  
 **Product area:** NIT3004 Engineering Studio Platform
 
@@ -422,10 +422,16 @@ Introduce a clear **Your Project Journey** view from S1 through S10.
 
 **Phase 2A — Session Journey foundation**
 
+Implementation status: **implemented for Preview validation**.
+
 - Represent S1–S10 focus/definition consistently.
 - Map existing S1–S5 activities/evidence without backfilling data.
 - Add the student Project Journey and historical/open/upcoming behaviour.
 - Preserve existing Session Check-in and weekly activity authority.
+- Persist stable Session Number, Week and curriculum focus on existing `studio_sessions` without changing attendance or teacher-authored dates/windows.
+- Current 2026 · 2B1 S1–S5 are explicitly closed by the idempotent Phase 2A migration; no historical Work Track is created.
+- Student Journey reads mapped existing S1–S5 evidence through a student-scoped RPC; missing historical evidence is presented neutrally.
+- Future 10-session plans use the real Mon/Wed/Thu, Mon/Wed/Thu, Mon/Wed/Thu, Mon course rhythm from the Teaching Block start date.
 
 **Phase 2B — Live Work Track S6–S9**
 
