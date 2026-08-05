@@ -1,6 +1,6 @@
 # Sprint 6 Plan — Poster Gallery & Session Work Evidence
 
-**Status:** In progress — Phase 2A implemented in Draft PR  
+**Status:** In progress — Phase 2A merged; Phase 2B in implementation
 **Source baseline:** Sprint 5 closed on 1 August 2026  
 **Product area:** NIT3004 Engineering Studio Platform
 
@@ -163,15 +163,14 @@ constraints.
 
 Model the full NIT3004 block as one coherent ten-session Project Journey rather
 than a set of disconnected weekly forms. Session Check-in proves attendance;
-the Session Task explains the teaching focus; mapped Activities and Work Track
-evidence show how each student moves from inherited project work to final
-delivery.
+the Session Task explains the teaching focus; Work Track evidence shows how each
+student moves from inherited project work to final delivery. Weekly Activities
+remain a separate Monday teaching-interaction evidence stream.
 
 For the current 2026 · 2B1 block, Sessions 1–5 have already happened. They remain
 visible as historical, closed sessions and are never reopened simply to backfill
-missing Work Track data. Existing evidence is mapped to those sessions where it
-already exists. The same S1–S10 definitions are reusable from the beginning for
-future Teaching Blocks.
+missing Work Track data. The same S1–S10 definitions are reusable from the
+beginning for future Teaching Blocks.
 
 The overall journey remains:
 
@@ -193,22 +192,16 @@ The overall journey remains:
 | S10 | Week 4 | **Platform Feedback + Final Presentation** | Upcoming |
 
 The journey is a curriculum structure, not a scoring model. A historical Session
-may legitimately contain an existing mapped Activity but no Work Track.
+may legitimately contain Check-in but no Work Track.
 
 #### Historical Sessions S1–S5
 
 Do not fabricate or request retrospective Work Track submissions for the current
 2B1 block.
 
-- **S1 — Project Reconnect & Check-in:** map existing Session Check-in / project
-  reconnection evidence where available.
-- **S2 — Team Alignment & Four-Week Commitment:** map the existing Week 1
-  commitment/action evidence where available.
-- **S3 — Project Progress & Work Focus:** map the existing Week 1 engagement /
-  progress evidence where available.
-- **S4 — Progress Pre-check:** map the existing Week 2 Implementation Pre-check.
-- **S5 — Progress Review:** map the existing Week 2 Progress Review and teacher
-  review/follow-up evidence.
+- Keep only the real Session Check-in history associated with S1–S5.
+- Existing Week 1 / Week 2 Activities remain in the independent Weekly Activity
+  system and are not re-labelled as Session evidence.
 
 If no historical evidence exists, show that honestly rather than presenting a
 missing submission as a failure. S1–S5 remain closed/read-only for current 2B1,
@@ -221,8 +214,7 @@ Each Session can contain three related but distinct elements:
 
 1. **Session Check-in** — attendance evidence governed by existing Session
    open/close/scheduling rules.
-2. **Session Task / mapped Activity** — the teaching focus and any existing
-   activity relevant to that Session.
+2. **Session Task** — the teaching focus and optional teacher guidance for that Session.
 3. **My Work Track** — lightweight individual evidence of what the student
    actually progressed, where that Session uses Work Track.
 
@@ -235,39 +227,56 @@ Teacher-defined task fields remain lightweight:
 Student identity, Block, Team and Project are always derived from authoritative
 roster/auth context; students do not re-enter them.
 
+#### Shared Completion Standard — S6–S9
+
+Work Track percentage is an evidence-based measurement, not a student estimate or
+a mark. Every IT Milestone Project starts from the same three locked core requirements:
+
+1. **Core functionality** — meets the primary user needs.
+2. **End-to-end integration & usability** — the main workflow works across integrated components.
+3. **Verification & quality** — critical features are tested or validated with evidence.
+
+Students assess those three requirements rather than writing them. Each fixed core
+requirement has a `?` help control with a short **What this means** explanation and
+practical IT examples, so teams interpret the baseline consistently. They may optionally
+add up to five project-specific requirements where that improves accuracy. All assessed
+requirements use one standard:
+
+| Requirement state | Completion contribution |
+|---|---:|
+| Not started | 0% |
+| Started / design only | 25% |
+| Partially implemented | 50% |
+| Working in main flow | 75% |
+| Working + verified with evidence | 100% |
+
+The platform calculates the arithmetic mean across the committed requirements.
+100% therefore means the requirements are implemented, demonstrable and verified;
+it does not merely mean that code has been written.
+
+S7–S9 carry forward the same requirement list and current scores so the team can
+update evidence without redefining the baseline. The previous calculated percentage
+is shown for context; longitudinal interpretation remains Sprint 7 scope.
+
+Teacher review uses the same standard. The teacher can **Confirm** the calculated
+percentage or **Adjust** it after demo/verification. An adjustment requires a
+structured reason, preserving Student calculated % and Teacher verified % as
+distinct evidence.
+
 #### S6 — Review → Action
 
-S6 converts the completed Week 2 review into concrete action rather than
-repeating the Pre-check.
+S6 converts the completed Week 2 review into measurable action without repeating
+the Pre-check. The calculated completion selects one of three lightweight paths:
 
-Structured student evidence should cover:
+- **≤70% — Building / Developing:** what is still being built, the main blocker,
+  and the next focus.
+- **71–90% — Completing:** what remains, end-to-end workflow state, evidence
+  available today, and the next focus.
+- **>90% — Verifying / Finalising:** what is being verified, critical-issue state,
+  product confidence, and the next focus.
 
-1. **Main focus after the progress review** — multi-select:
-   - Core feature implementation
-   - UI / UX
-   - Integration
-   - Testing
-   - Bug fixing
-   - Data / database
-   - Documentation
-   - Other
-2. **Current action status**:
-   - Not started
-   - Started
-   - In progress
-   - Completed
-   - Blocked
-3. **Evidence today**:
-   - Feature demonstrated
-   - Issue fixed
-   - Integration completed
-   - Test completed
-   - Document updated
-   - Other
-4. **Biggest concern going into Week 3** — structured choice with optional short
-   note only where useful.
-5. **Next Session focus** — concise structured choice / short value that can be
-   carried into S7.
+Branching is deliberately limited to these three paths. The percentage is never
+entered directly by the student.
 
 #### S7 — Application Progress + Technical Implementation Report
 
@@ -277,7 +286,7 @@ inside the platform.
 
 **Application progress**
 
-- Core-functions completion band.
+- Shared requirement-based calculated completion and change from the previous Track.
 - Integration status.
 - Major unresolved functionality.
 - Whether the application can currently be demonstrated end-to-end.
@@ -304,14 +313,8 @@ S8 makes completion and verification explicit before the final-readiness gate.
 
 **Project completion**
 
-Use a consistent completion band:
-
-- 0–25%
-- 26–50%
-- 51–75%
-- 76–90%
-- 91–99%
-- 100%
+Reuse the shared requirement-based calculated completion; do not ask for a second
+subjective project-completion estimate.
 
 **Final Report completion**
 
@@ -394,12 +397,12 @@ Introduce a clear **Your Project Journey** view from S1 through S10.
 - The current open Session is prominent.
 - Upcoming Sessions show their focus without allowing early submission unless
   explicitly opened by the teacher/session schedule.
-- Opening a Session shows its task, mapped Activity/evidence and Work Track or
+- Opening Track shows its Session Task and Work Track or
   S10 Feedback as appropriate.
 - Historical missing evidence is described neutrally; it is not rendered as a
   failure or penalty.
-- Existing Week activities remain valid source evidence and are mapped into the
-  Journey rather than duplicated.
+- Existing Week activities remain valid independent teaching evidence and are not
+  duplicated or mapped into the Session Journey.
 
 #### Teacher view and lifecycle
 
@@ -439,6 +442,13 @@ Implementation status: **implemented for Preview validation**.
 
 - Implement the shared Session Task / Work Track foundation.
 - Implement the Session-specific structured evidence for S6, S7, S8 and S9.
+- Calculate project completion from 3 locked IT core requirements plus up to 5 optional
+  project-specific requirements using the shared 0/25/50/75/100 evidence standard;
+  never ask students to invent the common baseline or estimate the final percentage.
+- Use three progress paths (≤70 / 71–90 / >90) in S6 so different team stages get
+  relevant questions without creating a large decision tree.
+- Carry the same requirement baseline and prior percentage into later Tracks.
+- Let Teacher Review confirm or adjust calculated completion with a recorded reason.
 - Carry forward useful prior-session context such as S6 next focus where it helps
   the next Session without turning the system into task management.
 - Add the teacher Session evidence view.
@@ -457,6 +467,8 @@ Implementation status: **implemented for Preview validation**.
 - Existing Weekly Activity evidence remains in its current independent activity system and is not reused as Session evidence.
 - Future blocks can use the same S1–S10 definitions from the beginning.
 - S6 captures Review → Action evidence without duplicating the Week 2 Pre-check.
+- Project completion is server-calculated from requirement evidence; 100% requires
+  working + verified evidence, and Teacher Review can confirm or adjust the result.
 - S7 captures Application progress and Technical Implementation Report structure.
 - S8 captures Project/Final Report completion plus Product Verification.
 - S9 captures Product, Report, Presentation and Demo Final Readiness.

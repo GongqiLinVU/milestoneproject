@@ -5,11 +5,34 @@
 **Phase 1 — Week 3 Poster Gallery** has passed classroom-path testing and was
 squash-merged to `main` in PR #50 on 5 August 2026.
 
-**Phase 2A — Session Journey Foundation** is implemented in the current Draft PR and is the Preview validation gate.
+**Phase 2A — Session Journey Foundation** passed Preview testing and was squash-merged to `main` in PR #52 on 5 August 2026.
 
-Phase 2A adds stable S1–S10 curriculum identity while keeping Session Check-in attendance-only. The student sees the complete Session Journey and a separate Track entry into Session Task + Work Track. Weekly Activities remain an independent Monday teaching-interaction evidence stream and are never mapped into Session Check-in.
+**Phase 2B — Live Work Track S6–S9** is the current implementation / Preview gate.
 
-### Phase 2A Preview setup
+Phase 2B fills the existing `Track →` modal with Session-specific structured evidence while keeping Session Check-in attendance-only and Weekly Activities independent. Completion is requirement-based and server-calculated, with limited branching by progress stage and Teacher confirm/adjust verification.
+
+### Phase 2B Preview setup
+
+Run in the Preview Supabase SQL Editor:
+
+`supabase/migrations/20260805_sprint6_phase2b_session_work_track.sql`
+
+Then test:
+
+1. Open S6 and add 3–8 committed requirements. Confirm each can only use the 0/25/50/75/100 evidence standard.
+2. Confirm the overall percentage is calculated automatically and cannot be directly entered.
+3. Verify the calculated percentage opens the correct S6 path: ≤70 Building/Developing, 71–90 Completing, >90 Verifying/Finalising.
+4. Save S6, then open S7 and confirm the same requirement baseline plus previous completion carry forward; update requirement states and confirm the new percentage/change.
+5. Confirm S7 Technical Report, S8 Product Verification and S9 Final Readiness keep their distinct Session-specific checks.
+6. Teacher Sessions → Work Track should show the student's calculated %, requirement detail, and let the teacher Confirm or Adjust completion; Adjust requires a reason.
+7. Close a Session and confirm saved Track evidence remains read-only.
+8. Confirm Session Check-in, Weekly Activities and Poster Gallery remain independent and unchanged.
+
+Because the Preview migration was already run before this measurement refinement,
+rerun the same Phase 2B migration once after this PR update; it is idempotent and
+will add/update the verification fields and RPCs.
+
+### Phase 2A migration reference
 
 Run in the Preview Supabase SQL Editor:
 
@@ -24,13 +47,15 @@ Then test 2026 · 2B1 as both teacher and student:
 5. Existing Check-in still opens/closes only through the original session controls.
 6. Existing Week activity activation still controls Weekly Activity submission independently.
 
-No Work Track submission fields or S10 Platform Feedback are included yet; those remain Phase 2B/2C.
+S10 Platform Feedback is not included; it remains Phase 2C.
 
 ### Phase 2 agreed direction
 
 - Keep the complete S1–S10 curriculum journey visible and reusable.
 - For current `2026 · 2B1`, S1–S5 are historical/closed: keep their real Check-in history and never reopen them to backfill Work Track.
-- S6 begins the live Work Track with **Review → Action**.
+- S6 begins the live Work Track with **Review → Action**, using requirement-based calculated completion and three lightweight progress paths.
+- S6–S9 reuse the same 3–8 committed requirements with 0/25/50/75/100 evidence states; the server calculates the percentage and later Sessions show change from the previous Track.
+- Teacher Review can confirm the calculated percentage or adjust it with a recorded reason.
 - S7 checks **Application Progress + Technical Implementation Report structure**.
 - S8 checks **Project/Final Report completion + Product Verification**.
 - S9 is the **Final Readiness** gate for Product, Report, Presentation and Demo.
@@ -133,8 +158,8 @@ No new Vercel secret is required. The Poster API reuses the existing
 - `api/poster.ts` bundles successfully for Node 20 via esbuild.
 - `git diff --check` passes.
 
-## Not included
+## Not included in Phase 2B
 
-- Sprint 6 Phase 2 Session Task / Work Track.
+- Sprint 6 Phase 2C S10 Platform Feedback.
 - Sprint 7 trajectory, analytics, enhanced export or AI insight.
 - Automatic Poster scoring or public Poster hosting.
