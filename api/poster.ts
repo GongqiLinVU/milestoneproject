@@ -151,8 +151,9 @@ export default async function handler(req: any, res: any) {
         const { data: targetTeam } = await admin.from("teams").select("team_number").eq("id", version.team_id).maybeSingle();
         const { data: pointer } = await admin.from("team_posters").select("draft_version_id,published_version_id").eq("team_id", version.team_id).maybeSingle();
         const ownTeam = roster && targetTeam && roster.team_number === targetTeam.team_number;
-        allowed = Boolean(roster && gallery?.is_published && pointer && (
-          pointer.published_version_id === version.id || (ownTeam && pointer.draft_version_id === version.id)
+        allowed = Boolean(roster && pointer && (
+          (ownTeam && pointer.draft_version_id === version.id) ||
+          (gallery?.is_published && pointer.published_version_id === version.id)
         ));
       }
     }
