@@ -163,6 +163,7 @@ function StudentSessions() {
 }
 function StudentPortal({ student }: { student: AuthenticatedStudent }) {
   const [form, setForm] = useState<Kind | null>(null);
+  const [reviewTarget, setReviewTarget] = useState<string | null>(null);
   const [weekStates, setWeekStates] = useState<Record<number, boolean> | null>(null);
   const [presentationOrder, setPresentationOrder] = useState<Array<{ position: number; teamName: string; projectName: string | null }> | null>(null);
   useEffect(() => {
@@ -201,7 +202,8 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
           <p>{student.blockLabel} · Complete only the activity that matters now.</p>
         </section>
         <div className="portal-section portal-weekly-section"><WeeklyHub
-          open={setForm}
+          open={(kind) => { setReviewTarget(null); setForm(kind); }}
+          openReview={(teamName) => { setReviewTarget(teamName); setForm("review"); }}
           weekStates={weekStates}
           presentationOrder={presentationOrder}
         /></div>
@@ -221,6 +223,7 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
         blockId={student.blockId}
         blockLabel={student.blockLabel}
         student={student}
+        reviewTarget={reviewTarget}
         close={() => setForm(null)}
       />
     </>
