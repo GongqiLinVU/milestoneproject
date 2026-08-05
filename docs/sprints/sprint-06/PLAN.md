@@ -71,7 +71,7 @@ feedback.
 | Preferred format | PDF |
 | Also accepted | PNG, JPG and JPEG |
 | Page requirement | Exactly one page; multi-page content is rejected |
-| Maximum file size | 5 MB |
+| Maximum file size | 1 MB |
 | Recommended page size | A3 or A4 |
 | Orientation | Portrait or landscape |
 | Recommended quality | Text readable when fitted to a normal desktop screen; images preferably at least 1600 px on the long edge |
@@ -81,6 +81,10 @@ feedback.
 
 The upload UI must show the rules before file selection and return a specific,
 student-friendly validation message when a file is rejected.
+
+The 1 MB limit is also a teaching constraint: the Poster should behave like a
+project advertisement, not a mini report. Prefer one strong visual idea and
+short, high-impact copy over dense text or oversized imagery.
 
 #### Storage and publication behaviour
 
@@ -139,7 +143,7 @@ constraints.
 
 #### Phase 1 acceptance criteria
 
-- A Team student can upload a valid one-page PDF, PNG or JPG no larger than 5 MB.
+- A Team student can upload a valid one-page PDF, PNG or JPG no larger than 1 MB.
 - Invalid type, oversize file and multi-page PDF are rejected clearly.
 - A student cannot upload for another Team.
 - A teacher can upload, replace and remove any Team Poster in the selected Block.

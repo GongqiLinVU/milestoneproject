@@ -27,6 +27,7 @@ import {
 import "./styles.css";
 import { ProjectManager, RosterManager } from "./TeamAllocation";
 import { StudentAccess } from "./StudentAccess";
+import { StudentPosterGallery, TeacherPosterGallery } from "./PosterGallery";
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL ||
     "https://gwihaizxivclamzehupk.supabase.co",
@@ -144,6 +145,7 @@ function StudentSessions() {
 }
 function StudentPortal({ student }: { student: AuthenticatedStudent }) {
   const [form, setForm] = useState<Kind | null>(null);
+  const [reviewTarget, setReviewTarget] = useState<string | null>(null);
   const [weekStates, setWeekStates] = useState<Record<number, boolean> | null>(null);
   const [presentationOrder, setPresentationOrder] = useState<Array<{ position: number; teamName: string; projectName: string | null }> | null>(null);
   useEffect(() => {
@@ -182,7 +184,8 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
           <p>{student.blockLabel} · Complete only the activity that matters now.</p>
         </section>
         <div className="portal-section portal-weekly-section"><WeeklyHub
-          open={setForm}
+          open={(kind) => { setReviewTarget(null); setForm(kind); }}
+          openReview={(teamName) => { setReviewTarget(teamName); setForm("review"); }}
           weekStates={weekStates}
           presentationOrder={presentationOrder}
         /></div>
@@ -202,6 +205,7 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
         blockId={student.blockId}
         blockLabel={student.blockLabel}
         student={student}
+        reviewTarget={reviewTarget}
         close={() => setForm(null)}
       />
     </>
@@ -318,10 +322,12 @@ function Studio() {
 }
 function WeeklyHub({
   open,
+  openReview,
   weekStates,
   presentationOrder,
 }: {
   open: (k: Kind) => void;
+  openReview: (teamName: string) => void;
   weekStates: Record<number, boolean> | null;
   presentationOrder: Array<{ position: number; teamName: string; projectName: string | null }> | null;
 }) {
@@ -404,10 +410,7 @@ function WeeklyHub({
                 <p>Use peer review to find the highest-priority gap before Demo Day.</p>
               </div>
             </div>
-            <Expo
-              peerReviewOpen={Boolean(weekStates?.[3])}
-              openReview={() => weekStates?.[3] && open("review")}
-            />
+            <StudentPosterGallery onFeedback={openReview} />
             <div className="activity-grid">
               <Activity disabled={!weekStates?.[3]} icon={ClipboardCheck} badge="End of week" title="Week 3 Engagement Check-out" text="Record final-delivery participation, evidence readiness and any risk that needs attention before Demo Day." action={() => open("checkout3")} />
             </div>
@@ -792,12 +795,14 @@ function Modal({
   blockId,
   blockLabel,
   student,
+  reviewTarget,
   close,
 }: {
   kind: Kind | null;
   blockId: string;
   blockLabel: string;
   student: AuthenticatedStudent;
+  reviewTarget?: string | null;
   close: () => void;
 }) {
   const [msg, setMsg] = useState("");
@@ -1071,6 +1076,7 @@ function Modal({
     }
     setStoredSubmission(receipt);
     setSubmitted(true);
+    if (activeKind === "review") window.dispatchEvent(new CustomEvent("poster-feedback-recorded"));
     if (activeKind === "progress") localStorage.removeItem(progressDraftKey);
     setMsg("Response recorded. Thank you.");
   }
@@ -1157,7 +1163,7 @@ function Modal({
           ) : (
             <>
               <div className="authenticated-identity"><b>{student.studentName}</b><span>{student.studentId} · {student.teamName}</span></div>
-              {fields(kind, student, progressStep, setProgressStep)}
+              {fields(kind, student, progressStep, setProgressStep, reviewTarget)}
               {msg && (
                 <p
                   className={"form-status " + (submitted ? "success" : "")}
@@ -1509,7 +1515,7 @@ function CheckinFields() {
     />
   </>;
 }
-function fields(k: Kind, student?: AuthenticatedStudent, progressStep = 1, setProgressStep: (step:number)=>void = ()=>{}) {
+function fields(k: Kind, student?: AuthenticatedStudent, progressStep = 1, setProgressStep: (step:number)=>void = ()=>{}, reviewTarget?: string | null) {
   if (k === "checkin")
     return <CheckinFields />;
   if (k === "pulse")
@@ -1569,7 +1575,7 @@ function fields(k: Kind, student?: AuthenticatedStudent, progressStep = 1, setPr
         you saw—no written comment is required.
       </p>
       <Identity student={student}/>
-      <Team name="reviewed_team" label="Team being reviewed (to team)" />
+      {reviewTarget ? <label>Team being reviewed<input value={reviewTarget} readOnly/><input type="hidden" name="reviewed_team" value={reviewTarget}/></label> : <Team name="reviewed_team" label="Team being reviewed (to team)" />}
       {[
         ["Problem clarity", "problem"],
         ["Working product", "product"],
@@ -1814,7 +1820,7 @@ function Admin() {
     useState<ActivityTable>("team_health_checks");
   const [teachingBlocks, setTeachingBlocks] = useState<TeachingBlock[]>([]);
   const [selectedBlockId, setSelectedBlockId] = useState("");
-  const [adminView, setAdminView] = useState<"overview" | "roster" | "projects" | "sessions" | "records">("overview");
+  const [adminView, setAdminView] = useState<"overview" | "roster" | "projects" | "sessions" | "posters" | "records">("overview");
   const [activityWorkspace, setActivityWorkspace] = useState<"weekly" | "records" | "presentation">("records");
   const [records, setRecords] = useState<ActivityRecord[]>([]);
   const [editRecord, setEditRecord] = useState<ActivityRecord | null>(null);
@@ -2609,6 +2615,7 @@ function Admin() {
           <button type="button" className={adminView === "roster" ? "active" : ""} onClick={() => setAdminView("roster")}><Users size={18}/><span><b>Blocks & roster</b><small>Students and teams</small></span></button>
           <button type="button" className={adminView === "projects" ? "active" : ""} onClick={() => setAdminView("projects")}><Rocket size={18}/><span><b>Project setup</b><small>Catalogue & assignments</small></span></button>
           <button type="button" className={adminView === "sessions" ? "active" : ""} onClick={() => setAdminView("sessions")}><ClipboardCheck size={18}/><span><b>Session check-in</b><small>Open attendance</small></span></button>
+          <button type="button" className={adminView === "posters" ? "active" : ""} onClick={() => setAdminView("posters")}><Presentation size={18}/><span><b>Poster Gallery</b><small>Week 3 publish</small></span></button>
           <button type="button" className={adminView === "records" ? "active" : ""} onClick={() => setAdminView("records")}><ClipboardCheck size={18}/><span><b>Activity management</b><small>Weeks, records & order</small></span></button>
           <a href="/" className="admin-sidebar-home">Back to student portal</a>
         </aside>
@@ -2669,6 +2676,7 @@ function Admin() {
       <div hidden={adminView !== "roster"}><RosterManager /></div>
       <div hidden={adminView !== "projects"}><ProjectManager /></div>
       <div hidden={adminView !== "sessions"}><StudioSessionControl blockId={selectedBlockId} blocks={teachingBlocks} onBlockChange={setSelectedBlockId}/></div>
+      <div hidden={adminView !== "posters"}><TeacherPosterGallery blockId={selectedBlockId} blocks={teachingBlocks} onBlockChange={setSelectedBlockId}/></div>
       <section hidden={adminView !== "records"} className="activity-workspace" aria-labelledby="activity-workspace-title">
         <div className="activity-workspace-heading">
           <div>
