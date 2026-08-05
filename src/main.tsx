@@ -135,8 +135,17 @@ type SessionTrackPayload = {
 };
 
 const workFocusOptions = ["Core feature implementation","UI / UX","Integration","Testing","Bug fixing","Data / database","Documentation","Other"];
-const completionBands = ["0–25%","26–50%","51–75%","76–90%","91–99%","100%"];
 const reportSections = ["System / solution architecture","Implementation approach","Key technical components","Data / integration","Testing approach","Technical challenges","Evidence / screenshots"];
+const requirementScoreOptions = [
+  { score: 0, label: "Not started", help: "No implementation yet" },
+  { score: 25, label: "Started / design only", help: "Planning, design or setup only" },
+  { score: 50, label: "Partially implemented", help: "Some implementation, not working through the main flow" },
+  { score: 75, label: "Working in main flow", help: "Works in the main workflow but is not fully verified" },
+  { score: 100, label: "Working + verified", help: "Implemented, demonstrable and verified with evidence" },
+] as const;
+type ProjectRequirement = { label:string; score:number };
+function completionStage(percent:number){if(percent<=40)return"Building";if(percent<=70)return"Developing";if(percent<=90)return"Completing";if(percent<100)return"Finalising / Verifying";return"Completed & Verified";}
+function completionPath(percent:number){return percent<=70?"building":percent<=90?"completing":"verifying";}
 
 function SessionWorkTrackModal({session,onClose,onSaved}:{session:StudentSessionRecord;onClose:()=>void;onSaved:()=>void}) {
   const [track, setTrack] = useState<SessionTrackPayload | null>(null);
@@ -144,30 +153,87 @@ function SessionWorkTrackModal({session,onClose,onSaved}:{session:StudentSession
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
-  useEffect(()=>{let active=true;setLoading(true);supabase.rpc("get_my_session_work_track",{p_session_id:session.sessionId}).then(({data,error})=>{if(!active)return;if(error){setMessage("This Session Work Track could not be loaded.");}else{const next=data as SessionTrackPayload;setTrack(next);setResponse(next.response||{});}setLoading(false);});return()=>{active=false};},[session.sessionId]);
+  useEffect(()=>{let active=true;setLoading(true);supabase.rpc("get_my_session_work_track",{p_session_id:session.sessionId}).then(({data,error})=>{
+    if(!active)return;
+    if(error){setMessage("This Session Work Track could not be loaded.");}
+    else{
+      const next=data as SessionTrackPayload & {previousResponse?:Record<string,any>|null;previousCompletion?:number|null};
+      const saved=next.response||{};
+      const previous=next.previousResponse||{};
+      const initial=Object.keys(saved).length?saved:(Array.isArray(previous.requirements)?{requirements:previous.requirements}:saved);
+      setTrack(next);setResponse(initial);
+    }
+    setLoading(false);
+  });return()=>{active=false};},[session.sessionId]);
   const value=(key:string)=>String(response[key]||"");
   const set=(key:string,next:unknown)=>setResponse(current=>({...current,[key]:next}));
   const toggle=(key:string,option:string)=>setResponse(current=>{const items=Array.isArray(current[key])?[...current[key]]:[];return{...current,[key]:items.includes(option)?items.filter(item=>item!==option):[...items,option]};});
   const sectionState=(key:string,section:string)=>String((response[key] as Record<string,string>|undefined)?.[section]||"");
   const setSection=(key:string,section:string,next:string)=>setResponse(current=>({...current,[key]:{...((current[key] as Record<string,string>|undefined)||{}),[section]:next}}));
-  function isComplete(){if(!track)return false;const filled=(key:string)=>Boolean(String(response[key]||"").trim());if(track.sessionNumber===6)return Array.isArray(response.mainFocus)&&response.mainFocus.length>0&&["actionStatus","evidenceToday","concern","nextFocus"].every(filled);if(track.sessionNumber===7)return["coreCompletion","integrationStatus","unresolvedFunctionality","endToEnd"].every(filled)&&reportSections.every(section=>sectionState("reportSections",section));if(track.sessionNumber===8)return["projectCompletion","reportCompletion","verificationStatus"].every(filled)&&Array.isArray(response.remainingReportAreas)&&response.remainingReportAreas.length>0&&["Core requirements","Critical workflows","End-to-end scenario","Known defects","Demo environment","Verification evidence"].every(section=>sectionState("verification",section));if(track.sessionNumber===9)return["criticalBlocker","overallReadiness"].every(filled)&&["Product","Final Report","Presentation","Demo"].every(section=>sectionState("readiness",section))&&(response.criticalBlocker!=="Yes"||filled("blockerNote"));return false;}
-  async function save(){if(!track?.isOpen)return;if(!isComplete()){setMessage("Please complete the required structured checks before saving.");return;}setBusy(true);setMessage("");const{data,error}=await supabase.rpc("save_my_session_work_track",{p_session_id:session.sessionId,p_response:response});if(error){setMessage(error.message||"Work Track could not be saved.");}else{setTrack(current=>current?{...current,updatedAt:(data as {updatedAt:string}).updatedAt,response}:current);setMessage("Work Track saved.");onSaved();}setBusy(false);}
+  const requirements:ProjectRequirement[]=Array.isArray(response.requirements)?response.requirements:[];
+  const normalizedRequirements=requirements.filter(item=>item&&String(item.label||"").trim()).map(item=>({label:String(item.label).trim(),score:Number(item.score)}));
+  const requirementsComplete=normalizedRequirements.length>=3&&normalizedRequirements.length<=8&&normalizedRequirements.every(item=>[0,25,50,75,100].includes(item.score));
+  const completionPercent=requirementsComplete?Math.round(normalizedRequirements.reduce((sum,item)=>sum+item.score,0)/normalizedRequirements.length):null;
+  const path=completionPercent==null?null:completionPath(completionPercent);
+  const previousCompletion=(track as (SessionTrackPayload&{previousCompletion?:number|null})|null)?.previousCompletion??null;
+  function setRequirement(index:number,key:"label"|"score",next:string|number){setResponse(current=>{const items:Array<ProjectRequirement|{label:string;score:any}>=Array.isArray(current.requirements)?current.requirements.map((item:any)=>({...item})):[];while(items.length<=index)items.push({label:"",score:""});items[index]={...items[index],[key]:next};return{...current,requirements:items};});}
+  function addRequirement(){if(requirements.length>=8)return;setResponse(current=>({...current,requirements:[...(Array.isArray(current.requirements)?current.requirements:[]),{label:"",score:""}]}));}
+  function removeRequirement(index:number){setResponse(current=>({...current,requirements:(Array.isArray(current.requirements)?current.requirements:[]).filter((_:unknown,i:number)=>i!==index)}));}
+  function filled(key:string){return Boolean(String(response[key]||"").trim());}
+  function metricComplete(){return requirementsComplete&&completionPercent!=null;}
+  function isComplete(){
+    if(!track||!metricComplete())return false;
+    if(track.sessionNumber===6){
+      if(path==="building")return Array.isArray(response.stillBuilding)&&response.stillBuilding.length>0&&filled("mainBlocker")&&filled("nextFocus");
+      if(path==="completing")return Array.isArray(response.remainingToComplete)&&response.remainingToComplete.length>0&&filled("endToEnd")&&Array.isArray(response.evidenceToday)&&response.evidenceToday.length>0&&filled("nextFocus");
+      return Array.isArray(response.verifyingNow)&&response.verifyingNow.length>0&&filled("criticalIssue")&&filled("productConfidence")&&filled("nextFocus");
+    }
+    if(track.sessionNumber===7)return["integrationStatus","unresolvedFunctionality","endToEnd"].every(filled)&&reportSections.every(section=>sectionState("reportSections",section));
+    if(track.sessionNumber===8)return["reportCompletion","verificationStatus"].every(filled)&&Array.isArray(response.remainingReportAreas)&&response.remainingReportAreas.length>0&&["Core requirements","Critical workflows","End-to-end scenario","Known defects","Demo environment","Verification evidence"].every(section=>sectionState("verification",section));
+    if(track.sessionNumber===9)return["criticalBlocker","overallReadiness"].every(filled)&&["Product","Final Report","Presentation","Demo"].every(section=>sectionState("readiness",section))&&(response.criticalBlocker!=="Yes"||filled("blockerNote"));
+    return false;
+  }
+  async function save(){if(!track?.isOpen)return;if(!isComplete()){setMessage("Complete the requirement assessment and the questions for your current progress path before saving.");return;}setBusy(true);setMessage("");const payload={...response,requirements:normalizedRequirements,completionPercent,completionStage:completionStage(completionPercent!),progressPath:path};const{data,error}=await supabase.rpc("save_my_session_work_track",{p_session_id:session.sessionId,p_response:payload});if(error){setMessage(error.message||"Work Track could not be saved.");}else{const saved=(data as {updatedAt:string;response?:Record<string,unknown>});setResponse((saved.response as Record<string,any>)||payload);setTrack(current=>current?{...current,updatedAt:saved.updatedAt,response:(saved.response as Record<string,unknown>)||payload}:current);setMessage("Work Track saved.");onSaved();}setBusy(false);}
   const checked=(key:string,option:string)=>Array.isArray(response[key])&&response[key].includes(option);
   const select=(label:string,key:string,options:string[],placeholder="Select one")=><label className="track-field"><span>{label}</span><select value={value(key)} onChange={event=>set(key,event.target.value)} disabled={!track?.isOpen}><option value="">{placeholder}</option>{options.map(option=><option key={option}>{option}</option>)}</select></label>;
   const multi=(label:string,key:string,options:string[])=><fieldset className="track-field track-choice-grid" disabled={!track?.isOpen}><legend>{label}</legend>{options.map(option=><label key={option}><input type="checkbox" checked={checked(key,option)} onChange={()=>toggle(key,option)}/><span>{option}</span></label>)}</fieldset>;
+  const displayRequirements=requirements.length?requirements:[{label:"",score:"" as any},{label:"",score:"" as any},{label:"",score:"" as any}];
+  const requirementAssessment=<div className="track-measurement">
+    <div className="track-subheading"><strong>Project Completion Standard</strong><span>Assess the requirements your team committed to deliver. Do not estimate an overall percentage — it is calculated from these requirement states.</span></div>
+    <div className="completion-standard">{requirementScoreOptions.map(item=><div key={item.score}><b>{item.score}%</b><span>{item.label}</span><small>{item.help}</small></div>)}</div>
+    {previousCompletion!=null&&<div className="track-carry-forward"><span>Previous Track</span><strong>{previousCompletion+"%"}</strong></div>}
+    <div className="requirement-assessment-list">{displayRequirements.map((item:any,index:number)=><div className="requirement-assessment-row" key={index}>
+      <label><span>Requirement {index+1}</span><input maxLength={120} value={String(item.label||"")} onChange={event=>setRequirement(index,"label",event.target.value)} disabled={!track?.isOpen||session.sessionNumber>6} placeholder="e.g. User can submit and retrieve a project record"/></label>
+      <label><span>Current state</span><select value={item.score==null?"":String(item.score)} onChange={event=>setRequirement(index,"score",Number(event.target.value))} disabled={!track?.isOpen}><option value="">Select evidence state</option>{requirementScoreOptions.map(option=><option key={option.score} value={option.score}>{option.score}% · {option.label}</option>)}</select></label>
+      {track?.isOpen&&session.sessionNumber===6&&displayRequirements.length>3&&<button type="button" className="secondary compact" onClick={()=>removeRequirement(index)}>Remove</button>}
+    </div>)}</div>
+    {track?.isOpen&&session.sessionNumber===6&&displayRequirements.length<8&&<button type="button" className="secondary compact requirement-add" onClick={addRequirement}>+ Add requirement</button>}
+    <div className={"calculated-completion "+(completionPercent==null?"incomplete":"")}><span>Calculated completion</span><strong>{completionPercent==null?"—":completionPercent+"%"}</strong><b>{completionPercent==null?"Complete at least 3 requirement rows":completionStage(completionPercent)}</b>{previousCompletion!=null&&completionPercent!=null&&<small>{(completionPercent-previousCompletion>=0?"+":"")+(completionPercent-previousCompletion)+"% since previous Track"}</small>}</div>
+  </div>;
   let fields:ReactNode=null;
-  if(track?.sessionNumber===6) fields=<>
-    {multi("1. Main focus after the progress review","mainFocus",workFocusOptions)}
-    {select("2. Current action status","actionStatus",["Not started","Started","In progress","Completed","Blocked"])}
-    {select("3. Evidence today","evidenceToday",["Feature demonstrated","Issue fixed","Integration completed","Test completed","Document updated","Other","Not completed yet"])}
-    {select("4. Biggest concern going into Week 3","concern",["Scope / remaining work","Technical issue","Testing / verification","Report / documentation","Time","Team coordination","No major concern","Other"])}
-    <label className="track-field"><span>Concern note <small>optional</small></span><textarea maxLength={220} value={value("concernNote")} onChange={event=>set("concernNote",event.target.value)} disabled={!track.isOpen} placeholder="Only add a short note if it helps explain the concern."/></label>
-    {select("5. Next Session focus","nextFocus",workFocusOptions)}
+  if(track?.sessionNumber===6&&path==="building") fields=<>
+    <div className="track-path-banner"><b>Building / Developing path</b><span>Your calculated completion is ≤70%. Focus on what still needs to become working.</span></div>
+    {multi("What is still being built?","stillBuilding",["Core feature","UI / UX","Data / database","Integration","Authentication / security","Other essential requirement"])}
+    {select("Biggest thing stopping completion","mainBlocker",["Technical problem","Requirement unclear","Integration dependency","Team capacity","Need teacher guidance","No major blocker"])}
+    {select("What will you complete next?","nextFocus",workFocusOptions)}
+  </>;
+  if(track?.sessionNumber===6&&path==="completing") fields=<>
+    <div className="track-path-banner"><b>Completing path</b><span>Your calculated completion is 71–90%. Focus on closing gaps and proving the main workflow.</span></div>
+    {multi("What remains before the product can be considered complete?","remainingToComplete",["Feature finishing","Integration","Bug fixing","Testing","UI polish","Documentation","Demo preparation"])}
+    {select("How much of the core workflow works end-to-end?","endToEnd",["Not yet end-to-end","Partially working","Main workflow working","Most workflows working","Fully working"])}
+    {multi("What evidence can you show today?","evidenceToday",["Working feature / demo","Integration result","Test result","Bug fixes","Updated UI","Updated technical documentation"])}
+    {select("Next Session focus","nextFocus",workFocusOptions)}
+  </>;
+  if(track?.sessionNumber===6&&path==="verifying") fields=<>
+    <div className="track-path-banner"><b>Verifying / Finalising path</b><span>Your calculated completion is above 90%. Focus on verification rather than more development.</span></div>
+    {multi("What are you verifying now?","verifyingNow",["Core requirements","End-to-end workflow","Edge cases","Known defects","Demo environment","Final documentation"])}
+    {select("Any known critical issue?","criticalIssue",["Yes — blocks final delivery","Yes — but manageable","No critical issue"])}
+    {select("Current product confidence","productConfidence",["Not ready","Nearly ready","Ready for verification"])}
+    {select("Next Session focus","nextFocus",workFocusOptions)}
   </>;
   if(track?.sessionNumber===7) fields=<>
     {track.previousNextFocus&&<div className="track-carry-forward"><span>From S6 · Next focus</span><strong>{track.previousNextFocus}</strong></div>}
-    <div className="track-subheading"><strong>Application progress</strong><span>Check what can be demonstrated now.</span></div>
-    {select("Core functions completion","coreCompletion",completionBands)}
+    <div className="track-subheading"><strong>Application progress</strong><span>Use the calculated requirement completion above; these checks capture what can be demonstrated now.</span></div>
     {select("Integration status","integrationStatus",["Not started","Partial","Working","Complete"])}
     {select("Major unresolved functionality","unresolvedFunctionality",["None","Minor","Major","Blocking"])}
     {select("Can the application be demonstrated end-to-end?","endToEnd",["Yes","Partially","No"])}
@@ -175,10 +241,9 @@ function SessionWorkTrackModal({session,onClose,onSaved}:{session:StudentSession
     <div className="track-readiness-grid">{reportSections.map(section=><label key={section}><span>{section}</span><select value={sectionState("reportSections",section)} onChange={event=>setSection("reportSections",section,event.target.value)} disabled={!track.isOpen}><option value="">Select</option><option>Not started</option><option>Draft</option><option>Ready</option></select></label>)}</div>
   </>;
   if(track?.sessionNumber===8) fields=<>
-    {select("Project completion","projectCompletion",completionBands)}
-    {select("Final Report completion","reportCompletion",completionBands)}
+    {select("Final Report completion","reportCompletion",["0–25%","26–50%","51–75%","76–90%","91–99%","100%"])}
     {multi("Final Report areas still needing work","remainingReportAreas",["Structure","Implementation","Testing / results","Screenshots / evidence","Evaluation","Conclusion","References","None"])}
-    <div className="track-subheading"><strong>Product Verification</strong><span>Record the current verification state.</span></div>
+    <div className="track-subheading"><strong>Product Verification</strong><span>The calculated requirement completion above measures delivery; now record verification quality.</span></div>
     <div className="track-readiness-grid">{["Core requirements","Critical workflows","End-to-end scenario","Known defects","Demo environment","Verification evidence"].map(section=><label key={section}><span>{section}</span><select value={sectionState("verification",section)} onChange={event=>setSection("verification",section,event.target.value)} disabled={!track.isOpen}><option value="">Select</option><option>Verified</option><option>In progress</option><option>Not yet</option></select></label>)}</div>
     {select("Overall Product Verification","verificationStatus",["Not Ready","Partially Verified","Verified"])}
   </>;
@@ -189,9 +254,8 @@ function SessionWorkTrackModal({session,onClose,onSaved}:{session:StudentSession
     {value("criticalBlocker")==="Yes"&&<label className="track-field"><span>Critical blocker <small>short note</small></span><textarea maxLength={220} value={value("blockerNote")} onChange={event=>set("blockerNote",event.target.value)} disabled={!track.isOpen}/></label>}
     {select("Overall readiness","overallReadiness",["Not Ready","Almost Ready","Ready to Present"])}
   </>;
-  return createPortal(<div className="session-work-track-modal" role="presentation" onMouseDown={event=>event.target===event.currentTarget&&onClose()}><section className="session-work-track-dialog work-track-form-dialog" role="dialog" aria-modal="true" aria-labelledby="session-work-track-title"><button type="button" className="session-work-track-close" aria-label="Close Session Task and Work Track" onClick={onClose}>×</button><div className="eyebrow">Independent project progress</div><h3 id="session-work-track-title">Session Task + Work Track</h3><strong>S{session.sessionNumber} · {session.focus}</strong>{loading?<p className="empty-state">Loading Work Track…</p>:track?<><div className="session-task-card"><span>Session Task</span><p>{track.taskGuidance||session.focus}</p>{track.expectedEvidence&&<small><b>Expected evidence:</b> {track.expectedEvidence}</small>}</div>{!track.isOpen&&<p className="track-readonly-note">This Session is closed. Your saved Work Track is read-only.</p>}<div className="work-track-fields">{fields}</div>{track.updatedAt&&<small className="track-saved-at"><CheckCircle2 size={14}/>Saved {new Date(track.updatedAt).toLocaleString()}</small>}{message&&<p className="admin-alert" role="status">{message}</p>}<div className="track-dialog-actions"><button type="button" className="secondary" onClick={onClose}>Close</button>{track.isOpen&&<button type="button" onClick={()=>void save()} disabled={busy}>{busy?"Saving…":track.updatedAt?"Update Work Track":"Save Work Track"}</button>}</div></>:<p className="empty-state error-state">{message||"Work Track is unavailable."}</p>}</section></div>,document.body);
+  return createPortal(<div className="session-work-track-modal" role="presentation" onMouseDown={event=>event.target===event.currentTarget&&onClose()}><section className="session-work-track-dialog work-track-form-dialog" role="dialog" aria-modal="true" aria-labelledby="session-work-track-title"><button type="button" className="session-work-track-close" aria-label="Close Session Task and Work Track" onClick={onClose}>×</button><div className="eyebrow">Independent project progress</div><h3 id="session-work-track-title">Session Task + Work Track</h3><strong>S{session.sessionNumber} · {session.focus}</strong>{loading?<p className="empty-state">Loading Work Track…</p>:track?<><div className="session-task-card"><span>Session Task</span><p>{track.taskGuidance||session.focus}</p>{track.expectedEvidence&&<small><b>Expected evidence:</b> {track.expectedEvidence}</small>}</div>{!track.isOpen&&<p className="track-readonly-note">This Session is closed. Your saved Work Track is read-only.</p>}<div className="work-track-fields">{requirementAssessment}{completionPercent!=null&&fields}</div>{track.updatedAt&&<small className="track-saved-at"><CheckCircle2 size={14}/>Saved {new Date(track.updatedAt).toLocaleString()}</small>}{message&&<p className="admin-alert" role="status">{message}</p>}<div className="track-dialog-actions"><button type="button" className="secondary" onClick={onClose}>Close</button>{track.isOpen&&<button type="button" onClick={()=>void save()} disabled={busy}>{busy?"Saving…":track.updatedAt?"Update Work Track":"Save Work Track"}</button>}</div></>:<p className="empty-state error-state">{message||"Work Track is unavailable."}</p>}</section></div>,document.body);
 }
-
 function StudentSessions() {
   const [sessions, setSessions] = useState<StudentSessionRecord[]>([]);
   const [trackSession, setTrackSession] = useState<StudentSessionRecord | null>(null);
