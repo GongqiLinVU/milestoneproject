@@ -223,7 +223,12 @@ begin
   )
   on conflict (session_id, student_id) do update
     set response = excluded.response,
-        updated_at = now()
+        updated_at = now(),
+        teacher_verified_completion = null,
+        teacher_verification_status = null,
+        teacher_verification_reason = null,
+        teacher_verified_at = null,
+        teacher_verified_by = null
   returning * into v_track;
 
   return jsonb_build_object('updatedAt', v_track.updated_at, 'response', v_track.response);
