@@ -27,6 +27,22 @@ create table if not exists public.student_session_work_tracks (
   unique (session_id, auth_user_id)
 );
 
+alter table public.student_session_work_tracks add column if not exists teacher_verified_completion smallint;
+alter table public.student_session_work_tracks add column if not exists teacher_verification_status text;
+alter table public.student_session_work_tracks add column if not exists teacher_verification_reason text;
+alter table public.student_session_work_tracks add column if not exists teacher_verified_at timestamptz;
+alter table public.student_session_work_tracks add column if not exists teacher_verified_by uuid references auth.users(id) on delete set null;
+
+alter table public.student_session_work_tracks drop constraint if exists student_session_work_tracks_teacher_completion_check;
+alter table public.student_session_work_tracks add constraint student_session_work_tracks_teacher_completion_check
+  check (teacher_verified_completion is null or teacher_verified_completion between 0 and 100) not valid;
+alter table public.student_session_work_tracks validate constraint student_session_work_tracks_teacher_completion_check;
+
+alter table public.student_session_work_tracks drop constraint if exists student_session_work_tracks_teacher_status_check;
+alter table public.student_session_work_tracks add constraint student_session_work_tracks_teacher_status_check
+  check (teacher_verification_status is null or teacher_verification_status in ('confirmed', 'adjusted')) not valid;
+alter table public.student_session_work_tracks validate constraint student_session_work_tracks_teacher_status_check;
+
 create index if not exists student_session_work_tracks_block_session_idx
   on public.student_session_work_tracks (block_id, session_id);
 
@@ -54,6 +70,8 @@ declare
   v_session public.studio_sessions%rowtype;
   v_track public.student_session_work_tracks%rowtype;
   v_previous_next_focus text;
+  v_previous_response jsonb;
+  v_previous_completion integer;
   v_block_id uuid;
 begin
   select * into v_account
@@ -85,13 +103,19 @@ begin
   from public.student_session_work_tracks
   where session_id = v_session.id and auth_user_id = auth.uid();
 
-  if v_session.session_number = 7 then
-    select track.response ->> 'nextFocus' into v_previous_next_focus
+  if v_session.session_number > 6 then
+    select track.response,
+           track.response ->> 'nextFocus',
+           case when jsonb_typeof(track.response -> 'completionPercent') = 'number'
+             then (track.response ->> 'completionPercent')::numeric::integer else null end
+    into v_previous_response, v_previous_next_focus, v_previous_completion
     from public.student_session_work_tracks track
     join public.studio_sessions previous on previous.id = track.session_id
     where track.auth_user_id = auth.uid()
       and track.block_id = v_block_id
-      and previous.session_number = 6
+      and previous.session_number < v_session.session_number
+      and previous.session_number between 6 and 9
+    order by previous.session_number desc
     limit 1;
   end if;
 
@@ -104,7 +128,9 @@ begin
     'isOpen', (v_session.status = 'open' or (v_session.status = 'scheduled' and v_session.starts_at <= now() and (v_session.ends_at is null or v_session.ends_at > now()))),
     'response', coalesce(v_track.response, '{}'::jsonb),
     'updatedAt', v_track.updated_at,
-    'previousNextFocus', v_previous_next_focus
+    'previousNextFocus', v_previous_next_focus,
+    'previousResponse', v_previous_response,
+    'previousCompletion', v_previous_completion
   );
 end;
 $$;
@@ -123,6 +149,12 @@ declare
   v_session public.studio_sessions%rowtype;
   v_block_id uuid;
   v_track public.student_session_work_tracks%rowtype;
+  v_response jsonb;
+  v_requirement_count integer;
+  v_invalid_requirement_count integer;
+  v_completion integer;
+  v_stage text;
+  v_path text;
 begin
   if p_response is null or jsonb_typeof(p_response) <> 'object' or length(p_response::text) > 12000 then
     raise exception using errcode = 'P0001', message = 'Work Track response is invalid';
@@ -150,10 +182,44 @@ begin
     raise exception using errcode = 'P0001', message = 'Work Track can only be updated while this session is open';
   end if;
 
+  if jsonb_typeof(p_response -> 'requirements') is distinct from 'array' then
+    raise exception using errcode = 'P0001', message = 'Add and assess the committed project requirements first';
+  end if;
+
+  select count(*),
+         count(*) filter (
+           where coalesce(btrim(requirement ->> 'label'), '') = ''
+              or char_length(requirement ->> 'label') > 120
+              or coalesce(requirement ->> 'score', '') not in ('0','25','50','75','100')
+         ),
+         round(avg((requirement ->> 'score')::numeric))::integer
+  into v_requirement_count, v_invalid_requirement_count, v_completion
+  from jsonb_array_elements(p_response -> 'requirements') requirement;
+
+  if v_requirement_count < 3 or v_requirement_count > 8 or v_invalid_requirement_count > 0 then
+    raise exception using errcode = 'P0001', message = 'Use 3 to 8 requirements and assess each with the 0/25/50/75/100 standard';
+  end if;
+
+  v_stage := case
+    when v_completion <= 40 then 'Building'
+    when v_completion <= 70 then 'Developing'
+    when v_completion <= 90 then 'Completing'
+    when v_completion < 100 then 'Finalising / Verifying'
+    else 'Completed & Verified'
+  end;
+  v_path := case when v_completion <= 70 then 'building' when v_completion <= 90 then 'completing' else 'verifying' end;
+  v_response := jsonb_set(
+    jsonb_set(
+      jsonb_set(p_response, '{completionPercent}', to_jsonb(v_completion), true),
+      '{completionStage}', to_jsonb(v_stage), true
+    ),
+    '{progressPath}', to_jsonb(v_path), true
+  );
+
   insert into public.student_session_work_tracks (
     session_id, student_id, auth_user_id, block_id, response
   ) values (
-    v_session.id, v_account.student_id, auth.uid(), v_block_id, p_response
+    v_session.id, v_account.student_id, auth.uid(), v_block_id, v_response
   )
   on conflict (session_id, student_id) do update
     set response = excluded.response,
@@ -191,7 +257,11 @@ begin
     'teamName', concat('Team ', roster.team_number),
     'checkedInAt', checkin.checked_in_at,
     'response', track.response,
-    'updatedAt', track.updated_at
+    'updatedAt', track.updated_at,
+    'teacherVerifiedCompletion', track.teacher_verified_completion,
+    'teacherVerificationStatus', track.teacher_verification_status,
+    'teacherVerificationReason', track.teacher_verification_reason,
+    'teacherVerifiedAt', track.teacher_verified_at
   ) order by roster.team_number, coalesce(roster.preferred_name, roster.full_name), roster.student_id), '[]'::jsonb)
   into v_result
   from public.student_roster roster
@@ -207,6 +277,75 @@ $$;
 
 revoke all on function public.get_teacher_session_work_tracks(uuid) from public;
 grant execute on function public.get_teacher_session_work_tracks(uuid) to authenticated;
+
+create or replace function public.verify_teacher_session_work_track(
+  p_session_id uuid,
+  p_student_id text,
+  p_verified_completion integer,
+  p_reason text default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $
+declare
+  v_track public.student_session_work_tracks%rowtype;
+  v_student_completion integer;
+  v_status text;
+begin
+  if not public.is_teacher() then
+    raise exception using errcode = 'P0001', message = 'Teacher access required';
+  end if;
+  if p_verified_completion is null or p_verified_completion < 0 or p_verified_completion > 100 then
+    raise exception using errcode = 'P0001', message = 'Verified completion must be between 0 and 100';
+  end if;
+  if p_reason is not null and char_length(p_reason) > 300 then
+    raise exception using errcode = 'P0001', message = 'Verification reason is too long';
+  end if;
+
+  select * into v_track
+  from public.student_session_work_tracks
+  where session_id = p_session_id and student_id = p_student_id;
+
+  if v_track.id is null then
+    raise exception using errcode = 'P0001', message = 'Student Work Track not found';
+  end if;
+
+  v_student_completion := case
+    when jsonb_typeof(v_track.response -> 'completionPercent') = 'number'
+    then (v_track.response ->> 'completionPercent')::numeric::integer
+    else null
+  end;
+  if v_student_completion is null then
+    raise exception using errcode = 'P0001', message = 'Student completion measure is not available';
+  end if;
+
+  v_status := case when p_verified_completion = v_student_completion then 'confirmed' else 'adjusted' end;
+  if v_status = 'adjusted' and coalesce(btrim(p_reason), '') = '' then
+    raise exception using errcode = 'P0001', message = 'Choose a reason when adjusting student completion';
+  end if;
+
+  update public.student_session_work_tracks
+  set teacher_verified_completion = p_verified_completion,
+      teacher_verification_status = v_status,
+      teacher_verification_reason = nullif(btrim(p_reason), ''),
+      teacher_verified_at = now(),
+      teacher_verified_by = auth.uid()
+  where id = v_track.id
+  returning * into v_track;
+
+  return jsonb_build_object(
+    'teacherVerifiedCompletion', v_track.teacher_verified_completion,
+    'teacherVerificationStatus', v_track.teacher_verification_status,
+    'teacherVerificationReason', v_track.teacher_verification_reason,
+    'teacherVerifiedAt', v_track.teacher_verified_at
+  );
+end;
+$;
+
+revoke all on function public.verify_teacher_session_work_track(uuid, text, integer, text) from public;
+grant execute on function public.verify_teacher_session_work_track(uuid, text, integer, text) to authenticated;
 
 -- Extend the Phase 2A Journey with only the student's own Track completion marker.
 create or replace function public.get_my_session_journey()
@@ -267,4 +406,6 @@ grant execute on function public.get_my_session_journey() to authenticated;
 -- 2. S6-S9 accept at most one Work Track per student/session and only save while open.
 -- 3. Closed Work Tracks remain readable but cannot be edited by students.
 -- 4. S7 may read S6 nextFocus as context; it is not copied into S7 evidence.
--- 5. Teacher evidence is block/session scoped and includes roster students even when Track is missing.
+-- 5. Completion is server-calculated from 3-8 committed requirements using the 0/25/50/75/100 evidence standard.
+-- 6. S7-S9 carry the previous requirement assessment forward for longitudinal comparison.
+-- 7. Teacher evidence is block/session scoped and teachers can confirm or adjust the calculated completion with a reason.
