@@ -1,0 +1,106 @@
+# Sprint 6 Handoff
+
+## Current gate
+
+**Phase 1 — Week 3 Poster Gallery** is implemented in a focused Draft PR and is
+awaiting Preview + Supabase verification. Do not merge until classroom-path
+testing passes.
+
+## Phase 1 implementation
+
+- Private `poster-gallery` Supabase Storage bucket, capped at 5 MB and limited
+  to PDF/PNG/JPEG.
+- Immutable Poster version history with separate Team draft and published
+  pointers.
+- Student upload/replace is restricted to the authenticated roster Team.
+- Teacher upload/replace supports any Team in the selected Teaching Block.
+- Upload files travel directly from browser to Supabase using a signed upload
+  token. This avoids Vercel Function's 4.5 MB request limit while keeping the
+  product's 5 MB Poster limit.
+- Server-side finalisation downloads the private object, verifies size and file
+  signature, and verifies that PDF files contain exactly one page using
+  `pdf-lib`. Failed validation removes the staged object.
+- Gallery preview uses a short-lived signed read URL; no public bucket URL is
+  created.
+- Teacher Publish copies draft pointers into the Block's published snapshot.
+  Later replacement does not change that snapshot until Publish is used again.
+- Teacher Hide preserves Posters and peer-review evidence.
+- Student Gallery is Block-scoped and shows Team, Project, Poster and feedback
+  completion state.
+- `Give feedback` opens the existing Poster Peer Review form with the Gallery
+  Team fixed as the target. Own-Team and duplicate protections remain database
+  enforced.
+- Poster Gallery publication is the Peer Feedback gate, independent of the broad
+  Week 3 activity switch.
+
+## Deployment constraint decision
+
+The accepted Poster limit is 5 MB. Vercel Functions currently limit request and
+response bodies to 4.5 MB, while Supabase recommends standard uploads for files
+up to 6 MB. Therefore Poster file bytes must not be proxied through the Vercel
+API. The API issues a short-lived upload token; the browser sends the bytes
+directly to the private Supabase bucket; the API then validates the stored object
+before it becomes a Team draft.
+
+## Required migration before Preview testing
+
+Run in the Preview Supabase SQL Editor:
+
+`supabase/migrations/20260805_sprint6_phase1_poster_gallery.sql`
+
+The migration creates the private Storage bucket, Gallery/version tables,
+Block-scoped RPCs and the Gallery-controlled Poster Peer Review policy.
+
+No new Vercel secret is required. The Poster API reuses the existing
+`SUPABASE_SERVICE_ROLE_KEY` server-only environment variable from Sprint 5.
+
+## Preview test checklist
+
+### Student
+
+1. Log in as a prepared/activated student and open Week 3.
+2. Confirm `Your Team Poster` identifies the roster Team without asking the
+   student to select a Team.
+3. Upload a valid one-page PDF below 5 MB; confirm it becomes the Team draft.
+4. Replace it with PNG or JPEG and confirm the new draft appears.
+5. Confirm a PDF with two pages is rejected with an exact one-page message.
+6. Confirm DOCX/PPTX and a file over 5 MB are rejected.
+7. Before Publish, confirm Gallery content remains hidden.
+8. After teacher Publish, confirm only the current Block's Team cards appear.
+9. Enlarge another Team Poster and choose **Give feedback**.
+10. Confirm the target Team is fixed in the form, own Team has no feedback
+    button, and an already-reviewed Team shows **Feedback completed**.
+
+### Teacher
+
+1. Open **Teacher Dashboard → Poster Gallery** and select the Preview Block.
+2. Confirm every Team appears as Missing or Ready with its current project.
+3. Upload/replace a Poster on behalf of one Team and preview it.
+4. Publish the Gallery; confirm Ready versions become the student snapshot.
+5. Replace one Team Poster after publishing; confirm students still see the old
+   snapshot and the teacher sees `Draft changed`.
+6. Publish again; confirm students now see the replacement.
+7. Hide the Gallery; confirm Posters disappear from student access but are not
+   deleted from teacher management.
+8. Remove a disposable draft using the explicit confirmation flow.
+
+### Security / isolation
+
+1. A student cannot upload for another Team by changing browser/API payloads.
+2. A student from another Block cannot obtain a signed URL for this Block's
+   Poster version.
+3. Hidden Gallery versions cannot obtain new student signed read URLs.
+4. Storage bucket listing is unavailable to normal browser roles.
+
+## Verification already completed locally
+
+- `npm run build` passes.
+- `api/poster.ts` bundles successfully for Node 20 via esbuild.
+- `git diff --check` passes.
+
+## Not included
+
+- Sprint 6 Phase 2 Session Task / Work Track.
+- Sprint 7 trajectory, analytics, enhanced export or AI insight.
+- Automatic Poster scoring or public Poster hosting.
+
