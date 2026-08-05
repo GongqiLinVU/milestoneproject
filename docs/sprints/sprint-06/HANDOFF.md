@@ -5,11 +5,29 @@
 **Phase 1 — Week 3 Poster Gallery** has passed classroom-path testing and was
 squash-merged to `main` in PR #50 on 5 August 2026.
 
-**Phase 2A — Session Journey Foundation** is implemented in the current Draft PR and is the Preview validation gate.
+**Phase 2A — Session Journey Foundation** passed Preview testing and was squash-merged to `main` in PR #52 on 5 August 2026.
 
-Phase 2A adds stable S1–S10 curriculum identity while keeping Session Check-in attendance-only. The student sees the complete Session Journey and a separate Track entry into Session Task + Work Track. Weekly Activities remain an independent Monday teaching-interaction evidence stream and are never mapped into Session Check-in.
+**Phase 2B — Live Work Track S6–S9** is the current implementation / Preview gate.
 
-### Phase 2A Preview setup
+Phase 2B fills the existing `Track →` modal with Session-specific structured evidence while keeping Session Check-in attendance-only and Weekly Activities independent.
+
+### Phase 2B Preview setup
+
+Run in the Preview Supabase SQL Editor:
+
+`supabase/migrations/20260805_sprint6_phase2b_session_work_track.sql`
+
+Then test:
+
+1. Open S6 and confirm a student can save/update Review → Action evidence from `Track →` without changing Check-in.
+2. Close S6 and confirm the saved Track becomes read-only and remains viewable.
+3. Open S7 and confirm the student's S6 `Next Session focus` appears as context only.
+4. Check S7 Technical Report readiness, S8 completion/verification and S9 Final Readiness forms use their distinct structures.
+5. Teacher Sessions → `Work Track` shows the whole roster, Checked-in state, Tracked/Missing state and attention signals together.
+6. Teacher Edit Session can add optional Session Task guidance and Expected evidence for S6–S9.
+7. Confirm Weekly Activities and Poster Gallery behaviour are unchanged.
+
+### Phase 2A migration reference
 
 Run in the Preview Supabase SQL Editor:
 
@@ -24,7 +42,7 @@ Then test 2026 · 2B1 as both teacher and student:
 5. Existing Check-in still opens/closes only through the original session controls.
 6. Existing Week activity activation still controls Weekly Activity submission independently.
 
-No Work Track submission fields or S10 Platform Feedback are included yet; those remain Phase 2B/2C.
+S10 Platform Feedback is not included; it remains Phase 2C.
 
 ### Phase 2 agreed direction
 
@@ -133,8 +151,8 @@ No new Vercel secret is required. The Poster API reuses the existing
 - `api/poster.ts` bundles successfully for Node 20 via esbuild.
 - `git diff --check` passes.
 
-## Not included
+## Not included in Phase 2B
 
-- Sprint 6 Phase 2 Session Task / Work Track.
+- Sprint 6 Phase 2C S10 Platform Feedback.
 - Sprint 7 trajectory, analytics, enhanced export or AI insight.
 - Automatic Poster scoring or public Poster hosting.
