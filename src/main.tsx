@@ -107,7 +107,19 @@ type AuthenticatedStudent = {
   checkInToSession?: () => Promise<void>;
   sessionCheckinBusy?: boolean;
 };
-type StudentSessionRecord = { sessionId: string; title: string; sessionDate: string; startsAt: string | null; endsAt: string | null; checkedInAt: string | null; status: string };
+type StudentSessionRecord = {
+  sessionId: string;
+  sessionNumber: number;
+  weekNumber: number;
+  focus: string;
+  title: string;
+  sessionDate: string;
+  startsAt: string | null;
+  endsAt: string | null;
+  checkedInAt: string | null;
+  status: "scheduled" | "open" | "closed";
+  evidence: string[];
+};
 
 function StudentSessions() {
   const [sessions, setSessions] = useState<StudentSessionRecord[]>([]);
@@ -116,10 +128,10 @@ function StudentSessions() {
   useEffect(() => {
     let active = true;
     const refresh = async () => {
-      const { data, error: historyError } = await supabase.rpc("get_my_session_history");
+      const { data, error: historyError } = await supabase.rpc("get_my_session_journey");
       if (!active) return;
       if (historyError) {
-        setError("Attendance history could not be loaded. Please refresh or tell your teacher.");
+        setError("Your Project Journey could not be loaded. Please refresh or tell your teacher.");
       } else {
         setSessions((data as StudentSessionRecord[] | null) || []);
         setError("");
@@ -136,16 +148,21 @@ function StudentSessions() {
       document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, []);
-  return <section id="sessions" className="portal-panel portal-section student-sessions">
-    <Head label="Sessions" title="Your attendance history." text="This is the same attendance record your teacher sees. Check-in is available only while the current session is open."/>
-    {loading ? <p className="empty-state">Loading sessions…</p> : error ? <p className="empty-state error-state" role="alert">{error}</p> : sessions.length ? <div className="attendance-history">
-      {sessions.map(item => <article key={item.sessionId}><div><b>{item.title}</b><span>{new Date(`${item.sessionDate}T00:00:00`).toLocaleDateString()}</span></div>{item.checkedInAt ? <strong>Checked in · {new Date(item.checkedInAt).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</strong> : <span>Not checked in</span>}</article>)}
+  return <section id="sessions" className="portal-panel portal-section student-sessions project-journey">
+    <Head label="Your Project Journey" title="Ten sessions. One delivery story." text="Follow the complete path from reconnecting with your project to Final Presentation. Past evidence stays readable; upcoming sessions stay locked until their normal session and activity controls open."/>
+    {loading ? <p className="empty-state">Loading your Project Journey…</p> : error ? <p className="empty-state error-state" role="alert">{error}</p> : sessions.length ? <div className="journey-session-list">
+      {sessions.map(item => <article key={item.sessionId} className={`journey-session-card ${item.status}`}>
+        <div className="journey-session-marker"><b>S{item.sessionNumber}</b><span>Week {item.weekNumber}</span></div>
+        <div className="journey-session-content"><div className="journey-session-heading"><div><small>{new Date(`${item.sessionDate}T00:00:00`).toLocaleDateString()}</small><h3>{item.focus}</h3></div><span className={`activity-control-status ${item.status}`}>{item.status === "open" ? "Current" : item.status === "closed" ? "Closed" : "Upcoming"}</span></div>
+          {item.evidence.length > 0 ? <div className="journey-evidence"><span>Mapped evidence</span>{item.evidence.map(label => <strong key={label}><CheckCircle2 size={14}/>{label}</strong>)}</div> : item.status === "closed" ? <p className="journey-history-note">No mapped Session Task evidence is available from this historical session. Nothing needs to be backfilled.</p> : <p className="journey-history-note">Session evidence will appear here when this part of the journey is active.</p>}
+          <div className="journey-attendance">{item.checkedInAt ? <strong><CheckCircle2 size={14}/>Checked in · {new Date(item.checkedInAt).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</strong> : <span>{item.status === "closed" ? "No recorded Session Check-in" : item.status === "open" ? "Session Check-in is available from the top of this page" : "Session Check-in not open yet"}</span>}</div>
+        </div>
+      </article>)}
     </div> : <p className="empty-state">No sessions have been prepared for this block yet.</p>}
   </section>;
 }
 function StudentPortal({ student }: { student: AuthenticatedStudent }) {
   const [form, setForm] = useState<Kind | null>(null);
-  const [reviewTarget, setReviewTarget] = useState<string | null>(null);
   const [weekStates, setWeekStates] = useState<Record<number, boolean> | null>(null);
   const [presentationOrder, setPresentationOrder] = useState<Array<{ position: number; teamName: string; projectName: string | null }> | null>(null);
   useEffect(() => {
@@ -166,7 +183,7 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
         <nav>
           <a href="#weekly">This Week</a>
           <a href="#my-project">My Project</a>
-          <a href="#sessions">Sessions</a>
+          <a href="#sessions">Project Journey</a>
           <a href="#get-help">Get Help</a>
         </nav>
       </header>
@@ -184,8 +201,7 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
           <p>{student.blockLabel} · Complete only the activity that matters now.</p>
         </section>
         <div className="portal-section portal-weekly-section"><WeeklyHub
-          open={(kind) => { setReviewTarget(null); setForm(kind); }}
-          openReview={(teamName) => { setReviewTarget(teamName); setForm("review"); }}
+          open={setForm}
           weekStates={weekStates}
           presentationOrder={presentationOrder}
         /></div>
@@ -205,7 +221,6 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
         blockId={student.blockId}
         blockLabel={student.blockLabel}
         student={student}
-        reviewTarget={reviewTarget}
         close={() => setForm(null)}
       />
     </>
@@ -1617,7 +1632,7 @@ function fields(k: Kind, student?: AuthenticatedStudent, progressStep = 1, setPr
     </>
   );
 }
-type StudioSessionRow = { id:string; title:string; session_date:string; status:"scheduled"|"open"|"closed"; starts_at:string|null; ends_at:string|null; opened_at:string|null; closed_at:string|null };
+type StudioSessionRow = { id:string; session_number:number|null; week_number:number|null; curriculum_focus:string|null; title:string; session_date:string; status:"scheduled"|"open"|"closed"; starts_at:string|null; ends_at:string|null; opened_at:string|null; closed_at:string|null };
 type AttendanceRow = { session_id:string; student_id:string; checked_in_at:string };
 
 function StudioSessionControl({
@@ -1637,7 +1652,7 @@ function StudioSessionControl({
 
   async function load() {
     if (!blockId) return;
-    const { data } = await supabase.from("studio_sessions").select("id,title,session_date,status,starts_at,ends_at,opened_at,closed_at").eq("block_id", blockId).order("session_date");
+    const { data } = await supabase.from("studio_sessions").select("id,session_number,week_number,curriculum_focus,title,session_date,status,starts_at,ends_at,opened_at,closed_at").eq("block_id", blockId).order("session_number", { nullsFirst: false }).order("session_date");
     const next = (data as StudioSessionRow[] | null) || [];
     setSessions(next);
     const ids = next.map(item => item.id);
@@ -1660,7 +1675,14 @@ function StudioSessionControl({
     setBusy(true);setMessage("");
     const { data:block }=await supabase.from("teaching_blocks").select("starts_on").eq("id",blockId).single();
     const base=new Date(block?.starts_on || new Date().toISOString().slice(0,10));
-    const rows=Array.from({length:10-sessions.length},(_,index)=>{const date=new Date(base);date.setDate(date.getDate()+(sessions.length+index)*7);return{block_id:blockId,title:`Session ${sessions.length+index+1}`,session_date:date.toISOString().slice(0,10),status:"scheduled"};});
+    const definitions=[
+      [1,1,"Project Reconnect & Check-in"],[2,1,"Team Alignment & Four-Week Commitment"],[3,1,"Project Progress & Work Focus"],
+      [4,2,"Progress Pre-check"],[5,2,"Progress Review"],[6,2,"Review → Action"],
+      [7,3,"Application Progress + Technical Implementation Report"],[8,3,"Completion Check + Product Verification"],[9,3,"Final Readiness"],
+      [10,4,"Platform Feedback + Final Presentation"],
+    ] as const;
+    const dayOffsets=[0,2,3,7,9,10,14,16,17,21];
+    const rows=Array.from({length:10-sessions.length},(_,index)=>{const sessionNumber=sessions.length+index+1;const definition=definitions[sessionNumber-1];const date=new Date(base);date.setDate(date.getDate()+dayOffsets[sessionNumber-1]);return{block_id:blockId,session_number:sessionNumber,week_number:definition[1],curriculum_focus:definition[2],title:`Session ${sessionNumber}`,session_date:date.toISOString().slice(0,10),status:"scheduled"};});
     const {error}=await supabase.from("studio_sessions").insert(rows);setMessage(error?"The 10-session plan could not be prepared.":"A 10-session block plan is ready. Edit dates and add automatic check-in times when known.");await load();setBusy(false);
   }
   async function save(event:FormEvent<HTMLFormElement>){event.preventDefault();if(!editing)return;setBusy(true);setMessage("");const values=Object.fromEntries(new FormData(event.currentTarget));const starts=String(values.starts_at||"");const ends=String(values.ends_at||"");if(starts&&ends&&new Date(ends)<=new Date(starts)){setBusy(false);return setMessage("End time must be after start time.");}const{error}=await supabase.from("studio_sessions").update({title:String(values.title).trim(),session_date:String(values.session_date),starts_at:starts?new Date(starts).toISOString():null,ends_at:ends?new Date(ends).toISOString():null,status:editing.status==="closed"?"closed":"scheduled",opened_at:editing.status==="closed"?editing.opened_at:null}).eq("id",editing.id);setMessage(error?"Session changes could not be saved.":"Session schedule updated.");if(!error)setEditing(null);await load();setBusy(false);}
@@ -1671,10 +1693,10 @@ function StudioSessionControl({
   return <section className="session-manager">
     <div className="session-manager-heading"><div>
       <div className="eyebrow">Authenticated attendance</div>
-      <h2>Studio Sessions{selectedBlock ? ` · ${selectedBlock.academic_year} ${selectedBlock.block_code}` : ""}</h2><p>Prepare the selected block once, then edit each session. A scheduled window opens and closes Check-in automatically; manual controls remain available.</p>
+      <h2>Studio Sessions{selectedBlock ? ` · ${selectedBlock.academic_year} ${selectedBlock.block_code}` : ""}</h2><p>The S1–S10 curriculum focus stays consistent across blocks. Dates and Check-in windows remain teacher-controlled attendance settings.</p>
     </div><div className="session-manager-actions"><label className="admin-block-filter">Teaching block<select value={blockId} onChange={event=>onBlockChange(event.target.value)} disabled={busy}>{blocks.map(block=><option key={block.id} value={block.id}>{block.academic_year} · {block.block_code}{block.status==="active"?" — Active":""}</option>)}</select></label><button disabled={busy||!blockId||sessions.length>=10} onClick={()=>void prepareTen()}><CalendarPlus size={17}/> Prepare {Math.max(0,10-sessions.length)} sessions</button></div></div>
     {message && <p className="admin-alert" role="status">{message}</p>}
-    <div className="teacher-session-list">{sessions.map(item=>{const state=effectiveStatus(item),checkins=attendance.filter(row=>row.session_id===item.id);return <article key={item.id} className={`teacher-session ${state}`}><div className="teacher-session-summary"><div><span className={`activity-control-status ${state}`}>{state}</span><h3>{item.title}</h3><p>{new Date(`${item.session_date}T00:00:00`).toLocaleDateString()} · {checkins.length} checked in</p>{item.starts_at&&<small>{new Date(item.starts_at).toLocaleString()} → {item.ends_at?new Date(item.ends_at).toLocaleString():"manual close"}</small>}</div><div className="teacher-session-actions"><button className="secondary compact" onClick={()=>setEditing(item)} disabled={busy}><Pencil size={15}/> Edit</button>{state==="open"?<button className="danger compact" onClick={()=>void setState(item,"closed")} disabled={busy}>Close</button>:state!=="closed"&&<button className="compact" onClick={()=>void setState(item,"open")} disabled={busy}>Open now</button>}<button className="secondary compact" onClick={()=>download(item)} disabled={!checkins.length}><Download size={15}/> CSV</button></div></div>{checkins.length>0&&<details><summary>View attendance</summary><table><thead><tr><th>Student ID</th><th>Check-in time</th></tr></thead><tbody>{checkins.map(row=><tr key={`${row.session_id}-${row.student_id}`}><td>{row.student_id}</td><td>{new Date(row.checked_in_at).toLocaleString()}</td></tr>)}</tbody></table></details>}</article>})}{!sessions.length&&<p className="empty-state">No sessions prepared yet. Create the standard 10-session plan to begin.</p>}</div>
+    <div className="teacher-session-list">{sessions.map(item=>{const state=effectiveStatus(item),checkins=attendance.filter(row=>row.session_id===item.id);return <article key={item.id} className={`teacher-session ${state}`}><div className="teacher-session-summary"><div><span className={`activity-control-status ${state}`}>{state}</span><span className="session-curriculum-label">{item.session_number ? `S${item.session_number}` : "Session"}{item.week_number ? ` · Week ${item.week_number}` : ""}</span><h3>{item.curriculum_focus || item.title}</h3><p>{new Date(`${item.session_date}T00:00:00`).toLocaleDateString()} · {checkins.length} checked in</p>{item.starts_at&&<small>{new Date(item.starts_at).toLocaleString()} → {item.ends_at?new Date(item.ends_at).toLocaleString():"manual close"}</small>}</div><div className="teacher-session-actions"><button className="secondary compact" onClick={()=>setEditing(item)} disabled={busy}><Pencil size={15}/> Edit</button>{state==="open"?<button className="danger compact" onClick={()=>void setState(item,"closed")} disabled={busy}>Close</button>:state!=="closed"&&<button className="compact" onClick={()=>void setState(item,"open")} disabled={busy}>Open now</button>}<button className="secondary compact" onClick={()=>download(item)} disabled={!checkins.length}><Download size={15}/> CSV</button></div></div>{checkins.length>0&&<details><summary>View attendance</summary><table><thead><tr><th>Student ID</th><th>Check-in time</th></tr></thead><tbody>{checkins.map(row=><tr key={`${row.session_id}-${row.student_id}`}><td>{row.student_id}</td><td>{new Date(row.checked_in_at).toLocaleString()}</td></tr>)}</tbody></table></details>}</article>})}{!sessions.length&&<p className="empty-state">No sessions prepared yet. Create the standard 10-session plan to begin.</p>}</div>
     {editing&&<div className="modal"><form className="dialog session-edit-dialog" onSubmit={save}><button type="button" className="close" onClick={()=>setEditing(null)}>×</button><div className="eyebrow">Edit session</div><h2>{editing.title}</h2><label>Title<input name="title" defaultValue={editing.title} required maxLength={120}/></label><label>Session date<input name="session_date" type="date" defaultValue={editing.session_date} required/></label><label>Automatic start (optional)<input name="starts_at" type="datetime-local" defaultValue={editing.starts_at?new Date(new Date(editing.starts_at).getTime()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16):""}/></label><label>Automatic end (optional)<input name="ends_at" type="datetime-local" defaultValue={editing.ends_at?new Date(new Date(editing.ends_at).getTime()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16):""}/></label><p>Leave both times empty to use Open now / Close manually.</p><div className="admin-dialog-actions"><button type="button" className="secondary" onClick={()=>setEditing(null)}>Cancel</button><button disabled={busy}>{busy?"Saving…":"Save session"}</button></div></form></div>}
   </section>;
 }
