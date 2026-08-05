@@ -157,118 +157,310 @@ constraints.
 - Own-Team and duplicate-review protections remain effective.
 - Hiding the Gallery does not delete Posters or existing feedback.
 
-### Phase 2 — Session Task & Work Track
+### Phase 2 — Session Journey, Task & Work Track
 
 #### Teaching purpose
 
-Session Check-in currently proves that a student attended, but it does not show
-enough about the work performed during that studio. Every relevant studio session
-should therefore carry a clear teacher task and allow each checked-in student to
-leave a small, structured work-evidence record.
+Model the full NIT3004 block as one coherent ten-session Project Journey rather
+than a set of disconnected weekly forms. Session Check-in proves attendance;
+the Session Task explains the teaching focus; mapped Activities and Work Track
+evidence show how each student moves from inherited project work to final
+delivery.
 
-This is deliberately lighter than a weekly activity and much lighter than a
-project-management tool.
+For the current 2026 · 2B1 block, Sessions 1–5 have already happened. They remain
+visible as historical, closed sessions and are never reopened simply to backfill
+missing Work Track data. Existing evidence is mapped to those sessions where it
+already exists. The same S1–S10 definitions are reusable from the beginning for
+future Teaching Blocks.
 
-#### Teacher Session Task
+The overall journey remains:
 
-Extend the existing teacher-managed Session with a lightweight task definition:
+> **Commit → Prove → Validate → Deliver**
 
-- **Today's task** — a short description of what the class should focus on.
-- **Expected evidence** — optional short guidance describing what students should
-  be able to show by the end of the session.
+#### Master Session Journey
 
-The task belongs to the Session and is visible with that Session context. Existing
-Session open/close/scheduling behaviour remains authoritative.
+| Session | Week | Session focus | Current 2B1 behaviour |
+|---|---|---|---|
+| S1 | Week 1 | **Project Reconnect & Check-in** | Historical / closed |
+| S2 | Week 1 | **Team Alignment & Four-Week Commitment** | Historical / closed |
+| S3 | Week 1 | **Project Progress & Work Focus** | Historical / closed |
+| S4 | Week 2 | **Progress Pre-check** | Historical / closed |
+| S5 | Week 2 | **Progress Review** | Historical / closed |
+| S6 | Week 2 | **Review → Action** | First live Session Task / Work Track |
+| S7 | Week 3 | **Application Progress + Technical Implementation Report** | Upcoming |
+| S8 | Week 3 | **Completion Check + Product Verification** | Upcoming |
+| S9 | Week 3 | **Final Readiness** | Upcoming |
+| S10 | Week 4 | **Platform Feedback + Final Presentation** | Upcoming |
 
-Example:
+The journey is a curriculum structure, not a scoring model. A historical Session
+may legitimately contain an existing mapped Activity but no Work Track.
 
-> **Today's task:** Finalise the Poster and identify remaining final-report gaps.  
-> **Expected evidence:** Updated Poster, document change, completed feature or
-> test result.
+#### Historical Sessions S1–S5
 
-#### Student Work Track
+Do not fabricate or request retrospective Work Track submissions for the current
+2B1 block.
 
-After check-in, the active Session exposes **Today's Task → My Work Track**.
-Student input should be quick and structured:
+- **S1 — Project Reconnect & Check-in:** map existing Session Check-in / project
+  reconnection evidence where available.
+- **S2 — Team Alignment & Four-Week Commitment:** map the existing Week 1
+  commitment/action evidence where available.
+- **S3 — Project Progress & Work Focus:** map the existing Week 1 engagement /
+  progress evidence where available.
+- **S4 — Progress Pre-check:** map the existing Week 2 Implementation Pre-check.
+- **S5 — Progress Review:** map the existing Week 2 Progress Review and teacher
+  review/follow-up evidence.
 
-1. **Work area**
-   - Development
+If no historical evidence exists, show that honestly rather than presenting a
+missing submission as a failure. S1–S5 remain closed/read-only for current 2B1,
+but their task definitions are retained so future blocks can use the complete
+journey.
+
+#### Common Session model
+
+Each Session can contain three related but distinct elements:
+
+1. **Session Check-in** — attendance evidence governed by existing Session
+   open/close/scheduling rules.
+2. **Session Task / mapped Activity** — the teaching focus and any existing
+   activity relevant to that Session.
+3. **My Work Track** — lightweight individual evidence of what the student
+   actually progressed, where that Session uses Work Track.
+
+Teacher-defined task fields remain lightweight:
+
+- **Today's task** — short Session focus/guidance.
+- **Expected evidence** — optional concise description of what students should be
+  able to demonstrate by the end of the Session.
+
+Student identity, Block, Team and Project are always derived from authoritative
+roster/auth context; students do not re-enter them.
+
+#### S6 — Review → Action
+
+S6 converts the completed Week 2 review into concrete action rather than
+repeating the Pre-check.
+
+Structured student evidence should cover:
+
+1. **Main focus after the progress review** — multi-select:
+   - Core feature implementation
+   - UI / UX
+   - Integration
    - Testing
+   - Bug fixing
+   - Data / database
    - Documentation
-   - Poster / Presentation
-   - Project management
    - Other
-2. **What did you complete / progress today?**
-   - one short text response, not a reflection essay
-3. **Evidence type**
-   - Demo shown
-   - Code / feature
-   - Test result
-   - Document updated
-   - Poster / presentation
-   - Other
-   - Not completed yet
-4. **Status**
-   - Completed
+2. **Current action status**:
+   - Not started
+   - Started
    - In progress
+   - Completed
    - Blocked
-5. **Need teacher help?**
-   - No
-   - Yes
+3. **Evidence today**:
+   - Feature demonstrated
+   - Issue fixed
+   - Integration completed
+   - Test completed
+   - Document updated
+   - Other
+4. **Biggest concern going into Week 3** — structured choice with optional short
+   note only where useful.
+5. **Next Session focus** — concise structured choice / short value that can be
+   carried into S7.
 
-The student may update the Work Track while the Session is open so it can reflect
-actual end-of-session progress rather than only an intention recorded at arrival.
+#### S7 — Application Progress + Technical Implementation Report
 
-#### Teacher view
+S7 checks both the application and the structure of the Technical Implementation
+Report. It is a readiness/evidence check, not a request to write the report
+inside the platform.
 
-For the selected Session, the teacher can see attendance and Work Track together
-without conflating them:
+**Application progress**
 
-- Student / Team
-- Checked-in state and time
-- Work area
-- Work status
-- Evidence type
-- Need teacher help
-- short completion/progress note
+- Core-functions completion band.
+- Integration status.
+- Major unresolved functionality.
+- Whether the application can currently be demonstrated end-to-end.
 
-The view should make **Needs teacher help** and **Blocked** easy to notice while
-keeping the underlying student response accessible.
+**Technical Implementation Report structure**
 
-A missing Work Track is shown as missing evidence; it does not retroactively
-change a valid attendance check-in.
+Show the expected sections as a checklist/readiness grid:
 
-#### Data and lifecycle rules
+- System / solution architecture
+- Implementation approach
+- Key technical components
+- Data / integration
+- Testing approach
+- Technical challenges
+- Evidence / screenshots
 
-- One Work Track per Student per Session.
-- Session, Student, Block, Team and Project context come from authoritative
-  existing records rather than student re-entry.
-- Attendance stays immutable under the existing Sprint 5 rules.
-- Work Track can be created/updated only within the authorised Session workflow;
-  teacher recovery rules, if needed, must be explicit rather than destructive.
-- Historical Session tasks and Work Tracks remain readable after the Session
-  closes.
-- No automatic score, grade, penalty or risk classification is derived from Work
-  Track fields.
-- Sprint 6 stores source evidence; cross-session trend calculations are deferred
-  to Sprint 7.
+Each section uses a small state such as **Not started / Draft / Ready**. The
+teacher should be able to use this view during the Session to identify missing
+structure quickly.
+
+#### S8 — Completion Check + Product Verification
+
+S8 makes completion and verification explicit before the final-readiness gate.
+
+**Project completion**
+
+Use a consistent completion band:
+
+- 0–25%
+- 26–50%
+- 51–75%
+- 76–90%
+- 91–99%
+- 100%
+
+**Final Report completion**
+
+Use the same completion bands and structured selection of any remaining report
+areas rather than a long free-text response.
+
+**Product Verification**
+
+Check whether:
+
+- Core requirements have been verified.
+- Critical workflows have been tested.
+- An end-to-end scenario has been tested.
+- Known defects have been reviewed.
+- The demo environment is working.
+- Verification evidence is available.
+
+Summarise the student's declared state as:
+
+- **Not Ready**
+- **Partially Verified**
+- **Verified**
+
+This is descriptive evidence only and must not become an automatic mark.
+
+#### S9 — Final Readiness
+
+S9 is the final delivery gate before Presentation. It should emphasise readiness,
+not another generic progress form.
+
+Show four readiness areas:
+
+| Area | State |
+|---|---|
+| Product | Ready / Attention / Not Ready |
+| Final Report | Ready / Attention / Not Ready |
+| Presentation | Ready / Attention / Not Ready |
+| Demo | Ready / Attention / Not Ready |
+
+Also capture:
+
+- **Any critical blocker?** — Yes / No, with a short note only when needed.
+- **Overall readiness** — Not Ready / Almost Ready / Ready to Present.
+
+The Teacher view should make teams/students needing attention immediately visible
+while preserving the underlying evidence.
+
+#### S10 — Platform Feedback + Final Presentation
+
+S10 does not use the normal Work Track. Before presenting, every student must
+complete a short individual Platform Feedback checkpoint.
+
+Required feedback should stay concise and structured:
+
+1. **Overall usefulness** — 1–5.
+2. **Did the platform help you stay engaged with the project?** —
+   Yes / Somewhat / No.
+3. **Most useful feature** — Session Check-in / Weekly Activities / Teacher Review
+   / Poster Gallery / Work Track / Peer Feedback.
+4. **What should we improve most?** — Navigation / Activities / Feedback /
+   Session workflow / Poster / Other.
+5. **Would you recommend this platform for future Capstone classes?** —
+   Yes / Maybe / No.
+6. **One thing you would change** — optional short text.
+
+After submission, show:
+
+> **Platform feedback completed — you are ready for your Final Presentation.**
+
+The Teacher view shows each student's **Feedback Completed / Pending** state so
+completion can be checked immediately before presentations. This is a workflow
+checkpoint, not a presentation grade.
+
+#### Student Journey UI
+
+Introduce a clear **Your Project Journey** view from S1 through S10.
+
+- Past Sessions are visibly completed/closed and remain readable where historical
+  evidence exists.
+- The current open Session is prominent.
+- Upcoming Sessions show their focus without allowing early submission unless
+  explicitly opened by the teacher/session schedule.
+- Opening a Session shows its task, mapped Activity/evidence and Work Track or
+  S10 Feedback as appropriate.
+- Historical missing evidence is described neutrally; it is not rendered as a
+  failure or penalty.
+- Existing Week activities remain valid source evidence and are mapped into the
+  Journey rather than duplicated.
+
+#### Teacher view and lifecycle
+
+- Teacher manages the ten Session definitions within the selected Teaching Block.
+- Existing Session scheduling/open/close behaviour remains authoritative.
+- Teacher can see attendance and relevant task/activity/Work Track evidence in
+  one Session context without conflating the records.
+- For S6–S9, Blocked / Need teacher help / readiness states are easy to notice.
+- For S10, individual Platform Feedback completion is easy to check before
+  Presentation.
+- One Work Track per Student per Session where Work Track is enabled.
+- Work Track is editable only through the authorised open-Session workflow;
+  historical evidence remains readable after close.
+- Future Teaching Blocks can use all S1–S10 definitions from the start.
+- No automatic score, grade, penalty or predictive risk classification is
+  derived from Journey or Work Track fields.
+- Cross-session analytics and interpretation remain Sprint 7 work.
+
+#### Phase 2 implementation slices
+
+**Phase 2A — Session Journey foundation**
+
+- Represent S1–S10 focus/definition consistently.
+- Map existing S1–S5 activities/evidence without backfilling data.
+- Add the student Project Journey and historical/open/upcoming behaviour.
+- Preserve existing Session Check-in and weekly activity authority.
+
+**Phase 2B — Live Work Track S6–S9**
+
+- Implement the shared Session Task / Work Track foundation.
+- Implement the Session-specific structured evidence for S6, S7, S8 and S9.
+- Carry forward useful prior-session context such as S6 next focus where it helps
+  the next Session without turning the system into task management.
+- Add the teacher Session evidence view.
+
+**Phase 2C — S10 Platform Feedback**
+
+- Add the mandatory individual feedback checkpoint before Presentation.
+- Add teacher Completed / Pending visibility.
+- Keep feedback concise, non-graded and reusable for platform improvement.
 
 #### Phase 2 acceptance criteria
 
-- A teacher can define/edit the task and optional expected evidence for an
-  appropriate Session.
-- A checked-in student sees the current Session task without re-entering identity,
-  Team or Project.
-- A student can save and update one lightweight Work Track for that Session while
-  the Session is open.
-- Another student cannot read or change private Work Track details outside the
-  authorised experience.
-- A teacher can review the selected Session's attendance and Work Track status
-  together.
-- Blocked/help-needed evidence is easy for the teacher to identify.
-- Missing Work Track does not alter attendance.
-- Closed historical Sessions retain their task and Work Track evidence.
-- No Sprint 7 trajectory, analytics or AI interpretation is introduced here.
+- The student experience represents the complete S1–S10 Project Journey.
+- Current 2B1 S1–S5 are closed/read-only and do not request retrospective Work
+  Track submissions.
+- Existing S1–S5 evidence is reused/mapped where it already exists.
+- Future blocks can use the same S1–S10 definitions from the beginning.
+- S6 captures Review → Action evidence without duplicating the Week 2 Pre-check.
+- S7 captures Application progress and Technical Implementation Report structure.
+- S8 captures Project/Final Report completion plus Product Verification.
+- S9 captures Product, Report, Presentation and Demo Final Readiness.
+- S10 requires each student to complete Platform Feedback before Presentation and
+  exposes Completed/Pending state to the teacher.
+- Student identity/Block/Team/Project context is derived from existing
+  authoritative records.
+- Closed historical Sessions retain legitimate task/activity/Work Track evidence.
+- Missing historical Work Track does not change attendance or imply poor
+  performance.
+- No Sprint 7 trajectory analytics, automatic marking or AI interpretation is
+  introduced in Phase 2.
 
 ### Phase 3 — Production Hardening & Sprint Close
 

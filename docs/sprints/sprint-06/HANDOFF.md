@@ -2,9 +2,31 @@
 
 ## Current gate
 
-**Phase 1 — Week 3 Poster Gallery** is implemented in a focused Draft PR and is
-awaiting Preview + Supabase verification. Do not merge until classroom-path
-testing passes.
+**Phase 1 — Week 3 Poster Gallery** has passed classroom-path testing and was
+squash-merged to `main` in PR #50 on 5 August 2026.
+
+The next implementation gate is **Phase 2 — Session Journey, Task & Work Track**.
+The master design is now S1–S10 rather than a Work Track that starts halfway
+through the block. This planning update does not implement Phase 2 application
+code.
+
+### Phase 2 agreed direction
+
+- Keep the complete S1–S10 curriculum journey visible and reusable.
+- For current `2026 · 2B1`, S1–S5 are historical/closed: map legitimate existing
+  Activities where available, but never reopen them only to backfill Work Track.
+- S6 begins the live Work Track with **Review → Action**.
+- S7 checks **Application Progress + Technical Implementation Report structure**.
+- S8 checks **Project/Final Report completion + Product Verification**.
+- S9 is the **Final Readiness** gate for Product, Report, Presentation and Demo.
+- S10 requires short individual **Platform Feedback before Final Presentation**;
+  the teacher sees Completed/Pending.
+- Existing Session Check-in remains attendance evidence; Session Task, mapped
+  Activities and Work Track are separate learning/work evidence.
+- Keep input structured and short. Do not turn the feature into Jira, marking or
+  automatic risk classification.
+- Implement in 2A Journey foundation, 2B live S6–S9 Work Track, then 2C S10
+  Platform Feedback.
 
 ## Phase 1 implementation
 
