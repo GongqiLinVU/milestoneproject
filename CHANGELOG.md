@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-08-05 — Sprint 6 Phase 2A (Draft)
+
+- Added stable S1–S10 curriculum identity to existing Studio Sessions without changing attendance records or teacher-authored dates/windows.
+- Added a student Project Journey showing historical, current and upcoming sessions plus mapped S1–S5 evidence where it already exists.
+- Closed current 2026 · 2B1 S1–S5 as historical without creating retrospective Work Track records.
+- Kept Session Check-in and weekly activity activation as separate, existing authorities.
+- Updated future ten-session preparation to the actual three/three/three/one four-week course rhythm.
+
+
 ## 2026-08-05 — Sprint 6 Phase 1 (Draft)
 
 - Added a private, Block-scoped Week 3 Poster Gallery with student and teacher
