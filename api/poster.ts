@@ -5,7 +5,7 @@ import { randomUUID } from "node:crypto";
 const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const bucket = "poster-gallery";
-const maxBytes = 5 * 1024 * 1024;
+const maxBytes = 1 * 1024 * 1024;
 const types = new Set(["application/pdf", "image/png", "image/jpeg"]);
 
 type Access = {
@@ -69,7 +69,7 @@ export default async function handler(req: any, res: any) {
     const type = String(req.body?.mimeType || "");
     const size = Number(req.body?.sizeBytes || 0);
     if (!types.has(type)) return res.status(400).json({ error: "Use a one-page PDF, PNG, JPG or JPEG file." });
-    if (!Number.isSafeInteger(size) || size < 1 || size > maxBytes) return res.status(400).json({ error: "Poster files must be 5 MB or smaller." });
+    if (!Number.isSafeInteger(size) || size < 1 || size > maxBytes) return res.status(400).json({ error: "Keep it simple — Poster files must be 1 MB or smaller." });
     const scope = await access();
     if (!scope) return res.status(403).json({ error: "You can upload only for your authorised Team." });
     const path = `drafts/${scope.blockId}/${scope.teamId}/${randomUUID()}.${extension(type)}`;
@@ -92,7 +92,7 @@ export default async function handler(req: any, res: any) {
       await admin.storage.from(bucket).remove([path]);
       return res.status(400).json({ error: message });
     };
-    if (bytes.length < 1 || bytes.length > maxBytes) return reject("Poster files must be 5 MB or smaller.");
+    if (bytes.length < 1 || bytes.length > maxBytes) return reject("Keep it simple — Poster files must be 1 MB or smaller.");
     if (!matchesSignature(bytes, type)) return reject("The file content does not match the selected PDF or image format.");
     if (type === "application/pdf") {
       try {
