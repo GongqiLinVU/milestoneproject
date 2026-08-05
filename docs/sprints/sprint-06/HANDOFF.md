@@ -63,10 +63,11 @@ No new Vercel secret is required. The Poster API reuses the existing
 4. Replace it with PNG or JPEG and confirm the new draft appears.
 5. Confirm a PDF with two pages is rejected with an exact one-page message.
 6. Confirm DOCX/PPTX and a file over 1 MB are rejected with the concise-design guidance.
-7. Before Publish, confirm Gallery content remains hidden.
-8. After teacher Publish, confirm only the current Block's Team cards appear.
-9. Enlarge another Team Poster and choose **Give feedback**.
-10. Confirm the target Team is fixed in the form, own Team has no feedback
+7. Before Publish, confirm the student can preview/enlarge their own current Team draft while the rest of the Gallery remains hidden.
+8. Replace the Team draft and confirm the own-Team preview immediately shows the replacement.
+9. After teacher Publish, confirm only the current Block's Team cards appear.
+10. Enlarge another Team Poster and choose **Give feedback**.
+11. Confirm the target Team is fixed in the form, own Team has no feedback
     button, and an already-reviewed Team shows **Feedback completed**.
 
 ### Teacher
@@ -87,7 +88,7 @@ No new Vercel secret is required. The Poster API reuses the existing
 1. A student cannot upload for another Team by changing browser/API payloads.
 2. A student from another Block cannot obtain a signed URL for this Block's
    Poster version.
-3. Hidden Gallery versions cannot obtain new student signed read URLs.
+3. While the Gallery is hidden, students can obtain a signed read URL only for their own Team's current draft; other Team and non-current versions remain unavailable.
 4. Storage bucket listing is unavailable to normal browser roles.
 
 ## Verification already completed locally
