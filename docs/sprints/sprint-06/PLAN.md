@@ -425,12 +425,14 @@ Introduce a clear **Your Project Journey** view from S1 through S10.
 Implementation status: **implemented for Preview validation**.
 
 - Represent S1–S10 focus/definition consistently.
-- Map existing S1–S5 activities/evidence without backfilling data.
-- Add the student Project Journey and historical/open/upcoming behaviour.
-- Preserve existing Session Check-in and weekly activity authority.
+- Keep Session Check-in attendance-only; do not map Weekly Activity evidence into it.
+- Add the complete S1–S10 Session Journey with historical/open/upcoming behaviour.
+- Add a separate Track entry point from each Session card into Session Task + Work Track.
+- Preserve Weekly Activities as an independent Monday teaching-interaction evidence stream.
 - Persist stable Session Number, Week and curriculum focus on existing `studio_sessions` without changing attendance or teacher-authored dates/windows.
 - Current 2026 · 2B1 S1–S5 are explicitly closed by the idempotent Phase 2A migration; no historical Work Track is created.
-- Student Journey reads mapped existing S1–S5 evidence through a student-scoped RPC; missing historical evidence is presented neutrally.
+- Student Journey RPC returns only Session curriculum/lifecycle and the student's own Check-in status; it does not return Weekly Activity evidence.
+- For current 2B1, S1–S5 Track is closed; live Track opens independently with the relevant Session and is implemented in Phase 2B.
 - Future 10-session plans use the real Mon/Wed/Thu, Mon/Wed/Thu, Mon/Wed/Thu, Mon course rhythm from the Teaching Block start date.
 
 **Phase 2B — Live Work Track S6–S9**
@@ -452,7 +454,7 @@ Implementation status: **implemented for Preview validation**.
 - The student experience represents the complete S1–S10 Project Journey.
 - Current 2B1 S1–S5 are closed/read-only and do not request retrospective Work
   Track submissions.
-- Existing S1–S5 evidence is reused/mapped where it already exists.
+- Existing Weekly Activity evidence remains in its current independent activity system and is not reused as Session evidence.
 - Future blocks can use the same S1–S10 definitions from the beginning.
 - S6 captures Review → Action evidence without duplicating the Week 2 Pre-check.
 - S7 captures Application progress and Technical Implementation Report structure.
@@ -462,9 +464,8 @@ Implementation status: **implemented for Preview validation**.
   exposes Completed/Pending state to the teacher.
 - Student identity/Block/Team/Project context is derived from existing
   authoritative records.
-- Closed historical Sessions retain legitimate task/activity/Work Track evidence.
-- Missing historical Work Track does not change attendance or imply poor
-  performance.
+- Closed historical Sessions retain only their real Session Check-in history; no Weekly Activity is presented as Session evidence.
+- Session Check-in and Work Track remain separate records: attendance never implies Work Track completion, and missing Work Track never changes attendance.
 - No Sprint 7 trajectory analytics, automatic marking or AI interpretation is
   introduced in Phase 2.
 
