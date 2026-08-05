@@ -230,7 +230,17 @@ roster/auth context; students do not re-enter them.
 #### Shared Completion Standard — S6–S9
 
 Work Track percentage is an evidence-based measurement, not a student estimate or
-a mark. Students assess 3–8 committed project requirements using one standard:
+a mark. Every IT Milestone Project starts from the same three locked core requirements:
+
+1. **Core functionality** — meets the primary user needs.
+2. **End-to-end integration & usability** — the main workflow works across integrated components.
+3. **Verification & quality** — critical features are tested or validated with evidence.
+
+Students assess those three requirements rather than writing them. Each fixed core
+requirement has a `?` help control with a short **What this means** explanation and
+practical IT examples, so teams interpret the baseline consistently. They may optionally
+add up to five project-specific requirements where that improves accuracy. All assessed
+requirements use one standard:
 
 | Requirement state | Completion contribution |
 |---|---:|
@@ -432,8 +442,9 @@ Implementation status: **implemented for Preview validation**.
 
 - Implement the shared Session Task / Work Track foundation.
 - Implement the Session-specific structured evidence for S6, S7, S8 and S9.
-- Calculate project completion from 3–8 committed requirements using the shared
-  0/25/50/75/100 evidence standard; never ask students to estimate the final percentage.
+- Calculate project completion from 3 locked IT core requirements plus up to 5 optional
+  project-specific requirements using the shared 0/25/50/75/100 evidence standard;
+  never ask students to invent the common baseline or estimate the final percentage.
 - Use three progress paths (≤70 / 71–90 / >90) in S6 so different team stages get
   relevant questions without creating a large decision tree.
 - Carry the same requirement baseline and prior percentage into later Tracks.
