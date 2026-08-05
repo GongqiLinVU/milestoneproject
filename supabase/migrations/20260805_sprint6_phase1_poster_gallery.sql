@@ -7,7 +7,7 @@ values (
   'poster-gallery',
   'poster-gallery',
   false,
-  5242880,
+  1048576,
   array['application/pdf','image/png','image/jpeg']::text[]
 )
 on conflict (id) do update set
@@ -29,7 +29,7 @@ create table if not exists public.poster_versions (
   storage_path text not null unique,
   original_filename text not null check (char_length(original_filename) between 1 and 255),
   mime_type text not null check (mime_type in ('application/pdf','image/png','image/jpeg')),
-  size_bytes integer not null check (size_bytes between 1 and 5242880),
+  size_bytes integer not null check (size_bytes between 1 and 1048576),
   uploader_auth_user_id uuid not null references auth.users(id) on delete restrict,
   uploader_role text not null check (uploader_role in ('student','teacher')),
   status text not null default 'ready' check (status in ('ready','removed')),
@@ -39,6 +39,14 @@ create table if not exists public.poster_versions (
 
 create index if not exists poster_versions_block_team_created_idx
   on public.poster_versions (block_id, team_id, created_at desc);
+
+-- Keep a re-run of this migration authoritative for Preview environments that
+-- previously used the original 5 MB Phase 1 limit.
+alter table public.poster_versions
+  drop constraint if exists poster_versions_size_bytes_check;
+alter table public.poster_versions
+  add constraint poster_versions_size_bytes_check
+  check (size_bytes between 1 and 1048576);
 
 create table if not exists public.team_posters (
   block_id uuid not null references public.teaching_blocks(id) on delete cascade,
@@ -265,7 +273,7 @@ with check (
 -- created on storage.objects; uploads and reads use short-lived signed tokens.
 
 -- Verification:
--- 1. bucket is private, 5 MB, PDF/PNG/JPEG only; browser roles cannot list it.
+-- 1. bucket is private, 1 MB, PDF/PNG/JPEG only; browser roles cannot list it.
 -- 2. student RPCs resolve only the authenticated active Block/Team.
 -- 3. publish copies each Team's draft pointer into an immutable published snapshot.
 -- 4. replacement changes only draft_version_id until Publish is called again.
