@@ -7,7 +7,7 @@ squash-merged to `main` in PR #50 on 5 August 2026.
 
 **Phase 2A — Session Journey Foundation** is implemented in the current Draft PR and is the Preview validation gate.
 
-Phase 2A adds stable S1–S10 curriculum identity to the existing attendance sessions, maps legitimate historical S1–S5 evidence without backfill, and replaces the student's attendance-only Sessions view with the complete Project Journey. Existing Check-in and weekly activity controls remain authoritative.
+Phase 2A adds stable S1–S10 curriculum identity while keeping Session Check-in attendance-only. The student sees the complete Session Journey and a separate Track entry into Session Task + Work Track. Weekly Activities remain an independent Monday teaching-interaction evidence stream and are never mapped into Session Check-in.
 
 ### Phase 2A Preview setup
 
@@ -19,25 +19,24 @@ Then test 2026 · 2B1 as both teacher and student:
 
 1. Teacher Session Check-in shows S1–S10 with the agreed Week/focus labels.
 2. S1–S5 are Closed; S6–S10 retain their existing lifecycle state.
-3. Student Project Journey shows all ten sessions, historical mapped evidence where it exists, and neutral text where it does not.
-4. Existing Check-in still opens/closes only through the original session controls.
-5. Existing Week activity activation still controls activity submission independently.
+3. Student Sessions shows all ten sessions with only real Check-in state; no Weekly Activity evidence appears inside Session cards.
+4. S1–S5 show Track closed; the current live Session exposes `Track →` into the independent Session Task + Work Track area.
+5. Existing Check-in still opens/closes only through the original session controls.
+6. Existing Week activity activation still controls Weekly Activity submission independently.
 
 No Work Track submission fields or S10 Platform Feedback are included yet; those remain Phase 2B/2C.
 
 ### Phase 2 agreed direction
 
 - Keep the complete S1–S10 curriculum journey visible and reusable.
-- For current `2026 · 2B1`, S1–S5 are historical/closed: map legitimate existing
-  Activities where available, but never reopen them only to backfill Work Track.
+- For current `2026 · 2B1`, S1–S5 are historical/closed: keep their real Check-in history and never reopen them to backfill Work Track.
 - S6 begins the live Work Track with **Review → Action**.
 - S7 checks **Application Progress + Technical Implementation Report structure**.
 - S8 checks **Project/Final Report completion + Product Verification**.
 - S9 is the **Final Readiness** gate for Product, Report, Presentation and Demo.
 - S10 requires short individual **Platform Feedback before Final Presentation**;
   the teacher sees Completed/Pending.
-- Existing Session Check-in remains attendance evidence; Session Task, mapped
-  Activities and Work Track are separate learning/work evidence.
+- Existing Session Check-in remains attendance evidence; Weekly Activities remain separate Monday teaching evidence; Session Task + Work Track is an independent progress area reached through `Track →`.
 - Keep input structured and short. Do not turn the feature into Jira, marking or
   automatic risk classification.
 - Implement in 2A Journey foundation, 2B live S6–S9 Work Track, then 2C S10
