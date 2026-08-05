@@ -227,39 +227,46 @@ Teacher-defined task fields remain lightweight:
 Student identity, Block, Team and Project are always derived from authoritative
 roster/auth context; students do not re-enter them.
 
+#### Shared Completion Standard — S6–S9
+
+Work Track percentage is an evidence-based measurement, not a student estimate or
+a mark. Students assess 3–8 committed project requirements using one standard:
+
+| Requirement state | Completion contribution |
+|---|---:|
+| Not started | 0% |
+| Started / design only | 25% |
+| Partially implemented | 50% |
+| Working in main flow | 75% |
+| Working + verified with evidence | 100% |
+
+The platform calculates the arithmetic mean across the committed requirements.
+100% therefore means the requirements are implemented, demonstrable and verified;
+it does not merely mean that code has been written.
+
+S7–S9 carry forward the same requirement list and current scores so the team can
+update evidence without redefining the baseline. The previous calculated percentage
+is shown for context; longitudinal interpretation remains Sprint 7 scope.
+
+Teacher review uses the same standard. The teacher can **Confirm** the calculated
+percentage or **Adjust** it after demo/verification. An adjustment requires a
+structured reason, preserving Student calculated % and Teacher verified % as
+distinct evidence.
+
 #### S6 — Review → Action
 
-S6 converts the completed Week 2 review into concrete action rather than
-repeating the Pre-check.
+S6 converts the completed Week 2 review into measurable action without repeating
+the Pre-check. The calculated completion selects one of three lightweight paths:
 
-Structured student evidence should cover:
+- **≤70% — Building / Developing:** what is still being built, the main blocker,
+  and the next focus.
+- **71–90% — Completing:** what remains, end-to-end workflow state, evidence
+  available today, and the next focus.
+- **>90% — Verifying / Finalising:** what is being verified, critical-issue state,
+  product confidence, and the next focus.
 
-1. **Main focus after the progress review** — multi-select:
-   - Core feature implementation
-   - UI / UX
-   - Integration
-   - Testing
-   - Bug fixing
-   - Data / database
-   - Documentation
-   - Other
-2. **Current action status**:
-   - Not started
-   - Started
-   - In progress
-   - Completed
-   - Blocked
-3. **Evidence today**:
-   - Feature demonstrated
-   - Issue fixed
-   - Integration completed
-   - Test completed
-   - Document updated
-   - Other
-4. **Biggest concern going into Week 3** — structured choice with optional short
-   note only where useful.
-5. **Next Session focus** — concise structured choice / short value that can be
-   carried into S7.
+Branching is deliberately limited to these three paths. The percentage is never
+entered directly by the student.
 
 #### S7 — Application Progress + Technical Implementation Report
 
@@ -269,7 +276,7 @@ inside the platform.
 
 **Application progress**
 
-- Core-functions completion band.
+- Shared requirement-based calculated completion and change from the previous Track.
 - Integration status.
 - Major unresolved functionality.
 - Whether the application can currently be demonstrated end-to-end.
@@ -296,14 +303,8 @@ S8 makes completion and verification explicit before the final-readiness gate.
 
 **Project completion**
 
-Use a consistent completion band:
-
-- 0–25%
-- 26–50%
-- 51–75%
-- 76–90%
-- 91–99%
-- 100%
+Reuse the shared requirement-based calculated completion; do not ask for a second
+subjective project-completion estimate.
 
 **Final Report completion**
 
@@ -431,6 +432,12 @@ Implementation status: **implemented for Preview validation**.
 
 - Implement the shared Session Task / Work Track foundation.
 - Implement the Session-specific structured evidence for S6, S7, S8 and S9.
+- Calculate project completion from 3–8 committed requirements using the shared
+  0/25/50/75/100 evidence standard; never ask students to estimate the final percentage.
+- Use three progress paths (≤70 / 71–90 / >90) in S6 so different team stages get
+  relevant questions without creating a large decision tree.
+- Carry the same requirement baseline and prior percentage into later Tracks.
+- Let Teacher Review confirm or adjust calculated completion with a recorded reason.
 - Carry forward useful prior-session context such as S6 next focus where it helps
   the next Session without turning the system into task management.
 - Add the teacher Session evidence view.
@@ -449,6 +456,8 @@ Implementation status: **implemented for Preview validation**.
 - Existing Weekly Activity evidence remains in its current independent activity system and is not reused as Session evidence.
 - Future blocks can use the same S1–S10 definitions from the beginning.
 - S6 captures Review → Action evidence without duplicating the Week 2 Pre-check.
+- Project completion is server-calculated from requirement evidence; 100% requires
+  working + verified evidence, and Teacher Review can confirm or adjust the result.
 - S7 captures Application progress and Technical Implementation Report structure.
 - S8 captures Project/Final Report completion plus Product Verification.
 - S9 captures Product, Report, Presentation and Demo Final Readiness.
