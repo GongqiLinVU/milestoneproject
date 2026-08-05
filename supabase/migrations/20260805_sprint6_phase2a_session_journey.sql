@@ -1,5 +1,6 @@
 -- Sprint 6 Phase 2A: stable S1-S10 curriculum identity and student Project Journey.
 -- Attendance remains governed by the existing studio session lifecycle.
+-- Weekly Activities remain independent and are never mapped into Session Check-in.
 
 alter table public.studio_sessions add column if not exists session_number smallint;
 alter table public.studio_sessions add column if not exists week_number smallint;
@@ -116,54 +117,7 @@ begin
         or (session.starts_at is not null and session.starts_at <= now()
           and (session.ends_at is null or session.ends_at > now())) then 'open'
       else 'scheduled' end,
-    'checkedInAt', checkin.checked_in_at,
-    'evidence', case session.session_number
-      when 1 then array_remove(array[
-        case when exists (
-          select 1 from public.student_checkins old_checkin
-          where old_checkin.block_id = v_block_id
-            and lower(trim(old_checkin.student_id)) = lower(trim(v_account.student_id))
-        ) then 'Week 1 Check-in' end
-      ], null)
-      when 2 then array_remove(array[
-        case when exists (
-          select 1 from public.student_checkins commitment
-          where commitment.block_id = v_block_id
-            and lower(trim(commitment.student_id)) = lower(trim(v_account.student_id))
-        ) then 'Four-Week Commitment' end
-      ], null)
-      when 3 then array_remove(array[
-        case when exists (
-          select 1 from public.team_health_checks health
-          where health.block_id = v_block_id
-            and lower(trim(health.student_id)) = lower(trim(v_account.student_id))
-        ) then 'Team Health Check' end,
-        case when exists (
-          select 1 from public.weekly_engagement_checkouts engagement
-          where engagement.block_id = v_block_id and engagement.week_number = 1
-            and lower(trim(engagement.student_id)) = lower(trim(v_account.student_id))
-        ) then 'Week 1 Engagement' end
-      ], null)
-      when 4 then array_remove(array[
-        case when exists (
-          select 1 from public.week2_progress_reviews precheck
-          where precheck.block_id = v_block_id
-            and lower(trim(precheck.student_id)) = lower(trim(v_account.student_id))
-        ) then 'Week 2 Implementation Pre-check' end
-      ], null)
-      when 5 then array_remove(array[
-        case when exists (
-          select 1 from public.teacher_progress_reviews review
-          where review.block_id = v_block_id
-            and lower(trim(review.student_id)) = lower(trim(v_account.student_id))
-        ) then 'Teacher Progress Review' end,
-        case when exists (
-          select 1 from public.weekly_engagement_checkouts engagement
-          where engagement.block_id = v_block_id and engagement.week_number = 2
-            and lower(trim(engagement.student_id)) = lower(trim(v_account.student_id))
-        ) then 'Week 2 Engagement' end
-      ], null)
-      else array[]::text[] end
+    'checkedInAt', checkin.checked_in_at
   ) order by session.session_number nulls last, session.session_date, session.created_at), '[]'::jsonb)
   into v_result
   from public.studio_sessions session
@@ -182,6 +136,6 @@ grant execute on function public.get_my_session_journey() to authenticated;
 -- 1. Existing block session dates, titles, attendance and schedule windows are unchanged.
 -- 2. Existing sessions are numbered S1-S10 in chronological order and have the agreed focus.
 -- 3. 2026 2B1 S1-S5 are closed; S6-S10 retain their existing lifecycle state.
--- 4. Students receive only their active block and only their own attendance/evidence mapping.
--- 5. Missing historical evidence returns an empty evidence list and never creates/backfills data.
+-- 4. Students receive only their active block and only their own Session Check-in history.
+-- 5. Weekly Activity evidence is not mapped, copied or backfilled into the Session Journey.
 -- 6. Existing get_my_session_history/check-in RPCs continue to work unchanged.
