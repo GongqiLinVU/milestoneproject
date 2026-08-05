@@ -1,4 +1,5 @@
 import { StrictMode, useEffect, useRef, useState, type FormEvent, type MouseEvent } from "react";
+import { createPortal } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { createClient } from "@supabase/supabase-js";
 import {
@@ -159,7 +160,7 @@ function StudentSessions() {
         </div>
       </article>)}
     </div> : <p className="empty-state">No sessions have been prepared for this block yet.</p>}
-    {trackSession && <div className="session-work-track-modal" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setTrackSession(null)}>
+    {trackSession && createPortal(<div className="session-work-track-modal" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setTrackSession(null)}>
       <section className="session-work-track-dialog" role="dialog" aria-modal="true" aria-labelledby="session-work-track-title">
         <button type="button" className="session-work-track-close" aria-label="Close Session Task and Work Track" onClick={() => setTrackSession(null)}>×</button>
         <div className="eyebrow">Independent project progress</div>
@@ -167,7 +168,7 @@ function StudentSessions() {
         <strong>S{trackSession.sessionNumber} · {trackSession.focus}</strong>
         <p>This is the independent progress area for this session. Session Task and Work Track fields will be added in Phase 2B without changing Session Check-in or Weekly Activities.</p>
       </section>
-    </div>}
+    </div>, document.body)}
   </section>;
 }
 function StudentPortal({ student }: { student: AuthenticatedStudent }) {
