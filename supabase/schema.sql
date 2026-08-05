@@ -1450,7 +1450,8 @@ grant execute on function public.find_student_team(text, text, text) to anon;
 -- Sprint 6 Phase 2A Session Journey is applied by:
 -- supabase/migrations/20260805_sprint6_phase2a_session_journey.sql
 -- It adds stable S1-S10 curriculum identity and the authenticated student
--- Project Journey RPC while preserving existing attendance authority.
+-- Session Journey RPC while preserving attendance authority. Weekly Activities
+-- remain independent and are not mapped into Session Check-in.
 
 -- Sprint 5 Phase 3 authenticated session check-in is applied by:
 -- supabase/migrations/20260731_sprint5_phase3_session_portal.sql
