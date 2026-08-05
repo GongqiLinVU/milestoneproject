@@ -197,7 +197,13 @@ begin
   from jsonb_array_elements(p_response -> 'requirements') requirement;
 
   if v_requirement_count < 3 or v_requirement_count > 8 or v_invalid_requirement_count > 0 then
-    raise exception using errcode = 'P0001', message = 'Use 3 to 8 requirements and assess each with the 0/25/50/75/100 standard';
+    raise exception using errcode = 'P0001', message = 'Assess the 3 core requirements and any optional requirements with the 0/25/50/75/100 standard';
+  end if;
+
+  if coalesce(p_response -> 'requirements' -> 0 ->> 'label', '') <> 'Core functionality meets the primary user needs'
+     or coalesce(p_response -> 'requirements' -> 1 ->> 'label', '') <> 'Main workflow works end-to-end across integrated components'
+     or coalesce(p_response -> 'requirements' -> 2 ->> 'label', '') <> 'Critical features are tested or validated with evidence' then
+    raise exception using errcode = 'P0001', message = 'The 3 IT Milestone Project core requirements cannot be changed';
   end if;
 
   v_stage := case
@@ -411,6 +417,7 @@ grant execute on function public.get_my_session_journey() to authenticated;
 -- 2. S6-S9 accept at most one Work Track per student/session and only save while open.
 -- 3. Closed Work Tracks remain readable but cannot be edited by students.
 -- 4. S7 may read S6 nextFocus as context; it is not copied into S7 evidence.
--- 5. Completion is server-calculated from 3-8 committed requirements using the 0/25/50/75/100 evidence standard.
--- 6. S7-S9 carry the previous requirement assessment forward for longitudinal comparison.
--- 7. Teacher evidence is block/session scoped and teachers can confirm or adjust the calculated completion with a reason.
+-- 5. Completion is server-calculated from 3 fixed IT core requirements plus up to 5 optional project-specific requirements.
+-- 6. The first 3 requirement labels are enforced server-side and use the shared 0/25/50/75/100 evidence standard.
+-- 7. S7-S9 carry the previous requirement assessment forward for longitudinal comparison.
+-- 8. Teacher evidence is block/session scoped and teachers can confirm or adjust the calculated completion with a reason.
