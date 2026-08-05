@@ -1,6 +1,6 @@
 # Sprint 6 Plan — Poster Gallery & Session Work Evidence
 
-**Status:** In progress — Phase 2A implemented in Draft PR  
+**Status:** In progress — Phase 2A merged; Phase 2B in implementation
 **Source baseline:** Sprint 5 closed on 1 August 2026  
 **Product area:** NIT3004 Engineering Studio Platform
 
@@ -163,15 +163,14 @@ constraints.
 
 Model the full NIT3004 block as one coherent ten-session Project Journey rather
 than a set of disconnected weekly forms. Session Check-in proves attendance;
-the Session Task explains the teaching focus; mapped Activities and Work Track
-evidence show how each student moves from inherited project work to final
-delivery.
+the Session Task explains the teaching focus; Work Track evidence shows how each
+student moves from inherited project work to final delivery. Weekly Activities
+remain a separate Monday teaching-interaction evidence stream.
 
 For the current 2026 · 2B1 block, Sessions 1–5 have already happened. They remain
 visible as historical, closed sessions and are never reopened simply to backfill
-missing Work Track data. Existing evidence is mapped to those sessions where it
-already exists. The same S1–S10 definitions are reusable from the beginning for
-future Teaching Blocks.
+missing Work Track data. The same S1–S10 definitions are reusable from the
+beginning for future Teaching Blocks.
 
 The overall journey remains:
 
@@ -193,22 +192,16 @@ The overall journey remains:
 | S10 | Week 4 | **Platform Feedback + Final Presentation** | Upcoming |
 
 The journey is a curriculum structure, not a scoring model. A historical Session
-may legitimately contain an existing mapped Activity but no Work Track.
+may legitimately contain Check-in but no Work Track.
 
 #### Historical Sessions S1–S5
 
 Do not fabricate or request retrospective Work Track submissions for the current
 2B1 block.
 
-- **S1 — Project Reconnect & Check-in:** map existing Session Check-in / project
-  reconnection evidence where available.
-- **S2 — Team Alignment & Four-Week Commitment:** map the existing Week 1
-  commitment/action evidence where available.
-- **S3 — Project Progress & Work Focus:** map the existing Week 1 engagement /
-  progress evidence where available.
-- **S4 — Progress Pre-check:** map the existing Week 2 Implementation Pre-check.
-- **S5 — Progress Review:** map the existing Week 2 Progress Review and teacher
-  review/follow-up evidence.
+- Keep only the real Session Check-in history associated with S1–S5.
+- Existing Week 1 / Week 2 Activities remain in the independent Weekly Activity
+  system and are not re-labelled as Session evidence.
 
 If no historical evidence exists, show that honestly rather than presenting a
 missing submission as a failure. S1–S5 remain closed/read-only for current 2B1,
@@ -221,8 +214,7 @@ Each Session can contain three related but distinct elements:
 
 1. **Session Check-in** — attendance evidence governed by existing Session
    open/close/scheduling rules.
-2. **Session Task / mapped Activity** — the teaching focus and any existing
-   activity relevant to that Session.
+2. **Session Task** — the teaching focus and optional teacher guidance for that Session.
 3. **My Work Track** — lightweight individual evidence of what the student
    actually progressed, where that Session uses Work Track.
 
@@ -394,12 +386,12 @@ Introduce a clear **Your Project Journey** view from S1 through S10.
 - The current open Session is prominent.
 - Upcoming Sessions show their focus without allowing early submission unless
   explicitly opened by the teacher/session schedule.
-- Opening a Session shows its task, mapped Activity/evidence and Work Track or
+- Opening Track shows its Session Task and Work Track or
   S10 Feedback as appropriate.
 - Historical missing evidence is described neutrally; it is not rendered as a
   failure or penalty.
-- Existing Week activities remain valid source evidence and are mapped into the
-  Journey rather than duplicated.
+- Existing Week activities remain valid independent teaching evidence and are not
+  duplicated or mapped into the Session Journey.
 
 #### Teacher view and lifecycle
 
