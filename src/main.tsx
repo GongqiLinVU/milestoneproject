@@ -1,4 +1,4 @@
-import { StrictMode, useEffect, useRef, useState, type FormEvent, type MouseEvent } from "react";
+import { StrictMode, useEffect, useRef, useState, type FormEvent, type MouseEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { createClient } from "@supabase/supabase-js";
@@ -118,8 +118,79 @@ type StudentSessionRecord = {
   startsAt: string | null;
   endsAt: string | null;
   checkedInAt: string | null;
+  workTrackUpdatedAt: string | null;
   status: "scheduled" | "open" | "closed";
 };
+
+type SessionTrackPayload = {
+  sessionId: string;
+  sessionNumber: number;
+  focus: string;
+  taskGuidance: string | null;
+  expectedEvidence: string | null;
+  isOpen: boolean;
+  response: Record<string, unknown>;
+  updatedAt: string | null;
+  previousNextFocus: string | null;
+};
+
+const workFocusOptions = ["Core feature implementation","UI / UX","Integration","Testing","Bug fixing","Data / database","Documentation","Other"];
+const completionBands = ["0–25%","26–50%","51–75%","76–90%","91–99%","100%"];
+const reportSections = ["System / solution architecture","Implementation approach","Key technical components","Data / integration","Testing approach","Technical challenges","Evidence / screenshots"];
+
+function SessionWorkTrackModal({session,onClose,onSaved}:{session:StudentSessionRecord;onClose:()=>void;onSaved:()=>void}) {
+  const [track, setTrack] = useState<SessionTrackPayload | null>(null);
+  const [response, setResponse] = useState<Record<string, any>>({});
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  useEffect(()=>{let active=true;setLoading(true);supabase.rpc("get_my_session_work_track",{p_session_id:session.sessionId}).then(({data,error})=>{if(!active)return;if(error){setMessage("This Session Work Track could not be loaded.");}else{const next=data as SessionTrackPayload;setTrack(next);setResponse(next.response||{});}setLoading(false);});return()=>{active=false};},[session.sessionId]);
+  const value=(key:string)=>String(response[key]||"");
+  const set=(key:string,next:unknown)=>setResponse(current=>({...current,[key]:next}));
+  const toggle=(key:string,option:string)=>setResponse(current=>{const items=Array.isArray(current[key])?[...current[key]]:[];return{...current,[key]:items.includes(option)?items.filter(item=>item!==option):[...items,option]};});
+  const sectionState=(key:string,section:string)=>String((response[key] as Record<string,string>|undefined)?.[section]||"");
+  const setSection=(key:string,section:string,next:string)=>setResponse(current=>({...current,[key]:{...((current[key] as Record<string,string>|undefined)||{}),[section]:next}}));
+  function isComplete(){if(!track)return false;const filled=(key:string)=>Boolean(String(response[key]||"").trim());if(track.sessionNumber===6)return Array.isArray(response.mainFocus)&&response.mainFocus.length>0&&["actionStatus","evidenceToday","concern","nextFocus"].every(filled);if(track.sessionNumber===7)return["coreCompletion","integrationStatus","unresolvedFunctionality","endToEnd"].every(filled)&&reportSections.every(section=>sectionState("reportSections",section));if(track.sessionNumber===8)return["projectCompletion","reportCompletion","verificationStatus"].every(filled)&&Array.isArray(response.remainingReportAreas)&&response.remainingReportAreas.length>0&&["Core requirements","Critical workflows","End-to-end scenario","Known defects","Demo environment","Verification evidence"].every(section=>sectionState("verification",section));if(track.sessionNumber===9)return["criticalBlocker","overallReadiness"].every(filled)&&["Product","Final Report","Presentation","Demo"].every(section=>sectionState("readiness",section))&&(response.criticalBlocker!=="Yes"||filled("blockerNote"));return false;}
+  async function save(){if(!track?.isOpen)return;if(!isComplete()){setMessage("Please complete the required structured checks before saving.");return;}setBusy(true);setMessage("");const{data,error}=await supabase.rpc("save_my_session_work_track",{p_session_id:session.sessionId,p_response:response});if(error){setMessage(error.message||"Work Track could not be saved.");}else{setTrack(current=>current?{...current,updatedAt:(data as {updatedAt:string}).updatedAt,response}:current);setMessage("Work Track saved.");onSaved();}setBusy(false);}
+  const checked=(key:string,option:string)=>Array.isArray(response[key])&&response[key].includes(option);
+  const select=(label:string,key:string,options:string[],placeholder="Select one")=><label className="track-field"><span>{label}</span><select value={value(key)} onChange={event=>set(key,event.target.value)} disabled={!track?.isOpen}><option value="">{placeholder}</option>{options.map(option=><option key={option}>{option}</option>)}</select></label>;
+  const multi=(label:string,key:string,options:string[])=><fieldset className="track-field track-choice-grid" disabled={!track?.isOpen}><legend>{label}</legend>{options.map(option=><label key={option}><input type="checkbox" checked={checked(key,option)} onChange={()=>toggle(key,option)}/><span>{option}</span></label>)}</fieldset>;
+  let fields:ReactNode=null;
+  if(track?.sessionNumber===6) fields=<>
+    {multi("1. Main focus after the progress review","mainFocus",workFocusOptions)}
+    {select("2. Current action status","actionStatus",["Not started","Started","In progress","Completed","Blocked"])}
+    {select("3. Evidence today","evidenceToday",["Feature demonstrated","Issue fixed","Integration completed","Test completed","Document updated","Other","Not completed yet"])}
+    {select("4. Biggest concern going into Week 3","concern",["Scope / remaining work","Technical issue","Testing / verification","Report / documentation","Time","Team coordination","No major concern","Other"])}
+    <label className="track-field"><span>Concern note <small>optional</small></span><textarea maxLength={220} value={value("concernNote")} onChange={event=>set("concernNote",event.target.value)} disabled={!track.isOpen} placeholder="Only add a short note if it helps explain the concern."/></label>
+    {select("5. Next Session focus","nextFocus",workFocusOptions)}
+  </>;
+  if(track?.sessionNumber===7) fields=<>
+    {track.previousNextFocus&&<div className="track-carry-forward"><span>From S6 · Next focus</span><strong>{track.previousNextFocus}</strong></div>}
+    <div className="track-subheading"><strong>Application progress</strong><span>Check what can be demonstrated now.</span></div>
+    {select("Core functions completion","coreCompletion",completionBands)}
+    {select("Integration status","integrationStatus",["Not started","Partial","Working","Complete"])}
+    {select("Major unresolved functionality","unresolvedFunctionality",["None","Minor","Major","Blocking"])}
+    {select("Can the application be demonstrated end-to-end?","endToEnd",["Yes","Partially","No"])}
+    <div className="track-subheading"><strong>Technical Implementation Report</strong><span>Check structure only — do not write the report here.</span></div>
+    <div className="track-readiness-grid">{reportSections.map(section=><label key={section}><span>{section}</span><select value={sectionState("reportSections",section)} onChange={event=>setSection("reportSections",section,event.target.value)} disabled={!track.isOpen}><option value="">Select</option><option>Not started</option><option>Draft</option><option>Ready</option></select></label>)}</div>
+  </>;
+  if(track?.sessionNumber===8) fields=<>
+    {select("Project completion","projectCompletion",completionBands)}
+    {select("Final Report completion","reportCompletion",completionBands)}
+    {multi("Final Report areas still needing work","remainingReportAreas",["Structure","Implementation","Testing / results","Screenshots / evidence","Evaluation","Conclusion","References","None"])}
+    <div className="track-subheading"><strong>Product Verification</strong><span>Record the current verification state.</span></div>
+    <div className="track-readiness-grid">{["Core requirements","Critical workflows","End-to-end scenario","Known defects","Demo environment","Verification evidence"].map(section=><label key={section}><span>{section}</span><select value={sectionState("verification",section)} onChange={event=>setSection("verification",section,event.target.value)} disabled={!track.isOpen}><option value="">Select</option><option>Verified</option><option>In progress</option><option>Not yet</option></select></label>)}</div>
+    {select("Overall Product Verification","verificationStatus",["Not Ready","Partially Verified","Verified"])}
+  </>;
+  if(track?.sessionNumber===9) fields=<>
+    <div className="track-subheading"><strong>Final Readiness</strong><span>One final gate before presentation week.</span></div>
+    <div className="track-readiness-grid">{["Product","Final Report","Presentation","Demo"].map(section=><label key={section}><span>{section}</span><select value={sectionState("readiness",section)} onChange={event=>setSection("readiness",section,event.target.value)} disabled={!track.isOpen}><option value="">Select</option><option>Ready</option><option>Attention</option><option>Not Ready</option></select></label>)}</div>
+    {select("Any critical blocker?","criticalBlocker",["No","Yes"])}
+    {value("criticalBlocker")==="Yes"&&<label className="track-field"><span>Critical blocker <small>short note</small></span><textarea maxLength={220} value={value("blockerNote")} onChange={event=>set("blockerNote",event.target.value)} disabled={!track.isOpen}/></label>}
+    {select("Overall readiness","overallReadiness",["Not Ready","Almost Ready","Ready to Present"])}
+  </>;
+  return createPortal(<div className="session-work-track-modal" role="presentation" onMouseDown={event=>event.target===event.currentTarget&&onClose()}><section className="session-work-track-dialog work-track-form-dialog" role="dialog" aria-modal="true" aria-labelledby="session-work-track-title"><button type="button" className="session-work-track-close" aria-label="Close Session Task and Work Track" onClick={onClose}>×</button><div className="eyebrow">Independent project progress</div><h3 id="session-work-track-title">Session Task + Work Track</h3><strong>S{session.sessionNumber} · {session.focus}</strong>{loading?<p className="empty-state">Loading Work Track…</p>:track?<><div className="session-task-card"><span>Session Task</span><p>{track.taskGuidance||session.focus}</p>{track.expectedEvidence&&<small><b>Expected evidence:</b> {track.expectedEvidence}</small>}</div>{!track.isOpen&&<p className="track-readonly-note">This Session is closed. Your saved Work Track is read-only.</p>}<div className="work-track-fields">{fields}</div>{track.updatedAt&&<small className="track-saved-at"><CheckCircle2 size={14}/>Saved {new Date(track.updatedAt).toLocaleString()}</small>}{message&&<p className="admin-alert" role="status">{message}</p>}<div className="track-dialog-actions"><button type="button" className="secondary" onClick={onClose}>Close</button>{track.isOpen&&<button type="button" onClick={()=>void save()} disabled={busy}>{busy?"Saving…":track.updatedAt?"Update Work Track":"Save Work Track"}</button>}</div></>:<p className="empty-state error-state">{message||"Work Track is unavailable."}</p>}</section></div>,document.body);
+}
 
 function StudentSessions() {
   const [sessions, setSessions] = useState<StudentSessionRecord[]>([]);
@@ -156,19 +227,11 @@ function StudentSessions() {
         <div className="journey-session-marker"><b>S{item.sessionNumber}</b><span>Week {item.weekNumber}</span></div>
         <div className="journey-session-content"><div className="journey-session-heading"><div><small>{new Date(`${item.sessionDate}T00:00:00`).toLocaleDateString()}</small><h3>{item.focus}</h3></div><span className={`activity-control-status ${item.status}`}>{item.status === "open" ? "Current" : item.status === "closed" ? "Closed" : "Upcoming"}</span></div>
           <div className="journey-attendance">{item.checkedInAt ? <strong><CheckCircle2 size={14}/>Checked in · {new Date(item.checkedInAt).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</strong> : <span>{item.status === "closed" ? "No recorded Session Check-in" : item.status === "open" ? "Session Check-in is available from the top of this page" : "Session Check-in not open yet"}</span>}</div>
-          <div className="journey-track-action">{item.status === "closed" ? <span>Track closed</span> : item.status === "open" ? <button type="button" className="secondary compact" onClick={() => setTrackSession(item)}>Track →</button> : <span>Track upcoming</span>}</div>
+          <div className="journey-track-action">{item.status === "closed" ? item.sessionNumber>=6&&item.sessionNumber<=9&&item.workTrackUpdatedAt?<button type="button" className="secondary compact" onClick={()=>setTrackSession(item)}><CheckCircle2 size={14}/> View track</button>:<span>Track closed</span> : item.status === "open"&&item.sessionNumber>=6&&item.sessionNumber<=9 ? <button type="button" className="secondary compact" onClick={() => setTrackSession(item)}>{item.workTrackUpdatedAt?<><CheckCircle2 size={14}/> Track saved</>:"Track →"}</button> : <span>{item.sessionNumber===10?"Final feedback in Phase 2C":"Track upcoming"}</span>}</div>
         </div>
       </article>)}
     </div> : <p className="empty-state">No sessions have been prepared for this block yet.</p>}
-    {trackSession && createPortal(<div className="session-work-track-modal" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setTrackSession(null)}>
-      <section className="session-work-track-dialog" role="dialog" aria-modal="true" aria-labelledby="session-work-track-title">
-        <button type="button" className="session-work-track-close" aria-label="Close Session Task and Work Track" onClick={() => setTrackSession(null)}>×</button>
-        <div className="eyebrow">Independent project progress</div>
-        <h3 id="session-work-track-title">Session Task + Work Track</h3>
-        <strong>S{trackSession.sessionNumber} · {trackSession.focus}</strong>
-        <p>This is the independent progress area for this session. Session Task and Work Track fields will be added in Phase 2B without changing Session Check-in or Weekly Activities.</p>
-      </section>
-    </div>, document.body)}
+    {trackSession&&<SessionWorkTrackModal session={trackSession} onClose={()=>setTrackSession(null)} onSaved={()=>window.dispatchEvent(new CustomEvent("student-session-checkin"))}/>}
   </section>;
 }
 function StudentPortal({ student }: { student: AuthenticatedStudent }) {
@@ -1645,8 +1708,9 @@ function fields(k: Kind, student?: AuthenticatedStudent, progressStep = 1, setPr
     </>
   );
 }
-type StudioSessionRow = { id:string; session_number:number|null; week_number:number|null; curriculum_focus:string|null; title:string; session_date:string; status:"scheduled"|"open"|"closed"; starts_at:string|null; ends_at:string|null; opened_at:string|null; closed_at:string|null };
+type StudioSessionRow = { id:string; session_number:number|null; week_number:number|null; curriculum_focus:string|null; title:string; session_date:string; status:"scheduled"|"open"|"closed"; starts_at:string|null; ends_at:string|null; opened_at:string|null; closed_at:string|null; task_guidance:string|null; expected_evidence:string|null };
 type AttendanceRow = { session_id:string; student_id:string; checked_in_at:string };
+type TeacherTrackRow = { studentId:string; studentName:string; teamName:string; checkedInAt:string|null; response:Record<string,any>|null; updatedAt:string|null };
 
 function StudioSessionControl({
   blockId,
@@ -1660,12 +1724,15 @@ function StudioSessionControl({
   const [sessions, setSessions] = useState<StudioSessionRow[]>([]);
   const [attendance, setAttendance] = useState<AttendanceRow[]>([]);
   const [editing, setEditing] = useState<StudioSessionRow | null>(null);
+  const [evidenceSession, setEvidenceSession] = useState<StudioSessionRow | null>(null);
+  const [evidenceRows, setEvidenceRows] = useState<TeacherTrackRow[]>([]);
+  const [evidenceLoading, setEvidenceLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
 
   async function load() {
     if (!blockId) return;
-    const { data } = await supabase.from("studio_sessions").select("id,session_number,week_number,curriculum_focus,title,session_date,status,starts_at,ends_at,opened_at,closed_at").eq("block_id", blockId).order("session_number", { nullsFirst: false }).order("session_date");
+    const { data } = await supabase.from("studio_sessions").select("id,session_number,week_number,curriculum_focus,title,session_date,status,starts_at,ends_at,opened_at,closed_at,task_guidance,expected_evidence").eq("block_id", blockId).order("session_number", { nullsFirst: false }).order("session_date");
     const next = (data as StudioSessionRow[] | null) || [];
     setSessions(next);
     const ids = next.map(item => item.id);
@@ -1698,10 +1765,15 @@ function StudioSessionControl({
     const rows=Array.from({length:10-sessions.length},(_,index)=>{const sessionNumber=sessions.length+index+1;const definition=definitions[sessionNumber-1];const date=new Date(base);date.setDate(date.getDate()+dayOffsets[sessionNumber-1]);return{block_id:blockId,session_number:sessionNumber,week_number:definition[1],curriculum_focus:definition[2],title:`Session ${sessionNumber}`,session_date:date.toISOString().slice(0,10),status:"scheduled"};});
     const {error}=await supabase.from("studio_sessions").insert(rows);setMessage(error?"The 10-session plan could not be prepared.":"A 10-session block plan is ready. Edit dates and add automatic check-in times when known.");await load();setBusy(false);
   }
-  async function save(event:FormEvent<HTMLFormElement>){event.preventDefault();if(!editing)return;setBusy(true);setMessage("");const values=Object.fromEntries(new FormData(event.currentTarget));const starts=String(values.starts_at||"");const ends=String(values.ends_at||"");if(starts&&ends&&new Date(ends)<=new Date(starts)){setBusy(false);return setMessage("End time must be after start time.");}const{error}=await supabase.from("studio_sessions").update({title:String(values.title).trim(),session_date:String(values.session_date),starts_at:starts?new Date(starts).toISOString():null,ends_at:ends?new Date(ends).toISOString():null,status:editing.status==="closed"?"closed":"scheduled",opened_at:editing.status==="closed"?editing.opened_at:null}).eq("id",editing.id);setMessage(error?"Session changes could not be saved.":"Session schedule updated.");if(!error)setEditing(null);await load();setBusy(false);}
+  async function save(event:FormEvent<HTMLFormElement>){event.preventDefault();if(!editing)return;setBusy(true);setMessage("");const values=Object.fromEntries(new FormData(event.currentTarget));const starts=String(values.starts_at||"");const ends=String(values.ends_at||"");if(starts&&ends&&new Date(ends)<=new Date(starts)){setBusy(false);return setMessage("End time must be after start time.");}const{error}=await supabase.from("studio_sessions").update({title:String(values.title).trim(),session_date:String(values.session_date),starts_at:starts?new Date(starts).toISOString():null,ends_at:ends?new Date(ends).toISOString():null,status:editing.status==="closed"?"closed":"scheduled",opened_at:editing.status==="closed"?editing.opened_at:null,task_guidance:String(values.task_guidance||"").trim()||null,expected_evidence:String(values.expected_evidence||"").trim()||null}).eq("id",editing.id);setMessage(error?"Session changes could not be saved.":"Session schedule and task updated.");if(!error)setEditing(null);await load();setBusy(false);}
   async function setState(item:StudioSessionRow,next:"open"|"closed"){setBusy(true);setMessage("");const now=new Date().toISOString();const{error}=await supabase.from("studio_sessions").update(next==="open"?{status:"open",opened_at:now,closed_at:null}:{status:"closed",closed_at:now}).eq("id",item.id);setMessage(error?(next==="open"?"Close any other open session before opening this one.":"The session could not be closed."):(next==="open"?"Session check-in is open now.":"Session closed. Attendance history is preserved."));await load();setBusy(false);}
   function download(item:StudioSessionRow){const rows=attendance.filter(row=>row.session_id===item.id);const csv=["Student ID,Checked in at",...rows.map(row=>`"${row.student_id}","${new Date(row.checked_in_at).toLocaleString()}"`)];const url=URL.createObjectURL(new Blob([csv.join("\n")],{type:"text/csv"}));const link=document.createElement("a");link.href=url;link.download=`${item.title.replace(/[^a-z0-9]+/gi,"-").toLowerCase()}-attendance.csv`;link.click();URL.revokeObjectURL(url);
   }
+  async function openEvidence(item:StudioSessionRow){setEvidenceSession(item);setEvidenceRows([]);setEvidenceLoading(true);const{data,error}=await supabase.rpc("get_teacher_session_work_tracks",{p_session_id:item.id});setEvidenceRows(error?[]:((data as TeacherTrackRow[]|null)||[]));if(error)setMessage("Session Work Track evidence could not be loaded.");setEvidenceLoading(false);}
+  function evidenceState(row:TeacherTrackRow){if(!row.response)return"Missing";return String(row.response.overallReadiness||row.response.verificationStatus||row.response.actionStatus||row.response.endToEnd||"Tracked");}
+  function evidenceNeedsAttention(row:TeacherTrackRow){const state=evidenceState(row);return /blocked|not ready|no$|major|blocking/i.test(state)||row.response?.criticalBlocker==="Yes"||row.response?.concern&&row.response.concern!=="No major concern";}
+  function evidenceLabel(key:string){return key.replace(/([A-Z])/g," $1").replace(/^./,value=>value.toUpperCase());}
+  function evidenceValue(value:unknown){if(Array.isArray(value))return value.join(", ");if(value&&typeof value==="object")return Object.entries(value as Record<string,unknown>).map(([key,item])=>`${key}: ${String(item)}`).join(" · ");return String(value??"");}
 
   return <section className="session-manager">
     <div className="session-manager-heading"><div>
@@ -1709,8 +1781,9 @@ function StudioSessionControl({
       <h2>Studio Sessions{selectedBlock ? ` · ${selectedBlock.academic_year} ${selectedBlock.block_code}` : ""}</h2><p>The S1–S10 curriculum focus stays consistent across blocks. Dates and Check-in windows remain teacher-controlled attendance settings.</p>
     </div><div className="session-manager-actions"><label className="admin-block-filter">Teaching block<select value={blockId} onChange={event=>onBlockChange(event.target.value)} disabled={busy}>{blocks.map(block=><option key={block.id} value={block.id}>{block.academic_year} · {block.block_code}{block.status==="active"?" — Active":""}</option>)}</select></label><button disabled={busy||!blockId||sessions.length>=10} onClick={()=>void prepareTen()}><CalendarPlus size={17}/> Prepare {Math.max(0,10-sessions.length)} sessions</button></div></div>
     {message && <p className="admin-alert" role="status">{message}</p>}
-    <div className="teacher-session-list">{sessions.map(item=>{const state=effectiveStatus(item),checkins=attendance.filter(row=>row.session_id===item.id);return <article key={item.id} className={`teacher-session ${state}`}><div className="teacher-session-summary"><div><span className={`activity-control-status ${state}`}>{state}</span><span className="session-curriculum-label">{item.session_number ? `S${item.session_number}` : "Session"}{item.week_number ? ` · Week ${item.week_number}` : ""}</span><h3>{item.curriculum_focus || item.title}</h3><p>{new Date(`${item.session_date}T00:00:00`).toLocaleDateString()} · {checkins.length} checked in</p>{item.starts_at&&<small>{new Date(item.starts_at).toLocaleString()} → {item.ends_at?new Date(item.ends_at).toLocaleString():"manual close"}</small>}</div><div className="teacher-session-actions"><button className="secondary compact" onClick={()=>setEditing(item)} disabled={busy}><Pencil size={15}/> Edit</button>{state==="open"?<button className="danger compact" onClick={()=>void setState(item,"closed")} disabled={busy}>Close</button>:state!=="closed"&&<button className="compact" onClick={()=>void setState(item,"open")} disabled={busy}>Open now</button>}<button className="secondary compact" onClick={()=>download(item)} disabled={!checkins.length}><Download size={15}/> CSV</button></div></div>{checkins.length>0&&<details><summary>View attendance</summary><table><thead><tr><th>Student ID</th><th>Check-in time</th></tr></thead><tbody>{checkins.map(row=><tr key={`${row.session_id}-${row.student_id}`}><td>{row.student_id}</td><td>{new Date(row.checked_in_at).toLocaleString()}</td></tr>)}</tbody></table></details>}</article>})}{!sessions.length&&<p className="empty-state">No sessions prepared yet. Create the standard 10-session plan to begin.</p>}</div>
-    {editing&&<div className="modal"><form className="dialog session-edit-dialog" onSubmit={save}><button type="button" className="close" onClick={()=>setEditing(null)}>×</button><div className="eyebrow">Edit session</div><h2>{editing.title}</h2><label>Title<input name="title" defaultValue={editing.title} required maxLength={120}/></label><label>Session date<input name="session_date" type="date" defaultValue={editing.session_date} required/></label><label>Automatic start (optional)<input name="starts_at" type="datetime-local" defaultValue={editing.starts_at?new Date(new Date(editing.starts_at).getTime()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16):""}/></label><label>Automatic end (optional)<input name="ends_at" type="datetime-local" defaultValue={editing.ends_at?new Date(new Date(editing.ends_at).getTime()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16):""}/></label><p>Leave both times empty to use Open now / Close manually.</p><div className="admin-dialog-actions"><button type="button" className="secondary" onClick={()=>setEditing(null)}>Cancel</button><button disabled={busy}>{busy?"Saving…":"Save session"}</button></div></form></div>}
+    <div className="teacher-session-list">{sessions.map(item=>{const state=effectiveStatus(item),checkins=attendance.filter(row=>row.session_id===item.id),supportsTrack=(item.session_number||0)>=6&&(item.session_number||0)<=9;return <article key={item.id} className={`teacher-session ${state}`}><div className="teacher-session-summary"><div><span className={`activity-control-status ${state}`}>{state}</span><span className="session-curriculum-label">{item.session_number ? `S${item.session_number}` : "Session"}{item.week_number ? ` · Week ${item.week_number}` : ""}</span><h3>{item.curriculum_focus || item.title}</h3><p>{new Date(`${item.session_date}T00:00:00`).toLocaleDateString()} · {checkins.length} checked in</p>{item.task_guidance&&<small className="teacher-task-preview">Task: {item.task_guidance}</small>}{item.starts_at&&<small>{new Date(item.starts_at).toLocaleString()} → {item.ends_at?new Date(item.ends_at).toLocaleString():"manual close"}</small>}</div><div className="teacher-session-actions"><button className="secondary compact" onClick={()=>setEditing(item)} disabled={busy}><Pencil size={15}/> Edit</button>{supportsTrack&&<button className="secondary compact" onClick={()=>void openEvidence(item)}><ListChecks size={15}/> Work Track</button>}{state==="open"?<button className="danger compact" onClick={()=>void setState(item,"closed")} disabled={busy}>Close</button>:state!=="closed"&&<button className="compact" onClick={()=>void setState(item,"open")} disabled={busy}>Open now</button>}<button className="secondary compact" onClick={()=>download(item)} disabled={!checkins.length}><Download size={15}/> CSV</button></div></div>{checkins.length>0&&<details><summary>View attendance</summary><table><thead><tr><th>Student ID</th><th>Check-in time</th></tr></thead><tbody>{checkins.map(row=><tr key={`${row.session_id}-${row.student_id}`}><td>{row.student_id}</td><td>{new Date(row.checked_in_at).toLocaleString()}</td></tr>)}</tbody></table></details>}</article>})}{!sessions.length&&<p className="empty-state">No sessions prepared yet. Create the standard 10-session plan to begin.</p>}</div>
+    {editing&&<div className="modal"><form className="dialog session-edit-dialog" onSubmit={save}><button type="button" className="close" onClick={()=>setEditing(null)}>×</button><div className="eyebrow">Edit session</div><h2>{editing.title}</h2><label>Title<input name="title" defaultValue={editing.title} required maxLength={120}/></label><label>Session date<input name="session_date" type="date" defaultValue={editing.session_date} required/></label>{(editing.session_number||0)>=6&&(editing.session_number||0)<=9&&<><label>Session Task <small>optional guidance</small><textarea name="task_guidance" defaultValue={editing.task_guidance||""} maxLength={600} placeholder={editing.curriculum_focus||editing.title}/></label><label>Expected evidence <small>optional</small><textarea name="expected_evidence" defaultValue={editing.expected_evidence||""} maxLength={400} placeholder="What should students be able to show by the end of this session?"/></label></>}<label>Automatic start (optional)<input name="starts_at" type="datetime-local" defaultValue={editing.starts_at?new Date(new Date(editing.starts_at).getTime()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16):""}/></label><label>Automatic end (optional)<input name="ends_at" type="datetime-local" defaultValue={editing.ends_at?new Date(new Date(editing.ends_at).getTime()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16):""}/></label><p>Leave both times empty to use Open now / Close manually.</p><div className="admin-dialog-actions"><button type="button" className="secondary" onClick={()=>setEditing(null)}>Cancel</button><button disabled={busy}>{busy?"Saving…":"Save session"}</button></div></form></div>}
+    {evidenceSession&&createPortal(<div className="session-work-track-modal" role="presentation" onMouseDown={event=>event.target===event.currentTarget&&setEvidenceSession(null)}><section className="session-work-track-dialog teacher-track-dialog" role="dialog" aria-modal="true"><button type="button" className="session-work-track-close" onClick={()=>setEvidenceSession(null)} aria-label="Close Work Track evidence">×</button><div className="eyebrow">Session evidence</div><h3>S{evidenceSession.session_number} · {evidenceSession.curriculum_focus||evidenceSession.title}</h3>{evidenceLoading?<p className="empty-state">Loading student evidence…</p>:<><div className="teacher-track-summary"><strong>{evidenceRows.filter(row=>row.response).length} / {evidenceRows.length} tracked</strong><span>{evidenceRows.filter(evidenceNeedsAttention).length} need attention</span></div><div className="teacher-track-list">{evidenceRows.map(row=><details key={row.studentId} className={evidenceNeedsAttention(row)?"needs-attention":""}><summary><span><b>{row.studentName}</b><small>{row.studentId} · {row.teamName}</small></span><span className={`track-evidence-state ${evidenceNeedsAttention(row)?"attention":""}`}>{evidenceState(row)}</span></summary><div className="teacher-track-detail"><p><b>Attendance:</b> {row.checkedInAt?`Checked in ${new Date(row.checkedInAt).toLocaleString()}`:"No recorded check-in"}</p>{row.response?<dl className="teacher-track-evidence-grid">{Object.entries(row.response).filter(([,value])=>value!==""&&value!=null).map(([key,value])=><div key={key}><dt>{evidenceLabel(key)}</dt><dd>{evidenceValue(value)}</dd></div>)}</dl>:<p>No Work Track submitted.</p>}</div></details>)}</div></>}</section></div>,document.body)}
   </section>;
 }
 
