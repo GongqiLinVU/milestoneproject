@@ -8,15 +8,15 @@ testing passes.
 
 ## Phase 1 implementation
 
-- Private `poster-gallery` Supabase Storage bucket, capped at 5 MB and limited
+- Private `poster-gallery` Supabase Storage bucket, capped at 1 MB and limited
   to PDF/PNG/JPEG.
 - Immutable Poster version history with separate Team draft and published
   pointers.
 - Student upload/replace is restricted to the authenticated roster Team.
 - Teacher upload/replace supports any Team in the selected Teaching Block.
-- Upload files travel directly from browser to Supabase using a signed upload
-  token. This avoids Vercel Function's 4.5 MB request limit while keeping the
-  product's 5 MB Poster limit.
+- Upload files travel directly from browser to private Supabase Storage using a
+  short-lived signed upload token; Poster bytes do not need to pass through the
+  application API.
 - Server-side finalisation downloads the private object, verifies size and file
   signature, and verifies that PDF files contain exactly one page using
   `pdf-lib`. Failed validation removes the staged object.
@@ -33,14 +33,12 @@ testing passes.
 - Poster Gallery publication is the Peer Feedback gate, independent of the broad
   Week 3 activity switch.
 
-## Deployment constraint decision
+## Upload architecture decision
 
-The accepted Poster limit is 5 MB. Vercel Functions currently limit request and
-response bodies to 4.5 MB, while Supabase recommends standard uploads for files
-up to 6 MB. Therefore Poster file bytes must not be proxied through the Vercel
-API. The API issues a short-lived upload token; the browser sends the bytes
-directly to the private Supabase bucket; the API then validates the stored object
-before it becomes a Team draft.
+The accepted Poster limit is 1 MB. Files still upload directly to the private
+Supabase bucket using a short-lived token: this keeps file transfer separate from
+the application API and preserves the existing private-storage design. The API
+then validates the stored object before it becomes a Team draft.
 
 ## Required migration before Preview testing
 
@@ -61,10 +59,10 @@ No new Vercel secret is required. The Poster API reuses the existing
 1. Log in as a prepared/activated student and open Week 3.
 2. Confirm `Your Team Poster` identifies the roster Team without asking the
    student to select a Team.
-3. Upload a valid one-page PDF below 5 MB; confirm it becomes the Team draft.
+3. Upload a valid one-page PDF below 1 MB; confirm it becomes the Team draft.
 4. Replace it with PNG or JPEG and confirm the new draft appears.
 5. Confirm a PDF with two pages is rejected with an exact one-page message.
-6. Confirm DOCX/PPTX and a file over 5 MB are rejected.
+6. Confirm DOCX/PPTX and a file over 1 MB are rejected with the concise-design guidance.
 7. Before Publish, confirm Gallery content remains hidden.
 8. After teacher Publish, confirm only the current Block's Team cards appear.
 9. Enlarge another Team Poster and choose **Give feedback**.
@@ -103,4 +101,3 @@ No new Vercel secret is required. The Poster API reuses the existing
 - Sprint 6 Phase 2 Session Task / Work Track.
 - Sprint 7 trajectory, analytics, enhanced export or AI insight.
 - Automatic Poster scoring or public Poster hosting.
-
