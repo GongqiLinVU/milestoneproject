@@ -192,7 +192,7 @@ begin
               or char_length(requirement ->> 'label') > 120
               or coalesce(requirement ->> 'score', '') not in ('0','25','50','75','100')
          ),
-         round(avg((requirement ->> 'score')::numeric))::integer
+         round(avg(case when coalesce(requirement ->> 'score', '') in ('0','25','50','75','100') then (requirement ->> 'score')::numeric else null end))::integer
   into v_requirement_count, v_invalid_requirement_count, v_completion
   from jsonb_array_elements(p_response -> 'requirements') requirement;
 
