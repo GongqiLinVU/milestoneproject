@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-08-05 — Sprint 6 Phase 1 (Draft)
+
+- Added a private, Block-scoped Week 3 Poster Gallery with student and teacher
+  upload/replace workflows.
+- Added 5 MB PDF/PNG/JPEG validation, including server-side one-page PDF checks.
+- Added immutable Poster versions with separate draft and published snapshots so
+  replacement never silently changes the current Gallery.
+- Added teacher Preview, Publish, Hide and confirmed Remove controls.
+- Added authenticated Gallery cards with short-lived Poster preview URLs and a
+  direct Poster → Peer Feedback flow.
+- Kept own-Team, duplicate-review, Block isolation and teacher-role protections
+  authoritative at the database/API boundary.
+
 ## Sprint 5 Finalisation — 2026-08-01
 
 - Completed roster-based student identity, activation, recovery and authenticated
