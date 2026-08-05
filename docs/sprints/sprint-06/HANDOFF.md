@@ -9,7 +9,7 @@ squash-merged to `main` in PR #50 on 5 August 2026.
 
 **Phase 2B — Live Work Track S6–S9** is the current implementation / Preview gate.
 
-Phase 2B fills the existing `Track →` modal with Session-specific structured evidence while keeping Session Check-in attendance-only and Weekly Activities independent.
+Phase 2B fills the existing `Track →` modal with Session-specific structured evidence while keeping Session Check-in attendance-only and Weekly Activities independent. Completion is requirement-based and server-calculated, with limited branching by progress stage and Teacher confirm/adjust verification.
 
 ### Phase 2B Preview setup
 
@@ -19,13 +19,18 @@ Run in the Preview Supabase SQL Editor:
 
 Then test:
 
-1. Open S6 and confirm a student can save/update Review → Action evidence from `Track →` without changing Check-in.
-2. Close S6 and confirm the saved Track becomes read-only and remains viewable.
-3. Open S7 and confirm the student's S6 `Next Session focus` appears as context only.
-4. Check S7 Technical Report readiness, S8 completion/verification and S9 Final Readiness forms use their distinct structures.
-5. Teacher Sessions → `Work Track` shows the whole roster, Checked-in state, Tracked/Missing state and attention signals together.
-6. Teacher Edit Session can add optional Session Task guidance and Expected evidence for S6–S9.
-7. Confirm Weekly Activities and Poster Gallery behaviour are unchanged.
+1. Open S6 and add 3–8 committed requirements. Confirm each can only use the 0/25/50/75/100 evidence standard.
+2. Confirm the overall percentage is calculated automatically and cannot be directly entered.
+3. Verify the calculated percentage opens the correct S6 path: ≤70 Building/Developing, 71–90 Completing, >90 Verifying/Finalising.
+4. Save S6, then open S7 and confirm the same requirement baseline plus previous completion carry forward; update requirement states and confirm the new percentage/change.
+5. Confirm S7 Technical Report, S8 Product Verification and S9 Final Readiness keep their distinct Session-specific checks.
+6. Teacher Sessions → Work Track should show the student's calculated %, requirement detail, and let the teacher Confirm or Adjust completion; Adjust requires a reason.
+7. Close a Session and confirm saved Track evidence remains read-only.
+8. Confirm Session Check-in, Weekly Activities and Poster Gallery remain independent and unchanged.
+
+Because the Preview migration was already run before this measurement refinement,
+rerun the same Phase 2B migration once after this PR update; it is idempotent and
+will add/update the verification fields and RPCs.
 
 ### Phase 2A migration reference
 
@@ -48,7 +53,9 @@ S10 Platform Feedback is not included; it remains Phase 2C.
 
 - Keep the complete S1–S10 curriculum journey visible and reusable.
 - For current `2026 · 2B1`, S1–S5 are historical/closed: keep their real Check-in history and never reopen them to backfill Work Track.
-- S6 begins the live Work Track with **Review → Action**.
+- S6 begins the live Work Track with **Review → Action**, using requirement-based calculated completion and three lightweight progress paths.
+- S6–S9 reuse the same 3–8 committed requirements with 0/25/50/75/100 evidence states; the server calculates the percentage and later Sessions show change from the previous Track.
+- Teacher Review can confirm the calculated percentage or adjust it with a recorded reason.
 - S7 checks **Application Progress + Technical Implementation Report structure**.
 - S8 checks **Project/Final Report completion + Product Verification**.
 - S9 is the **Final Readiness** gate for Product, Report, Presentation and Demo.
