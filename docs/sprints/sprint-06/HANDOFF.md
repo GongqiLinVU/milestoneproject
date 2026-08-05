@@ -5,10 +5,25 @@
 **Phase 1 — Week 3 Poster Gallery** has passed classroom-path testing and was
 squash-merged to `main` in PR #50 on 5 August 2026.
 
-The next implementation gate is **Phase 2 — Session Journey, Task & Work Track**.
-The master design is now S1–S10 rather than a Work Track that starts halfway
-through the block. This planning update does not implement Phase 2 application
-code.
+**Phase 2A — Session Journey Foundation** is implemented in the current Draft PR and is the Preview validation gate.
+
+Phase 2A adds stable S1–S10 curriculum identity to the existing attendance sessions, maps legitimate historical S1–S5 evidence without backfill, and replaces the student's attendance-only Sessions view with the complete Project Journey. Existing Check-in and weekly activity controls remain authoritative.
+
+### Phase 2A Preview setup
+
+Run in the Preview Supabase SQL Editor:
+
+`supabase/migrations/20260805_sprint6_phase2a_session_journey.sql`
+
+Then test 2026 · 2B1 as both teacher and student:
+
+1. Teacher Session Check-in shows S1–S10 with the agreed Week/focus labels.
+2. S1–S5 are Closed; S6–S10 retain their existing lifecycle state.
+3. Student Project Journey shows all ten sessions, historical mapped evidence where it exists, and neutral text where it does not.
+4. Existing Check-in still opens/closes only through the original session controls.
+5. Existing Week activity activation still controls activity submission independently.
+
+No Work Track submission fields or S10 Platform Feedback are included yet; those remain Phase 2B/2C.
 
 ### Phase 2 agreed direction
 
