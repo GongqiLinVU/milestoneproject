@@ -4,7 +4,8 @@
 
 - Added a private, Block-scoped Week 3 Poster Gallery with student and teacher
   upload/replace workflows.
-- Added 5 MB PDF/PNG/JPEG validation, including server-side one-page PDF checks.
+- Added a 1 MB PDF/PNG/JPEG limit to encourage concise, visual Poster design,
+  including server-side one-page PDF checks.
 - Added immutable Poster versions with separate draft and published snapshots so
   replacement never silently changes the current Gallery.
 - Added teacher Preview, Publish, Hide and confirmed Remove controls.
