@@ -288,7 +288,7 @@ returns jsonb
 language plpgsql
 security definer
 set search_path = ''
-as $
+as $$
 declare
   v_track public.student_session_work_tracks%rowtype;
   v_student_completion integer;
@@ -342,7 +342,7 @@ begin
     'teacherVerifiedAt', v_track.teacher_verified_at
   );
 end;
-$;
+$$;
 
 revoke all on function public.verify_teacher_session_work_track(uuid, text, integer, text) from public;
 grant execute on function public.verify_teacher_session_work_track(uuid, text, integer, text) to authenticated;
