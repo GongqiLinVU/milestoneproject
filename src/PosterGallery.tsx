@@ -6,7 +6,7 @@ const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL || "https://gwihaizxivclamzehupk.supabase.co",
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "sb_publishable_-RPm45eBd8_CVaNk4GbXhg_nxOkMrLr",
 );
-const maxBytes = 5 * 1024 * 1024;
+const maxBytes = 1 * 1024 * 1024;
 const acceptedTypes = new Set(["application/pdf", "image/png", "image/jpeg"]);
 
 type PosterDraft = {
@@ -49,7 +49,7 @@ async function posterApi<T>(action: string, payload: Record<string, unknown> = {
 
 function validateFile(file: File) {
   if (!acceptedTypes.has(file.type)) return "Use a one-page PDF, PNG, JPG or JPEG file.";
-  if (file.size > maxBytes) return "Poster files must be 5 MB or smaller.";
+  if (file.size > maxBytes) return "Keep it simple — Poster files must be 1 MB or smaller. Reduce large images and focus on one strong visual message.";
   if (file.size === 0) return "This file is empty. Choose a valid Poster file.";
   return "";
 }
@@ -146,7 +146,7 @@ export function StudentPosterGallery({ onFeedback }: { onFeedback: (teamName: st
   }, [load]);
   return <section className="poster-gallery-student" aria-labelledby="poster-gallery-title">
     <div className="poster-gallery-heading"><div><span>Week 3 · Poster Gallery</span><h3 id="poster-gallery-title">See the project. Then give useful feedback.</h3><p>Each Poster is one page: problem, solution, key features and project value. Poster access is limited to your teaching block.</p></div><span className={`activity-control-status ${gallery?.isPublished ? "open" : "closed"}`}>{gallery?.isPublished ? "Gallery open" : "Gallery hidden"}</span></div>
-    {uploadStatus && <article className="my-poster-panel"><div><span>Your Team Poster · {uploadStatus.teamName}</span><b>{uploadStatus.draft ? uploadStatus.draft.originalFilename : "No Poster uploaded yet"}</b><small>PDF preferred · PNG/JPG accepted · exactly one page · maximum 5 MB</small></div><UploadControl teamId={uploadStatus.teamId} current={uploadStatus.draft} onUploaded={load}/></article>}
+    {uploadStatus && <article className="my-poster-panel"><div><span>Your Team Poster · {uploadStatus.teamName}</span><b>{uploadStatus.draft ? uploadStatus.draft.originalFilename : "No Poster uploaded yet"}</b><small>Project Advertisement, not a Mini Report · PDF preferred · PNG/JPG accepted · exactly one page · maximum 1 MB</small></div><UploadControl teamId={uploadStatus.teamId} current={uploadStatus.draft} onUploaded={load}/></article>}
     {message && <p className="admin-alert error" role="alert">{message}</p>}
     {!gallery ? <p className="empty-state">Loading Poster Gallery…</p> : !gallery.isPublished ? <div className="gallery-hidden-state"><Image/><div><b>The Gallery is not published yet.</b><span>You can prepare your Team Poster now. Your teacher will open the Gallery when the class is ready.</span></div></div> : <div className="poster-gallery-grid">
       {gallery.posters.map(poster => <article key={poster.teamId} className={`gallery-poster-card ${poster.isOwnTeam ? "own" : ""}`}><div className="gallery-card-heading"><div><span>{poster.teamName}{poster.isOwnTeam ? " · Your team" : ""}</span><h4>{poster.projectName || "Project assignment pending"}</h4></div>{poster.feedbackCompleted && <CheckCircle2 className="feedback-complete-icon"/>}</div>{poster.versionId && poster.mimeType ? <PosterPreview versionId={poster.versionId} mimeType={poster.mimeType} title={poster.teamName}/> : <div className="poster-missing"><Image/><b>Poster unavailable</b><span>This Team has not published a Poster.</span></div>}<div className="gallery-card-action">{poster.isOwnTeam ? <span>Feedback is for other Teams.</span> : poster.feedbackCompleted ? <strong><CheckCircle2 size={16}/> Feedback completed</strong> : <button type="button" disabled={!poster.versionId} onClick={()=>onFeedback(poster.teamName)}>Give feedback</button>}</div></article>)}
