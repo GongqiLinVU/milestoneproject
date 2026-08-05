@@ -160,7 +160,7 @@ function SessionWorkTrackModal({session,onClose,onSaved}:{session:StudentSession
       const next=data as SessionTrackPayload & {previousResponse?:Record<string,any>|null;previousCompletion?:number|null};
       const saved=next.response||{};
       const previous=next.previousResponse||{};
-      const initial=Object.keys(saved).length?saved:(Array.isArray(previous.requirements)?{requirements:previous.requirements}:saved);
+      const initial=Object.keys(saved).length?saved:(Array.isArray(previous.requirements)&&previous.requirements.length?{requirements:previous.requirements}:{requirements:[{label:"",score:""},{label:"",score:""},{label:"",score:""}]});
       setTrack(next);setResponse(initial);
     }
     setLoading(false);
@@ -203,11 +203,11 @@ function SessionWorkTrackModal({session,onClose,onSaved}:{session:StudentSession
     <div className="completion-standard">{requirementScoreOptions.map(item=><div key={item.score}><b>{item.score}%</b><span>{item.label}</span><small>{item.help}</small></div>)}</div>
     {previousCompletion!=null&&<div className="track-carry-forward"><span>Previous Track</span><strong>{previousCompletion+"%"}</strong></div>}
     <div className="requirement-assessment-list">{displayRequirements.map((item:any,index:number)=><div className="requirement-assessment-row" key={index}>
-      <label><span>Requirement {index+1}</span><input maxLength={120} value={String(item.label||"")} onChange={event=>setRequirement(index,"label",event.target.value)} disabled={!track?.isOpen||session.sessionNumber>6} placeholder="e.g. User can submit and retrieve a project record"/></label>
+      <label><span>Requirement {index+1}</span><input maxLength={120} value={String(item.label||"")} onChange={event=>setRequirement(index,"label",event.target.value)} disabled={!track?.isOpen||(session.sessionNumber>6&&previousCompletion!=null)} placeholder="e.g. User can submit and retrieve a project record"/></label>
       <label><span>Current state</span><select value={item.score==null?"":String(item.score)} onChange={event=>setRequirement(index,"score",Number(event.target.value))} disabled={!track?.isOpen}><option value="">Select evidence state</option>{requirementScoreOptions.map(option=><option key={option.score} value={option.score}>{option.score}% · {option.label}</option>)}</select></label>
-      {track?.isOpen&&session.sessionNumber===6&&displayRequirements.length>3&&<button type="button" className="secondary compact" onClick={()=>removeRequirement(index)}>Remove</button>}
+      {track?.isOpen&&(session.sessionNumber===6||previousCompletion==null)&&displayRequirements.length>3&&<button type="button" className="secondary compact" onClick={()=>removeRequirement(index)}>Remove</button>}
     </div>)}</div>
-    {track?.isOpen&&session.sessionNumber===6&&displayRequirements.length<8&&<button type="button" className="secondary compact requirement-add" onClick={addRequirement}>+ Add requirement</button>}
+    {track?.isOpen&&(session.sessionNumber===6||previousCompletion==null)&&displayRequirements.length<8&&<button type="button" className="secondary compact requirement-add" onClick={addRequirement}>+ Add requirement</button>}
     <div className={"calculated-completion "+(completionPercent==null?"incomplete":"")}><span>Calculated completion</span><strong>{completionPercent==null?"—":completionPercent+"%"}</strong><b>{completionPercent==null?"Complete at least 3 requirement rows":completionStage(completionPercent)}</b>{previousCompletion!=null&&completionPercent!=null&&<small>{(completionPercent-previousCompletion>=0?"+":"")+(completionPercent-previousCompletion)+"% since previous Track"}</small>}</div>
   </div>;
   let fields:ReactNode=null;
