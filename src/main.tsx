@@ -143,7 +143,33 @@ const requirementScoreOptions = [
   { score: 75, label: "Working in main flow", help: "Works in the main workflow but is not fully verified" },
   { score: 100, label: "Working + verified", help: "Implemented, demonstrable and verified with evidence" },
 ] as const;
-type ProjectRequirement = { label:string; score:number };
+type ProjectRequirement = { label:string; score:number|string };
+const coreITRequirements = [
+  "Core functionality meets the primary user needs",
+  "Main workflow works end-to-end across integrated components",
+  "Critical features are tested or validated with evidence",
+] as const;
+const coreITRequirementGuides:Record<string,{meaning:string;examples:string}> = {
+  "Core functionality meets the primary user needs": {
+    meaning: "The product's main features solve the agreed problem for its primary users. Count working capability, not plans, screens or unfinished code.",
+    examples: "A booking product can create, change and cancel a real booking; an AI product accepts real input and returns the intended usable result.",
+  },
+  "Main workflow works end-to-end across integrated components": {
+    meaning: "A primary user journey works from start to finish, with the important UI, logic, data, services or APIs connected rather than demonstrated separately.",
+    examples: "A submitted form is processed and stored, then the result is shown correctly; an external API or AI model works inside the real application flow.",
+  },
+  "Critical features are tested or validated with evidence": {
+    meaning: "The team has checked important behaviour against expected results and can show evidence. This does not mean the product must be bug-free.",
+    examples: "Test cases with results, expected-vs-actual validation, edge/error-case checks, or demo evidence showing a critical requirement behaves correctly.",
+  },
+};
+function buildRequirementBaseline(source:unknown):ProjectRequirement[]{
+  const items=(Array.isArray(source)?source:[]).filter((item:any)=>item&&typeof item==="object").map((item:any)=>({label:String(item.label||"").trim(),score:item.score??""}));
+  const used=new Set<number>();
+  const core=coreITRequirements.map(label=>{const index=items.findIndex((item,index)=>!used.has(index)&&item.label===label);if(index<0)return{label,score:""};used.add(index);return{label,score:items[index].score};});
+  const optional=items.filter((item,index)=>!used.has(index)&&item.label&&!coreITRequirements.includes(item.label as typeof coreITRequirements[number])).slice(0,5);
+  return [...core,...optional];
+}
 function completionStage(percent:number){if(percent<=40)return"Building";if(percent<=70)return"Developing";if(percent<=90)return"Completing";if(percent<100)return"Finalising / Verifying";return"Completed & Verified";}
 function completionPath(percent:number){return percent<=70?"building":percent<=90?"completing":"verifying";}
 
@@ -160,7 +186,8 @@ function SessionWorkTrackModal({session,onClose,onSaved}:{session:StudentSession
       const next=data as SessionTrackPayload & {previousResponse?:Record<string,any>|null;previousCompletion?:number|null};
       const saved=next.response||{};
       const previous=next.previousResponse||{};
-      const initial=Object.keys(saved).length?saved:(Array.isArray(previous.requirements)&&previous.requirements.length?{requirements:previous.requirements}:{requirements:[{label:"",score:""},{label:"",score:""},{label:"",score:""}]});
+      const source=Object.keys(saved).length?saved:(Array.isArray(previous.requirements)&&previous.requirements.length?{requirements:previous.requirements}:{});
+      const initial={...source,requirements:buildRequirementBaseline(source.requirements)};
       setTrack(next);setResponse(initial);
     }
     setLoading(false);
@@ -172,7 +199,8 @@ function SessionWorkTrackModal({session,onClose,onSaved}:{session:StudentSession
   const setSection=(key:string,section:string,next:string)=>setResponse(current=>({...current,[key]:{...((current[key] as Record<string,string>|undefined)||{}),[section]:next}}));
   const requirements:ProjectRequirement[]=Array.isArray(response.requirements)?response.requirements:[];
   const normalizedRequirements=requirements.filter(item=>item&&String(item.label||"").trim()).map(item=>({label:String(item.label).trim(),score:Number(item.score)}));
-  const requirementsComplete=normalizedRequirements.length>=3&&normalizedRequirements.length<=8&&normalizedRequirements.every(item=>[0,25,50,75,100].includes(item.score));
+  const coreBaselineValid=coreITRequirements.every((label,index)=>String(requirements[index]?.label||"")===label);
+  const requirementsComplete=coreBaselineValid&&requirements.length>=3&&requirements.length<=8&&requirements.every(item=>String(item.label||"").trim()&&[0,25,50,75,100].includes(Number(item.score)));
   const completionPercent=requirementsComplete?Math.round(normalizedRequirements.reduce((sum,item)=>sum+item.score,0)/normalizedRequirements.length):null;
   const path=completionPercent==null?null:completionPath(completionPercent);
   const previousCompletion=(track as (SessionTrackPayload&{previousCompletion?:number|null})|null)?.previousCompletion??null;
@@ -197,18 +225,18 @@ function SessionWorkTrackModal({session,onClose,onSaved}:{session:StudentSession
   const checked=(key:string,option:string)=>Array.isArray(response[key])&&response[key].includes(option);
   const select=(label:string,key:string,options:string[],placeholder="Select one")=><label className="track-field"><span>{label}</span><select value={value(key)} onChange={event=>set(key,event.target.value)} disabled={!track?.isOpen}><option value="">{placeholder}</option>{options.map(option=><option key={option}>{option}</option>)}</select></label>;
   const multi=(label:string,key:string,options:string[])=><fieldset className="track-field track-choice-grid" disabled={!track?.isOpen}><legend>{label}</legend>{options.map(option=><label key={option}><input type="checkbox" checked={checked(key,option)} onChange={()=>toggle(key,option)}/><span>{option}</span></label>)}</fieldset>;
-  const displayRequirements=requirements.length?requirements:[{label:"",score:"" as any},{label:"",score:"" as any},{label:"",score:"" as any}];
+  const displayRequirements=requirements.length?requirements:buildRequirementBaseline([]);
   const requirementAssessment=<div className="track-measurement">
-    <div className="track-subheading"><strong>Project Completion Standard</strong><span>Assess the requirements your team committed to deliver. Do not estimate an overall percentage — it is calculated from these requirement states.</span></div>
+    <div className="track-subheading"><strong>Project Completion Standard</strong><span>Assess the three common IT Milestone Project requirements below. Their names are fixed so every team uses the same baseline. Add project-specific requirements only when they improve accuracy.</span></div>
     <div className="completion-standard">{requirementScoreOptions.map(item=><div key={item.score}><b>{item.score}%</b><span>{item.label}</span><small>{item.help}</small></div>)}</div>
     {previousCompletion!=null&&<div className="track-carry-forward"><span>Previous Track</span><strong>{previousCompletion+"%"}</strong></div>}
     <div className="requirement-assessment-list">{displayRequirements.map((item:any,index:number)=><div className="requirement-assessment-row" key={index}>
-      <label><span>Requirement {index+1}</span><input maxLength={120} value={String(item.label||"")} onChange={event=>setRequirement(index,"label",event.target.value)} disabled={!track?.isOpen||(session.sessionNumber>6&&previousCompletion!=null)} placeholder="e.g. User can submit and retrieve a project record"/></label>
+      <div className="requirement-name-field"><div className="requirement-name-heading"><span>{index<3?`Core requirement ${index+1}`:`Optional requirement ${index-2}`}</span>{index<3&&<details className="requirement-help"><summary aria-label={`Explain ${String(item.label)}`} title="What does this requirement mean?"><CircleHelp size={16}/></summary><div className="requirement-help-card"><b>What this means</b><p>{coreITRequirementGuides[String(item.label)]?.meaning}</p><b>Examples</b><p>{coreITRequirementGuides[String(item.label)]?.examples}</p></div></details>}</div><input maxLength={120} value={String(item.label||"")} onChange={event=>setRequirement(index,"label",event.target.value)} disabled={!track?.isOpen||index<3||(session.sessionNumber>6&&previousCompletion!=null)} placeholder={index<3?"IT Milestone Project core standard":"Add a project-specific requirement"}/></div>
       <label><span>Current state</span><select value={item.score==null?"":String(item.score)} onChange={event=>setRequirement(index,"score",Number(event.target.value))} disabled={!track?.isOpen}><option value="">Select evidence state</option>{requirementScoreOptions.map(option=><option key={option.score} value={option.score}>{option.score}% · {option.label}</option>)}</select></label>
-      {track?.isOpen&&(session.sessionNumber===6||previousCompletion==null)&&displayRequirements.length>3&&<button type="button" className="secondary compact" onClick={()=>removeRequirement(index)}>Remove</button>}
+      {track?.isOpen&&(session.sessionNumber===6||previousCompletion==null)&&index>=3&&<button type="button" className="secondary compact" onClick={()=>removeRequirement(index)}>Remove</button>}
     </div>)}</div>
     {track?.isOpen&&(session.sessionNumber===6||previousCompletion==null)&&displayRequirements.length<8&&<button type="button" className="secondary compact requirement-add" onClick={addRequirement}>+ Add requirement</button>}
-    <div className={"calculated-completion "+(completionPercent==null?"incomplete":"")}><span>Calculated completion</span><strong>{completionPercent==null?"—":completionPercent+"%"}</strong><b>{completionPercent==null?"Complete at least 3 requirement rows":completionStage(completionPercent)}</b>{previousCompletion!=null&&completionPercent!=null&&<small>{(completionPercent-previousCompletion>=0?"+":"")+(completionPercent-previousCompletion)+"% since previous Track"}</small>}</div>
+    <div className={"calculated-completion "+(completionPercent==null?"incomplete":"")}><span>Calculated completion</span><strong>{completionPercent==null?"—":completionPercent+"%"}</strong><b>{completionPercent==null?"Assess all core requirements and any optional requirements you add":completionStage(completionPercent)}</b>{previousCompletion!=null&&completionPercent!=null&&<small>{(completionPercent-previousCompletion>=0?"+":"")+(completionPercent-previousCompletion)+"% since previous Track"}</small>}</div>
   </div>;
   let fields:ReactNode=null;
   if(track?.sessionNumber===6&&path==="building") fields=<>
