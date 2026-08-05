@@ -118,11 +118,11 @@ type StudentSessionRecord = {
   endsAt: string | null;
   checkedInAt: string | null;
   status: "scheduled" | "open" | "closed";
-  evidence: string[];
 };
 
 function StudentSessions() {
   const [sessions, setSessions] = useState<StudentSessionRecord[]>([]);
+  const [trackSession, setTrackSession] = useState<StudentSessionRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   useEffect(() => {
@@ -149,16 +149,21 @@ function StudentSessions() {
     };
   }, []);
   return <section id="sessions" className="portal-panel portal-section student-sessions project-journey">
-    <Head label="Your Project Journey" title="Ten sessions. One delivery story." text="Follow the complete path from reconnecting with your project to Final Presentation. Past evidence stays readable; upcoming sessions stay locked until their normal session and activity controls open."/>
+    <Head label="Session Check-in" title="Your session journey." text="Check-in records attendance for each studio session. Weekly Activities remain separate. Use Track to open the independent Session Task + Work Track for a live session."/>
     {loading ? <p className="empty-state">Loading your Project Journey…</p> : error ? <p className="empty-state error-state" role="alert">{error}</p> : sessions.length ? <div className="journey-session-list">
       {sessions.map(item => <article key={item.sessionId} className={`journey-session-card ${item.status}`}>
         <div className="journey-session-marker"><b>S{item.sessionNumber}</b><span>Week {item.weekNumber}</span></div>
         <div className="journey-session-content"><div className="journey-session-heading"><div><small>{new Date(`${item.sessionDate}T00:00:00`).toLocaleDateString()}</small><h3>{item.focus}</h3></div><span className={`activity-control-status ${item.status}`}>{item.status === "open" ? "Current" : item.status === "closed" ? "Closed" : "Upcoming"}</span></div>
-          {item.evidence.length > 0 ? <div className="journey-evidence"><span>Mapped evidence</span>{item.evidence.map(label => <strong key={label}><CheckCircle2 size={14}/>{label}</strong>)}</div> : item.status === "closed" ? <p className="journey-history-note">No mapped Session Task evidence is available from this historical session. Nothing needs to be backfilled.</p> : <p className="journey-history-note">Session evidence will appear here when this part of the journey is active.</p>}
           <div className="journey-attendance">{item.checkedInAt ? <strong><CheckCircle2 size={14}/>Checked in · {new Date(item.checkedInAt).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</strong> : <span>{item.status === "closed" ? "No recorded Session Check-in" : item.status === "open" ? "Session Check-in is available from the top of this page" : "Session Check-in not open yet"}</span>}</div>
+          <div className="journey-track-action">{item.status === "closed" ? <span>Track closed</span> : item.status === "open" ? <a className="secondary compact" href="#session-work-track" onClick={() => setTrackSession(item)}>Track →</a> : <span>Track upcoming</span>}</div>
         </div>
       </article>)}
     </div> : <p className="empty-state">No sessions have been prepared for this block yet.</p>}
+    <section id="session-work-track" className="session-work-track-shell">
+      <div className="eyebrow">Independent project progress</div>
+      <h3>Session Task + Work Track</h3>
+      {trackSession ? <><strong>S{trackSession.sessionNumber} · {trackSession.focus}</strong><p>This is the independent progress area for this session. Session Task and Work Track fields will be added in Phase 2B without changing Session Check-in or Weekly Activities.</p></> : <p>Select Track on the current session to open its independent progress area.</p>}
+    </section>
   </section>;
 }
 function StudentPortal({ student }: { student: AuthenticatedStudent }) {
