@@ -155,15 +155,19 @@ function StudentSessions() {
         <div className="journey-session-marker"><b>S{item.sessionNumber}</b><span>Week {item.weekNumber}</span></div>
         <div className="journey-session-content"><div className="journey-session-heading"><div><small>{new Date(`${item.sessionDate}T00:00:00`).toLocaleDateString()}</small><h3>{item.focus}</h3></div><span className={`activity-control-status ${item.status}`}>{item.status === "open" ? "Current" : item.status === "closed" ? "Closed" : "Upcoming"}</span></div>
           <div className="journey-attendance">{item.checkedInAt ? <strong><CheckCircle2 size={14}/>Checked in · {new Date(item.checkedInAt).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</strong> : <span>{item.status === "closed" ? "No recorded Session Check-in" : item.status === "open" ? "Session Check-in is available from the top of this page" : "Session Check-in not open yet"}</span>}</div>
-          <div className="journey-track-action">{item.status === "closed" ? <span>Track closed</span> : item.status === "open" ? <a className="secondary compact" href="#session-work-track" onClick={() => setTrackSession(item)}>Track →</a> : <span>Track upcoming</span>}</div>
+          <div className="journey-track-action">{item.status === "closed" ? <span>Track closed</span> : item.status === "open" ? <button type="button" className="secondary compact" onClick={() => setTrackSession(item)}>Track →</button> : <span>Track upcoming</span>}</div>
         </div>
       </article>)}
     </div> : <p className="empty-state">No sessions have been prepared for this block yet.</p>}
-    <section id="session-work-track" className="session-work-track-shell">
-      <div className="eyebrow">Independent project progress</div>
-      <h3>Session Task + Work Track</h3>
-      {trackSession ? <><strong>S{trackSession.sessionNumber} · {trackSession.focus}</strong><p>This is the independent progress area for this session. Session Task and Work Track fields will be added in Phase 2B without changing Session Check-in or Weekly Activities.</p></> : <p>Select Track on the current session to open its independent progress area.</p>}
-    </section>
+    {trackSession && <div className="session-work-track-modal" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setTrackSession(null)}>
+      <section className="session-work-track-dialog" role="dialog" aria-modal="true" aria-labelledby="session-work-track-title">
+        <button type="button" className="session-work-track-close" aria-label="Close Session Task and Work Track" onClick={() => setTrackSession(null)}>×</button>
+        <div className="eyebrow">Independent project progress</div>
+        <h3 id="session-work-track-title">Session Task + Work Track</h3>
+        <strong>S{trackSession.sessionNumber} · {trackSession.focus}</strong>
+        <p>This is the independent progress area for this session. Session Task and Work Track fields will be added in Phase 2B without changing Session Check-in or Weekly Activities.</p>
+      </section>
+    </div>}
   </section>;
 }
 function StudentPortal({ student }: { student: AuthenticatedStudent }) {
