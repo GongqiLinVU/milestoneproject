@@ -253,8 +253,10 @@ begin
     'startsAt', session.starts_at,
     'endsAt', session.ends_at,
     'status', case
-      when session.status = 'closed' or (session.ends_at is not null and session.ends_at <= now()) then 'closed'
-      when session.status = 'open' or (session.starts_at is not null and session.starts_at <= now() and (session.ends_at is null or session.ends_at > now())) then 'open'
+      when session.status = 'open' then 'open'
+      when session.status = 'closed' then 'closed'
+      when session.starts_at is not null and session.starts_at <= now() and (session.ends_at is null or session.ends_at > now()) then 'open'
+      when session.ends_at is not null and session.ends_at <= now() then 'closed'
       else 'scheduled' end,
     'checkedInAt', checkin.checked_in_at,
     'workTrackUpdatedAt', track.updated_at,
@@ -282,3 +284,4 @@ grant execute on function public.get_my_session_journey() to authenticated;
 -- 2. The five structured questions are required; the final change note is optional and capped at 300 characters.
 -- 3. Teacher status exposes completion only; it does not convert feedback into a grade.
 -- 4. Session Check-in, Weekly Activities and S6-S9 Work Track remain independent.
+-- 5. An explicit Teacher reopen remains open even when an older automatic end time has passed.
