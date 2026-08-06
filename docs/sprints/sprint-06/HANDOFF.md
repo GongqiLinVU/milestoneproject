@@ -7,9 +7,30 @@ squash-merged to `main` in PR #50 on 5 August 2026.
 
 **Phase 2A — Session Journey Foundation** passed Preview testing and was squash-merged to `main` in PR #52 on 5 August 2026.
 
-**Phase 2B — Live Work Track S6–S9** is the current implementation / Preview gate.
+**Phase 2B — Live Work Track S6–S9** passed Preview testing and was squash-merged to `main` in PR #53 on 6 August 2026.
 
-Phase 2B fills the existing `Track →` modal with Session-specific structured evidence while keeping Session Check-in attendance-only and Weekly Activities independent. Completion is requirement-based and server-calculated, with limited branching by progress stage and Teacher confirm/adjust verification.
+**Phase 2C — S10 Platform Feedback** is the current implementation / Preview gate.
+
+Phase 2C adds the short individual feedback checkpoint before Final Presentation. It is separate from Work Track and non-graded; Teacher sees Completed / Pending immediately.
+
+### Phase 2C Preview setup
+
+Run in the Preview Supabase SQL Editor:
+
+`supabase/migrations/20260806_sprint6_phase2c_platform_feedback.sql`
+
+Then test:
+
+1. Open S10 as Teacher and confirm the student Journey shows `Feedback →` rather than Work Track.
+2. Submit the five required structured questions; confirm the optional change note may be blank.
+3. Confirm completion changes to `Feedback completed` and reopening S10 shows the saved response.
+4. Teacher S10 → Feedback status shows each roster student as Completed / Pending.
+5. Close S10 and confirm submitted feedback remains readable but cannot be edited.
+6. Confirm S6–S9 Work Track, Session Check-in and Weekly Activities are unchanged.
+
+### Phase 2B reference
+
+Phase 2B uses requirement-based, server-calculated completion with limited branching by progress stage and Teacher confirm/adjust verification.
 
 ### Phase 2B Preview setup
 
@@ -47,7 +68,7 @@ Then test 2026 · 2B1 as both teacher and student:
 5. Existing Check-in still opens/closes only through the original session controls.
 6. Existing Week activity activation still controls Weekly Activity submission independently.
 
-S10 Platform Feedback is not included; it remains Phase 2C.
+S10 Platform Feedback is implemented in Phase 2C above.
 
 ### Phase 2 agreed direction
 
@@ -158,8 +179,7 @@ No new Vercel secret is required. The Poster API reuses the existing
 - `api/poster.ts` bundles successfully for Node 20 via esbuild.
 - `git diff --check` passes.
 
-## Not included in Phase 2B
+## Not included in Sprint 6 Phase 2C
 
-- Sprint 6 Phase 2C S10 Platform Feedback.
 - Sprint 7 trajectory, analytics, enhanced export or AI insight.
 - Automatic Poster scoring or public Poster hosting.
