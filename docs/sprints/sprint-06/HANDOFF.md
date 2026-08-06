@@ -27,6 +27,7 @@ Then test:
 4. Teacher S10 → Feedback status shows each roster student as Completed / Pending.
 5. Close S10 and confirm submitted feedback remains readable but cannot be edited.
 6. Confirm S6–S9 Work Track, Session Check-in and Weekly Activities are unchanged.
+7. Close any Session, confirm Teacher can `Reopen` it with existing attendance/evidence preserved, then `Reset status` and confirm it returns to Not opened without deleting student records.
 
 Local verification: `npm run build` and `git diff --check` pass for the complete Phase 2C diff.
 
