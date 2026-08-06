@@ -408,6 +408,7 @@ Introduce a clear **Your Project Journey** view from S1 through S10.
 
 - Teacher manages the ten Session definitions within the selected Teaching Block.
 - Existing Session scheduling/open/close behaviour remains authoritative.
+- Teacher may reopen an explicitly closed Session, or reset its lifecycle to Not opened. Both actions preserve attendance, Work Track and feedback evidence; reset clears the old automatic window so it cannot immediately re-close.
 - Teacher can see attendance and relevant task/activity/Work Track evidence in
   one Session context without conflating the records.
 - For S6–S9, Blocked / Need teacher help / readiness states are easy to notice.
