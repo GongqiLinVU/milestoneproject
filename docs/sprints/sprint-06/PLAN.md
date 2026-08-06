@@ -1,6 +1,6 @@
 # Sprint 6 Plan — Poster Gallery & Session Work Evidence
 
-**Status:** In progress — Phase 2A merged; Phase 2B in implementation
+**Status:** In progress — Phase 2A/2B merged; Phase 2C in implementation
 **Source baseline:** Sprint 5 closed on 1 August 2026  
 **Product area:** NIT3004 Engineering Studio Platform
 
@@ -458,6 +458,12 @@ Implementation status: **implemented for Preview validation**.
 - Add the mandatory individual feedback checkpoint before Presentation.
 - Add teacher Completed / Pending visibility.
 - Keep feedback concise, non-graded and reusable for platform improvement.
+
+Implementation status: **implemented for Preview validation**. S10 uses its own
+feedback record rather than the S6–S9 Work Track. The five structured questions
+are required, the final change note is optional, and students may update their
+response only while S10 is open. Teacher visibility is deliberately completion-
+focused so the checkpoint does not become another grading surface.
 
 #### Phase 2 acceptance criteria
 
