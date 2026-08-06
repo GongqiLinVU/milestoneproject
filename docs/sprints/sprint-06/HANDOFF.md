@@ -28,6 +28,8 @@ Then test:
 5. Close S10 and confirm submitted feedback remains readable but cannot be edited.
 6. Confirm S6–S9 Work Track, Session Check-in and Weekly Activities are unchanged.
 
+Local verification: `npm run build` and `git diff --check` pass for the complete Phase 2C diff.
+
 ### Phase 2B reference
 
 Phase 2B uses requirement-based, server-calculated completion with limited branching by progress stage and Teacher confirm/adjust verification.
