@@ -797,6 +797,8 @@ function Activity({
   );
 }
 function friendlyError(code: string | undefined, kind: Kind) {
+  if (kind === "review" && code === "42501")
+    return "Poster feedback is unavailable for your current class or team. Refresh the Gallery and ask your teacher if it remains unavailable.";
   if (code === "42501")
     return "This week is currently closed. Your response was not submitted.";
   if (code === "23505") {
@@ -1207,6 +1209,7 @@ function Modal({
       payload = {
         reviewer_name: v.name,
         reviewer_student_id: v.sid,
+        reviewer_team: student.teamName,
         reviewed_team: v.reviewed_team,
         problem_clarity: +v.problem,
         working_product: +v.product,
