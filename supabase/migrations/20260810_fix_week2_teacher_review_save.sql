@@ -16,7 +16,7 @@ declare
   v_actions text[];
   v_recheck_week smallint;
 begin
-  if auth.uid() is null or not public.is_teacher() then
+  if auth.uid() is null or not coalesce(public.is_teacher(), false) then
     raise exception using
       errcode = '42501',
       message = 'Your teacher session is not authorised to save this review. Sign in again and retry.';
