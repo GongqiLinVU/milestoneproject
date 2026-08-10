@@ -797,6 +797,8 @@ function Activity({
   );
 }
 function friendlyError(code: string | undefined, kind: Kind) {
+  if (kind === "review" && code === "42501")
+    return "Poster feedback is unavailable for your current class or team. Refresh the Gallery and ask your teacher if it remains unavailable.";
   if (code === "42501")
     return "This week is currently closed. Your response was not submitted.";
   if (code === "23505") {
@@ -1207,6 +1209,7 @@ function Modal({
       payload = {
         reviewer_name: v.name,
         reviewer_student_id: v.sid,
+        reviewer_team: student.teamName,
         reviewed_team: v.reviewed_team,
         problem_clarity: +v.problem,
         working_product: +v.product,
@@ -1269,10 +1272,35 @@ function Modal({
         return;
       }
     }
-    payload.block_id = blockId;
-    const { error } = await supabase.from(table).insert(payload);
-    if (error) {
-      setMsg(friendlyError(error.code, activeKind));
+    let submissionError: { code?: string; message?: string } | null = null;
+    if (activeKind === "review") {
+      const { error } = await supabase.rpc("submit_poster_review", {
+        p_reviewed_team: String(payload.reviewed_team),
+        p_problem_clarity: Number(payload.problem_clarity),
+        p_working_product: Number(payload.working_product),
+        p_evidence_testing: Number(payload.evidence_testing),
+        p_document_readiness: Number(payload.document_readiness),
+        p_presentation_quality: Number(payload.presentation_quality),
+        p_strongest_part: String(payload.strongest_part),
+        p_highest_priority: String(payload.highest_priority),
+      });
+      submissionError = error;
+    } else {
+      payload.block_id = blockId;
+      const { error } = await supabase.from(table).insert(payload);
+      submissionError = error;
+    }
+    if (submissionError) {
+      const reviewMessage = activeKind === "review" && submissionError.message
+        ? submissionError.message
+        : "";
+      setMsg(reviewMessage.includes("Poster Gallery is not published")
+        ? "Poster feedback is closed because the Gallery is not currently published."
+        : reviewMessage.includes("Your Team cannot review its own Poster")
+          ? "Please choose another Team. Students cannot review their own Team Poster."
+          : reviewMessage.includes("published Poster is not available")
+            ? "That Team does not currently have a published Poster to review."
+            : friendlyError(submissionError.code, activeKind));
       return;
     }
     const receipt = submissionReceipt(activeKind, v);
