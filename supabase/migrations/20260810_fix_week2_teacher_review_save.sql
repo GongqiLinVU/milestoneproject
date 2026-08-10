@@ -1,6 +1,25 @@
 -- Hotfix: save Week 2 teacher reviews through an authoritative, teacher-only RPC.
 -- Student identity and block context are derived from the selected Pre-check submission.
 
+-- Repair databases where an earlier create-table migration was skipped or the table
+-- already existed with an older shape. ADD COLUMN IF NOT EXISTS is safe to rerun and
+-- preserves every existing review.
+alter table public.teacher_progress_reviews
+  add column if not exists block_id uuid references public.teaching_blocks(id),
+  add column if not exists review_outcome text check (review_outcome is null or review_outcome in ('Verified','Partially verified','Not verified','Unable to demonstrate','Further evidence required')),
+  add column if not exists demonstration_outcome text check (demonstration_outcome is null or demonstration_outcome in ('Worked on target system','Worked with limitations','Partial demonstration','Could not demonstrate','Not applicable')),
+  add column if not exists method_explanation text check (method_explanation is null or method_explanation in ('Clear and credible','Mostly clear','Limited explanation','Could not explain')),
+  add column if not exists evidence_quality text check (evidence_quality is null or evidence_quality in ('Strong and traceable','Adequate','Partial','No usable evidence')),
+  add column if not exists contribution_verification text check (contribution_verification is null or contribution_verification in ('Clearly verified','Partly verified','Needs further evidence','Not verified')),
+  add column if not exists report_alignment text check (report_alignment is null or report_alignment in ('Consistent','Minor update needed','Significant update needed','Not checked')),
+  add column if not exists teacher_feedback text check (teacher_feedback is null or char_length(teacher_feedback) between 1 and 800),
+  add column if not exists follow_up_status text check (follow_up_status is null or follow_up_status in ('Not reviewed','No follow-up needed','Action required','In progress','Recheck next session','Resolved')),
+  add column if not exists follow_up_actions text[] default array[]::text[],
+  add column if not exists follow_up_note text check (follow_up_note is null or char_length(follow_up_note) <= 400),
+  add column if not exists recheck_week smallint check (recheck_week is null or recheck_week between 2 and 4),
+  add column if not exists created_at timestamptz default now(),
+  add column if not exists updated_at timestamptz default now();
+
 create or replace function public.save_teacher_progress_review(
   p_submission_id uuid,
   p_review jsonb
