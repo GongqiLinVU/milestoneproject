@@ -121,11 +121,6 @@ begin
   returning * into v_saved;
 
   return to_jsonb(v_saved);
-exception
-  when check_violation then
-    raise exception using
-      errcode = '22023',
-      message = 'One or more review choices are not valid. Refresh the dashboard and select the fields again.';
 end;
 $$;
 
