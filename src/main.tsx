@@ -2468,10 +2468,6 @@ function Admin() {
       return;
     }
     const payload = {
-      block_id: selectedBlockId,
-      student_name: String(student.student_name),
-      student_id: String(student.student_id),
-      team_name: String(student.team_name),
       review_outcome: values.review_outcome,
       demonstration_outcome: values.demonstration_outcome,
       method_explanation: values.method_explanation,
@@ -2484,13 +2480,14 @@ function Admin() {
       follow_up_note: String(values.follow_up_note ?? "").trim() || null,
       recheck_week: values.recheck_week ? Number(values.recheck_week) : null,
     };
-    const { error } = await supabase
-      .from("teacher_progress_reviews")
-      .upsert(payload, { onConflict: "block_id,student_id" });
+    const { error } = await supabase.rpc("save_teacher_progress_review", {
+      p_submission_id: String(student.id),
+      p_review: payload,
+    });
     setTeacherReviewBusy(false);
     if (error) {
       setTeacherReviewMessage(
-        "The review could not be saved. Check the fields and teacher permissions.",
+        error.message || "The review could not be saved. Refresh the dashboard and try again.",
       );
       return;
     }
