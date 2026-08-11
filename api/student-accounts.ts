@@ -81,7 +81,7 @@ export default async function handler(req: any, res: any) {
     }
     const { error: statusError } = await admin
       .from("student_accounts")
-      .update({ status: "ready", activated_at: null })
+      .update({ status: "ready", activated_at: null, password_reset_at: new Date().toISOString() })
       .eq("student_id", row.student_id);
     if (statusError) {
       return res.status(500).json({ error: "Password changed, but activation status could not be reset. Contact support before sharing it." });
