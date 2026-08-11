@@ -488,6 +488,34 @@ focused so the checkpoint does not become another grading surface.
 - No Sprint 7 trajectory analytics, automatic marking or AI interpretation is
   introduced in Phase 2.
 
+### Phase 2D — Teacher Password Reset Feedback
+
+Improve the existing student-account recovery workflow so a successful teacher
+password reset is visible and unambiguous after the action completes.
+
+- Keep the existing confirmation that the previous password will stop working.
+- Continue generating a new one-time temporary password and expose the
+  **Download temporary credentials** action immediately after reset.
+- Persist the reset event on the student account rather than relying on temporary
+  browser state.
+- In the Account column, distinguish **Ready to activate** (first preparation)
+  from **Password reset** (teacher recovery action).
+- Show the reset date and time so the teacher can confirm which account changed
+  and when.
+- After the student activates again, the primary account status returns to
+  **Activated**; attendance, activities, Poster feedback and other evidence remain
+  unchanged.
+
+Acceptance criteria:
+
+- Reset success produces both an explicit success message and downloadable new
+  temporary credentials.
+- The affected roster row immediately shows **Password reset** with its timestamp.
+- Refreshing or reopening the Teacher Dashboard preserves that feedback.
+- A newly prepared account that has never been reset still shows
+  **Ready to activate**.
+- Resetting does not delete or alter student learning evidence.
+
 ### Phase 3 — Production Hardening & Sprint Close
 
 - Validate Student, Teacher and unauthorised role boundaries.
