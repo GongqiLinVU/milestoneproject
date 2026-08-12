@@ -120,7 +120,7 @@ Every push to `main` triggers a production deployment.
 - [Contributing guide](CONTRIBUTING.md)
 - [Changelog](CHANGELOG.md)
 
-## Current priority
+## Current status
 
 Sprint 6 is closed after Production build, database security audit and role-based
 workflow regression all passed on 12 August 2026. Poster storage is private and
