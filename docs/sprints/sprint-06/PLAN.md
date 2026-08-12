@@ -1,6 +1,6 @@
 # Sprint 6 Plan — Poster Gallery & Session Work Evidence
 
-**Status:** In progress — Phase 1–2D merged; Phase 3 validation in progress
+**Status:** Closed — all phases merged and Production-validated on 12 August 2026
 **Source baseline:** Sprint 5 closed on 1 August 2026  
 **Product area:** NIT3004 Engineering Studio Platform
 
@@ -527,11 +527,12 @@ Acceptance criteria:
 - Update README, AI Context, Architecture, Roadmap, Changelog and Sprint Handoff.
 - Record verified Production evidence before closing Sprint 6.
 
-Phase 3 uses the role-based checklist in `FINAL_VALIDATION.md` and the read-only
-database audit in `supabase/scripts/sprint6_phase3_security_audit.sql`. A check is
-recorded as passed only after it has been exercised against the deployed
-Production environment; local build or static review alone is not Production
-evidence.
+Phase 3 completed on 12 August 2026 using the role-based checklist in
+`FINAL_VALIDATION.md` and the read-only database audit in
+`supabase/scripts/sprint6_phase3_security_audit.sql`. The final Production audit
+returned 24/24 PASS, including private 1 MB Poster storage, RLS, Block/Team
+consistency and removal of anonymous Sprint 6 RPC execution. Manual Student,
+Teacher, signed-out and legacy workflow regression testing also passed.
 
 ## Deferred explicitly to Sprint 7
 
