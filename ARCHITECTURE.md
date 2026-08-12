@@ -13,6 +13,26 @@
 session with one immutable first check-in timestamp. RLS and security-definer
 RPC validation prevent cross-student and cross-block attendance.
 
+## Sprint 6 evidence architecture
+
+The authenticated Project Journey keeps evidence domains separate:
+
+- `studio_sessions` controls session lifecycle and attendance windows.
+- `student_session_checkins` stores attendance independently.
+- `student_session_work_tracks` stores structured S6–S9 progress evidence.
+- `student_platform_feedback` stores the S10 individual checkpoint.
+- `team_posters`, `poster_versions` and `poster_gallery_settings` maintain
+  private Team drafts, immutable versions and Block publication state.
+
+Poster bytes live in the private `poster-gallery` bucket. Upload and preview use
+short-lived signed URLs; finalisation verifies type, signature, one-page PDF
+shape and the 1 MB limit. No browser SELECT policy exposes the bucket.
+
+Sprint 6 RPCs use `SECURITY DEFINER` with an empty `search_path`, validate the
+authenticated Student or Teacher inside the function, and deny anonymous
+execution at the privilege boundary. All Sprint 6 evidence tables have RLS and
+the Production consistency audit found no cross-Block or cross-Team mismatch.
+
 ## Overview
 
 Engineering Studio Platform is a browser-based teaching application with a React frontend, Supabase backend services and Vercel hosting.
