@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-08-12 — Sprint 6 closed
+
+- Completed Production validation for Poster Gallery, S1–S10 Journey, S6–S9
+  Work Track, S10 Platform Feedback and legacy workflow regression.
+- Enforced the private Poster bucket at 1 MB for PDF/PNG/JPEG while preserving
+  existing Poster objects and classroom evidence.
+- Removed anonymous execution from all 13 Sprint 6 RPCs while retaining
+  authenticated/service-role access and in-function identity checks.
+- Re-ran the Production security audit with 24/24 PASS: RLS enabled, no public
+  Poster read policy and zero Block/Team consistency mismatches.
+- Recorded Student, Teacher and signed-out workflow verification and closed
+  Sprint 6; deferred trajectory, analytics, enhanced exports and AI
+  interpretation to Sprint 7.
+
 ## 2026-08-05 — Sprint 6 Phase 2A (Draft)
 
 - Added stable S1–S10 curriculum identity to existing Studio Sessions without changing attendance records or teacher-authored dates/windows.
