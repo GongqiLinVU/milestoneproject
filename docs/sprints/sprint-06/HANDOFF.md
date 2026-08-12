@@ -9,7 +9,20 @@ squash-merged to `main` in PR #50 on 5 August 2026.
 
 **Phase 2B — Live Work Track S6–S9** passed Preview testing and was squash-merged to `main` in PR #53 on 6 August 2026.
 
-**Phase 2C — S10 Platform Feedback** is the current implementation / Preview gate.
+**Phase 2C — S10 Platform Feedback** passed Preview testing and was squash-merged
+to `main` in PR #54 on 10 August 2026.
+
+**Phase 2D — Teacher Password Reset Feedback** passed Preview testing and was
+squash-merged to `main` in PR #57 on 12 August 2026.
+
+The Week 2 Teacher Review save/schema compatibility hotfix passed Preview testing
+and was squash-merged to `main` in PR #56 on 12 August 2026.
+
+**Phase 3 — Production Hardening & Sprint Close** is the current gate. Use
+`FINAL_VALIDATION.md` as the authoritative role-based checklist. Run the
+read-only `supabase/scripts/sprint6_phase3_security_audit.sql` in Production
+before the manual workflow checks. Do not mark Sprint 6 closed until every
+required result is recorded and any failure has been fixed and retested.
 
 Phase 2C adds the short individual feedback checkpoint before Final Presentation. It is separate from Work Track and non-graded; Teacher sees Completed / Pending immediately.
 
