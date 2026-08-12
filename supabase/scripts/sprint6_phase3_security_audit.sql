@@ -26,7 +26,7 @@ bucket_check as (
     'Poster bucket private and constrained' as check_name,
     case when bucket.id = 'poster-gallery'
       and bucket.public = false
-      and bucket.file_size_limit = 5242880
+      and bucket.file_size_limit = 1048576
       and bucket.allowed_mime_types @> array['application/pdf','image/png','image/jpeg']::text[]
       then 'PASS' else 'FAIL' end as result,
     case when bucket.id is null then 'bucket missing'
