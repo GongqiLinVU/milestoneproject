@@ -122,10 +122,12 @@ Every push to `main` triggers a production deployment.
 
 ## Current priority
 
-Sprint 6 Phase 1–2D are merged and classroom-path tested. The current gate is
-the role-based [Sprint 6 Production validation checklist](docs/sprints/sprint-06/FINAL_VALIDATION.md)
-and close-out documentation. Trajectory, Block Teaching Analytics, enhanced
-exports and further AI-assisted teaching work remain deferred to Sprint 7.
+Sprint 6 is closed after Production build, database security audit and role-based
+workflow regression all passed on 12 August 2026. Poster storage is private and
+limited to one-page PDF/PNG/JPEG files at or below 1 MB; Sprint 6 RPCs reject
+anonymous execution at the privilege boundary. Trajectory, Block Teaching
+Analytics, enhanced exports and further AI-assisted teaching work are deferred
+to Sprint 7.
 
 See the [Sprint 6 plan](docs/sprints/sprint-06/PLAN.md), current
 [handoff](docs/sprints/sprint-06/HANDOFF.md), and reusable
