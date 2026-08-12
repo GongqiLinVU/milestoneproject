@@ -122,13 +122,13 @@ Every push to `main` triggers a production deployment.
 
 ## Current priority
 
-Sprint 5 Phase 1–4A are merged and tested. The current gate is the focused
-[Production validation checklist](docs/sprints/sprint-05/FINAL_VALIDATION.md)
+Sprint 6 Phase 1–2D are merged and classroom-path tested. The current gate is
+the role-based [Sprint 6 Production validation checklist](docs/sprints/sprint-06/FINAL_VALIDATION.md)
 and close-out documentation. Trajectory, Block Teaching Analytics, enhanced
-exports and further AI-assisted teaching work begin in Sprint 6.
+exports and further AI-assisted teaching work remain deferred to Sprint 7.
 
-See the [Sprint 5 plan](docs/sprints/sprint-05/PLAN.md), current
-[handoff](docs/sprints/sprint-05/HANDOFF.md), and reusable
+See the [Sprint 6 plan](docs/sprints/sprint-06/PLAN.md), current
+[handoff](docs/sprints/sprint-06/HANDOFF.md), and reusable
 [session start protocol](prompts/START_SESSION.md).
 
 
