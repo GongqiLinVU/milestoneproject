@@ -40,8 +40,8 @@ student account from a different Block.
 
 ## Gate 4 — Poster lifecycle
 
-- [ ] Valid one-page PDF at or below 5 MB uploads and previews.
-- [ ] Valid PNG/JPEG at or below 5 MB uploads and previews.
+- [ ] Valid one-page PDF at or below 1 MB uploads and previews.
+- [ ] Valid PNG/JPEG at or below 1 MB uploads and previews.
 - [ ] Oversize, unsupported, signature-mismatched and multi-page PDF files are rejected clearly.
 - [ ] Replace changes the draft without changing the published snapshot.
 - [ ] Publish updates the Block snapshot; missing Teams remain clearly unavailable.
