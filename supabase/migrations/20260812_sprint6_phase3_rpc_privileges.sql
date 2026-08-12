@@ -1,5 +1,5 @@
 -- Sprint 6 Phase 3 storage and RPC privilege hardening.
--- Keep Poster objects private and constrain new uploads/replacements to one-page
+-- Keep Poster objects private and constrain new uploads/replacements to
 -- PDF/JPEG/PNG files at or below 1 MB. Existing objects are not deleted.
 
 update storage.buckets
