@@ -1,6 +1,13 @@
--- Sprint 6 Phase 3 RPC privilege hardening.
--- Browser users must authenticate before PostgREST can execute these functions.
--- The functions retain their existing in-body Student/Teacher authorisation checks.
+-- Sprint 6 Phase 3 storage and RPC privilege hardening.
+-- Keep Poster objects private and constrain new uploads/replacements to one-page
+-- PDF/JPEG/PNG files at or below 1 MB. Existing objects are not deleted.
+
+update storage.buckets
+set
+  public = false,
+  file_size_limit = 1048576,
+  allowed_mime_types = array['application/pdf', 'image/png', 'image/jpeg']::text[]
+where id = 'poster-gallery';
 
 revoke execute on function public.get_my_poster_upload_status() from public, anon;
 revoke execute on function public.get_my_poster_gallery() from public, anon;
