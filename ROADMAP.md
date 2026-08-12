@@ -169,6 +169,29 @@ The former Phase 4 trajectory/analytics work and Phase 5 export/privacy validati
 were intentionally moved to Sprint 5. Detailed historical scope and evidence
 remain in `docs/sprints/sprint-04/`.
 
+## Sprint 6 — Poster Gallery and Session Work Evidence
+
+**Status: Completed and production validated on 12 August 2026**
+
+Delivered:
+
+- private, Block-scoped Week 3 Poster Gallery with one-page PDF/PNG/JPEG uploads
+  limited to 1 MB
+- separate Team draft and published snapshots, Teacher Publish/Hide controls and
+  direct Poster Peer Feedback entry
+- complete S1–S10 Project Journey with attendance kept separate from evidence
+- structured S6–S9 Work Track with server-calculated requirement completion and
+  Teacher Confirm/Adjust
+- S10 individual Platform Feedback with Teacher Completed/Pending visibility
+- persistent Teacher password-reset feedback and Week 2 Teacher Review schema
+  compatibility fixes
+- Production hardening that removed anonymous Sprint 6 RPC execution and
+  verified RLS, private storage and Block/Team consistency
+
+Production close evidence is recorded in
+`docs/sprints/sprint-06/FINAL_VALIDATION.md`. Trajectory, Block Teaching
+Analytics, enhanced exports and AI-assisted interpretation remain Sprint 7.
+
 ## Sprint 5 — Student Identity and Experience Simplification
 
 **Status: Finalisation — Phase 1–4A merged and tested; close-out review pending**

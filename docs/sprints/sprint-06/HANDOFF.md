@@ -1,6 +1,6 @@
 # Sprint 6 Handoff
 
-## Current gate
+## Closed state
 
 **Phase 1 — Week 3 Poster Gallery** has passed classroom-path testing and was
 squash-merged to `main` in PR #50 on 5 August 2026.
@@ -9,7 +9,21 @@ squash-merged to `main` in PR #50 on 5 August 2026.
 
 **Phase 2B — Live Work Track S6–S9** passed Preview testing and was squash-merged to `main` in PR #53 on 6 August 2026.
 
-**Phase 2C — S10 Platform Feedback** is the current implementation / Preview gate.
+**Phase 2C — S10 Platform Feedback** passed Preview testing and was squash-merged
+to `main` in PR #54 on 10 August 2026.
+
+**Phase 2D — Teacher Password Reset Feedback** passed Preview testing and was
+squash-merged to `main` in PR #57 on 12 August 2026.
+
+The Week 2 Teacher Review save/schema compatibility hotfix passed Preview testing
+and was squash-merged to `main` in PR #56 on 12 August 2026.
+
+**Phase 3 — Production Hardening & Sprint Close** passed Production validation
+on 12 August 2026. The repeat security audit returned 24/24 PASS after anonymous
+execution was revoked from Sprint 6 RPCs and the private Poster bucket was
+enforced at 1 MB. Student, Teacher, signed-out and legacy workflow regression
+testing also passed. Sprint 6 is closed; use `FINAL_VALIDATION.md` as the
+authoritative evidence record.
 
 Phase 2C adds the short individual feedback checkpoint before Final Presentation. It is separate from Work Track and non-graded; Teacher sees Completed / Pending immediately.
 

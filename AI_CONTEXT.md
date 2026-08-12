@@ -1,5 +1,23 @@
 # AI Context — Engineering Studio Platform
 
+## Sprint 6 verified Production state
+
+Sprint 6 closed on 12 August 2026 after Production build, a 24/24 database
+security audit and manual Student, Teacher, signed-out and legacy workflow
+regression testing passed.
+
+- Week 3 Poster Gallery uses a private Block-scoped bucket, short-lived signed
+  URLs, one-page PDF/PNG/JPEG validation and a 1 MB limit.
+- S1–S10 form one Project Journey; S6–S9 use structured Work Track evidence and
+  S10 uses individual Platform Feedback.
+- Sprint 6 RPCs are `SECURITY DEFINER` with an empty `search_path`, explicit
+  identity checks and no anonymous execution grant.
+- Student identity, Block, Team and Project remain roster-authoritative.
+- Session Check-in, Weekly Activities, Poster evidence and Work Track remain
+  separate records.
+- Trajectory, Block analytics, enhanced exports and AI interpretation are Sprint
+  7 scope.
+
 ## Sprint 5 Phase 3 student surfaces
 
 - `/` is public course information and never exposes weekly activities or
@@ -190,7 +208,7 @@ Important current rules:
 
 ## Active sprint
 
-**Sprint 5 — Student Identity and Experience Simplification (Finalisation)**
+**Sprint 6 — Closed; Sprint 7 planning is next**
 
 Phase 1 retires Class Pulse, Team Conversation and the standalone Find My Team
 page from the active experience without deleting historical rows. Week 1
