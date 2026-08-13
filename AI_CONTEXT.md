@@ -95,6 +95,13 @@ These rules are durable project policy for every new session:
 - Authentication: Supabase Auth
 - Authorisation: PostgreSQL Row Level Security
 
+### Environment baseline
+
+- Vercel Preview and Production currently connect to the same Supabase project and therefore share the same database, Auth, Storage and RPC state.
+- A database migration applied through either deployment context changes that one shared Supabase backend; do not run the same migration again merely because the frontend is being promoted from Preview to Production.
+- Before giving migration instructions, confirm the target Supabase project rather than inferring separate databases from the Vercel environment names.
+- Keep migrations idempotent and committed under `supabase/migrations`, but treat one successful execution against the shared project as applied for both Preview and Production.
+
 Do not place service-role keys, database passwords or third-party secrets in client code, documentation or Git history.
 
 ## Technology stack
