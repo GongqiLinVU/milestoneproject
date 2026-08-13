@@ -257,8 +257,10 @@ begin
     'startsAt', session.starts_at,
     'endsAt', session.ends_at,
     'status', case
-      when session.status = 'closed' or (session.ends_at is not null and session.ends_at <= now()) then 'closed'
-      when session.status = 'open' or (session.starts_at is not null and session.starts_at <= now() and (session.ends_at is null or session.ends_at > now())) then 'open'
+      when session.status = 'open' then 'open'
+      when session.status = 'closed' then 'closed'
+      when session.starts_at is not null and session.starts_at <= now() and (session.ends_at is null or session.ends_at > now()) then 'open'
+      when session.ends_at is not null and session.ends_at <= now() then 'closed'
       else 'scheduled' end,
     'checkedInAt', checkin.checked_in_at,
     'workTrackUpdatedAt', track.updated_at,
@@ -274,7 +276,8 @@ begin
           and (session.ends_at is null or session.ends_at > now())
         ) then 'open'
       else 'scheduled'
-    end
+    end,
+    'platformFeedbackCompletedAt', feedback.submitted_at
   ) order by session.session_number nulls last, session.session_date, session.created_at), '[]'::jsonb)
   into v_result
   from public.studio_sessions session
@@ -282,6 +285,8 @@ begin
     on checkin.session_id = session.id and checkin.auth_user_id = auth.uid()
   left join public.student_session_work_tracks track
     on track.session_id = session.id and track.auth_user_id = auth.uid()
+  left join public.student_platform_feedback feedback
+    on feedback.session_id = session.id and feedback.auth_user_id = auth.uid()
   where session.block_id = v_block_id;
 
   return v_result;
