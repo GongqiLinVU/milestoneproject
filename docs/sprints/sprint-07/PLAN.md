@@ -168,3 +168,23 @@ Requirements:
 - replacing source evidence with generated summaries
 - a general business-intelligence dashboard
 - adding student data-entry solely to make analytics look richer
+
+
+## Phase 1A — Independent Work Track Access
+
+**Priority:** immediate current-block support before the broader Sprint 7 dashboard work.
+
+The Session Check-in lifecycle and S6–S9 Work Track access must be independently
+teacher-controlled. Work Track follows its Session schedule by default, while a
+teacher may explicitly open or close one Track without changing attendance. This
+allows, for example, S8 Work Track to remain available during S9.
+
+Acceptance criteria:
+
+1. S8 Check-in can remain closed while S8 Work Track is open.
+2. S8 and S9 Work Tracks can be open simultaneously.
+3. Teacher controls expose Open Track, Close Track and Follow session.
+4. Students can edit an independently open Track and only view saved evidence
+   after it closes.
+5. Existing attendance, schedule and Work Track evidence are preserved.
+6. The migration is idempotent and the replaced RPCs remain authenticated-only.
