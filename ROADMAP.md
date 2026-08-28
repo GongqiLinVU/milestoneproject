@@ -239,28 +239,52 @@ Phase 1–4A are merged. The remaining gate is the focused production checklist
 and close-out documentation in `docs/sprints/sprint-05/`; new analytics or
 reporting work starts only in Sprint 6.
 
-## Sprint 6 — Trajectory, Analytics and AI-assisted Teaching
+## Sprint 7 — Observation, Feedback & Evidence Review
 
-**Status: Future — renumbered from the former Sprint 5**
+**Status: Observation completed; documentation close-out pending**
 
-Potential scope:
+Sprint 7 preserved the final Sessions as an observation window and analysed the
+complete 2026 2B1 journey rather than implementing the earlier dashboard-first
+plan.
 
-- Student and Team trajectory across Week 1–4 evidence
-- Block teaching analytics with evidence drill-down
-- Block/team/project/student-aware enhanced exports
-- Weekly evidence summary
-- Common concern clustering
-- Suggested teacher interventions
-- Team health signals
-- Reflection support
-- Teacher copilot
+Delivered:
 
-Guardrails:
+- independent Work Track access required for the live block
+- reusable anonymised analysis framework and read-only exports
+- final analysis across 17 starting, 3 withdrawn and 14 active students
+- longitudinal comparison of Intake, participation, Work Track, Teacher Review,
+  Poster/Peer Feedback, S10 feedback and final evaluation
+- evidence-based Sprint 8 decisions
 
-- AI must cite the underlying student evidence.
-- AI output is advisory, not an automatic mark or disciplinary decision.
-- Sensitive student information must be minimised.
-- Teachers retain final judgement.
+The observation established that report text and self-reported completion cannot
+be treated as verified participation or understanding. Teacher Review and
+specific work evidence were decisive.
+
+## Sprint 8 — AI Session Intake & Evidence Verification
+
+**Status: Planned**
+
+Sprint 8 pilots a bounded AI Session Intake that produces a structured Progress
+Report from a short adaptive evidence interview.
+
+Delivery direction:
+
+- versioned Claim / Evidence / Owner / Verification / Action model
+- three core questions plus at most three adaptive follow-ups
+- student-confirmed structured Session summary
+- deterministic fallback when AI is unavailable
+- Teacher Verification Queue with targeted questions
+- next-Session continuity for unresolved Teacher actions
+- longitudinal comparison of responsibility, evidence and verification
+- advisory Final Report Evaluation prototype using five labelled project cases
+
+The accepted boundary is:
+
+> Report is a claim; Activity is a process record; Artifact is work evidence;
+> Teacher Review is verification; AI connects them.
+
+AI does not publish marks, determine authorship, accuse copying or replace live
+demonstration and Teacher academic judgement.
 
 ## Longer-term platform direction
 
