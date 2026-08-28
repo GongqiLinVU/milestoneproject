@@ -58,6 +58,28 @@ The flexible conversation must never replace this stable output contract.
 - every AI inference shown to a teacher links to the supporting source record
 - use “insufficient evidence to verify,” not stronger unsupported conclusions
 
+## Evaluation-first development gate
+
+AI implementation must not begin from subjective impressions that a response
+“looks good.” Sprint 8 uses the independent, versioned evaluation workspace at
+`tests/ai-session-intake/`.
+
+Before UI, provider or database implementation:
+
+- approve `ai-intake-eval.v1.0.0`;
+- approve the mandatory labelled case catalogue;
+- create isolated test Block `NIT3004-2B2` without modifying existing Blocks;
+- prepare three mock students in one mock Team;
+- evaluate deterministic contract/safety, AI response quality and teaching
+  utility as separate gates;
+- record schema, prompt, model and test-suite versions for every candidate run.
+
+A high AI-quality score cannot compensate for an authority, privacy, schema,
+fallback or cross-Block isolation failure. Every material prompt, model,
+conversation-policy or schema change must rerun the mandatory regression suite.
+The test standard and cases are durable assets intended for later prompt and
+scenario iteration.
+
 ## Phase 1 — Evidence Contract & Conversation Design
 
 Design before connecting a model.
@@ -73,6 +95,7 @@ Deliver:
 - student confirmation and correction flow
 - privacy, retention and prompt-input boundaries
 - deterministic fallback when the AI provider is unavailable
+- independent versioned AI evaluation standard and reusable test folder
 - labelled test cases from the five final projects and observed student journeys
 
 Acceptance:
@@ -82,6 +105,7 @@ Acceptance:
 - AI output cannot write Teacher status or marks
 - a student can complete a useful fallback Intake without AI
 - generated questions are bounded, relevant and non-accusatory
+- Gate A hard requirements and Gate B quality thresholds are approved before AI implementation
 
 ## Phase 2 — Student AI Session Intake Pilot
 
