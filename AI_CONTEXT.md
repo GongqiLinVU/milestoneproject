@@ -215,27 +215,32 @@ Important current rules:
 
 ## Active sprint
 
-**Sprint 6 — Closed; Sprint 7 planning is next**
+**Sprint 7 observation completed; Sprint 8 planning is active**
 
-Phase 1 retires Class Pulse, Team Conversation and the standalone Find My Team
-page from the active experience without deleting historical rows. Week 1
-Check-in remains operational until Phase 2 replaces it with Account Activation
-& Check-in. The target student information architecture is **This Week**, **My
-Project** and **Get Help**; authentication is not part of Phase 1.
+Sprint 7 analysed the completed 2026 2B1 journey before further feature work.
+The baseline is 17 starting students, 3 withdrawn and 14 active students across
+6 Teams. Final evidence connected Intake, Activities, attendance, Work Track,
+Teacher Review, Poster/Peer Feedback, S10 feedback and Final Report evaluation.
 
-Phase 2 introduces teacher-prepared Supabase Auth identities keyed by Student
-ID, unique one-time credentials, required personal-password setup and
-authenticated roster context. `SUPABASE_SERVICE_ROLE_KEY` is server-only.
-Students cannot register, enumerate the roster or choose their block/team.
+The durable product rule is:
 
-Detailed scope and acceptance criteria are in
-`docs/sprints/sprint-05/PLAN.md`. Actual progress and evidence belong in
-`docs/sprints/sprint-05/HANDOFF.md`. New sessions must use
-`prompts/START_SESSION.md`.
+> Report is a claim; Activity is a process record; Artifact is work evidence;
+> Teacher Review is verification; AI connects them.
 
-Phase 1–4A are merged and product-owner tested. Sprint 5 closes after the
-role-based Production checklist and documentation close-out PR. Student/Team Trajectory, Block Teaching Analytics, AI Analytics
-and enhanced exports are grouped into Sprint 6.
+Sprint 8 pilots a bounded AI Session Intake rather than a Report-per-Session
+essay workflow. A short adaptive interview generates a stable structured
+Progress Report and targeted Teacher verification questions. AI may extract,
+clarify, compare, summarise and suggest questions. It may not publish marks,
+verify contribution, determine authorship, accuse copying or replace live
+Teacher judgement.
+
+The first Sprint 8 implementation Phase is Evidence Contract & Conversation
+Design. Do not begin with an unrestricted chatbot, UI-first work or provider
+integration. Define the versioned schema, conversation state machine, maximum
+turns, deterministic fallback, privacy boundary and labelled test cases first.
+
+Detailed scope and next-session instructions are in
+`docs/sprints/sprint-08/PLAN.md` and `docs/sprints/sprint-08/HANDOFF.md`.
 
 ## Sprint continuity
 
