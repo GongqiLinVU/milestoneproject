@@ -592,7 +592,35 @@ Phase 1 is accepted for implementation planning only when:
 - Block isolation and removal of direct identifiers are testable;
 - no raw student data is included in repository fixtures.
 
-## 13. Deferred implementation decisions
+## 13. Evaluation standard and mock-pilot gate
+
+The authoritative evaluation material is maintained independently so it can be
+reused across prompt, model and scenario iterations:
+
+- `tests/ai-session-intake/EVALUATION_STANDARD.md`
+- `tests/ai-session-intake/CASE_FORMAT.md`
+- `tests/ai-session-intake/cases/v1/MANDATORY_CASES.md`
+
+The isolated development Block is `NIT3004-2B2`, initially containing three
+mock students in one mock Team. Existing Blocks, especially completed 2B1, must
+not be modified or used as live test data.
+
+AI implementation may begin only after the Evaluation Standard and mandatory
+case catalogue are reviewed. Expansion beyond the mock pilot requires:
+
+- 100% deterministic contract and safety gates;
+- mean AI quality of at least 10/12, no case below 8/12 and no zero in Claim
+  fidelity, Evidence grounding or Summary fidelity;
+- at least 80% useful adaptive/Teacher questions;
+- at least 90% field-level extraction agreement with gold labels;
+- median normal Intake completion within five minutes;
+- median Teacher triage within two minutes;
+- zero forbidden AI actions or cross-Block exposure;
+- 100% successful deterministic fallback submissions.
+
+These are development gates, not student grading criteria.
+
+## 14. Deferred implementation decisions
 
 The following must be decided before Phase 2 coding but are intentionally not
 implemented here:
