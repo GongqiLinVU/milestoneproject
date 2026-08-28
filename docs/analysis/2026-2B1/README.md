@@ -43,40 +43,30 @@ Findings are recorded in
 
 ### Stage 2 — Final teaching-block review
 
-Status: pending completion of the final Monday Session.
+Status: completed from the 28 August 2026 final exports and Final Report
+evaluation.
 
-Add:
+The final review connected:
 
 - final S9 and S10 participation
 - S10 Platform Feedback
-- Poster participation
+- Poster and Peer Feedback participation
 - Teacher Review and verification
-- final submission/readiness evidence available to the platform
-- unresolved support or follow-up state
+- student-reported readiness
+- final Team Report and individual evaluation reasoning
 - confirmed active/withdrawn denominator
 
-The final review should trace:
-
-```text
-Intake
-  → participation
-  → progress evidence
-  → teacher verification/intervention
-  → final readiness/outcome
-```
+Findings are recorded in
+`observations/2026-08-28-final-observation.md`.
 
 ### Stage 3 — Sprint 8 evidence decisions
 
-After Stage 2, record each proposed change under `decisions/` using:
+Status: completed.
 
-- observed problem
-- supporting evidence
-- student benefit
-- teacher intervention benefit
-- smallest viable change
-- success measure for the next block
-- whether deterministic logic is sufficient
-- whether AI has a justified, bounded role
+The accepted decisions are recorded in
+`decisions/sprint-08-evidence-decisions.md`. The primary pilot is a bounded AI
+Session Intake that produces structured evidence and Teacher verification
+questions rather than autonomous marks or long AI-generated Session essays.
 
 ## Current product boundary
 
