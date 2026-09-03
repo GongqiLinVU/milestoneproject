@@ -116,3 +116,18 @@ The first applied-migration audit returned 9 PASS and one FAIL:
 `PUBLIC`, the deployed role state retained anonymous execution. The migration
 now also revokes both RPC signatures explicitly from `anon`. Re-run the complete
 idempotent migration, then rerun the audit before merge.
+
+## Database verification result
+
+The corrected migration was reapplied on 3 September 2026 and the read-only
+security audit returned **10/10 PASS**:
+
+- 2B2 is permitted without automatic creation;
+- anonymous roles have no table or RPC access;
+- authenticated students cannot directly mutate Intake rows;
+- authenticated reads remain protected by own-row/Teacher RLS;
+- both RPCs are `SECURITY DEFINER` with an empty `search_path`;
+- all existing Sessions remain Intake-closed;
+- no 2B2 Block was auto-created.
+
+This closes the first audit finding. The uploaded raw CSV remains outside Git.
