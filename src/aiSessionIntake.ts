@@ -91,6 +91,129 @@ export type FallbackTurn = {
   text: string;
 };
 
+export type DeterministicIntakeAnswers = {
+  responsibility: string;
+  progress: string;
+  progressKind: ProgressKind;
+  scope: string;
+  completionPercent: number | null;
+  evidenceType: EvidenceType;
+  evidenceAvailability: EvidenceAvailability;
+  evidenceReference: string;
+  verificationMethod: string;
+  testingStatus: TestingStatus;
+  testingMethod: string;
+  testingResult: string;
+  testingBaseline: string;
+  blockerStatus: "none" | "active" | "resolved" | "unknown";
+  blockerDescription: string;
+  supportRequested: string;
+  nextAction: string;
+  dueSession: string;
+  expectedEvidence: string;
+};
+
+export type DeterministicFollowUp = {
+  id: "specific_scope" | "evidence_plan" | "testing_result" | "blocker_change";
+  purpose: string;
+  question: string;
+};
+
+const broadClaimPattern = /\b(backend|frontend|testing|documentation|integration|feature|system|project)\s+(is\s+)?(complete|completed|done|finished|ready)\b/i;
+
+export function selectDeterministicFollowUps(
+  answers: DeterministicIntakeAnswers,
+  previousRecord?: IntakeStudentRecord | null,
+): DeterministicFollowUp[] {
+  const followUps: DeterministicFollowUp[] = [];
+  if (broadClaimPattern.test(answers.progress) || answers.scope.trim().length < 12) {
+    followUps.push({
+      id: "specific_scope",
+      purpose: "clarify claim scope",
+      question: "Which specific component, behaviour or deliverable changed, and what part remains outside this claim?",
+    });
+  }
+  if (answers.evidenceAvailability !== "available_now" ||
+      (answers.completionPercent === 100 && !answers.evidenceReference.trim())) {
+    followUps.push({
+      id: "evidence_plan",
+      purpose: "clarify evidence plan",
+      question: "What concrete evidence will be available, and how should your teacher verify it?",
+    });
+  }
+  if (answers.testingStatus === "executed" &&
+      (!answers.testingResult.trim() || !answers.testingBaseline.trim())) {
+    followUps.push({
+      id: "testing_result",
+      purpose: "clarify testing result",
+      question: "What did you observe, and what expected result or baseline did you compare it with?",
+    });
+  }
+  if (previousRecord?.blocker.status === "active" && answers.blockerStatus !== "active") {
+    followUps.push({
+      id: "blocker_change",
+      purpose: "clarify blocker change",
+      question: "The previous blocker is no longer active. What changed, and what evidence shows it is resolved?",
+    });
+  }
+  return followUps.slice(0, 3);
+}
+
+export function buildFallbackStudentRecord(
+  answers: DeterministicIntakeAnswers,
+  followUpAnswers: Partial<Record<DeterministicFollowUp["id"], string>>,
+  hasPrevious: boolean,
+): IntakeStudentRecord {
+  const specificScope = followUpAnswers.specific_scope?.trim();
+  const evidencePlan = followUpAnswers.evidence_plan?.trim();
+  const testingResult = followUpAnswers.testing_result?.trim();
+  const blockerChange = followUpAnswers.blocker_change?.trim();
+  const availability = answers.evidenceAvailability;
+  const reference = availability === "available_now" ? answers.evidenceReference.trim() : null;
+  const verificationMethod = answers.verificationMethod.trim() || evidencePlan || null;
+  return {
+    responsibility: {
+      current: answers.responsibility.trim(),
+      change_from_previous: hasPrevious ? "unknown" : "initial",
+    },
+    claims: [{
+      claim_id: "C1",
+      statement: answers.progress.trim(),
+      progress_kind: answers.progressKind,
+      scope: specificScope || answers.scope.trim(),
+      completion_percent: answers.completionPercent,
+    }],
+    evidence: [{
+      evidence_id: "E1",
+      claim_ids: ["C1"],
+      type: answers.evidenceType,
+      availability,
+      reference,
+      verification_method: verificationMethod,
+      not_required_reason: availability === "not_required" ? (evidencePlan || "No separate evidence is required for this claim") : null,
+    }],
+    testing: answers.testingStatus === "not_applicable" ? [{ execution_status: "not_applicable" }] : [{
+      test_id: "T1",
+      claim_ids: ["C1"],
+      execution_status: answers.testingStatus,
+      method: answers.testingMethod.trim() || null,
+      observed_result: answers.testingStatus === "executed" ? (testingResult || answers.testingResult.trim()) : null,
+      baseline_or_expected: answers.testingBaseline.trim() || null,
+    }],
+    dependencies: [],
+    blocker: {
+      status: answers.blockerStatus,
+      description: answers.blockerStatus === "none" ? null : (blockerChange || answers.blockerDescription.trim()),
+      support_requested: answers.supportRequested.trim() || null,
+    },
+    next_action: {
+      action: answers.nextAction.trim(),
+      due_session: answers.dueSession,
+      expected_evidence: answers.expectedEvidence.trim(),
+    },
+  };
+}
+
 export type IntakeValidationResult =
   | { valid: true; value: IntakeStudentRecord }
   | { valid: false; errors: string[] };

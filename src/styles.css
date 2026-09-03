@@ -1875,3 +1875,16 @@ button.danger:hover {
 .requirement-help-card b{display:block;margin:.05rem 0 .18rem;color:#26372e;font-size:.73rem}
 .requirement-help-card p{margin:0 0 .55rem}
 .requirement-help-card p:last-child{margin-bottom:0}
+.intake-dialog{max-width:760px}
+.intake-progress{height:6px;background:#e6edf5;border-radius:999px;overflow:hidden;margin:1rem 0 1.35rem}
+.intake-progress span{display:block;height:100%;background:linear-gradient(90deg,#2b6cb0,#22a699);transition:width .2s ease}
+.intake-dialog .work-track-fields h4,.intake-review h4,.intake-confirmed h4{margin:.35rem 0 1rem;font-size:1.15rem}
+.intake-review dl,.intake-confirmed dl{display:grid;gap:.7rem;margin:1rem 0}
+.intake-review dl div,.intake-confirmed dl div{background:#f7fafc;border:1px solid #dce5ee;border-radius:10px;padding:.8rem 1rem}
+.intake-review dt,.intake-confirmed dt{font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:#526273;font-weight:700}
+.intake-review dd,.intake-confirmed dd{margin:.25rem 0 0;white-space:pre-wrap}
+.intake-attestation{display:flex;gap:.7rem;align-items:flex-start;background:#eef7f5;border:1px solid #b9ddd5;border-radius:10px;padding:1rem;line-height:1.45}
+.intake-attestation input{margin-top:.25rem;flex:0 0 auto}
+.intake-confirmed{text-align:left;margin-top:1.2rem}
+.intake-confirmed>svg{color:#16856f}
+@media(max-width:640px){.intake-dialog{max-width:100%}.intake-review dl,.intake-confirmed dl{gap:.5rem}}

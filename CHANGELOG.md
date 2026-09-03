@@ -1,5 +1,13 @@
 # Changelog
 
+## Sprint 8 Phase 2B — Draft
+
+- Added a 2B2-only deterministic Session Intake journey for S1–S9.
+- Added three core evidence questions, up to three ordered rule-based follow-ups
+  and explicit student confirmation before fallback persistence.
+- Added Teacher Open, Close and Follow session controls for 2B2 Intake without
+  changing existing Blocks or connecting an AI provider.
+
 ## 2026-08-12 — Sprint 6 closed
 
 - Completed Production validation for Poster Gallery, S1–S10 Journey, S6–S9
