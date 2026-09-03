@@ -271,7 +271,7 @@ export function validateIntakeStudentRecord(input: unknown): IntakeValidationRes
         typeof claim.claim_id !== "string" ||
         !/^C[1-5]$/.test(claim.claim_id) ||
         !textLength(claim.statement, 3, 1000) ||
-        !textLength(claim.scope, 3, 500) ||
+        !textLength(claim.scope, 2, 500) ||
         !progressKinds.has(claim.progress_kind as ProgressKind)) {
       errors.push("one or more claims are invalid");
       return;
