@@ -1,6 +1,6 @@
 # Sprint 8 Plan — AI Session Intake & Evidence Verification
 
-**Status:** Planned  
+**Status:** Phase 1 complete; Phase 2A in Draft review  
 **Source baseline:** Sprint 7 final observation of 2026 2B1  
 **Product area:** NIT3004 Engineering Studio Platform
 
@@ -108,6 +108,22 @@ Acceptance:
 - Gate A hard requirements and Gate B quality thresholds are approved before AI implementation
 
 ## Phase 2 — Student AI Session Intake Pilot
+
+### Phase 2A — Mock Pilot Foundation
+
+Build the non-AI foundation before provider integration:
+
+- permit an isolated `NIT3004-2B2` test Block without creating or activating it automatically;
+- add an opt-in, default-closed Session Intake store;
+- enforce Block/Student/Session identity and RLS;
+- implement the versioned TypeScript and database validators;
+- implement provider-independent fallback persistence;
+- add deterministic fixtures and security audit;
+- preserve 2B1 and all existing Session behaviour.
+
+The Teacher creates the planned Block, Team and three mock students only after
+the migration and security audit are reviewed. Full Student UI and model calls
+remain later Phase 2 work.
 
 Replace the active Session Work Track interaction for a controlled pilot; do not
 remove historical data or all legacy forms at once.
