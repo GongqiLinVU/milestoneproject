@@ -108,3 +108,11 @@ included by the strict TypeScript build even before UI integration.
 - prompt versioning and bounded follow-up selection;
 - real Gate A/B regression runs;
 - Teacher Verification Queue in Phase 3.
+
+## First database audit finding
+
+The first applied-migration audit returned 9 PASS and one FAIL:
+`Anon cannot execute Intake RPCs`. Although execution was revoked from
+`PUBLIC`, the deployed role state retained anonymous execution. The migration
+now also revokes both RPC signatures explicitly from `anon`. Re-run the complete
+idempotent migration, then rerun the audit before merge.
