@@ -364,12 +364,12 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
   const set=<K extends keyof DeterministicIntakeAnswers>(key:K,value:DeterministicIntakeAnswers[K])=>setAnswers(current=>({...current,[key]:value}));
   const input=(label:string,key:keyof DeterministicIntakeAnswers,placeholder:string,maxLength=1000)=><label className="track-field"><span>{label}</span><textarea value={String(answers[key]??"")} maxLength={maxLength} onChange={event=>set(key,event.target.value as never)} placeholder={placeholder}/></label>;
   function coreComplete(current:number){
-    if(current===1)return answers.responsibility.trim().length>=3&&answers.progress.trim().length>=3&&answers.scope.trim().length>=3;
+    if(current===1)return answers.responsibility.trim().length>=2&&answers.progress.trim().length>=3&&answers.scope.trim().length>=3;
     if(current===2){const testingComplete=answers.testingStatus!=="executed"||(answers.testingMethod.trim().length>=3&&answers.testingResult.trim().length>=1);if(!testingComplete)return false;if(answers.evidenceAvailability==="available_now")return answers.evidenceReference.trim().length>=3&&answers.verificationMethod.trim().length>=3;if(answers.evidenceAvailability==="expected_later")return answers.verificationMethod.trim().length>=3;return true;}
     return answers.nextAction.trim().length>=3&&answers.expectedEvidence.trim().length>=3&&(answers.blockerStatus==="none"||answers.blockerDescription.trim().length>=3);
   }
   function next(){
-    if(step<=3&&!coreComplete(step)){setMessage("Complete the required evidence fields before continuing.");return;}
+    if(step<=3&&!coreComplete(step)){setMessage(step===1?(answers.responsibility.trim().length<2?"Responsibility is required. Short technical terms such as UI, UX, DB or AI are accepted.":answers.progress.trim().length<3?"Describe what you personally completed or advanced.":"Describe the exact part covered by this claim."):step===2?"Complete the evidence and verification fields that apply to your selected evidence state.":"Complete your next action, expected evidence and any active blocker details.");return;}
     setMessage("");
     if(step===3){const selected=selectDeterministicFollowUps(answers,context?.previousConfirmed?.studentRecord);setFollowUps(selected);setStep(selected.length?4:5);return;}
     if(step===4){if(followUps.some(item=>(followUpAnswers[item.id]||"").trim().length<3)){setMessage("Answer each clarification before reviewing your summary.");return;}setStep(5);return;}
