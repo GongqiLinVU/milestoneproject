@@ -5,9 +5,9 @@
 Phase 1 Evidence Contract and Evaluation Standard were merged through PR #62
 (commit `2db40024d97c1efe67d67f1550da1ded92a61142`).
 
-Phase 2A Mock Pilot Foundation is now in Draft review. Its migration has not been
-applied and no test Block, mock account or production Intake record has been
-created.
+Phase 2A Mock Pilot Foundation is in Draft review. The corrected migration has
+been applied and its read-only database security audit returned 10/10 PASS. No
+test Block, mock account or production Intake record has been created.
 
 ## Phase 2A scope
 
@@ -25,12 +25,13 @@ Detailed implementation and execution order:
 
 ## Next verification
 
-Before merge:
+Verified before merge:
 
-1. review the physical schema and RPC authority boundary;
-2. confirm 2B2 is allowed but not auto-created;
-3. confirm existing Sessions remain Intake-closed;
-4. run the strict TypeScript production build through CI/Preview.
+1. physical schema and RPC authority boundary reviewed;
+2. 2B2 allowed but not auto-created;
+3. existing Sessions remain Intake-closed;
+4. database security audit 10/10 PASS;
+5. strict TypeScript/Vercel Preview build passed.
 
 After explicit merge approval:
 
