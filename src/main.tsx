@@ -508,7 +508,7 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
           <div className="student-project-summary"><div><span>Student</span><b>{student.studentName}</b><small>{student.studentId}</small></div><div><span>Team</span><b>{student.teamName}</b><small>Roster assignment</small></div><div><span>Project</span><b>{student.projectName || "Pending"}</b><small>{student.projectCategory || "Catalogue assignment pending"}{student.projectDifficulty ? ` · ${student.projectDifficulty}` : ""}</small></div></div>
           {student.projectSource === "catalogue" && <div className="project-detail-grid"><article><span>Problem</span><p>{student.projectProblem || "Not specified"}</p></article><article><span>Target users</span><p>{student.projectTargetUsers || "Not specified"}</p></article><article className="wide"><span>Expected outcomes</span><p>{student.projectExpectedOutcomes || "Not specified"}</p></article></div>}
         </section>
-        <StudentSessions intakePilot={/^2026\s*·\s*2B2$/i.test(student.blockLabel.trim())}/>
+        <StudentSessions intakePilot={/^2026\s*(?:·\s*)?2B2$/i.test(student.blockLabel.trim())}/>
         <section id="get-help" className="portal-panel portal-section"><Head label="Get Help" title="Bring one clear question." text="Use the support choices inside the current weekly activity so your teacher can connect help to the right evidence and session."/></section>
       </main>
       <footer>
