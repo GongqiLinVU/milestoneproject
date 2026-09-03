@@ -245,6 +245,7 @@ end;
 $$;
 
 revoke all on function public.validate_session_intake_student_record(jsonb) from public;
+revoke all on function public.validate_session_intake_student_record(jsonb) from anon, authenticated;
 
 create or replace function public.get_my_session_intake(p_session_id uuid)
 returns jsonb
@@ -335,6 +336,7 @@ end;
 $$;
 
 revoke all on function public.get_my_session_intake(uuid) from public;
+revoke all on function public.get_my_session_intake(uuid) from anon;
 grant execute on function public.get_my_session_intake(uuid) to authenticated;
 
 create or replace function public.save_my_session_intake_fallback(
@@ -468,6 +470,7 @@ end;
 $$;
 
 revoke all on function public.save_my_session_intake_fallback(uuid,jsonb,jsonb,jsonb) from public;
+revoke all on function public.save_my_session_intake_fallback(uuid,jsonb,jsonb,jsonb) from anon;
 grant execute on function public.save_my_session_intake_fallback(uuid,jsonb,jsonb,jsonb) to authenticated;
 
 -- Verification:
