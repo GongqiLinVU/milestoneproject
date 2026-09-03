@@ -1,0 +1,188 @@
+{
+  "suiteVersion": "ai-intake-suite.v1.0.0",
+  "schemaVersion": "session-intake.v1.0.0",
+  "purpose": "Deterministic Phase 2A validator fixtures; contains no real student data.",
+  "cases": [
+    {
+      "id": "DF01",
+      "expectedValid": true,
+      "studentRecord": {
+        "responsibility": {
+          "current": "Implement and test the booking API validation",
+          "change_from_previous": "initial",
+          "shared_with": [],
+          "ownership_note": null
+        },
+        "claims": [
+          {
+            "claim_id": "C1",
+            "statement": "Added validation for missing booking dates",
+            "progress_kind": "completed",
+            "scope": "Booking creation endpoint",
+            "completion_percent": null
+          }
+        ],
+        "evidence": [
+          {
+            "evidence_id": "E1",
+            "claim_ids": ["C1"],
+            "type": "repository_change",
+            "reference": "commit mock-a1",
+            "verification_method": "Run the missing-date API test",
+            "availability": "available_now",
+            "student_observed_result": "The endpoint returned the expected validation error"
+          }
+        ],
+        "testing": [
+          {
+            "test_id": "T1",
+            "claim_ids": ["C1"],
+            "execution_status": "executed",
+            "method": "Submitted a request without a booking date",
+            "observed_result": "HTTP 400 with the validation message",
+            "baseline_or_expected": "Expected HTTP 400"
+          }
+        ],
+        "dependencies": [],
+        "blocker": {
+          "status": "none",
+          "description": null,
+          "support_requested": null
+        },
+        "next_action": {
+          "action": "Add invalid date-range validation",
+          "due_session": "S2",
+          "expected_evidence": "Passing invalid date-range API test"
+        }
+      }
+    },
+    {
+      "id": "DF02",
+      "expectedValid": false,
+      "expectedErrors": [
+        "available evidence needs a reference and verification method"
+      ],
+      "studentRecord": {
+        "responsibility": {
+          "current": "Complete the backend",
+          "change_from_previous": "unchanged"
+        },
+        "claims": [
+          {
+            "claim_id": "C1",
+            "statement": "The backend is complete",
+            "progress_kind": "completed",
+            "scope": "Entire backend",
+            "completion_percent": 100
+          }
+        ],
+        "evidence": [
+          {
+            "evidence_id": "E1",
+            "claim_ids": ["C1"],
+            "type": "other",
+            "reference": null,
+            "verification_method": null,
+            "availability": "available_now"
+          }
+        ],
+        "testing": [],
+        "dependencies": [],
+        "blocker": {"status": "none"},
+        "next_action": {
+          "action": "Finish testing",
+          "due_session": "S3",
+          "expected_evidence": "Test results"
+        }
+      }
+    },
+    {
+      "id": "DF03",
+      "expectedValid": true,
+      "studentRecord": {
+        "responsibility": {
+          "current": "Evaluate the classification model",
+          "change_from_previous": "refined"
+        },
+        "claims": [
+          {
+            "claim_id": "C1",
+            "statement": "The first model run produced poor recall",
+            "progress_kind": "attempted_failed",
+            "scope": "Minority-class evaluation"
+          }
+        ],
+        "evidence": [
+          {
+            "evidence_id": "E1",
+            "claim_ids": ["C1"],
+            "type": "experiment_result",
+            "reference": "mock evaluation run 3",
+            "verification_method": "Open the result table and recalculate recall",
+            "availability": "available_now",
+            "student_observed_result": "Recall was 0.41 against the 0.70 baseline"
+          }
+        ],
+        "testing": [
+          {
+            "test_id": "T1",
+            "claim_ids": ["C1"],
+            "execution_status": "executed",
+            "method": "Evaluated the held-out mock dataset",
+            "observed_result": "Recall 0.41",
+            "baseline_or_expected": "Previous baseline 0.70"
+          }
+        ],
+        "dependencies": [],
+        "blocker": {
+          "status": "active",
+          "description": "Minority-class examples are limited",
+          "support_requested": "Confirm whether resampling is acceptable"
+        },
+        "next_action": {
+          "action": "Run a resampling experiment and compare recall",
+          "due_session": "S4",
+          "expected_evidence": "Baseline-versus-resampling result table"
+        }
+      }
+    },
+    {
+      "id": "DF04",
+      "expectedValid": false,
+      "expectedErrors": ["student_record contains unsupported fields"],
+      "studentRecord": {
+        "responsibility": {
+          "current": "Prepare the demonstration",
+          "change_from_previous": "initial"
+        },
+        "claims": [
+          {
+            "claim_id": "C1",
+            "statement": "Prepared the demonstration flow",
+            "progress_kind": "advanced",
+            "scope": "Primary user journey"
+          }
+        ],
+        "evidence": [
+          {
+            "evidence_id": "E1",
+            "claim_ids": ["C1"],
+            "type": "live_demonstration",
+            "availability": "expected_later",
+            "verification_method": "Demonstrate the primary journey in S2"
+          }
+        ],
+        "testing": [],
+        "dependencies": [],
+        "blocker": {"status": "none"},
+        "next_action": {
+          "action": "Complete the demonstration setup",
+          "due_session": "S2",
+          "expected_evidence": "Live primary-journey demonstration"
+        },
+        "teacher_verification": "confirmed",
+        "marks": 100
+      }
+    }
+  ]
+}
