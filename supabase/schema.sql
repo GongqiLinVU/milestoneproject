@@ -1895,8 +1895,8 @@ begin
   end if;
 
   if jsonb_typeof(p_record -> 'responsibility') is distinct from 'object'
-     or char_length(btrim(coalesce(p_record #>> '{responsibility,current}', ''))) not between 3 and 500 then
-    v_errors := array_append(v_errors, 'current responsibility must be 3 to 500 characters');
+     or char_length(btrim(coalesce(p_record #>> '{responsibility,current}', ''))) not between 2 and 500 then
+    v_errors := array_append(v_errors, 'current responsibility must be 2 to 500 characters');
   end if;
 
   if coalesce(p_record #>> '{responsibility,change_from_previous}', '') not in
