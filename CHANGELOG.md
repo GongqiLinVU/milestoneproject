@@ -7,6 +7,8 @@
   and explicit student confirmation before fallback persistence.
 - Added Teacher Open, Close and Follow session controls for 2B2 Intake without
   changing existing Blocks or connecting an AI provider.
+- Added confirmed Teacher controls for Planned, Active and Archived Block
+  lifecycle transitions while preserving historical data.
 
 ## 2026-08-12 — Sprint 6 closed
 

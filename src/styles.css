@@ -1887,4 +1887,6 @@ button.danger:hover {
 .intake-attestation input{margin-top:.25rem;flex:0 0 auto}
 .intake-confirmed{text-align:left;margin-top:1.2rem}
 .intake-confirmed>svg{color:#16856f}
+.block-status-actions{display:flex!important;justify-content:flex-start!important;gap:8px;flex-wrap:wrap;padding-top:3px;border-top:1px solid #dfe8df}
+.block-status.archived{background:#e8ebee;color:#56606a}.block-status.planned{background:#fff2ce;color:#795b00}
 @media(max-width:640px){.intake-dialog{max-width:100%}.intake-review dl,.intake-confirmed dl{gap:.5rem}}

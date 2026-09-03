@@ -40,6 +40,9 @@ Detailed implementation and execution order:
 - submission uses only `save_my_session_intake_fallback`;
 - confirmed records are read-only and remain labelled as unverified claims;
 - Teachers see Intake Open / Close / Follow session controls only for 2B2.
+- Teachers can archive the completed 2B1 Block, activate 2B2 after no other
+  Block is active, or restore an archived Block to Planned. Every transition
+  requires confirmation and preserves historical data.
 
 ## Next verification
 

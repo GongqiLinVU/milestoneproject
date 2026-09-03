@@ -36,6 +36,9 @@ conversation therefore contains six to twelve turns.
 - confirmed submissions are read-only;
 - Teacher changes only `studio_sessions.intake_access` and only sees this control
   when the selected Block code is `2B2`;
+- Teacher Block management exposes explicit Planned, Active and Archived
+  transitions; archiving preserves all historical data and activation remains
+  subject to the existing single-active-Block database constraint;
 - database RLS remains the final authority.
 
 ## Privacy and AI boundary
