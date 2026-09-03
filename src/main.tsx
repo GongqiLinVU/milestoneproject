@@ -372,7 +372,7 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
     if(step<=3&&!coreComplete(step)){setMessage(step===1?(answers.responsibility.trim().length<2?"Responsibility is required. Short technical terms such as UI, UX, DB or AI are accepted.":answers.progress.trim().length<3?"Describe what you personally completed or advanced.":"Describe the exact part covered by this claim."):step===2?"Complete the evidence and verification fields that apply to your selected evidence state.":"Complete your next action, expected evidence and any active blocker details.");return;}
     setMessage("");
     if(step===3){const selected=selectDeterministicFollowUps(answers,context?.previousConfirmed?.studentRecord);setFollowUps(selected);setStep(selected.length?4:5);return;}
-    if(step===4){if(followUps.some(item=>(followUpAnswers[item.id]||"").trim().length<3)){setMessage("Answer each clarification before reviewing your summary.");return;}setStep(5);return;}
+    if(step===4){if(followUps.some(item=>(followUpAnswers[item.id]||"").trim().length<2)){setMessage("Answer each clarification before reviewing your summary. Short technical terms such as UI, UX, DB or AI are accepted.");return;}setStep(5);return;}
     setStep(current=>Math.min(5,current+1) as 1|2|3|4|5);
   }
   const record=context?buildFallbackStudentRecord(answers,followUpAnswers,Boolean(context.previousConfirmed)):null;
