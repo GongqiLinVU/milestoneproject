@@ -253,8 +253,8 @@ export function validateIntakeStudentRecord(input: unknown): IntakeValidationRes
   }
 
   const responsibility = input.responsibility;
-  if (!isObject(responsibility) || !textLength(responsibility.current, 3, 500)) {
-    errors.push("current responsibility must be 3 to 500 characters");
+  if (!isObject(responsibility) || !textLength(responsibility.current, 2, 500)) {
+    errors.push("current responsibility must be 2 to 500 characters");
   }
   if (!isObject(responsibility) ||
       !["initial", "unchanged", "refined", "changed", "unknown"].includes(String(responsibility.change_from_previous))) {
