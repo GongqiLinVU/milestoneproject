@@ -1875,3 +1875,19 @@ button.danger:hover {
 .requirement-help-card b{display:block;margin:.05rem 0 .18rem;color:#26372e;font-size:.73rem}
 .requirement-help-card p{margin:0 0 .55rem}
 .requirement-help-card p:last-child{margin-bottom:0}
+.intake-dialog{width:min(760px,100%);max-width:760px;max-height:calc(100dvh - 48px);overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
+.intake-dialog .track-dialog-actions{position:sticky;bottom:0;z-index:3;margin-bottom:-.35rem;padding-bottom:.35rem;background:#f7f9ff}
+.intake-progress{height:6px;background:#e6edf5;border-radius:999px;overflow:hidden;margin:1rem 0 1.35rem}
+.intake-progress span{display:block;height:100%;background:linear-gradient(90deg,#2b6cb0,#22a699);transition:width .2s ease}
+.intake-dialog .work-track-fields h4,.intake-review h4,.intake-confirmed h4{margin:.35rem 0 1rem;font-size:1.15rem}
+.intake-review dl,.intake-confirmed dl{display:grid;gap:.7rem;margin:1rem 0}
+.intake-review dl div,.intake-confirmed dl div{background:#f7fafc;border:1px solid #dce5ee;border-radius:10px;padding:.8rem 1rem}
+.intake-review dt,.intake-confirmed dt{font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:#526273;font-weight:700}
+.intake-review dd,.intake-confirmed dd{margin:.25rem 0 0;white-space:pre-wrap}
+.intake-attestation{display:flex;gap:.7rem;align-items:flex-start;background:#eef7f5;border:1px solid #b9ddd5;border-radius:10px;padding:1rem;line-height:1.45}
+.intake-attestation input{margin-top:.25rem;flex:0 0 auto}
+.intake-confirmed{text-align:left;margin-top:1.2rem}
+.intake-confirmed>svg{color:#16856f}
+.block-status-actions{display:flex!important;justify-content:flex-start!important;gap:8px;flex-wrap:wrap;padding-top:3px;border-top:1px solid #dfe8df}
+.block-status.archived{background:#e8ebee;color:#56606a}.block-status.planned{background:#fff2ce;color:#795b00}
+@media(max-width:640px){.session-work-track-modal{padding:10px}.intake-dialog{max-width:100%;max-height:calc(100dvh - 20px);padding:1.25rem}.intake-review dl,.intake-confirmed dl{gap:.5rem}}
