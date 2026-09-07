@@ -56,4 +56,29 @@ record or conversation.
 - broad claim plus missing evidence selects two ordered follow-ups: PASS;
 - bounded fallback conversation validation: PASS.
 
-Preview testing with three mock students remains required before merge.
+## Mock pilot result — 2026-09-07
+
+The teacher completed the deterministic workflow with three mock students and
+queried the persisted records directly from Supabase:
+
+- four confirmed records exist only in `2026 · 2B2`;
+- `test001` has an S1 → S2 longitudinal pair with the same responsibility,
+  available evidence and executed testing; its blocker changes from active to
+  resolved;
+- `n2b002` preserves a broad backend claim as `expected_later` evidence with
+  `planned_not_executed` testing;
+- `n2b003` preserves an honest failed sensor experiment as
+  `attempted_failed`, with available evidence, executed testing and an active
+  blocker;
+- every record reports zero Evidence Schema validation errors;
+- every record uses `deterministic_fallback` and records `ai_used=false`.
+
+This passes the Phase 2B persistence, scenario-fidelity and longitudinal-context
+data gates. The raw teacher query export is not committed because it is
+environment validation evidence rather than a repository fixture.
+
+## Remaining merge gate
+
+Re-run the updated idempotent Phase 2A migration and its security audit so the
+database responsibility/scope validator accepts the same short technical terms
+as the TypeScript validator. Confirm the current Vercel build before merge.
