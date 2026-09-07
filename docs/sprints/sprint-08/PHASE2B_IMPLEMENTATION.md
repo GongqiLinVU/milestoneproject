@@ -77,8 +77,21 @@ This passes the Phase 2B persistence, scenario-fidelity and longitudinal-context
 data gates. The raw teacher query export is not committed because it is
 environment validation evidence rather than a repository fixture.
 
-## Remaining merge gate
+## Post-pilot migration and security recheck — 2026-09-07
 
-Re-run the updated idempotent Phase 2A migration and its security audit so the
-database responsibility/scope validator accepts the same short technical terms
-as the TypeScript validator. Confirm the current Vercel build before merge.
+The updated idempotent Phase 2A migration was re-run after the mock pilot. The
+security audit confirmed all eight active security/configuration controls PASS:
+RLS, RPC hardening, anon denial, authenticated read scope, direct-mutation
+denial and 2B2 constraint support.
+
+Two installation-time assertions are no longer expected to PASS after an
+operational pilot:
+
+- `Existing Sessions default Intake closed` reports FAIL because the teacher
+  intentionally opened S1 through the Teacher UI;
+- `No 2B2 block auto-created` reports CHECK because the teacher intentionally
+  created 2026 · 2B2 through the dashboard.
+
+These results do not indicate migration side effects or a security regression.
+They record the expected post-setup state. The Phase 2B database gate is
+satisfied.
