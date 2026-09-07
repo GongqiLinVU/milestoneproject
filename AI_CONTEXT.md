@@ -215,7 +215,7 @@ Important current rules:
 
 ## Active sprint
 
-**Sprint 7 observation completed; Sprint 8 planning is active**
+**Sprint 8 Phase 2B deterministic pilot is active**
 
 Sprint 7 analysed the completed 2026 2B1 journey before further feature work.
 The baseline is 17 starting students, 3 withdrawn and 14 active students across
@@ -234,10 +234,10 @@ clarify, compare, summarise and suggest questions. It may not publish marks,
 verify contribution, determine authorship, accuse copying or replace live
 Teacher judgement.
 
-The first Sprint 8 implementation Phase is Evidence Contract & Conversation
-Design. Do not begin with an unrestricted chatbot, UI-first work or provider
-integration. Define the versioned schema, conversation state machine, maximum
-turns, deterministic fallback, privacy boundary and labelled test cases first.
+Phase 1 defined the contract and evaluation standard. Phase 2A delivered the
+default-closed Block-scoped store, validator and fallback RPC and passed its
+10/10 database security audit. Phase 2B implements the deterministic 2B2-only
+student interaction and Teacher access controls before any provider integration.
 
 Detailed scope and next-session instructions are in
 `docs/sprints/sprint-08/PLAN.md` and `docs/sprints/sprint-08/HANDOFF.md`.

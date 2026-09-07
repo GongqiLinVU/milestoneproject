@@ -8,6 +8,20 @@ const publishableKey =
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const password = () => `Vu!${randomBytes(12).toString("base64url")}9a`;
+const identityKey = (value: unknown) => String(value || "").trim().toLowerCase();
+
+async function findAuthUserByEmail(admin: any, email: string) {
+  const wanted = identityKey(email);
+  for (let page = 1; page <= 20; page += 1) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
+    if (error) return { user: null, error };
+    const users = data?.users || [];
+    const user = users.find((item: any) => identityKey(item.email) === wanted);
+    if (user) return { user, error: null };
+    if (users.length < 1000) break;
+  }
+  return { user: null, error: null };
+}
 
 async function teacher(token: string) {
   if (!url || !publishableKey) return false;
@@ -54,21 +68,22 @@ export default async function handler(req: any, res: any) {
   if (rosterError) return res.status(500).json({ error: "Roster could not be loaded." });
 
   const selectedRoster = requestedStudentId
-    ? (roster || []).filter((row) => row.student_id === requestedStudentId)
+    ? (roster || []).filter((row) => identityKey(row.student_id) === requestedStudentId)
     : (roster || []);
   if (requestedStudentId && selectedRoster.length !== 1) {
     return res.status(404).json({ error: "The selected student is not in this teaching block." });
   }
 
-  const ids = selectedRoster.map((row) => row.student_id);
-  const { data: existing } = ids.length
-    ? await admin.from("student_accounts").select("student_id, auth_user_id, status").in("student_id", ids)
-    : { data: [] as Array<{ student_id: string; auth_user_id: string; status: string }> };
-  const accounts = new Map((existing || []).map((row) => [row.student_id, row]));
+  const { data: existing, error: accountError } = await admin
+    .from("student_accounts")
+    .select("student_id, auth_user_id, status");
+  if (accountError) return res.status(500).json({ error: "Student account links could not be loaded." });
+  const accounts = new Map((existing || []).map((row) => [identityKey(row.student_id), row]));
+  const accountsByAuthUser = new Map((existing || []).map((row) => [row.auth_user_id, row]));
 
   if (action === "reset") {
     const row = selectedRoster[0];
-    const account = accounts.get(row.student_id);
+    const account = accounts.get(identityKey(row.student_id));
     if (!account) {
       return res.status(409).json({ error: "Prepare this student account before resetting its password." });
     }
@@ -92,7 +107,7 @@ export default async function handler(req: any, res: any) {
     });
   }
 
-  const pending = selectedRoster.filter((row) => !accounts.has(row.student_id));
+  const pending = selectedRoster.filter((row) => !accounts.has(identityKey(row.student_id)));
   const invalid = pending.filter(
     (row) => !row.vu_email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.vu_email),
   );
@@ -106,23 +121,62 @@ export default async function handler(req: any, res: any) {
   }
 
   const credentials: Array<{ studentId: string; name: string; initialPassword: string }> = [];
+  let reused = selectedRoster.length - pending.length;
   for (const row of pending) {
+    const authLookup = await findAuthUserByEmail(admin, row.vu_email);
+    if (authLookup.error) {
+      return res.status(500).json({ error: `Auth accounts could not be checked for ${row.student_id}.`, credentials });
+    }
+    if (authLookup.user) {
+      const linkedAccount = accountsByAuthUser.get(authLookup.user.id);
+      const authStudentId = identityKey(authLookup.user.user_metadata?.student_id);
+      const rosterStudentId = identityKey(row.student_id);
+      const linkedStudentId = identityKey(linkedAccount?.student_id);
+      const matchesStudent = authStudentId === rosterStudentId || linkedStudentId === rosterStudentId;
+
+      if (!matchesStudent) {
+        const existingStudentId = linkedAccount?.student_id || authLookup.user.user_metadata?.student_id || "another student";
+        return res.status(409).json({
+          error: `The email for ${row.student_id} already belongs to ${existingStudentId}. A continuing student must use the same Student ID in every block; do not change their email.`,
+          studentId: row.student_id,
+          existingStudentId,
+          credentials,
+        });
+      }
+
+      if (!linkedAccount) {
+        const { error: restoreError } = await admin.from("student_accounts").insert({
+          student_id: row.student_id,
+          auth_user_id: authLookup.user.id,
+          status: authLookup.user.last_sign_in_at ? "activated" : "ready",
+        });
+        if (restoreError) {
+          return res.status(409).json({
+            error: `The existing Auth account for ${row.student_id} was found, but its platform link could not be restored.`,
+            credentials,
+          });
+        }
+      }
+      reused += 1;
+      continue;
+    }
+
     const initialPassword = password();
     const { data: created, error } = await admin.auth.admin.createUser({
       email: row.vu_email,
       password: initialPassword,
       email_confirm: true,
       app_metadata: { role: "student" },
-      user_metadata: { student_id: row.student_id },
+      user_metadata: { student_id: identityKey(row.student_id) },
     });
     if (error || !created.user) {
       return res.status(409).json({
-        error: `Account preparation stopped at ${row.student_id}. Correct duplicate email or Auth details, then retry.`,
+        error: `Account preparation stopped at ${row.student_id}. The Auth account could not be created; retry or inspect its Auth record.`,
         credentials,
       });
     }
     const { error: linkError } = await admin.from("student_accounts").insert({
-      student_id: row.student_id,
+      student_id: identityKey(row.student_id),
       auth_user_id: created.user.id,
       status: "ready",
     });
@@ -132,5 +186,5 @@ export default async function handler(req: any, res: any) {
     }
     credentials.push({ studentId: row.student_id, name: row.full_name, initialPassword });
   }
-  return res.status(200).json({ action: "prepare", credentials });
+  return res.status(200).json({ action: "prepare", credentials, reused });
 }

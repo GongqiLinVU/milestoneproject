@@ -1,6 +1,6 @@
 # Sprint 8 Plan — AI Session Intake & Evidence Verification
 
-**Status:** Phase 1 complete; Phase 2A in Draft review  
+**Status:** Phase 1 and Phase 2A complete; Phase 2B in Draft review
 **Source baseline:** Sprint 7 final observation of 2026 2B1  
 **Product area:** NIT3004 Engineering Studio Platform
 
@@ -124,6 +124,23 @@ Build the non-AI foundation before provider integration:
 The Teacher creates the planned Block, Team and three mock students only after
 the migration and security audit are reviewed. Full Student UI and model calls
 remain later Phase 2 work.
+
+### Phase 2B — Deterministic Student Pilot UI
+
+Deliver the provider-independent path before any AI call:
+
+- expose Session Intake only to authenticated students in the isolated 2B2 pilot;
+- replace the pilot's S1–S9 Work Track entry point without removing historical Work Track data;
+- collect the three core questions as structured inputs;
+- apply at most three deterministic clarification rules;
+- show an editable review summary and explicit student attestation;
+- save only through the Phase 2A fallback RPC;
+- let the Teacher open, close or bind Intake to the Session schedule only in 2B2;
+- keep all other Blocks and the S10 Platform Feedback journey unchanged.
+
+Phase 2B does not call a model, create users, create a Block or add a database
+migration. Its purpose is to verify the interaction, evidence contract and
+fallback path with the three mock students before provider integration.
 
 Replace the active Session Work Track interaction for a controlled pilot; do not
 remove historical data or all legacy forms at once.

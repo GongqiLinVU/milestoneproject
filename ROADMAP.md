@@ -262,10 +262,14 @@ specific work evidence were decisive.
 
 ## Sprint 8 — AI Session Intake & Evidence Verification
 
-**Status: Planned**
+**Status: Phase 1 and Phase 2A complete; Phase 2B in Draft review**
 
 Sprint 8 pilots a bounded AI Session Intake that produces a structured Progress
 Report from a short adaptive evidence interview.
+
+The current Phase 2B proves the deterministic 2B2 student workflow, bounded
+rule-based clarifications, student confirmation and Teacher access control. AI
+provider integration remains gated on mock-student Preview validation.
 
 Delivery direction:
 
