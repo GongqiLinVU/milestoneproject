@@ -11,10 +11,34 @@ const text = (value: unknown, max: number) =>
 async function authenticatedStudent(token: string) {
   const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceKey) return false;
+  if (!url || !serviceKey) return null;
   const admin = createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
   const { data: { user }, error } = await admin.auth.getUser(token);
-  return !error && user?.app_metadata?.role === "student";
+  return !error && user?.app_metadata?.role === "student" ? { admin, user } : null;
+}
+
+async function resolvePreviousRecord(admin: any, authUserId: string, sessionId: string) {
+  const { data: account } = await admin.from("student_accounts")
+    .select("student_id").eq("auth_user_id", authUserId).eq("status", "activated").maybeSingle();
+  const { data: session } = await admin.from("studio_sessions")
+    .select("id,block_id,session_number,block:teaching_blocks!inner(block_code)")
+    .eq("id", sessionId).maybeSingle();
+  if (!account || !session || session.block?.block_code !== "2B2" || session.session_number < 1 || session.session_number > 9) {
+    throw new Error("context");
+  }
+  const { data: roster } = await admin.from("student_roster").select("id")
+    .eq("block_id", session.block_id).eq("student_id", account.student_id).maybeSingle();
+  if (!roster) throw new Error("context");
+
+  const { data: previousSessions } = await admin.from("studio_sessions").select("id,session_number")
+    .eq("block_id", session.block_id).lt("session_number", session.session_number)
+    .order("session_number", { ascending: false });
+  for (const previousSession of previousSessions || []) {
+    const { data: intake } = await admin.from("student_session_intakes").select("student_record")
+      .eq("session_id", previousSession.id).eq("student_id", account.student_id).maybeSingle();
+    if (intake?.student_record) return intake.student_record;
+  }
+  return null;
 }
 
 function outputText(response: any) {
@@ -27,9 +51,8 @@ function outputText(response: any) {
   return "";
 }
 
-function sanitise(body: any) {
+function sanitise(body: any, previous: any) {
   const answers = body?.answers || {};
-  const previous = body?.previousRecord || null;
   return {
     answers: {
       responsibility: text(answers.responsibility, 500),
@@ -77,9 +100,10 @@ export default async function handler(req: any, res: any) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed." });
 
   const token = String(req.headers.authorization || "").replace(/^Bearer /, "");
-  if (!token || !(await authenticatedStudent(token))) {
-    return res.status(403).json({ error: "Activated student access required." });
-  }
+  const auth = token ? await authenticatedStudent(token) : null;
+  if (!auth) return res.status(403).json({ error: "Activated student access required." });
+  const sessionId = text(req.body?.sessionId, 36);
+  if (!/^[0-9a-f-]{36}$/i.test(sessionId)) return res.status(400).json({ error: "Valid Session context is required." });
   if (!process.env.OPENAI_API_KEY) {
     return res.status(503).json({ error: "AI Intake is not configured." });
   }
@@ -88,7 +112,13 @@ export default async function handler(req: any, res: any) {
   }
 
   const mode: Mode = req.body?.mode === "extract" ? "extract" : "questions";
-  const context = sanitise(req.body);
+  let previousRecord = null;
+  try {
+    previousRecord = await resolvePreviousRecord(auth.admin, auth.user.id, sessionId);
+  } catch {
+    return res.status(403).json({ error: "Session Intake context is not available." });
+  }
+  const context = sanitise(req.body, previousRecord);
   if (!context.answers.responsibility || !context.answers.progress || !context.answers.nextAction) {
     return res.status(400).json({ error: "Core Intake answers are incomplete." });
   }
