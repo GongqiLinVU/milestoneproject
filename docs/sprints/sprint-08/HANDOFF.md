@@ -10,9 +10,15 @@ Phase 2A Mock Pilot Foundation was squash-merged through PR #63 (commit
 read-only database security audit returned 10/10 PASS. No test Block, mock
 account or production Intake record was created by the implementation.
 
-Phase 2B Deterministic Student Pilot UI is in Draft review. It adds the bounded
-fallback interaction and Teacher Intake controls for the isolated 2B2 pilot;
-it does not connect an AI provider or change the database.
+Phase 2B Deterministic Student Pilot UI was squash-merged through PR #64
+(commit `c8c1d59404e23f6bb31e164b7b21b35f6552e5c5`). Three mock students
+produced four valid 2B2 records, including one S1 → S2 longitudinal pair. The
+provider-independent workflow, fallback persistence and post-pilot security
+checks passed.
+
+Phase 2C AI-Assisted Intake is now in Draft implementation. It adds bounded AI
+question selection and extraction above the Phase 2B fallback, plus a separate
+hardened persistence RPC for validated AI-assisted records.
 
 ## Phase 2A scope
 
@@ -28,7 +34,7 @@ it does not connect an AI provider or change the database.
 Detailed implementation and execution order:
 `docs/sprints/sprint-08/PHASE2A_IMPLEMENTATION.md`.
 
-## Phase 2B Draft scope
+## Phase 2B completed scope
 
 - 2B2 students can open S1–S9 Session Intake from the Project Journey;
 - all other Blocks retain their existing Work Track behaviour;
@@ -82,3 +88,16 @@ For Phase 2B Preview review:
 - no change to 2B1 data;
 - one focused Phase branch and Draft PR;
 - merge only after explicit approval.
+
+
+## Phase 2C current scope
+
+- authenticated student-only AI endpoint;
+- no direct identity, Block, Team or other-student raw text in provider input;
+- same-student previous confirmed record only;
+- zero to three AI-selected evidence follow-ups;
+- AI refinement accepted only after local Evidence Schema validation;
+- student review and confirmation remain mandatory;
+- hardened `save_my_session_intake_ai` RPC re-resolves authority and validates;
+- deterministic fallback remains available for every provider failure;
+- migration and security audit are committed but not executed automatically.
