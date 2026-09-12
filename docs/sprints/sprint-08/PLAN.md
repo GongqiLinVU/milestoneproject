@@ -1,6 +1,6 @@
 # Sprint 8 Plan — AI Session Intake & Evidence Verification
 
-**Status:** Phase 1 and Phase 2A complete; Phase 2B in Draft review
+**Status:** Phase 1, Phase 2A and Phase 2B complete; Phase 2C in Draft implementation
 **Source baseline:** Sprint 7 final observation of 2026 2B1  
 **Product area:** NIT3004 Engineering Studio Platform
 
@@ -170,6 +170,21 @@ Acceptance:
 - the saved record distinguishes original student text, structured extraction
   and AI-generated summary
 - provider failure does not block deterministic submission
+
+### Phase 2C — AI-Assisted Intake
+
+Add bounded provider assistance on top of the verified Phase 2B path:
+
+- use the three core answers and the same student's previous confirmed record;
+- generate zero to three evidence-focused follow-ups;
+- extract/refine a schema-valid student record without inventing evidence;
+- exclude direct identity, Block, Team and other-student raw text from provider input;
+- validate locally and again in a hardened AI-save RPC;
+- store prompt/model metadata separately from student confirmation;
+- fall back to the deterministic path on provider, network or schema failure.
+
+Phase 2C does not add Teacher verification or grading. Detailed implementation:
+`docs/sprints/sprint-08/PHASE2C_IMPLEMENTATION.md`.
 
 ## Phase 3 — Teacher Verification Queue
 
