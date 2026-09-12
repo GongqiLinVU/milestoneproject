@@ -322,6 +322,27 @@ function PlatformFeedbackModal({session,onClose,onSaved}:{session:StudentSession
   return createPortal(<div className="session-work-track-modal" role="presentation" onMouseDown={event=>event.target===event.currentTarget&&onClose()}><section className="session-work-track-dialog platform-feedback-dialog" role="dialog" aria-modal="true" aria-labelledby="platform-feedback-title"><button type="button" className="session-work-track-close" aria-label="Close Platform Feedback" onClick={onClose}>×</button><div className="eyebrow">Final presentation checkpoint</div><h3 id="platform-feedback-title">Platform Feedback</h3><strong>S10 · {session.focus}</strong>{loading?<p className="empty-state">Loading feedback…</p>:feedback?<><div className="platform-feedback-intro"><b>2 minutes · individual · not graded</b><span>Tell us what actually helped and what should improve for future Capstone students.</span></div>{!feedback.isOpen&&<p className="track-readonly-note">Session 10 is closed. Your submitted feedback is read-only.</p>}<div className="work-track-fields"><div className="track-field"><span>1. Overall usefulness</span><div className="feedback-rating" role="group" aria-label="Overall usefulness">{[1,2,3,4,5].map(value=><button key={value} type="button" className={(response.overallUsefulness===String(value)?"selected ":"")+"secondary compact"} onClick={()=>set("overallUsefulness",String(value))} disabled={!feedback.isOpen}>{value}</button>)}</div><small>1 = Not useful · 5 = Very useful</small></div>{choice("2. Did the platform help you stay engaged with the project?","engagementHelp",["Yes","Somewhat","No"])}{choice("3. Most useful feature","mostUsefulFeature",["Session Check-in","Weekly Activities","Teacher Review","Poster Gallery","Work Track","Peer Feedback"])}{choice("4. What should we improve most?","improveArea",["Navigation","Activities","Feedback","Session workflow","Poster","Other"])}{choice("5. Would you recommend this platform for future Capstone classes?","recommendation",["Yes","Maybe","No"])}<label className="track-field"><span>6. One thing you would change <small>optional</small></span><textarea maxLength={300} value={response.changeNote||""} onChange={event=>set("changeNote",event.target.value)} disabled={!feedback.isOpen} placeholder="Keep it short — one idea is enough."/></label></div>{feedback.submittedAt&&<small className="track-saved-at"><CheckCircle2 size={14}/>Feedback completed {new Date(feedback.submittedAt).toLocaleString()}</small>}{message&&<p className="admin-alert" role="status">{message}</p>}<div className="track-dialog-actions"><button type="button" className="secondary" onClick={onClose}>Close</button>{feedback.isOpen&&<button type="button" onClick={()=>void save()} disabled={busy}>{busy?"Saving…":feedback.submittedAt?"Update feedback":"Complete feedback"}</button>}</div></>:<p className="empty-state error-state">{message||"Platform Feedback is unavailable."}</p>}</section></div>,document.body);
 }
 
+type AiIntakeMeta = {
+  used: boolean;
+  promptVersion: string | null;
+  model: string | null;
+  questionPurposes: string[];
+  uncertainties: string[];
+  flags: string[];
+  suggestedTeacherQuestions: string[];
+  extractionStatus: "not_used" | "completed" | "fallback";
+};
+
+type AiExtraction = {
+  refinedResponsibility: string;
+  refinedClaim: string;
+  refinedScope: string;
+  refinedVerificationMethod: string;
+  uncertainties: string[];
+  flags: string[];
+  suggestedTeacherQuestions: string[];
+};
+
 type SessionIntakeContext = {
   schemaVersion: string;
   testSuiteVersion: string;
@@ -360,6 +381,8 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
   const [busy,setBusy]=useState(false);
   const [message,setMessage]=useState("");
   const [confirmed,setConfirmed]=useState(false);
+  const [aiRecord,setAiRecord]=useState<IntakeStudentRecord|null>(null);
+  const [aiMeta,setAiMeta]=useState<AiIntakeMeta>({used:false,promptVersion:null,model:null,questionPurposes:[],uncertainties:[],flags:[],suggestedTeacherQuestions:[],extractionStatus:"not_used"});
   useEffect(()=>{let active=true;supabase.rpc("get_my_session_intake",{p_session_id:session.sessionId}).then(({data,error})=>{if(!active)return;if(error)setMessage("Session Intake is unavailable for this session.");else setContext(data as SessionIntakeContext);setLoading(false);});return()=>{active=false};},[session.sessionId]);
   const set=<K extends keyof DeterministicIntakeAnswers>(key:K,value:DeterministicIntakeAnswers[K])=>setAnswers(current=>({...current,[key]:value}));
   const input=(label:string,key:keyof DeterministicIntakeAnswers,placeholder:string,maxLength=1000)=><label className="track-field"><span>{label}</span><textarea value={String(answers[key]??"")} maxLength={maxLength} onChange={event=>set(key,event.target.value as never)} placeholder={placeholder}/></label>;
@@ -368,14 +391,58 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
     if(current===2){const testingComplete=answers.testingStatus!=="executed"||(answers.testingMethod.trim().length>=3&&answers.testingResult.trim().length>=1);if(!testingComplete)return false;if(answers.evidenceAvailability==="available_now")return answers.evidenceReference.trim().length>=3&&answers.verificationMethod.trim().length>=3;if(answers.evidenceAvailability==="expected_later")return answers.verificationMethod.trim().length>=3;return true;}
     return answers.nextAction.trim().length>=3&&answers.expectedEvidence.trim().length>=3&&(answers.blockerStatus==="none"||answers.blockerDescription.trim().length>=3);
   }
-  function next(){
+  async function callAi(mode:"questions"|"extract"){
+    const {data:{session:authSession}}=await supabase.auth.getSession();
+    const response=await fetch("/api/session-intake-ai",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${authSession?.access_token||""}`},body:JSON.stringify({mode,answers,followUpAnswers,previousRecord:context?.previousConfirmed?.studentRecord||null})});
+    if(!response.ok)throw new Error("provider");
+    return response.json();
+  }
+  async function next(){
     if(step<=3&&!coreComplete(step)){setMessage(step===1?(answers.responsibility.trim().length<2?"Responsibility is required. Short technical terms such as UI, UX, DB or AI are accepted.":answers.progress.trim().length<3?"Describe what you personally completed or advanced.":"Describe the exact part covered by this claim."):step===2?"Complete the evidence and verification fields that apply to your selected evidence state.":"Complete your next action, expected evidence and any active blocker details.");return;}
     setMessage("");
-    if(step===3){const selected=selectDeterministicFollowUps(answers,context?.previousConfirmed?.studentRecord);setFollowUps(selected);setStep(selected.length?4:5);return;}
-    if(step===4){if(followUps.some(item=>(followUpAnswers[item.id]||"").trim().length<2)){setMessage("Answer each clarification before reviewing your summary. Short technical terms such as UI, UX, DB or AI are accepted.");return;}setStep(5);return;}
+    if(step===3){
+      setBusy(true);
+      try{
+        const payload=await callAi("questions");
+        const allowed=new Set(["specific_scope","evidence_plan","testing_result","blocker_change"]);
+        const seen=new Set<string>();
+        const selected=((payload.result?.followUps||[]) as DeterministicFollowUp[]).filter(item=>allowed.has(item.id)&&!seen.has(item.id)&&seen.add(item.id)&&item.question?.trim().length>=3).slice(0,3);
+        setFollowUps(selected);
+        setAiMeta({used:true,promptVersion:payload.promptVersion||null,model:payload.model||null,questionPurposes:selected.map(item=>item.purpose),uncertainties:payload.result?.uncertainties||[],flags:payload.result?.flags||[],suggestedTeacherQuestions:payload.result?.suggestedTeacherQuestions||[],extractionStatus:"not_used"});
+        setStep(selected.length?4:5);
+      }catch{
+        const selected=selectDeterministicFollowUps(answers,context?.previousConfirmed?.studentRecord);
+        setFollowUps(selected);
+        setAiMeta(current=>({...current,used:false,extractionStatus:"fallback"}));
+        setMessage("AI follow-up is temporarily unavailable. The secure fallback questions are being used.");
+        setStep(selected.length?4:5);
+      }finally{setBusy(false);}
+      return;
+    }
+    if(step===4){
+      if(followUps.some(item=>(followUpAnswers[item.id]||"").trim().length<2)){setMessage("Answer each clarification before reviewing your summary. Short technical terms such as UI, UX, DB or AI are accepted.");return;}
+      if(aiMeta.used){
+        setBusy(true);
+        try{
+          const payload=await callAi("extract");
+          const result=payload.result as AiExtraction;
+          const base=buildFallbackStudentRecord(answers,followUpAnswers,Boolean(context?.previousConfirmed));
+          const refined:IntakeStudentRecord={...base,responsibility:{...base.responsibility,current:result.refinedResponsibility?.trim()||base.responsibility.current},claims:base.claims.map((claim,index)=>index?claim:{...claim,statement:result.refinedClaim?.trim()||claim.statement,scope:result.refinedScope?.trim()||claim.scope}),evidence:base.evidence.map((item,index)=>index?item:{...item,verification_method:result.refinedVerificationMethod?.trim()||item.verification_method})};
+          if(validateIntakeStudentRecord(refined).valid)setAiRecord(refined);
+          else throw new Error("schema");
+          setAiMeta(current=>({...current,promptVersion:payload.promptVersion||current.promptVersion,model:payload.model||current.model,uncertainties:result.uncertainties||current.uncertainties,flags:result.flags||current.flags,suggestedTeacherQuestions:result.suggestedTeacherQuestions||current.suggestedTeacherQuestions,extractionStatus:"completed"}));
+        }catch{
+          setAiRecord(null);
+          setAiMeta(current=>({...current,used:false,extractionStatus:"fallback"}));
+          setMessage("AI extraction could not be validated. Your original answers are preserved in the secure fallback summary.");
+        }finally{setBusy(false);}
+      }
+      setStep(5);return;
+    }
     setStep(current=>Math.min(5,current+1) as 1|2|3|4|5);
   }
-  const record=context?buildFallbackStudentRecord(answers,followUpAnswers,Boolean(context.previousConfirmed)):null;
+  const deterministicRecord=context?buildFallbackStudentRecord(answers,followUpAnswers,Boolean(context.previousConfirmed)):null;
+  const record=aiRecord||deterministicRecord;
   const validation=record?validateIntakeStudentRecord(record):null;
   const conversation:FallbackTurn[]=[
     {actor:"system",purpose:"core progress question",text:"What did you personally complete or advance since the previous Session?"},
@@ -393,7 +460,10 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
     if(!context?.isOpen||!record||!validation?.valid||validateFallbackConversation(conversation).length||!confirmed)return;
     setBusy(true);setMessage("");
     const summary=buildDeterministicSummary(record);
-    const {error}=await supabase.rpc("save_my_session_intake_fallback",{p_session_id:session.sessionId,p_source_conversation:conversation,p_student_record:record,p_student_confirmation:{status:"confirmed",attestation:STUDENT_CONFIRMATION_ATTESTATION,corrections:[],summary}});
+    const confirmation={status:"confirmed",attestation:STUDENT_CONFIRMATION_ATTESTATION,corrections:[],summary};
+    const {error}=aiMeta.used&&aiMeta.extractionStatus==="completed"
+      ? await supabase.rpc("save_my_session_intake_ai",{p_session_id:session.sessionId,p_source_conversation:conversation,p_student_record:record,p_student_confirmation:confirmation,p_prompt_version:aiMeta.promptVersion,p_ai_assistance:{used:true,model:aiMeta.model,follow_up_count:followUps.length,question_purposes:aiMeta.questionPurposes,extraction_status:"completed",uncertainties:aiMeta.uncertainties,flags:aiMeta.flags,suggested_teacher_questions:aiMeta.suggestedTeacherQuestions}})
+      : await supabase.rpc("save_my_session_intake_fallback",{p_session_id:session.sessionId,p_source_conversation:conversation,p_student_record:record,p_student_confirmation:confirmation});
     if(error)setMessage(error.message||"Session Intake could not be confirmed.");else{setMessage("Session Intake confirmed. Your claims still require Teacher verification.");const {data}=await supabase.rpc("get_my_session_intake",{p_session_id:session.sessionId});setContext(data as SessionIntakeContext);onSaved();}
     setBusy(false);
   }
@@ -406,9 +476,9 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
       {step===2&&<div className="work-track-fields"><h4>2. Evidence and verification</h4><label className="track-field"><span>Evidence type</span><select value={answers.evidenceType} onChange={event=>set("evidenceType",event.target.value as DeterministicIntakeAnswers["evidenceType"])}>{evidenceTypeOptions.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label><label className="track-field"><span>Evidence availability</span><select value={answers.evidenceAvailability} onChange={event=>set("evidenceAvailability",event.target.value as DeterministicIntakeAnswers["evidenceAvailability"])}><option value="available_now">Available now</option><option value="expected_later">Expected later</option><option value="not_produced">Not produced</option><option value="not_required">Not required</option><option value="unknown">Unknown</option></select></label>{answers.evidenceAvailability==="available_now"&&input("Evidence reference","evidenceReference","Commit, URL, file, result, screenshot or demo location")}{["available_now","expected_later"].includes(answers.evidenceAvailability)&&input("How can it be verified?","verificationMethod","A concrete check your teacher can perform")}
         <label className="track-field"><span>Testing state</span><select value={answers.testingStatus} onChange={event=>set("testingStatus",event.target.value as DeterministicIntakeAnswers["testingStatus"])}><option value="not_applicable">Not applicable</option><option value="executed">Executed</option><option value="planned_not_executed">Planned, not executed</option></select></label>{answers.testingStatus!=="not_applicable"&&input("Testing method","testingMethod","What was tested or is planned?")}{answers.testingStatus==="executed"&&<>{input("Observed result","testingResult","What actually happened?")}{input("Expected result or baseline","testingBaseline","What did you compare it with?")}</>}</div>}
       {step===3&&<div className="work-track-fields"><h4>3. Next action and blockers</h4>{input("What is your next action?","nextAction","One concrete action")}{input("What evidence should that action produce?","expectedEvidence","Expected demonstrable output")}<label className="track-field"><span>Due Session</span><select value={answers.dueSession} onChange={event=>set("dueSession",event.target.value)}>{Array.from({length:10-session.sessionNumber},(_,index)=>`S${session.sessionNumber+index+1}`).map(value=><option key={value}>{value}</option>)}</select></label><label className="track-field"><span>Blocker status</span><select value={answers.blockerStatus} onChange={event=>set("blockerStatus",event.target.value as DeterministicIntakeAnswers["blockerStatus"])}><option value="none">No blocker</option><option value="active">Active</option><option value="resolved">Resolved</option><option value="unknown">Unknown</option></select></label>{answers.blockerStatus!=="none"&&input("Describe the blocker or change","blockerDescription","What is blocked, or what changed?")}{input("Support requested (optional)","supportRequested","A specific decision, review or resource",500)}</div>}
-      {step===4&&<div className="work-track-fields"><h4>Clarify your evidence</h4><p className="form-note">These rule-based follow-ups are limited to {followUps.length}. No AI model is being used.</p>{followUps.map(item=><label className="track-field" key={item.id}><span>{item.question}</span><textarea maxLength={1000} value={followUpAnswers[item.id]||""} onChange={event=>setFollowUpAnswers(current=>({...current,[item.id]:event.target.value}))}/></label>)}</div>}
+      {step===4&&<div className="work-track-fields"><h4>Clarify your evidence</h4><p className="form-note">{aiMeta.used?`AI selected ${followUps.length} evidence-focused follow-up${followUps.length===1?"":"s"}. Your answers remain unverified claims.`:`Secure fallback selected ${followUps.length} rule-based follow-up${followUps.length===1?"":"s"}.`}</p>{followUps.map(item=><label className="track-field" key={item.id}><span>{item.question}</span><textarea maxLength={1000} value={followUpAnswers[item.id]||""} onChange={event=>setFollowUpAnswers(current=>({...current,[item.id]:event.target.value}))}/></label>)}</div>}
       {step===5&&record&&<div className="intake-review"><h4>Confirm your structured summary</h4><p className="form-note">Edit earlier answers if anything is inaccurate. This is your claim, not a Teacher verification.</p><dl><div><dt>Responsibility</dt><dd>{record.responsibility.current}</dd></div><div><dt>Progress claim</dt><dd>{record.claims[0].statement}</dd></div><div><dt>Evidence</dt><dd>{record.evidence[0].availability.replaceAll("_"," ")} · {record.evidence[0].reference||record.evidence[0].verification_method||"No evidence identified"}</dd></div><div><dt>Testing</dt><dd>{record.testing[0]?.execution_status.replaceAll("_"," ")}</dd></div><div><dt>Blocker</dt><dd>{record.blocker.status}{record.blocker.description?` · ${record.blocker.description}`:""}</dd></div><div><dt>Next action</dt><dd>{record.next_action.action} · due {record.next_action.due_session}</dd></div></dl>{validation&&!validation.valid&&<p className="admin-alert">{validation.errors.join(" · ")}</p>}<label className="intake-attestation"><input type="checkbox" checked={confirmed} onChange={event=>setConfirmed(event.target.checked)}/><span>{STUDENT_CONFIRMATION_ATTESTATION}</span></label></div>}
-      {message&&<p className="admin-alert" role="status">{message}</p>}<div className="track-dialog-actions"><button type="button" className="secondary" onClick={step===1?onClose:()=>{setMessage("");setStep(current=>(current===5?(followUps.length?4:3):current-1) as 1|2|3|4|5)}}>{step===1?"Close":"Back"}</button>{step<5?<button type="button" onClick={next}>Continue</button>:<button type="button" onClick={()=>void submit()} disabled={busy||!confirmed||!validation?.valid}>{busy?"Confirming…":"Confirm and submit"}</button>}</div></>}
+      {message&&<p className="admin-alert" role="status">{message}</p>}<div className="track-dialog-actions"><button type="button" className="secondary" onClick={step===1?onClose:()=>{setMessage("");setStep(current=>(current===5?(followUps.length?4:3):current-1) as 1|2|3|4|5)}}>{step===1?"Close":"Back"}</button>{step<5?<button type="button" onClick={()=>void next()} disabled={busy}>{busy?"Preparing…":"Continue"}</button>:<button type="button" onClick={()=>void submit()} disabled={busy||!confirmed||!validation?.valid}>{busy?"Confirming…":"Confirm and submit"}</button>}</div></>}
     {message&&saved&&<p className="admin-alert" role="status">{message}</p>}<div className="track-dialog-actions">{(saved||!context?.isOpen)&&<button type="button" className="secondary" onClick={onClose}>Close</button>}</div></section></div>,document.body);
 }
 
