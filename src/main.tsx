@@ -393,7 +393,7 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
   }
   async function callAi(mode:"questions"|"extract"){
     const {data:{session:authSession}}=await supabase.auth.getSession();
-    const response=await fetch("/api/session-intake-ai",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${authSession?.access_token||""}`},body:JSON.stringify({mode,answers,followUpAnswers,previousRecord:context?.previousConfirmed?.studentRecord||null})});
+    const response=await fetch("/api/session-intake-ai",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${authSession?.access_token||""}`},body:JSON.stringify({mode,sessionId:session.sessionId,answers,followUpAnswers})});
     if(!response.ok)throw new Error("provider");
     return response.json();
   }
