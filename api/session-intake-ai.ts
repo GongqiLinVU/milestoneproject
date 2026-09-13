@@ -14,7 +14,7 @@ async function authenticatedStudent(token: string) {
   if (!url || !serviceKey) return null;
   const admin = createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
   const { data: { user }, error } = await admin.auth.getUser(token);
-  return !error && user?.app_metadata?.role === "student" ? { admin, user } : null;
+  return !error && user ? { admin, user } : null;
 }
 
 async function resolvePreviousRecord(admin: any, authUserId: string, sessionId: string) {
@@ -23,12 +23,14 @@ async function resolvePreviousRecord(admin: any, authUserId: string, sessionId: 
   const { data: session } = await admin.from("studio_sessions")
     .select("id,block_id,session_number,focus,block:teaching_blocks!inner(block_code)")
     .eq("id", sessionId).maybeSingle();
-  if (!account || !session || session.block?.block_code !== "2B2" || session.session_number < 1 || session.session_number > 9) {
-    throw new Error("context");
+  if (!account) throw new Error("student_account_not_activated");
+  const block = Array.isArray(session?.block) ? session.block[0] : session?.block;
+  if (!session || block?.block_code !== "2B2" || session.session_number < 1 || session.session_number > 9) {
+    throw new Error("session_not_available");
   }
   const { data: roster } = await admin.from("student_roster").select("id")
     .eq("block_id", session.block_id).eq("student_id", account.student_id).maybeSingle();
-  if (!roster) throw new Error("context");
+  if (!roster) throw new Error("student_not_enrolled_in_block");
 
   const { data: previousSessions } = await admin.from("studio_sessions").select("id,session_number")
     .eq("block_id", session.block_id).lt("session_number", session.session_number)
@@ -108,11 +110,11 @@ export default async function handler(req: any, res: any) {
 
   const token = String(req.headers.authorization || "").replace(/^Bearer /, "");
   const auth = token ? await authenticatedStudent(token) : null;
-  if (!auth) return res.status(403).json({ error: "Activated student access required." });
+  if (!auth) return res.status(403).json({ error: "Authenticated student access required.", code: "authentication_failed", stage: "authentication", fallback: true });
   const sessionId = text(req.body?.sessionId, 36);
-  if (!/^[0-9a-f-]{36}$/i.test(sessionId)) return res.status(400).json({ error: "Valid Session context is required." });
+  if (!/^[0-9a-f-]{36}$/i.test(sessionId)) return res.status(400).json({ error: "Valid Session context is required.", code: "invalid_session_id", stage: "request_validation", fallback: true });
   if (!process.env.OPENAI_API_KEY) {
-    return res.status(503).json({ error: "AI Intake is not configured.", code: "missing_api_key", fallback: true });
+    return res.status(503).json({ error: "AI Intake is not configured.", code: "missing_api_key", stage: "provider_configuration", fallback: true });
   }
   if (Buffer.byteLength(JSON.stringify(req.body || {}), "utf8") > MAX_BODY_BYTES) {
     return res.status(413).json({ error: "AI Intake request is too large." });
@@ -122,8 +124,9 @@ export default async function handler(req: any, res: any) {
   let resolved: any = null;
   try {
     resolved = await resolvePreviousRecord(auth.admin, auth.user.id, sessionId);
-  } catch {
-    return res.status(403).json({ error: "Session Intake context is not available." });
+  } catch (error) {
+    const code = error instanceof Error ? error.message : "context_unavailable";
+    return res.status(403).json({ error: "Session Intake context is not available.", code, stage: "student_session_context", fallback: true });
   }
   const context = sanitise(req.body, resolved?.previousRecord, resolved?.sessionContext);
   if (mode !== "turn" && (!context.answers.responsibility || !context.answers.progress || !context.answers.nextAction)) {
@@ -209,12 +212,12 @@ export default async function handler(req: any, res: any) {
   if (!response.ok) {
     const providerRequestId = response.headers.get("x-request-id");
     console.error("AI Intake provider failed", response.status, providerRequestId);
-    return res.status(502).json({ error: "AI Intake provider rejected the request.", code: "provider_rejected", providerStatus: response.status, providerRequestId, fallback: true });
+    return res.status(502).json({ error: "AI Intake provider rejected the request.", code: "provider_rejected", stage: "provider_response", providerStatus: response.status, providerRequestId, fallback: true });
   }
   try {
     const result = JSON.parse(outputText(await response.json()));
     return res.status(200).json({ mode, promptVersion: PROMPT_VERSION, model: MODEL, providerRequestId: response.headers.get("x-request-id"), result });
   } catch {
-    return res.status(502).json({ error: "AI Intake returned an invalid response.", code: "invalid_provider_response", providerRequestId: response.headers.get("x-request-id"), fallback: true });
+    return res.status(502).json({ error: "AI Intake returned an invalid response.", code: "invalid_provider_response", stage: "schema_parsing", providerRequestId: response.headers.get("x-request-id"), fallback: true });
   }
 }
