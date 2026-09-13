@@ -673,8 +673,12 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
     setBusy(true);setMessage("");
     const source=turns as FallbackTurn[];
     const confirmation={status:"confirmed",attestation:STUDENT_CONFIRMATION_ATTESTATION,corrections:[],summary:buildDeterministicSummary(record)};
-    const {error}=aiMeta.used&&aiMeta.extractionStatus==="completed"?await supabase.rpc("save_my_session_intake_ai",{p_session_id:session.sessionId,p_source_conversation:source,p_student_record:record,p_student_confirmation:confirmation,p_prompt_version:aiMeta.promptVersion,p_ai_assistance:{used:true,model:aiMeta.model,follow_up_count:followUps.length,question_purposes:aiMeta.questionPurposes,extraction_status:"completed",uncertainties:aiMeta.uncertainties,flags:aiMeta.flags,suggested_teacher_questions:aiMeta.suggestedTeacherQuestions}}):await supabase.rpc("save_my_session_intake_fallback",{p_session_id:session.sessionId,p_source_conversation:source,p_student_record:record,p_student_confirmation:confirmation});
-    if(error)setMessage(error.message||"Session Intake could not be confirmed.");else{const {data}=await supabase.rpc("get_my_session_intake",{p_session_id:session.sessionId});setContext(data as SessionIntakeContext);setMessage("Session Intake confirmed. This Session is now read-only.");onSaved()}
+    let saveResult=aiMeta.used&&aiMeta.extractionStatus==="completed"?await supabase.rpc("save_my_session_intake_ai",{p_session_id:session.sessionId,p_source_conversation:source,p_student_record:record,p_student_confirmation:confirmation,p_prompt_version:aiMeta.promptVersion,p_ai_assistance:{used:true,model:aiMeta.model,follow_up_count:Math.min(3,Math.max(0,turns.filter(turn=>turn.actor==="system").length-1)),question_purposes:turns.filter(turn=>turn.actor==="system").slice(1,4).map(turn=>turn.purpose),extraction_status:"completed",uncertainties:aiMeta.uncertainties,flags:aiMeta.flags,suggested_teacher_questions:aiMeta.suggestedTeacherQuestions}}):await supabase.rpc("save_my_session_intake_fallback",{p_session_id:session.sessionId,p_source_conversation:source,p_student_record:record,p_student_confirmation:confirmation});
+    if(saveResult.error&&aiMeta.used){
+      setDebugEvents(current=>[...current,{at:new Date().toISOString(),mode:"persistence_fallback",request:{promptVersion:aiMeta.promptVersion},error:saveResult.error.message}]);
+      saveResult=await supabase.rpc("save_my_session_intake_fallback",{p_session_id:session.sessionId,p_source_conversation:source,p_student_record:record,p_student_confirmation:confirmation});
+    }
+    if(saveResult.error)setMessage(saveResult.error.message||"Session Intake could not be confirmed.");else{const {data}=await supabase.rpc("get_my_session_intake",{p_session_id:session.sessionId});setContext(data as SessionIntakeContext);setMessage("Session Intake confirmed. This Session is now read-only.");onSaved()}
     setBusy(false);
   }
   const saved=context?.confirmedRecord;
