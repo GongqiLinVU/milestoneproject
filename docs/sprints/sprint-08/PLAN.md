@@ -56,6 +56,12 @@ The flexible conversation must never replace this stable output contract.
 - deterministic validation controls required fields, limits, permissions,
   Session availability and persistence
 - student confirms or corrects the generated summary before submission
+- confirmation freezes the Session conversation and confirmed evidence as
+  read-only student history
+- Teacher review, comments and actions are stored separately and cannot rewrite
+  the student's historical claim
+- students respond to unresolved Teacher Actions through the next Session
+  Intake, not by editing or replying inside history
 - preserve source conversation and structured extraction for traceability
 - every AI inference shown to a teacher links to the supporting source record
 - use “insufficient evidence to verify,” not stronger unsupported conclusions
