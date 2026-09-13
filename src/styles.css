@@ -2007,3 +2007,26 @@ button.danger:hover {
   .chat-composer{width:calc(100% - 16px)}
   .chat-composer>small{display:none}
 }
+
+
+/* Phase 2C evidence changes attached to answers */
+.message-evidence-update{justify-self:end;display:grid;gap:.15rem;max-width:min(520px,90%);padding:.55rem .75rem;border:1px solid #bdd1ff;border-radius:12px;background:#f3f6ff;color:#24416f;text-align:left;cursor:pointer}
+.message-evidence-update b{font-size:.76rem}
+.message-evidence-update span{font-size:.7rem;color:#5a6b84}
+.evidence-drawer{top:18px;right:18px;height:calc(100% - 36px);border:1px solid #d7dfec;border-radius:20px;box-shadow:0 24px 80px rgba(20,32,26,.22)}
+.evidence-tabs{display:grid;grid-template-columns:1fr 1fr;gap:.35rem;margin-bottom:1rem;padding:.3rem;border-radius:12px;background:#e9edf5}
+.evidence-tabs button{display:flex;align-items:center;justify-content:center;gap:.35rem;padding:.6rem .55rem;border:0;border-radius:9px;background:transparent;color:#536174;font-size:.78rem;font-weight:800;cursor:pointer}
+.evidence-tabs button.active{background:#fff;color:#1e3150;box-shadow:0 2px 8px rgba(30,49,80,.08)}
+.evidence-tabs button b{display:inline-grid;place-items:center;min-width:20px;height:20px;border-radius:999px;background:#dfe6f5;font-size:.68rem}
+.evidence-drawer dl>div.highlight{border-color:#2d65f6;background:#f2f6ff;box-shadow:0 0 0 3px #2d65f619;animation:evidence-highlight 1.2s ease}
+.previous-evidence-list{display:grid;gap:.85rem}
+.previous-evidence-list>article{padding:.85rem;border:1px solid #dfe5ef;border-radius:14px;background:#fff}
+.previous-evidence-list article>header{display:flex;align-items:start;justify-content:space-between;gap:.75rem;margin-bottom:.7rem}
+.previous-evidence-list article>header small{color:#707b74}
+.previous-evidence-list article dl{gap:.45rem}
+.previous-evidence-list article dl>div{padding:.6rem;background:#fafbfe}
+@keyframes evidence-highlight{0%{transform:translateX(8px);background:#e6eeff}100%{transform:translateX(0);background:#f2f6ff}}
+@media(max-width:700px){
+  .evidence-drawer{top:8px;right:8px;height:calc(100% - 16px);width:calc(100% - 16px)}
+  .message-evidence-update{max-width:94%}
+}
