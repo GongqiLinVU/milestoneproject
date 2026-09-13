@@ -54,17 +54,27 @@ Detailed candidate design:
 - archived 2B1 history remains available;
 - existing-account reuse when a student continues into a later Block.
 
-## Phase 2C next design round
+## Phase 2C current UI-first round
 
-Deliver before resuming UI implementation:
+The portal and Intake workspace stabilise before conversation logic is
+connected:
 
-1. full interaction transcripts for strong evidence, little progress and
-   repeated unfinished action;
-2. responsive desktop/mobile wireframes;
-3. route transition and stop rules;
-4. minimal schema delta for outcome type, source links, student-accepted small
-   action and Teacher-help request;
-5. revised mandatory test cases and acceptance thresholds.
+1. show one expanded Current Session at the top;
+2. place My Project below it in compact form;
+3. collapse completed, catch-up and upcoming Session groups;
+4. move Class Activities to the bottom and collapse them on login;
+5. use one dedicated full-page Intake workspace for every selected Session;
+6. keep catch-up Sessions accessible but secondary when several Intakes are
+   open;
+7. validate desktop/mobile scrolling, navigation and draft protection;
+8. then connect routes, schema delta and AI extraction.
+
+Session status determines the primary class focus. Intake access only determines
+whether a Session may accept an Intake. Therefore S1 and S2 may remain open for
+catch-up while S3 is the single Current Session.
+
+Detailed UI decision:
+`docs/sprints/sprint-08/PHASE2C_UI_ARCHITECTURE.md`.
 
 The form-first prototype remains on the branch as a reference. Do not run the
 Phase 2C migration yet.
