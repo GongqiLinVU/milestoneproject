@@ -2030,3 +2030,16 @@ button.danger:hover {
   .evidence-drawer{top:8px;right:8px;height:calc(100% - 16px);width:calc(100% - 16px)}
   .message-evidence-update{max-width:94%}
 }
+
+
+/* Phase 2C LLM turn visibility and downloadable debug */
+.chat-message>span{display:flex;align-items:center;gap:.45rem}
+.chat-message.student>span{justify-content:flex-end}
+.llm-message-badge{padding:.12rem .38rem;border-radius:999px;background:#e9efff;color:#245cff;font-size:.6rem;letter-spacing:.05em}
+.llm-debug-panel{max-width:760px;margin:1.5rem auto 0;border:1px solid #d9dfda;border-radius:14px;background:#fff;overflow:hidden}
+.llm-debug-panel>summary{padding:.8rem 1rem;cursor:pointer;color:#4f5e55;font-size:.78rem;font-weight:800;list-style:none}
+.llm-debug-panel>summary::-webkit-details-marker{display:none}
+.llm-debug-panel>div{display:grid;gap:.7rem;padding:0 1rem 1rem}
+.llm-debug-panel p{margin:0;color:#6a756e;font-size:.76rem}
+.llm-debug-panel button{justify-self:start}
+.llm-debug-panel pre{max-height:280px;margin:0;padding:.8rem;overflow:auto;border-radius:10px;background:#142019;color:#dce8df;font-size:.68rem;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}
