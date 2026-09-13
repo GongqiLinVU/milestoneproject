@@ -193,16 +193,24 @@ Candidate interaction:
 - retain the full structured form as provider-independent fallback;
 - keep student confirmation and all existing authority/privacy boundaries.
 
-Phase 2C design deliverables precede further implementation:
+Phase 2C uses a UI-first delivery sequence:
 
-1. route and stop rules;
-2. desktop/mobile workspace wireframes;
-3. full interaction examples for strong evidence, little progress and repeated
-   unfinished action;
-4. minimal schema delta and revised mandatory regression suite.
+1. place one expanded Current Session at the top of the student portal;
+2. move Class Activities to a collapsed bottom section;
+3. group completed, catch-up and upcoming Sessions behind collapsed summaries;
+4. build one full-page responsive Intake workspace reused by every Session;
+5. validate navigation, scrolling and multiple-open-Session behaviour;
+6. then connect the conversation routes, schema delta and evidence extraction.
+
+The Intake record remains bound to one Session, while the UI exposes one shared
+workspace and one primary Session action. Multiple Intake-access Sessions appear
+as secondary catch-up options and cannot create parallel workspaces.
 
 Detailed design:
 `docs/sprints/sprint-08/PHASE2C_EXPERIENCE_DESIGN.md`.
+
+UI architecture:
+`docs/sprints/sprint-08/PHASE2C_UI_ARCHITECTURE.md`.
 
 Implementation status and retained technical boundaries:
 `docs/sprints/sprint-08/PHASE2C_IMPLEMENTATION.md`.
