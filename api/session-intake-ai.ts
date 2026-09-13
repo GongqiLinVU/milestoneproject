@@ -20,13 +20,15 @@ async function authenticatedStudent(token: string) {
 async function resolvePreviousRecord(admin: any, authUserId: string, sessionId: string) {
   const { data: account } = await admin.from("student_accounts")
     .select("student_id").eq("auth_user_id", authUserId).eq("status", "activated").maybeSingle();
-  const { data: session } = await admin.from("studio_sessions")
-    .select("id,block_id,session_number,focus,block:teaching_blocks!inner(block_code)")
+  const { data: session, error: sessionError } = await admin.from("studio_sessions")
+    .select("id,block_id,session_number,focus")
     .eq("id", sessionId).maybeSingle();
   if (!account) throw new Error("student_account_not_activated");
-  const block = Array.isArray(session?.block) ? session.block[0] : session?.block;
-  if (!session || block?.block_code !== "2B2" || session.session_number < 1 || session.session_number > 9) {
-    throw new Error("session_not_available");
+  if (sessionError || !session) throw new Error("session_record_not_found");
+  const { data: block, error: blockError } = await admin.from("teaching_blocks")
+    .select("block_code").eq("id", session.block_id).maybeSingle();
+  if (blockError || !block || block.block_code !== "2B2" || session.session_number < 1 || session.session_number > 9) {
+    throw new Error("session_not_eligible_for_ai_intake");
   }
   const { data: roster } = await admin.from("student_roster").select("id")
     .eq("block_id", session.block_id).eq("student_id", account.student_id).maybeSingle();
