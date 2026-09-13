@@ -1,18 +1,20 @@
 # Sprint 8 Plan — AI Session Intake & Evidence Verification
 
-**Status:** Phase 1, Phase 2A and Phase 2B complete; Phase 2C in Draft implementation
+**Status:** Phase 1, Phase 2A and Phase 2B complete; Phase 2C guided-experience design round
 **Source baseline:** Sprint 7 final observation of 2026 2B1  
 **Product area:** NIT3004 Engineering Studio Platform
 
 ## Sprint goal
 
-Pilot a short, adaptive AI Session Intake that replaces repetitive fixed progress
-forms with a bounded evidence interview.
+Pilot a guided AI Session Intake that helps students progress while producing
+a bounded evidence record. The experience combines a short conversation with a
+live evidence workspace instead of exposing the Evidence Schema as the normal
+student form.
 
-Each Session should produce a structured Progress Report without requiring the
-student to write a long report. AI asks personalised follow-up questions,
-extracts a stable evidence record and prepares targeted Teacher verification
-questions. Academic judgement remains with the teacher.
+Each Session should help the student state what actually happened, identify
+supporting evidence, choose a realistic next step or request Teacher help.
+Students with little or no progress remain first-class cases. Academic judgement
+and verification remain with the Teacher.
 
 ## Product proposition
 
@@ -171,19 +173,38 @@ Acceptance:
   and AI-generated summary
 - provider failure does not block deterministic submission
 
-### Phase 2C — AI-Assisted Intake
+### Phase 2C — Guided AI Intake and Evidence Workspace
 
-Add bounded provider assistance on top of the verified Phase 2B path:
+The first form-first prototype proved bounded provider assistance, validation,
+persistence and fallback. It is not the candidate student experience. Phase 2C
+now completes a design round before the UI is refactored.
 
-- use the three core answers and the same student's previous confirmed record;
-- generate zero to three evidence-focused follow-ups;
-- extract/refine a schema-valid student record without inventing evidence;
-- exclude direct identity, Block, Team and other-student raw text from provider input;
-- validate locally and again in a hardened AI-save RPC;
-- store prompt/model metadata separately from student confirmation;
-- fall back to the deterministic path on provider, network or schema failure.
+Candidate interaction:
 
-Phase 2C does not add Teacher verification or grading. Detailed implementation:
+- present one natural-language question at a time;
+- update a separate live evidence workspace during the conversation;
+- cover responsibility/change, evidence/verification and blocker/next action
+  through adaptive paths rather than a fixed visible questionnaire;
+- use current Session teaching focus and bounded same-student continuity;
+- support evidence, clarification, small-next-step and Teacher-help routes;
+- stop evidence interrogation when the student clearly reports no progress;
+- allow a valid outcome with evidence, missing evidence, an accepted small
+  action or a Teacher guidance request;
+- retain the full structured form as provider-independent fallback;
+- keep student confirmation and all existing authority/privacy boundaries.
+
+Phase 2C design deliverables precede further implementation:
+
+1. route and stop rules;
+2. desktop/mobile workspace wireframes;
+3. full interaction examples for strong evidence, little progress and repeated
+   unfinished action;
+4. minimal schema delta and revised mandatory regression suite.
+
+Detailed design:
+`docs/sprints/sprint-08/PHASE2C_EXPERIENCE_DESIGN.md`.
+
+Implementation status and retained technical boundaries:
 `docs/sprints/sprint-08/PHASE2C_IMPLEMENTATION.md`.
 
 ## Phase 3 — Teacher Verification Queue
