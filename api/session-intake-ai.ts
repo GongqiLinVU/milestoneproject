@@ -2,7 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const MAX_BODY_BYTES = 24_000;
 const PROMPT_VERSION = "session-intake-ai.v1.1.0";
-const MODEL = process.env.OPENAI_INTAKE_MODEL || process.env.OPENAI_MODEL || "gpt-5.6-luna";
+const MODEL = process.env.OPENAI_INTAKE_MODEL || process.env.OPENAI_MODEL || "gpt-5-mini";
 
 type Mode = "turn" | "questions" | "extract";
 const text = (value: unknown, max: number) =>
@@ -53,27 +53,29 @@ function outputText(response: any) {
 
 function sanitise(body: any, previous: any, sessionContext: any) {
   const answers = body?.answers || {};
+  const captured = new Set(Array.isArray(body?.capturedFields) ? body.capturedFields.map((value: unknown) => text(value, 40)) : []);
+  const include = (field: string) => body?.mode !== "turn" || captured.has(field);
   return {
     answers: {
-      responsibility: text(answers.responsibility, 500),
-      progress: text(answers.progress, 1000),
-      progressKind: text(answers.progressKind, 40),
-      scope: text(answers.scope, 500),
-      completionPercent: typeof answers.completionPercent === "number" ? Math.max(0, Math.min(100, answers.completionPercent)) : null,
-      evidenceType: text(answers.evidenceType, 50),
-      evidenceAvailability: text(answers.evidenceAvailability, 40),
-      evidenceReference: text(answers.evidenceReference, 1000),
-      verificationMethod: text(answers.verificationMethod, 1000),
-      testingStatus: text(answers.testingStatus, 40),
-      testingMethod: text(answers.testingMethod, 1000),
-      testingResult: text(answers.testingResult, 1000),
-      testingBaseline: text(answers.testingBaseline, 1000),
-      blockerStatus: text(answers.blockerStatus, 40),
-      blockerDescription: text(answers.blockerDescription, 1000),
-      supportRequested: text(answers.supportRequested, 500),
-      nextAction: text(answers.nextAction, 1000),
-      dueSession: text(answers.dueSession, 10),
-      expectedEvidence: text(answers.expectedEvidence, 1000),
+      responsibility: include("responsibility") ? text(answers.responsibility, 500) : "",
+      progress: include("claim") ? text(answers.progress, 1000) : "",
+      progressKind: include("claim") ? text(answers.progressKind, 40) : "",
+      scope: include("scope") ? text(answers.scope, 500) : "",
+      completionPercent: include("claim") && typeof answers.completionPercent === "number" ? Math.max(0, Math.min(100, answers.completionPercent)) : null,
+      evidenceType: include("evidence") ? text(answers.evidenceType, 50) : "",
+      evidenceAvailability: include("evidence") ? text(answers.evidenceAvailability, 40) : "",
+      evidenceReference: include("evidence") ? text(answers.evidenceReference, 1000) : "",
+      verificationMethod: include("verification_method") ? text(answers.verificationMethod, 1000) : "",
+      testingStatus: include("testing") ? text(answers.testingStatus, 40) : "",
+      testingMethod: include("testing") ? text(answers.testingMethod, 1000) : "",
+      testingResult: include("testing") ? text(answers.testingResult, 1000) : "",
+      testingBaseline: include("testing") ? text(answers.testingBaseline, 1000) : "",
+      blockerStatus: include("blocker") ? text(answers.blockerStatus, 40) : "",
+      blockerDescription: include("blocker") ? text(answers.blockerDescription, 1000) : "",
+      supportRequested: include("blocker") ? text(answers.supportRequested, 500) : "",
+      nextAction: include("next_action") ? text(answers.nextAction, 1000) : "",
+      dueSession: include("next_action") ? text(answers.dueSession, 10) : "",
+      expectedEvidence: include("next_action") ? text(answers.expectedEvidence, 1000) : "",
     },
     followUpAnswers: Object.fromEntries(
       Object.entries(body?.followUpAnswers || {}).slice(0, 3).map(([key, value]) => [text(key, 40), text(value, 1000)])
@@ -110,7 +112,7 @@ export default async function handler(req: any, res: any) {
   const sessionId = text(req.body?.sessionId, 36);
   if (!/^[0-9a-f-]{36}$/i.test(sessionId)) return res.status(400).json({ error: "Valid Session context is required." });
   if (!process.env.OPENAI_API_KEY) {
-    return res.status(503).json({ error: "AI Intake is not configured." });
+    return res.status(503).json({ error: "AI Intake is not configured.", code: "missing_api_key", fallback: true });
   }
   if (Buffer.byteLength(JSON.stringify(req.body || {}), "utf8") > MAX_BODY_BYTES) {
     return res.status(413).json({ error: "AI Intake request is too large." });
@@ -205,13 +207,14 @@ export default async function handler(req: any, res: any) {
   });
 
   if (!response.ok) {
-    console.error("AI Intake provider failed", response.status, response.headers.get("x-request-id"));
-    return res.status(502).json({ error: "AI Intake is temporarily unavailable.", fallback: true });
+    const providerRequestId = response.headers.get("x-request-id");
+    console.error("AI Intake provider failed", response.status, providerRequestId);
+    return res.status(502).json({ error: "AI Intake provider rejected the request.", code: "provider_rejected", providerStatus: response.status, providerRequestId, fallback: true });
   }
   try {
     const result = JSON.parse(outputText(await response.json()));
     return res.status(200).json({ mode, promptVersion: PROMPT_VERSION, model: MODEL, providerRequestId: response.headers.get("x-request-id"), result });
   } catch {
-    return res.status(502).json({ error: "AI Intake returned an invalid response.", fallback: true });
+    return res.status(502).json({ error: "AI Intake returned an invalid response.", code: "invalid_provider_response", providerRequestId: response.headers.get("x-request-id"), fallback: true });
   }
 }
