@@ -70,7 +70,11 @@ The first student UI slice is implemented on the Draft branch:
 - Intake opens as a full-page, ChatGPT-style conversation thread;
 - the student sees one assistant question at a time and replies through a sticky
   message composer;
+- every student answer calls the authenticated OpenAI turn endpoint, which
+  returns the next message, route and source-linked Evidence updates;
 - No progress and Teacher help are available as direct conversation routes;
+- a collapsed LLM debug panel records sanitized requests, structured responses,
+  model/prompt versions and provider request IDs and downloads them as JSON;
 - Evidence stays hidden by default and announces new extracted items through a
   count on the Evidence button;
 - selecting Evidence opens a dismissible right-side drawer;
