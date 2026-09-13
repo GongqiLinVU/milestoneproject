@@ -177,6 +177,54 @@ student to another open Session.
 - Closing with an unsaved draft requires confirmation.
 - Submission returns to Current Session and updates its status immediately.
 
+## Session Intake lifecycle and history
+
+Each Session produces one durable Intake snapshot. Conversation is available
+only while that Session Intake is active.
+
+| State | Student capability | Teacher capability |
+|---|---|---|
+| Not started | Start while Intake access is available | Open/close access |
+| Draft | Continue conversation; edit extracted fields | See submission is in progress, not its unfinished private draft |
+| Review pending | Correct fields and confirm | No verification yet |
+| Confirmed | Read-only | Review original turns and confirmed evidence |
+| Teacher reviewed | Read-only; view verification, comment and action | Append verification, comment and next action |
+| Session closed without confirmation | View an incomplete/closed status; cannot resume | Decide whether to reopen access or record guidance |
+
+A student confirmation immediately freezes:
+
+- the original conversation;
+- AI extraction shown at confirmation;
+- student corrections;
+- the final student-confirmed evidence record;
+- the prompt/schema/model metadata used for that run.
+
+Closing the Session also prevents continued conversation. Reopening Intake access
+is an explicit Teacher action. If a confirmed record already exists, reopening
+does not unlock or overwrite it; a correction requires a separate auditable
+Teacher-managed correction workflow in a later phase.
+
+Teacher review is stored separately from the student snapshot. Teacher comments,
+verification status and Teacher Actions are append-only academic records and
+cannot rewrite what the student originally claimed.
+
+Students can read Teacher feedback on a historical Session. They cannot reply
+inside the historical conversation. An unresolved Teacher Action is carried
+forward as context in the next eligible Session Intake, where the student can
+describe what happened in response.
+
+The History view therefore contains:
+
+- Session identity and teaching focus;
+- confirmed timestamp and outcome type;
+- read-only conversation transcript;
+- read-only evidence workspace as confirmed;
+- Teacher verification and comments;
+- Teacher Action and its later resolution link, when available.
+
+History must never present a button labelled Continue, Edit or Reply for a
+confirmed or closed Session.
+
 ## Intake status language
 
 | State | Primary action |
