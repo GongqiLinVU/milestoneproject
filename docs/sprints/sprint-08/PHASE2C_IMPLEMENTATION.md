@@ -67,14 +67,21 @@ The first student UI slice is implemented on the Draft branch:
 - upcoming Sessions are collapsed;
 - My Project uses a compact expandable summary;
 - Class Activities moved to the bottom and are collapsed on login;
-- Intake opens as a full-page shared workspace;
-- the evidence panel updates from the selected Session's current answers;
-- confirmed records render as locked history;
+- Intake opens as a full-page, ChatGPT-style conversation thread;
+- the student sees one assistant question at a time and replies through a sticky
+  message composer;
+- No progress and Teacher help are available as direct conversation routes;
+- Evidence stays hidden by default and announces new extracted items through a
+  count on the Evidence button;
+- selecting Evidence opens a dismissible right-side drawer;
+- confirmed records render in the same workspace as locked history without a
+  composer;
 - 2B1 retains the existing portal layout.
 
-The Vercel/TypeScript build passed for this slice. Next review should validate
-the information hierarchy, mobile scrolling and multi-Session selection in
-Preview before conversation routing is refactored.
+The Vercel/TypeScript build passed for this slice. The form-first component is
+no longer used by the normal Intake entry. Next review should validate the chat
+rhythm, hidden Evidence drawer, mobile scrolling and multi-Session selection in
+Preview.
 
 Remaining design/implementation deliverables:
 
