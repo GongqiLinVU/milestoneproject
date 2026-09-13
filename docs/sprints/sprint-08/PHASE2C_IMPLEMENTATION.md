@@ -2,7 +2,7 @@
 
 **Branch:** `sprint-08-phase2c-ai-intake`  
 **Schema baseline:** `session-intake.v1.0.0`  
-**Prompt prototype:** `session-intake-ai.v1.0.0`  
+**Prompt prototype:** `session-intake-ai.v1.1.0`  
 **Test suite baseline:** `ai-intake-suite.v1.0.0`
 
 ## Current decision
