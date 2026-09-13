@@ -554,7 +554,7 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
     const payload=await response.json().catch(()=>({}));
     if(!response.ok){
       const code=typeof payload.code==="string"?payload.code:"http_error";
-      const detail=[`${response.status}`,code,typeof payload.providerStatus==="number"?`provider_${payload.providerStatus}`:"",typeof payload.providerRequestId==="string"?`request_${payload.providerRequestId}`:""].filter(Boolean).join(":");
+      const detail=[`${response.status}`,typeof payload.stage==="string"?payload.stage:"unknown_stage",code,typeof payload.providerStatus==="number"?`provider_${payload.providerStatus}`:"",typeof payload.providerRequestId==="string"?`request_${payload.providerRequestId}`:""].filter(Boolean).join(":");
       throw new Error(detail);
     }
     return payload;
