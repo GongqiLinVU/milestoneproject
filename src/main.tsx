@@ -468,7 +468,7 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
     setBusy(false);
   }
   const saved=context?.confirmedRecord;
-  return createPortal(<div className="session-work-track-modal" role="presentation" onMouseDown={event=>event.target===event.currentTarget&&onClose()}><section className="session-work-track-dialog intake-dialog" role="dialog" aria-modal="true" aria-labelledby="session-intake-title"><button type="button" className="session-work-track-close" onClick={onClose} aria-label="Close Session Intake">×</button><div className="eyebrow">Structured progress evidence</div><h3 id="session-intake-title">Session Intake</h3><strong>S{session.sessionNumber} · {session.focus}</strong>
+  return createPortal(<div className="intake-workspace-backdrop"><section className="intake-workspace" aria-labelledby="session-intake-title"><header className="intake-workspace-header"><button type="button" className="secondary compact" onClick={onClose} aria-label="Back to Current Session">← Back to Sessions</button><div><div className="eyebrow">Guided evidence workspace</div><h3 id="session-intake-title">S{session.sessionNumber} · {session.focus}</h3><span>{saved?"Confirmed history · read-only":"Session Intake"}</span></div></header><div className="intake-workspace-grid"><main className="intake-conversation">
     {loading?<p className="empty-state">Loading Session Intake…</p>:saved?<div className="intake-confirmed"><CheckCircle2 size={30}/><h4>Intake confirmed</h4><p>Your submission is a claim and has not been Teacher verified.</p><dl><div><dt>Responsibility</dt><dd>{saved.studentRecord.responsibility.current}</dd></div><div><dt>Progress</dt><dd>{saved.studentRecord.claims.map(item=>item.statement).join(" · ")}</dd></div><div><dt>Next action</dt><dd>{saved.studentRecord.next_action.action} · {saved.studentRecord.next_action.due_session}</dd></div></dl><small>Confirmed {new Date(saved.confirmedAt).toLocaleString()} · deterministic fallback</small></div>:!context?.isOpen?<p className="track-readonly-note">Session Intake is closed. Your teacher controls when this pilot is available.</p>:<>
       <div className="intake-progress" aria-label={`Step ${step} of 5`}><span style={{width:`${step*20}%`}}/></div>
       {step===1&&<div className="work-track-fields"><h4>1. Your responsibility and progress</h4>{input("What are you personally responsible for?","responsibility","A specific component, analysis, workflow or deliverable")}{input("What did you personally complete or advance?","progress","Describe what changed since the previous Session")}{input("What exact part does this claim cover?","scope","Name the component, behaviour or boundary")}
@@ -479,10 +479,10 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
       {step===4&&<div className="work-track-fields"><h4>Clarify your evidence</h4><p className="form-note">{aiMeta.used?`AI selected ${followUps.length} evidence-focused follow-up${followUps.length===1?"":"s"}. Your answers remain unverified claims.`:`Secure fallback selected ${followUps.length} rule-based follow-up${followUps.length===1?"":"s"}.`}</p>{followUps.map(item=><label className="track-field" key={item.id}><span>{item.question}</span><textarea maxLength={1000} value={followUpAnswers[item.id]||""} onChange={event=>setFollowUpAnswers(current=>({...current,[item.id]:event.target.value}))}/></label>)}</div>}
       {step===5&&record&&<div className="intake-review"><h4>Confirm your structured summary</h4><p className="form-note">Edit earlier answers if anything is inaccurate. This is your claim, not a Teacher verification.</p><dl><div><dt>Responsibility</dt><dd>{record.responsibility.current}</dd></div><div><dt>Progress claim</dt><dd>{record.claims[0].statement}</dd></div><div><dt>Evidence</dt><dd>{record.evidence[0].availability.replaceAll("_"," ")} · {record.evidence[0].reference||record.evidence[0].verification_method||"No evidence identified"}</dd></div><div><dt>Testing</dt><dd>{record.testing[0]?.execution_status.replaceAll("_"," ")}</dd></div><div><dt>Blocker</dt><dd>{record.blocker.status}{record.blocker.description?` · ${record.blocker.description}`:""}</dd></div><div><dt>Next action</dt><dd>{record.next_action.action} · due {record.next_action.due_session}</dd></div></dl>{validation&&!validation.valid&&<p className="admin-alert">{validation.errors.join(" · ")}</p>}<label className="intake-attestation"><input type="checkbox" checked={confirmed} onChange={event=>setConfirmed(event.target.checked)}/><span>{STUDENT_CONFIRMATION_ATTESTATION}</span></label></div>}
       {message&&<p className="admin-alert" role="status">{message}</p>}<div className="track-dialog-actions"><button type="button" className="secondary" onClick={step===1?onClose:()=>{setMessage("");setStep(current=>(current===5?(followUps.length?4:3):current-1) as 1|2|3|4|5)}}>{step===1?"Close":"Back"}</button>{step<5?<button type="button" onClick={()=>void next()} disabled={busy}>{busy?"Preparing…":"Continue"}</button>:<button type="button" onClick={()=>void submit()} disabled={busy||!confirmed||!validation?.valid}>{busy?"Confirming…":"Confirm and submit"}</button>}</div></>}
-    {message&&saved&&<p className="admin-alert" role="status">{message}</p>}<div className="track-dialog-actions">{(saved||!context?.isOpen)&&<button type="button" className="secondary" onClick={onClose}>Close</button>}</div></section></div>,document.body);
+    {message&&saved&&<p className="admin-alert" role="status">{message}</p>}<div className="track-dialog-actions">{(saved||!context?.isOpen)&&<button type="button" className="secondary" onClick={onClose}>Back to Sessions</button>}</div></main><aside className="intake-evidence-panel"><div><span className="eyebrow">This Session's evidence</span><h4>{saved?"Confirmed snapshot":"Builds as you answer"}</h4><p>{saved?"Student history is locked. Teacher review is stored separately.":"Review what the Intake currently understands before you confirm."}</p></div><dl><div><dt>Responsibility</dt><dd>{saved?.studentRecord.responsibility.current||answers.responsibility||"Not captured yet"}</dd></div><div><dt>Claim</dt><dd>{saved?.studentRecord.claims?.[0]?.statement||answers.progress||"Not captured yet"}</dd></div><div><dt>Evidence</dt><dd>{saved?.studentRecord.evidence?.[0]?.reference||answers.evidenceReference||"Not identified yet"}</dd></div><div><dt>Testing</dt><dd>{saved?.studentRecord.testing?.[0]?.execution_status?.replaceAll("_"," ")||answers.testingStatus.replaceAll("_"," ")}</dd></div><div><dt>Blocker</dt><dd>{saved?.studentRecord.blocker.status||answers.blockerStatus}</dd></div><div><dt>Next action</dt><dd>{saved?.studentRecord.next_action.action||answers.nextAction||"Not captured yet"}</dd></div></dl><small>Student claim · Teacher verification is separate</small></aside></div></section></div>,document.body);
 }
 
-function StudentSessions({intakePilot=false}:{intakePilot?:boolean}) {
+function LegacyStudentSessions({intakePilot=false}:{intakePilot?:boolean}) {
   const [sessions, setSessions] = useState<StudentSessionRecord[]>([]);
   const [trackSession, setTrackSession] = useState<StudentSessionRecord | null>(null);
   const [feedbackSession, setFeedbackSession] = useState<StudentSessionRecord | null>(null);
@@ -528,6 +528,63 @@ function StudentSessions({intakePilot=false}:{intakePilot?:boolean}) {
     {feedbackSession&&<PlatformFeedbackModal session={feedbackSession} onClose={()=>setFeedbackSession(null)} onSaved={()=>window.dispatchEvent(new CustomEvent("student-session-checkin"))}/>}
   </section>;
 }
+function StudentSessions({intakePilot=false}:{intakePilot?:boolean}) {
+  if(!intakePilot) return <LegacyStudentSessions intakePilot={false}/>;
+  const [sessions,setSessions]=useState<StudentSessionRecord[]>([]);
+  const [intakes,setIntakes]=useState<Record<string,SessionIntakeContext|null>>({});
+  const [selected,setSelected]=useState<StudentSessionRecord|null>(null);
+  const [loading,setLoading]=useState(true);
+  const [error,setError]=useState("");
+  useEffect(()=>{
+    let active=true;
+    const refresh=async()=>{
+      const {data,error:journeyError}=await supabase.rpc("get_my_session_journey");
+      if(!active)return;
+      if(journeyError){setError("Your Sessions could not be loaded. Please refresh or tell your teacher.");setLoading(false);return;}
+      const items=((data as StudentSessionRecord[]|null)||[]).sort((a,b)=>a.sessionNumber-b.sessionNumber);
+      setSessions(items);
+      const pairs=await Promise.all(items.filter(item=>item.sessionNumber<=9).map(async item=>{
+        const {data:intake}=await supabase.rpc("get_my_session_intake",{p_session_id:item.sessionId});
+        return [item.sessionId,intake as SessionIntakeContext|null] as const;
+      }));
+      if(active){setIntakes(Object.fromEntries(pairs));setError("");setLoading(false);}
+    };
+    const onRefresh=()=>void refresh();
+    void refresh();
+    window.addEventListener("student-session-checkin",onRefresh);
+    return()=>{active=false;window.removeEventListener("student-session-checkin",onRefresh);};
+  },[]);
+  const openSessions=sessions.filter(item=>item.status==="open").sort((a,b)=>b.sessionNumber-a.sessionNumber);
+  const available=sessions.filter(item=>intakes[item.sessionId]?.isOpen&&!intakes[item.sessionId]?.confirmedRecord).sort((a,b)=>b.sessionNumber-a.sessionNumber);
+  const primary=openSessions[0]||available[0]||sessions.find(item=>item.status==="scheduled")||sessions.at(-1)||null;
+  const others=sessions.filter(item=>item.sessionId!==primary?.sessionId);
+  const catchup=others.filter(item=>intakes[item.sessionId]?.isOpen&&!intakes[item.sessionId]?.confirmedRecord);
+  const history=others.filter(item=>Boolean(intakes[item.sessionId]?.confirmedRecord)||item.status==="closed");
+  const upcoming=others.filter(item=>!catchup.includes(item)&&!history.includes(item));
+  const action=(item:StudentSessionRecord,catchUp=false)=>{
+    const intake=intakes[item.sessionId];
+    if(intake?.confirmedRecord)return <button type="button" className="secondary compact" onClick={()=>setSelected(item)}>View confirmed Intake</button>;
+    if(intake?.isOpen)return <button type="button" className={catchUp?"secondary compact":"compact"} onClick={()=>setSelected(item)}>{catchUp?"Complete catch-up Intake":"Start guided Intake"}</button>;
+    return <span className="session-intake-unavailable">Intake {item.status==="closed"?"closed":"not open yet"}</span>;
+  };
+  const compact=(item:StudentSessionRecord,catchUp=false)=><article key={item.sessionId} className="session-compact-row"><div><b>S{item.sessionNumber} · {item.focus}</b><small>{new Date(item.sessionDate+"T00:00:00").toLocaleDateString()} · {intakes[item.sessionId]?.confirmedRecord?"Confirmed":catchUp?"Catch-up available":item.status==="closed"?"Closed":"Upcoming"}</small></div>{action(item,catchUp)}</article>;
+  return <section id="sessions" className="portal-section session-first-area">
+    {loading?<p className="empty-state">Loading your Current Session…</p>:error?<p className="empty-state error-state" role="alert">{error}</p>:primary?<><article className="current-session-panel">
+      <div className="current-session-top"><div><span className="current-session-label">Current Session</span><h2>S{primary.sessionNumber} · {primary.focus}</h2><p>{primary.title}</p></div><span className={"activity-control-status "+primary.status}>{primary.status==="open"?"Current":primary.status==="closed"?"Closed":"Next"}</span></div>
+      <div className="current-session-status">
+        <div><span>Attendance</span>{primary.checkedInAt?<b><CheckCircle2 size={16}/> Checked in</b>:<b>Check-in pending</b>}</div>
+        <div><span>Session Intake</span><b>{intakes[primary.sessionId]?.confirmedRecord?"Confirmed":intakes[primary.sessionId]?.isOpen?"Ready":"Not available"}</b></div>
+      </div>
+      <div className="current-session-action"><div><span>Your evidence journey</span><p>{intakes[primary.sessionId]?.confirmedRecord?"This Session is locked as read-only history.":intakes[primary.sessionId]?.isOpen?"Describe what happened, organise evidence and agree your next step.":"Your Teacher controls when this Intake opens."}</p></div>{action(primary)}</div>
+    </article>
+    {catchup.length>0&&<details className="session-group"><summary><span><b>Catch-up available</b><small>{catchup.length} incomplete Session{catchup.length===1?"":"s"}</small></span><ChevronDown size={20}/></summary><div>{catchup.map(item=>compact(item,true))}</div></details>}
+    {history.length>0&&<details className="session-group"><summary><span><b>Session history</b><small>{history.length} previous Session{history.length===1?"":"s"} · read-only after confirmation</small></span><ChevronDown size={20}/></summary><div>{history.map(item=>compact(item))}</div></details>}
+    {upcoming.length>0&&<details className="session-group"><summary><span><b>Upcoming Sessions</b><small>{upcoming.length} prepared</small></span><ChevronDown size={20}/></summary><div>{upcoming.map(item=>compact(item))}</div></details>}
+    </>:<p className="empty-state">No Sessions have been prepared for this Block.</p>}
+    {selected&&<SessionIntakeModal session={selected} onClose={()=>setSelected(null)} onSaved={()=>window.dispatchEvent(new CustomEvent("student-session-checkin"))}/>}
+  </section>;
+}
+
 function StudentPortal({ student }: { student: AuthenticatedStudent }) {
   const [form, setForm] = useState<Kind | null>(null);
   const [reviewTarget, setReviewTarget] = useState<string | null>(null);
@@ -542,6 +599,9 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
       setPresentationOrder(order.error ? [] : ((order.data as Array<{ position: number; teamName: string; projectName: string | null }>) || []));
     });
   }, [student.blockId]);
+  const intakePilot=/^2026\s*(?:·\s*)?2B2$/i.test(student.blockLabel.trim());
+  const projectPanel=<section id="my-project" className="portal-panel portal-section"><details className={intakePilot?"project-summary-details":""} open={!intakePilot}><summary className={intakePilot?"project-summary-toggle":undefined}><div><span>My Project</span><b>{student.projectName||"Project not assigned"}</b></div>{intakePilot&&<ChevronDown size={20}/>}</summary><div className="project-summary-body"><Head label="My Project" title={student.projectName || "Project not assigned"} text={student.projectDescription || (student.projectSource === "roster" ? "This project name came from the roster but is not yet linked to the Project Catalogue. Ask your teacher to complete the team assignment." : "Your teacher has not assigned a catalogue project to this team yet.")}/><div className="student-project-summary"><div><span>Student</span><b>{student.studentName}</b><small>{student.studentId}</small></div><div><span>Team</span><b>{student.teamName}</b><small>Roster assignment</small></div><div><span>Project</span><b>{student.projectName || "Pending"}</b><small>{student.projectCategory || "Catalogue assignment pending"}{student.projectDifficulty ? ` · ${student.projectDifficulty}` : ""}</small></div></div>{student.projectSource === "catalogue" && <div className="project-detail-grid"><article><span>Problem</span><p>{student.projectProblem || "Not specified"}</p></article><article><span>Target users</span><p>{student.projectTargetUsers || "Not specified"}</p></article><article className="wide"><span>Expected outcomes</span><p>{student.projectExpectedOutcomes || "Not specified"}</p></article></div>}</div></details></section>;
+  const activities=<details className="portal-section class-activities"><summary><div><span>Class Activities</span><b>Guided together during class</b><small>{weekStates?Object.values(weekStates).filter(Boolean).length:0} weeks available</small></div><span className="class-activities-show">Show activities <ChevronDown size={20}/></span></summary><div className="portal-weekly-section"><WeeklyHub open={(kind)=>{setReviewTarget(null);setForm(kind)}} openReview={(teamName)=>{setReviewTarget(teamName);setForm("review")}} weekStates={weekStates} presentationOrder={presentationOrder}/></div></details>;
   return (
     <>
       <header>
@@ -549,9 +609,9 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
           NIT3004 <span>Engineering Studio</span>
         </a>
         <nav>
-          <a href="#weekly">This Week</a>
+          <a href="#sessions">Current Session</a>
           <a href="#my-project">My Project</a>
-          <a href="#sessions">Sessions</a>
+          <a href="#weekly">Activities</a>
           <a href="#get-help">Get Help</a>
         </nav>
       </header>
@@ -568,17 +628,7 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
           </div>
           <p>{student.blockLabel} · Complete only the activity that matters now.</p>
         </section>
-        <div className="portal-section portal-weekly-section"><WeeklyHub
-          open={(kind) => { setReviewTarget(null); setForm(kind); }}
-          openReview={(teamName) => { setReviewTarget(teamName); setForm("review"); }}
-          weekStates={weekStates}
-          presentationOrder={presentationOrder}
-        /></div>
-        <section id="my-project" className="portal-panel portal-section"><Head label="My Project" title={student.projectName || "Project not assigned"} text={student.projectDescription || (student.projectSource === "roster" ? "This project name came from the roster but is not yet linked to the Project Catalogue. Ask your teacher to complete the team assignment." : "Your teacher has not assigned a catalogue project to this team yet.")}/>
-          <div className="student-project-summary"><div><span>Student</span><b>{student.studentName}</b><small>{student.studentId}</small></div><div><span>Team</span><b>{student.teamName}</b><small>Roster assignment</small></div><div><span>Project</span><b>{student.projectName || "Pending"}</b><small>{student.projectCategory || "Catalogue assignment pending"}{student.projectDifficulty ? ` · ${student.projectDifficulty}` : ""}</small></div></div>
-          {student.projectSource === "catalogue" && <div className="project-detail-grid"><article><span>Problem</span><p>{student.projectProblem || "Not specified"}</p></article><article><span>Target users</span><p>{student.projectTargetUsers || "Not specified"}</p></article><article className="wide"><span>Expected outcomes</span><p>{student.projectExpectedOutcomes || "Not specified"}</p></article></div>}
-        </section>
-        <StudentSessions intakePilot={/^2026\s*(?:·\s*)?2B2$/i.test(student.blockLabel.trim())}/>
+        {intakePilot?<><StudentSessions intakePilot/>{projectPanel}{activities}</>:<><div className="portal-section portal-weekly-section"><WeeklyHub open={(kind)=>{setReviewTarget(null);setForm(kind)}} openReview={(teamName)=>{setReviewTarget(teamName);setForm("review")}} weekStates={weekStates} presentationOrder={presentationOrder}/></div>{projectPanel}<StudentSessions/></>}
         <section id="get-help" className="portal-panel portal-section"><Head label="Get Help" title="Bring one clear question." text="Use the support choices inside the current weekly activity so your teacher can connect help to the right evidence and session."/></section>
       </main>
       <footer>
