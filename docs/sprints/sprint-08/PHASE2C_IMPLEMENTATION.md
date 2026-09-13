@@ -57,15 +57,33 @@ Teacher guidance. They are not automatic risk scores.
 - deterministic completion after provider, network or schema failure;
 - AI cannot write Teacher verification, Teacher Action or marks.
 
-## Design-round deliverables
+## UI-first implementation status
 
-1. collection routes and transition/stop rules;
-2. desktop and mobile workspace wireframes;
-3. three full conversation-to-evidence examples: strong evidence, little
-   progress, and repeated unfinished action;
-4. minimal schema delta for outcome type, source links, accepted small action
-   and Teacher-help request;
-5. revised mandatory regression suite and acceptance thresholds.
+The first student UI slice is implemented on the Draft branch:
+
+- 2B2 opens with one expanded Current Session;
+- multiple eligible Sessions are grouped as secondary catch-up options;
+- confirmed and closed Sessions appear under read-only History;
+- upcoming Sessions are collapsed;
+- My Project uses a compact expandable summary;
+- Class Activities moved to the bottom and are collapsed on login;
+- Intake opens as a full-page shared workspace;
+- the evidence panel updates from the selected Session's current answers;
+- confirmed records render as locked history;
+- 2B1 retains the existing portal layout.
+
+The Vercel/TypeScript build passed for this slice. Next review should validate
+the information hierarchy, mobile scrolling and multi-Session selection in
+Preview before conversation routing is refactored.
+
+Remaining design/implementation deliverables:
+
+1. refine the responsive workspace after UI review;
+2. define the minimal schema delta for outcome type, source links, accepted
+   small action and Teacher-help request;
+3. connect evidence, clarification, small-step and Teacher-help routes;
+4. add draft protection and explicit current-versus-catch-up context;
+5. execute the revised mandatory regression suite.
 
 No Phase 2C migration should be applied until the schema delta and candidate
 experience are reviewed.
