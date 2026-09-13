@@ -21,7 +21,7 @@ async function resolvePreviousRecord(admin: any, authUserId: string, sessionId: 
   const { data: account } = await admin.from("student_accounts")
     .select("student_id").eq("auth_user_id", authUserId).eq("status", "activated").maybeSingle();
   const { data: session, error: sessionError } = await admin.from("studio_sessions")
-    .select("id,block_id,session_number,focus")
+    .select("id,block_id,session_number,curriculum_focus")
     .eq("id", sessionId).maybeSingle();
   if (!account) throw new Error("student_account_not_activated");
   if (sessionError || !session) throw new Error("session_record_not_found");
@@ -40,9 +40,9 @@ async function resolvePreviousRecord(admin: any, authUserId: string, sessionId: 
   for (const previousSession of previousSessions || []) {
     const { data: intake } = await admin.from("student_session_intakes").select("student_record")
       .eq("session_id", previousSession.id).eq("student_id", account.student_id).maybeSingle();
-    if (intake?.student_record) return { previousRecord: intake.student_record, sessionContext: { sessionNumber: session.session_number, focus: session.focus } };
+    if (intake?.student_record) return { previousRecord: intake.student_record, sessionContext: { sessionNumber: session.session_number, focus: session.curriculum_focus } };
   }
-  return { previousRecord: null, sessionContext: { sessionNumber: session.session_number, focus: session.focus } };
+  return { previousRecord: null, sessionContext: { sessionNumber: session.session_number, focus: session.curriculum_focus } };
 }
 
 function outputText(response: any) {
