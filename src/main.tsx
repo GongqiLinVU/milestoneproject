@@ -483,7 +483,7 @@ function FormSessionIntakePrototype({session,onClose,onSaved}:{session:StudentSe
 }
 
 
-type IntakeChatTurn={actor:"system"|"student";purpose:string;text:string;evidenceChanges?:string[]};
+type IntakeChatTurn={actor:"system"|"student";purpose:string;text:string;source?:"system"|"llm"|"fallback";evidenceChanges?:string[]};
 type IntakeHistoryRecord={sessionNumber:number;focus:string;record:IntakeStudentRecord;confirmedAt:string};
 type IntakeTurnResult={assistantMessage:string;route:"evidence"|"clarification"|"small_step"|"teacher_help"|"review";readyForReview:boolean;evidenceUpdates:Array<{field:"responsibility"|"claim"|"scope"|"evidence"|"verification_method"|"testing"|"blocker"|"next_action";value:string;state:"student_claim"|"available"|"missing"|"unknown"|"planned"|"executed"|"needs_teacher";sourceTurn:number}>;uncertainties:string[];suggestedTeacherQuestions:string[]};
 type IntakeDebugEvent={at:string;mode:string;request:Record<string,unknown>;response?:Record<string,unknown>;error?:string};
@@ -550,9 +550,14 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
   const openEvidence=(fields:string[],tab:"current"|"previous"="current")=>{setHighlightFields(fields);setEvidenceTab(tab);setEvidenceOpen(true);setEvidenceUpdates(0)};
   async function callAi(mode:"turn"|"questions"|"extract",nextAnswers:DeterministicIntakeAnswers,nextFollowUps=followUpAnswers,conversation: IntakeChatTurn[]=turns){
     const {data:{session:authSession}}=await supabase.auth.getSession();
-    const response=await fetch("/api/session-intake-ai",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${authSession?.access_token||""}`},body:JSON.stringify({mode,sessionId:session.sessionId,answers:nextAnswers,followUpAnswers:nextFollowUps,conversation})});
-    if(!response.ok)throw new Error("provider");
-    return response.json();
+    const response=await fetch("/api/session-intake-ai",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${authSession?.access_token||""}`},body:JSON.stringify({mode,sessionId:session.sessionId,answers:nextAnswers,followUpAnswers:nextFollowUps,conversation,capturedFields})});
+    const payload=await response.json().catch(()=>({}));
+    if(!response.ok){
+      const code=typeof payload.code==="string"?payload.code:"http_error";
+      const detail=[`${response.status}`,code,typeof payload.providerStatus==="number"?`provider_${payload.providerStatus}`:"",typeof payload.providerRequestId==="string"?`request_${payload.providerRequestId}`:""].filter(Boolean).join(":");
+      throw new Error(detail);
+    }
+    return payload;
   }
   async function prepareReview(nextAnswers:DeterministicIntakeAnswers,nextFollowUpAnswers=followUpAnswers,nextMeta=aiMeta){
     setBusy(true);
@@ -627,7 +632,7 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
   }
   async function fallbackAfterFailure(text:string){
     const question=stage===0?"What concrete evidence or demonstration could show the part you just described?":stage===1?"What is the smallest next action you can complete, and do you need your Teacher to decide anything?":"Please identify the single most useful detail your Teacher should review.";
-    setTurns(current=>[...current,{actor:"system",purpose:"provider fallback",text:question}]);
+    setTurns(current=>[...current,{actor:"system",purpose:"provider fallback",source:"fallback",text:question}]);
     setStage(current=>Math.min(3,current+1) as 0|1|2|3);
     setMessage("The AI response was unavailable. Your answer is saved in this draft and a fallback question is shown.");
   }
@@ -636,7 +641,7 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
     const studentTurn:IntakeChatTurn={actor:"student",purpose:"student response",text};
     const conversation=[...turns,studentTurn];
     setDraft("");setTurns(conversation);setEvidenceOpen(false);setBusy(true);setMessage("");
-    const debugRequest={sessionNumber:session.sessionNumber,sessionFocus:session.focus,conversation:conversation.map(turn=>({actor:turn.actor,text:turn.text})),currentEvidence:answers};
+    const debugRequest={sessionNumber:session.sessionNumber,sessionFocus:session.focus,conversation:conversation.map(turn=>({actor:turn.actor,text:turn.text})),capturedFields,currentEvidence:Object.fromEntries(Object.entries(answers).filter(([key])=>{const map:Record<string,string[]>={responsibility:["responsibility"],progress:["claim"],progressKind:["claim"],scope:["scope"],completionPercent:["claim"],evidenceType:["evidence"],evidenceAvailability:["evidence"],evidenceReference:["evidence"],verificationMethod:["verification_method"],testingStatus:["testing"],testingMethod:["testing"],testingResult:["testing"],testingBaseline:["testing"],blockerStatus:["blocker"],blockerDescription:["blocker"],supportRequested:["blocker"],nextAction:["next_action"],dueSession:["next_action"],expectedEvidence:["next_action"]};return (map[key]||[]).some(field=>capturedFields.includes(field))}))};
     try{
       const payload=await callAi("turn",answers,followUpAnswers,conversation);
       const result=payload.result as IntakeTurnResult;
@@ -650,10 +655,10 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
       setDebugEvents(current=>[...current,{at:new Date().toISOString(),mode:"turn",request:debugRequest,response:{model:payload.model,promptVersion:payload.promptVersion,providerRequestId:payload.providerRequestId,result}}]);
       const assistantCount=conversation.filter(turn=>turn.actor==="system").length;
       if(result.readyForReview||result.route==="review"||assistantCount>=6){
-        if(result.assistantMessage)addTurn({actor:"system",purpose:"review transition",text:result.assistantMessage});
+        if(result.assistantMessage)addTurn({actor:"system",purpose:"review transition",source:"llm",text:result.assistantMessage});
         await prepareReview(nextAnswers,followUpAnswers,{...aiMeta,used:true,promptVersion:payload.promptVersion||null,model:payload.model||null,uncertainties:result.uncertainties||[],suggestedTeacherQuestions:result.suggestedTeacherQuestions||[],extractionStatus:"not_used"});
       }else{
-        addTurn({actor:"system",purpose:result.route,text:result.assistantMessage});
+        addTurn({actor:"system",purpose:result.route,source:"llm",text:result.assistantMessage});
         setStage(current=>Math.min(3,current+1) as 0|1|2|3);setBusy(false);
       }
     }catch(error){
@@ -693,7 +698,7 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
   return createPortal(<div className="chat-intake-page"><header className="chat-intake-header"><button type="button" className="secondary compact" onClick={onClose}>← Sessions</button><div><span>{saved?"Session history":"AI Session Intake"}</span><h2>S{session.sessionNumber} · {session.focus}</h2></div><button type="button" className={`evidence-drawer-trigger ${evidenceUpdates&&!evidenceOpen?"has-updates":""}`} onClick={()=>evidenceOpen?setEvidenceOpen(false):openEvidence([])}>Evidence chain {evidenceUpdates&&!evidenceOpen?<b>{evidenceUpdates} new</b>:null}</button></header>
     <main className="chat-intake-shell"><section className="chat-thread" aria-label="Session Intake conversation">
       {loading?<p className="empty-state">Loading Session Intake…</p>:saved?<><div className="chat-message assistant"><span>Intake</span><p>This Session was confirmed on {new Date(saved.confirmedAt).toLocaleString()}. The conversation and evidence are now read-only.</p></div><div className="chat-message student"><span>Your confirmed claim</span><p>{saved.studentRecord.claims.map(item=>item.statement).join(" · ")}</p></div><div className="chat-message assistant"><span>Next action</span><p>{saved.studentRecord.next_action.action} · {saved.studentRecord.next_action.due_session}</p></div></>:!context?.isOpen?<div className="chat-message assistant"><p>This Session Intake is closed. Your Teacher controls when it is available.</p></div>:<>
-        {turns.map((turn,index)=><div key={index} className={`chat-message ${turn.actor==="student"?"student":"assistant"}`}><span>{turn.actor==="student"?"You":"Intake assistant"}{turn.actor==="system"&&index>0?<b className="llm-message-badge">LLM</b>:null}</span><p>{turn.text}</p>{turn.actor==="student"&&turn.evidenceChanges?.length?<button type="button" className="message-evidence-update" onClick={()=>openEvidence(turn.evidenceChanges||[])}><b>{turn.evidenceChanges.length} evidence field{turn.evidenceChanges.length===1?"":"s"} updated</b><span>{turn.evidenceChanges.map(value=>value.replace("_"," ")).join(" · ")} · View changes</span></button>:null}</div>)}
+        {turns.map((turn,index)=><div key={index} className={`chat-message ${turn.actor==="student"?"student":"assistant"}`}><span>{turn.actor==="student"?"You":"Intake assistant"}{turn.source==="llm"?<b className="llm-message-badge">LLM</b>:turn.source==="fallback"?<b className="llm-message-badge">Fallback</b>:null}</span><p>{turn.text}</p>{turn.actor==="student"&&turn.evidenceChanges?.length?<button type="button" className="message-evidence-update" onClick={()=>openEvidence(turn.evidenceChanges||[])}><b>{turn.evidenceChanges.length} evidence field{turn.evidenceChanges.length===1?"":"s"} updated</b><span>{turn.evidenceChanges.map(value=>value.replace("_"," ")).join(" · ")} · View changes</span></button>:null}</div>)}
         {busy&&<div className="chat-message assistant thinking"><span>Intake assistant</span><p>Organising your answer…</p></div>}
         {stage===4&&record&&<div className="chat-review-card"><span>Ready for your review</span><h3>Confirm this Session record</h3><p>Your statements remain claims until your Teacher verifies them. Open Evidence to review the complete record.</p><label><input type="checkbox" checked={confirmed} onChange={event=>setConfirmed(event.target.checked)}/><span>{STUDENT_CONFIRMATION_ATTESTATION}</span></label><button type="button" onClick={()=>void submit()} disabled={!confirmed||busy}>{busy?"Confirming…":"Confirm Session Intake"}</button></div>}
         {debugEvents.length>0&&<details className="llm-debug-panel"><summary>LLM debug · {debugEvents.length} call{debugEvents.length===1?"":"s"}</summary><div><p>Contains this mock student's de-identified Intake request and structured model response.</p><button type="button" className="secondary compact" onClick={downloadDebug}>Download debug JSON</button><pre>{JSON.stringify(debugEvents.at(-1),null,2)}</pre></div></details>}
