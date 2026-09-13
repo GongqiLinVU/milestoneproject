@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 
 const MAX_BODY_BYTES = 24_000;
-const PROMPT_VERSION = "session-intake-ai.v1.0.0";
+const PROMPT_VERSION = "session-intake-ai.v1.1.0";
 const MODEL = process.env.OPENAI_INTAKE_MODEL || process.env.OPENAI_MODEL || "gpt-5.6-luna";
 
 type Mode = "turn" | "questions" | "extract";
