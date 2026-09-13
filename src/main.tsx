@@ -483,13 +483,14 @@ function FormSessionIntakePrototype({session,onClose,onSaved}:{session:StudentSe
 }
 
 
-type IntakeChatTurn={actor:"system"|"student";purpose:string;text:string};
+type IntakeChatTurn={actor:"system"|"student";purpose:string;text:string;evidenceChanges?:string[]};
+type IntakeHistoryRecord={sessionNumber:number;focus:string;record:IntakeStudentRecord;confirmedAt:string};
 
 function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRecord;onClose:()=>void;onSaved:()=>void}) {
-  const opening="Tell me what you were personally responsible for in this Session and what actually happened with that work.";
   const [context,setContext]=useState<SessionIntakeContext|null>(null);
+  const [historyRecords,setHistoryRecords]=useState<IntakeHistoryRecord[]>([]);
   const [answers,setAnswers]=useState<DeterministicIntakeAnswers>(()=>newIntakeAnswers(session.sessionNumber));
-  const [turns,setTurns]=useState<IntakeChatTurn[]>([{actor:"system",purpose:"responsibility and progress",text:opening}]);
+  const [turns,setTurns]=useState<IntakeChatTurn[]>([]);
   const [draft,setDraft]=useState("");
   const [stage,setStage]=useState<0|1|2|3|4>(0);
   const [noProgress,setNoProgress]=useState(false);
@@ -499,15 +500,48 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
   const [record,setRecord]=useState<IntakeStudentRecord|null>(null);
   const [aiMeta,setAiMeta]=useState<AiIntakeMeta>({used:false,promptVersion:null,model:null,questionPurposes:[],uncertainties:[],flags:[],suggestedTeacherQuestions:[],extractionStatus:"not_used"});
   const [evidenceOpen,setEvidenceOpen]=useState(false);
+  const [evidenceTab,setEvidenceTab]=useState<"current"|"previous">("current");
+  const [highlightFields,setHighlightFields]=useState<string[]>([]);
   const [evidenceUpdates,setEvidenceUpdates]=useState(0);
   const [confirmed,setConfirmed]=useState(false);
   const [loading,setLoading]=useState(true);
   const [busy,setBusy]=useState(false);
   const [message,setMessage]=useState("");
   const endRef=useRef<HTMLDivElement|null>(null);
-  useEffect(()=>{let active=true;supabase.rpc("get_my_session_intake",{p_session_id:session.sessionId}).then(({data,error})=>{if(!active)return;if(error)setMessage("Session Intake is unavailable for this Session.");else setContext(data as SessionIntakeContext);setLoading(false)});return()=>{active=false}},[session.sessionId]);
+  useEffect(()=>{
+    let active=true;
+    const load=async()=>{
+      const [{data,error},{data:journey}]=await Promise.all([
+        supabase.rpc("get_my_session_intake",{p_session_id:session.sessionId}),
+        supabase.rpc("get_my_session_journey")
+      ]);
+      if(!active)return;
+      if(error){setMessage("Session Intake is unavailable for this Session.");setLoading(false);return;}
+      const nextContext=data as SessionIntakeContext;
+      setContext(nextContext);
+      const previousSessions=((journey as StudentSessionRecord[]|null)||[]).filter(item=>item.sessionNumber<session.sessionNumber);
+      const previous=await Promise.all(previousSessions.map(async item=>{
+        const {data:past}=await supabase.rpc("get_my_session_intake",{p_session_id:item.sessionId});
+        const confirmed=(past as SessionIntakeContext|null)?.confirmedRecord;
+        return confirmed?{sessionNumber:item.sessionNumber,focus:item.focus,record:confirmed.studentRecord,confirmedAt:confirmed.confirmedAt}:null;
+      }));
+      if(!active)return;
+      setHistoryRecords(previous.filter((item):item is IntakeHistoryRecord=>Boolean(item)).sort((a,b)=>b.sessionNumber-a.sessionNumber));
+      const prior=nextContext.previousConfirmed?.studentRecord;
+      const first=session.sessionNumber===1
+        ?"Start with one part of the project that you will personally own before S2. Choose something observable, such as one screen, API endpoint, sensor task, analysis step or report section. What is that specific part, and what first result will you produce?"
+        :prior
+          ?`In your last confirmed Intake, your responsibility was “${prior.responsibility.current}” and your next action was “${prior.next_action.action}”. Start there: what did you actually complete, change, test or discover since then? If the plan changed or nothing progressed, say that directly.`
+          :`This is S${session.sessionNumber}: ${session.focus}. Start with one specific part you personally worked on since the previous class. What changed, and what observable result exists now?`;
+      setTurns([{actor:"system",purpose:"session starting point",text:first}]);
+      setLoading(false);
+    };
+    void load();
+    return()=>{active=false};
+  },[session.sessionId,session.sessionNumber,session.focus]);
   useEffect(()=>{endRef.current?.scrollIntoView({behavior:"smooth",block:"nearest"})},[turns,stage]);
   const addTurn=(turn:IntakeChatTurn)=>setTurns(current=>[...current,turn]);
+  const openEvidence=(fields:string[],tab:"current"|"previous"="current")=>{setHighlightFields(fields);setEvidenceTab(tab);setEvidenceOpen(true);setEvidenceUpdates(0)};
   async function callAi(mode:"questions"|"extract",nextAnswers:DeterministicIntakeAnswers,nextFollowUps=followUpAnswers){
     const {data:{session:authSession}}=await supabase.auth.getSession();
     const response=await fetch("/api/session-intake-ai",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${authSession?.access_token||""}`},body:JSON.stringify({mode,sessionId:session.sessionId,answers:nextAnswers,followUpAnswers:nextFollowUps})});
@@ -553,8 +587,9 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
   }
   async function send(){
     const text=draft.trim();if(!text||busy||stage===4)return;
-    setDraft("");addTurn({actor:"student",purpose:stage===0?"progress answer":stage===1?(noProgress?"blocker answer":"evidence answer"):stage===2?"next action answer":`${followUps[followIndex]?.purpose||"clarification"} answer`,text});
-    setEvidenceOpen(false);setEvidenceUpdates(current=>current+1);
+    const changes=stage===0?(noProgress?["responsibility","claim"]:["responsibility","claim"]):stage===1?(noProgress?["blocker"]:["evidence"]):stage===2?["next_action"]:[followUps[followIndex]?.id==="testing_result"?"testing":followUps[followIndex]?.id==="blocker_change"?"blocker":followUps[followIndex]?.id==="evidence_plan"?"evidence":"claim"];
+    setDraft("");addTurn({actor:"student",purpose:stage===0?"progress answer":stage===1?(noProgress?"blocker answer":"evidence answer"):stage===2?"next action answer":`${followUps[followIndex]?.purpose||"clarification"} answer`,text,evidenceChanges:changes});
+    setEvidenceOpen(false);setHighlightFields(changes);setEvidenceUpdates(current=>current+changes.length);
     if(stage===0){
       const reportedNone=/\b(no progress|nothing|did not|didn't|haven't|have not|not started)\b/i.test(text);
       setNoProgress(reportedNone);
@@ -587,10 +622,10 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
   }
   const saved=context?.confirmedRecord;
   const evidence=saved?.studentRecord||record;
-  return createPortal(<div className="chat-intake-page"><header className="chat-intake-header"><button type="button" className="secondary compact" onClick={onClose}>← Sessions</button><div><span>{saved?"Session history":"AI Session Intake"}</span><h2>S{session.sessionNumber} · {session.focus}</h2></div><button type="button" className={`evidence-drawer-trigger ${evidenceUpdates&&!evidenceOpen?"has-updates":""}`} onClick={()=>{setEvidenceOpen(value=>!value);setEvidenceUpdates(0)}}>Evidence {evidenceUpdates&&!evidenceOpen?<b>{evidenceUpdates} new</b>:null}</button></header>
+  return createPortal(<div className="chat-intake-page"><header className="chat-intake-header"><button type="button" className="secondary compact" onClick={onClose}>← Sessions</button><div><span>{saved?"Session history":"AI Session Intake"}</span><h2>S{session.sessionNumber} · {session.focus}</h2></div><button type="button" className={`evidence-drawer-trigger ${evidenceUpdates&&!evidenceOpen?"has-updates":""}`} onClick={()=>evidenceOpen?setEvidenceOpen(false):openEvidence([])}>Evidence chain {evidenceUpdates&&!evidenceOpen?<b>{evidenceUpdates} new</b>:null}</button></header>
     <main className="chat-intake-shell"><section className="chat-thread" aria-label="Session Intake conversation">
       {loading?<p className="empty-state">Loading Session Intake…</p>:saved?<><div className="chat-message assistant"><span>Intake</span><p>This Session was confirmed on {new Date(saved.confirmedAt).toLocaleString()}. The conversation and evidence are now read-only.</p></div><div className="chat-message student"><span>Your confirmed claim</span><p>{saved.studentRecord.claims.map(item=>item.statement).join(" · ")}</p></div><div className="chat-message assistant"><span>Next action</span><p>{saved.studentRecord.next_action.action} · {saved.studentRecord.next_action.due_session}</p></div></>:!context?.isOpen?<div className="chat-message assistant"><p>This Session Intake is closed. Your Teacher controls when it is available.</p></div>:<>
-        {turns.map((turn,index)=><div key={index} className={`chat-message ${turn.actor==="student"?"student":"assistant"}`}><span>{turn.actor==="student"?"You":"Intake assistant"}</span><p>{turn.text}</p></div>)}
+        {turns.map((turn,index)=><div key={index} className={`chat-message ${turn.actor==="student"?"student":"assistant"}`}><span>{turn.actor==="student"?"You":"Intake assistant"}</span><p>{turn.text}</p>{turn.actor==="student"&&turn.evidenceChanges?.length?<button type="button" className="message-evidence-update" onClick={()=>openEvidence(turn.evidenceChanges||[])}><b>{turn.evidenceChanges.length} evidence field{turn.evidenceChanges.length===1?"":"s"} updated</b><span>{turn.evidenceChanges.map(value=>value.replace("_"," ")).join(" · ")} · View changes</span></button>:null}</div>)}
         {busy&&<div className="chat-message assistant thinking"><span>Intake assistant</span><p>Organising your answer…</p></div>}
         {stage===4&&record&&<div className="chat-review-card"><span>Ready for your review</span><h3>Confirm this Session record</h3><p>Your statements remain claims until your Teacher verifies them. Open Evidence to review the complete record.</p><label><input type="checkbox" checked={confirmed} onChange={event=>setConfirmed(event.target.checked)}/><span>{STUDENT_CONFIRMATION_ATTESTATION}</span></label><button type="button" onClick={()=>void submit()} disabled={!confirmed||busy}>{busy?"Confirming…":"Confirm Session Intake"}</button></div>}
         <div ref={endRef}/>
@@ -598,8 +633,7 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
       {message&&<p className="admin-alert" role="status">{message}</p>}
       {!loading&&!saved&&context?.isOpen&&stage<4&&<div className="chat-composer"><div className="chat-route-actions">{stage===0&&<button type="button" className="secondary compact" onClick={()=>setDraft("I made no progress in this Session.")}>No progress</button>}<button type="button" className="secondary compact" onClick={()=>setDraft("I need my Teacher to help me decide the next step.")}>I need Teacher help</button></div><div><textarea rows={2} maxLength={1800} value={draft} onChange={event=>setDraft(event.target.value)} onKeyDown={event=>{if(event.key==="Enter"&&!event.shiftKey){event.preventDefault();void send()}}} placeholder="Reply to the Intake assistant…"/><button type="button" onClick={()=>void send()} disabled={!draft.trim()||busy}>Send</button></div><small>Enter to send · Shift + Enter for a new line</small></div>}
     </section>
-    <aside className={`evidence-drawer ${evidenceOpen?"open":""}`} aria-hidden={!evidenceOpen}><div className="evidence-drawer-head"><div><span>This Session's evidence</span><h3>{saved?"Confirmed snapshot":"What I understand so far"}</h3></div><button type="button" className="secondary compact" onClick={()=>setEvidenceOpen(false)}>Close</button></div><dl><div><dt>Responsibility</dt><dd>{evidence?.responsibility.current||answers.responsibility||"Not captured yet"}</dd></div><div><dt>Claim</dt><dd>{evidence?.claims?.[0]?.statement||answers.progress||"Not captured yet"}</dd></div><div><dt>Evidence</dt><dd>{evidence?.evidence?.[0]?.reference||answers.evidenceReference||(noProgress?"Not produced":"Not identified yet")}</dd></div><div><dt>Testing</dt><dd>{evidence?.testing?.[0]?.execution_status?.replaceAll("_"," ")||answers.testingStatus.replaceAll("_"," ")}</dd></div><div><dt>Blocker</dt><dd>{evidence?.blocker.description||answers.blockerDescription||answers.blockerStatus}</dd></div><div><dt>Next action</dt><dd>{evidence?.next_action.action||answers.nextAction||"Not captured yet"}</dd></div></dl><p>Student claim · Teacher verification is separate.</p></aside>
-    {evidenceOpen&&<button className="evidence-drawer-scrim" aria-label="Close evidence" onClick={()=>setEvidenceOpen(false)}/>}</main></div>,document.body);
+    <aside className={`evidence-drawer ${evidenceOpen?"open":""}`} aria-hidden={!evidenceOpen}><div className="evidence-drawer-head"><div><span>Evidence chain</span><h3>{saved?"Confirmed snapshot":"Progress across Sessions"}</h3></div><button type="button" className="secondary compact" onClick={()=>setEvidenceOpen(false)}>Close</button></div><div className="evidence-tabs" role="tablist"><button type="button" className={evidenceTab==="current"?"active":""} onClick={()=>setEvidenceTab("current")}>Current Session</button><button type="button" className={evidenceTab==="previous"?"active":""} onClick={()=>setEvidenceTab("previous")}>Previous Sessions <b>{historyRecords.length}</b></button></div>{evidenceTab==="current"?<dl><div className={highlightFields.includes("responsibility")?"highlight":""}><dt>Responsibility</dt><dd>{evidence?.responsibility.current||answers.responsibility||"Not captured yet"}</dd></div><div className={highlightFields.includes("claim")?"highlight":""}><dt>Claim</dt><dd>{evidence?.claims?.[0]?.statement||answers.progress||"Not captured yet"}</dd></div><div className={highlightFields.includes("evidence")?"highlight":""}><dt>Evidence</dt><dd>{evidence?.evidence?.[0]?.reference||answers.evidenceReference||(noProgress?"Not produced":"Not identified yet")}</dd></div><div className={highlightFields.includes("testing")?"highlight":""}><dt>Testing</dt><dd>{evidence?.testing?.[0]?.execution_status?.replaceAll("_"," ")||answers.testingStatus.replaceAll("_"," ")}</dd></div><div className={highlightFields.includes("blocker")?"highlight":""}><dt>Blocker</dt><dd>{evidence?.blocker.description||answers.blockerDescription||answers.blockerStatus}</dd></div><div className={highlightFields.includes("next_action")?"highlight":""}><dt>Next action</dt><dd>{evidence?.next_action.action||answers.nextAction||"Not captured yet"}</dd></div></dl>:<div className="previous-evidence-list">{historyRecords.length?historyRecords.map(item=><article key={item.sessionNumber}><header><b>S{item.sessionNumber} · {item.focus}</b><small>{new Date(item.confirmedAt).toLocaleDateString()}</small></header><dl><div><dt>Responsibility</dt><dd>{item.record.responsibility.current}</dd></div><div><dt>Claim</dt><dd>{item.record.claims.map(claim=>claim.statement).join(" · ")}</dd></div><div><dt>Evidence</dt><dd>{item.record.evidence.map(value=>value.reference||value.availability.replaceAll("_"," ")).join(" · ")}</dd></div><div><dt>Next action</dt><dd>{item.record.next_action.action}</dd></div></dl></article>):<p>No previous confirmed Intake exists for this student in this Block.</p>}</div>}<p>Student claims · Teacher verification is stored separately.</p></aside></main></div>,document.body);
 }
 
 function LegacyStudentSessions({intakePilot=false}:{intakePilot?:boolean}) {
