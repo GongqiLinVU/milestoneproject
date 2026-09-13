@@ -18,8 +18,19 @@ async function authenticatedStudent(token: string) {
 }
 
 async function resolvePreviousRecord(admin: any, authUserId: string, sessionId: string) {
-  const { data: account } = await admin.from("student_accounts")
-    .select("student_id").eq("auth_user_id", authUserId).eq("status", "activated").maybeSingle();
+  let account: { student_id: string } | null = null;
+  let accountError: any = null;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const result = await admin.from("student_accounts")
+      .select("student_id").eq("auth_user_id", authUserId).eq("status", "activated").maybeSingle();
+    account = result.data;
+    accountError = result.error;
+    if (account) break;
+    if (attempt === 0) await new Promise(resolve => setTimeout(resolve, 75));
+  }
+  if (accountError) {
+    throw new Error(`student_account_query_failed_${text(accountError.code, 40) || "unknown"}`);
+  }
   const { data: session, error: sessionError } = await admin.from("studio_sessions")
     .select("id,block_id,session_number,curriculum_focus")
     .eq("id", sessionId).maybeSingle();
