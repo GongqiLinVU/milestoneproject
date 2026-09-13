@@ -213,8 +213,20 @@ export default async function handler(req: any, res: any) {
 
   if (!response.ok) {
     const providerRequestId = response.headers.get("x-request-id");
-    console.error("AI Intake provider failed", response.status, providerRequestId);
-    return res.status(502).json({ error: "AI Intake provider rejected the request.", code: "provider_rejected", stage: "provider_response", providerStatus: response.status, providerRequestId, fallback: true });
+    const providerPayload = await response.json().catch(() => null);
+    const providerErrorCode = text(providerPayload?.error?.code, 80) || null;
+    const providerErrorType = text(providerPayload?.error?.type, 80) || null;
+    console.error("AI Intake provider failed", response.status, providerRequestId, providerErrorCode, providerErrorType);
+    return res.status(502).json({
+      error: "AI Intake provider rejected the request.",
+      code: "provider_rejected",
+      stage: "provider_response",
+      providerStatus: response.status,
+      providerErrorCode,
+      providerErrorType,
+      providerRequestId,
+      fallback: true,
+    });
   }
   try {
     const result = JSON.parse(outputText(await response.json()));
