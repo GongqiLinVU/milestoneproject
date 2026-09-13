@@ -194,17 +194,24 @@ limits or Teacher state.
 The conversation preserves every answer and switches to the deterministic
 fallback so the student can still submit a schema-valid record.
 
-## Next delivery sequence
+## Next delivery sequence — UI first
 
-1. Review this interaction and route design using complete transcripts for
-   cases A, D and F.
-2. Produce a responsive wireframe for desktop and mobile states.
-3. Define the minimal schema changes for outcome type, source links, accepted
+The information architecture and workspace UI should stabilise before the
+conversation engine is connected.
+
+1. Refactor the 2B2 portal around one expanded Current Session.
+2. Move Class Activities to a collapsed section at the bottom.
+3. Group completed, catch-up and upcoming Sessions behind collapsed summaries.
+4. Build one dedicated responsive Intake workspace reused by every Session.
+5. Validate desktop/mobile scrolling, selected-Session visibility, draft
+   protection and back navigation using static/mock states.
+6. Define the minimal schema changes for outcome type, source links, accepted
    small action and Teacher-help request.
-4. Update the candidate regression suite before implementation.
-5. Refactor the Phase 2C normal path from the form-first prototype into the
-   guided workspace.
-6. Run mock student testing, Gate A, Gate B and provider-failure validation.
+7. Connect the conversation routes and evidence extraction.
+8. Run mock student testing, Gate A, Gate B and provider-failure validation.
+
+UI architecture:
+`docs/sprints/sprint-08/PHASE2C_UI_ARCHITECTURE.md`.
 
 The current form-first Phase 2C code is retained only as a technical prototype
 until the guided experience is approved.
