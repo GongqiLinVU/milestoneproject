@@ -322,6 +322,27 @@ function PlatformFeedbackModal({session,onClose,onSaved}:{session:StudentSession
   return createPortal(<div className="session-work-track-modal" role="presentation" onMouseDown={event=>event.target===event.currentTarget&&onClose()}><section className="session-work-track-dialog platform-feedback-dialog" role="dialog" aria-modal="true" aria-labelledby="platform-feedback-title"><button type="button" className="session-work-track-close" aria-label="Close Platform Feedback" onClick={onClose}>×</button><div className="eyebrow">Final presentation checkpoint</div><h3 id="platform-feedback-title">Platform Feedback</h3><strong>S10 · {session.focus}</strong>{loading?<p className="empty-state">Loading feedback…</p>:feedback?<><div className="platform-feedback-intro"><b>2 minutes · individual · not graded</b><span>Tell us what actually helped and what should improve for future Capstone students.</span></div>{!feedback.isOpen&&<p className="track-readonly-note">Session 10 is closed. Your submitted feedback is read-only.</p>}<div className="work-track-fields"><div className="track-field"><span>1. Overall usefulness</span><div className="feedback-rating" role="group" aria-label="Overall usefulness">{[1,2,3,4,5].map(value=><button key={value} type="button" className={(response.overallUsefulness===String(value)?"selected ":"")+"secondary compact"} onClick={()=>set("overallUsefulness",String(value))} disabled={!feedback.isOpen}>{value}</button>)}</div><small>1 = Not useful · 5 = Very useful</small></div>{choice("2. Did the platform help you stay engaged with the project?","engagementHelp",["Yes","Somewhat","No"])}{choice("3. Most useful feature","mostUsefulFeature",["Session Check-in","Weekly Activities","Teacher Review","Poster Gallery","Work Track","Peer Feedback"])}{choice("4. What should we improve most?","improveArea",["Navigation","Activities","Feedback","Session workflow","Poster","Other"])}{choice("5. Would you recommend this platform for future Capstone classes?","recommendation",["Yes","Maybe","No"])}<label className="track-field"><span>6. One thing you would change <small>optional</small></span><textarea maxLength={300} value={response.changeNote||""} onChange={event=>set("changeNote",event.target.value)} disabled={!feedback.isOpen} placeholder="Keep it short — one idea is enough."/></label></div>{feedback.submittedAt&&<small className="track-saved-at"><CheckCircle2 size={14}/>Feedback completed {new Date(feedback.submittedAt).toLocaleString()}</small>}{message&&<p className="admin-alert" role="status">{message}</p>}<div className="track-dialog-actions"><button type="button" className="secondary" onClick={onClose}>Close</button>{feedback.isOpen&&<button type="button" onClick={()=>void save()} disabled={busy}>{busy?"Saving…":feedback.submittedAt?"Update feedback":"Complete feedback"}</button>}</div></>:<p className="empty-state error-state">{message||"Platform Feedback is unavailable."}</p>}</section></div>,document.body);
 }
 
+type AiIntakeMeta = {
+  used: boolean;
+  promptVersion: string | null;
+  model: string | null;
+  questionPurposes: string[];
+  uncertainties: string[];
+  flags: string[];
+  suggestedTeacherQuestions: string[];
+  extractionStatus: "not_used" | "completed" | "fallback";
+};
+
+type AiExtraction = {
+  refinedResponsibility: string;
+  refinedClaim: string;
+  refinedScope: string;
+  refinedVerificationMethod: string;
+  uncertainties: string[];
+  flags: string[];
+  suggestedTeacherQuestions: string[];
+};
+
 type SessionIntakeContext = {
   schemaVersion: string;
   testSuiteVersion: string;
@@ -350,7 +371,7 @@ function newIntakeAnswers(sessionNumber:number):DeterministicIntakeAnswers {
   };
 }
 
-function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRecord;onClose:()=>void;onSaved:()=>void}) {
+function FormSessionIntakePrototype({session,onClose,onSaved}:{session:StudentSessionRecord;onClose:()=>void;onSaved:()=>void}) {
   const [context,setContext]=useState<SessionIntakeContext|null>(null);
   const [answers,setAnswers]=useState<DeterministicIntakeAnswers>(()=>newIntakeAnswers(session.sessionNumber));
   const [followUps,setFollowUps]=useState<DeterministicFollowUp[]>([]);
@@ -360,6 +381,8 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
   const [busy,setBusy]=useState(false);
   const [message,setMessage]=useState("");
   const [confirmed,setConfirmed]=useState(false);
+  const [aiRecord,setAiRecord]=useState<IntakeStudentRecord|null>(null);
+  const [aiMeta,setAiMeta]=useState<AiIntakeMeta>({used:false,promptVersion:null,model:null,questionPurposes:[],uncertainties:[],flags:[],suggestedTeacherQuestions:[],extractionStatus:"not_used"});
   useEffect(()=>{let active=true;supabase.rpc("get_my_session_intake",{p_session_id:session.sessionId}).then(({data,error})=>{if(!active)return;if(error)setMessage("Session Intake is unavailable for this session.");else setContext(data as SessionIntakeContext);setLoading(false);});return()=>{active=false};},[session.sessionId]);
   const set=<K extends keyof DeterministicIntakeAnswers>(key:K,value:DeterministicIntakeAnswers[K])=>setAnswers(current=>({...current,[key]:value}));
   const input=(label:string,key:keyof DeterministicIntakeAnswers,placeholder:string,maxLength=1000)=><label className="track-field"><span>{label}</span><textarea value={String(answers[key]??"")} maxLength={maxLength} onChange={event=>set(key,event.target.value as never)} placeholder={placeholder}/></label>;
@@ -368,14 +391,58 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
     if(current===2){const testingComplete=answers.testingStatus!=="executed"||(answers.testingMethod.trim().length>=3&&answers.testingResult.trim().length>=1);if(!testingComplete)return false;if(answers.evidenceAvailability==="available_now")return answers.evidenceReference.trim().length>=3&&answers.verificationMethod.trim().length>=3;if(answers.evidenceAvailability==="expected_later")return answers.verificationMethod.trim().length>=3;return true;}
     return answers.nextAction.trim().length>=3&&answers.expectedEvidence.trim().length>=3&&(answers.blockerStatus==="none"||answers.blockerDescription.trim().length>=3);
   }
-  function next(){
+  async function callAi(mode:"questions"|"extract"){
+    const {data:{session:authSession}}=await supabase.auth.getSession();
+    const response=await fetch("/api/session-intake-ai",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${authSession?.access_token||""}`},body:JSON.stringify({mode,sessionId:session.sessionId,answers,followUpAnswers})});
+    if(!response.ok)throw new Error("provider");
+    return response.json();
+  }
+  async function next(){
     if(step<=3&&!coreComplete(step)){setMessage(step===1?(answers.responsibility.trim().length<2?"Responsibility is required. Short technical terms such as UI, UX, DB or AI are accepted.":answers.progress.trim().length<3?"Describe what you personally completed or advanced.":"Describe the exact part covered by this claim."):step===2?"Complete the evidence and verification fields that apply to your selected evidence state.":"Complete your next action, expected evidence and any active blocker details.");return;}
     setMessage("");
-    if(step===3){const selected=selectDeterministicFollowUps(answers,context?.previousConfirmed?.studentRecord);setFollowUps(selected);setStep(selected.length?4:5);return;}
-    if(step===4){if(followUps.some(item=>(followUpAnswers[item.id]||"").trim().length<2)){setMessage("Answer each clarification before reviewing your summary. Short technical terms such as UI, UX, DB or AI are accepted.");return;}setStep(5);return;}
+    if(step===3){
+      setBusy(true);
+      try{
+        const payload=await callAi("questions");
+        const allowed=new Set(["specific_scope","evidence_plan","testing_result","blocker_change"]);
+        const seen=new Set<string>();
+        const selected=((payload.result?.followUps||[]) as DeterministicFollowUp[]).filter(item=>allowed.has(item.id)&&!seen.has(item.id)&&seen.add(item.id)&&item.question?.trim().length>=3).slice(0,3);
+        setFollowUps(selected);
+        setAiMeta({used:true,promptVersion:payload.promptVersion||null,model:payload.model||null,questionPurposes:selected.map(item=>item.purpose),uncertainties:payload.result?.uncertainties||[],flags:payload.result?.flags||[],suggestedTeacherQuestions:payload.result?.suggestedTeacherQuestions||[],extractionStatus:"not_used"});
+        setStep(selected.length?4:5);
+      }catch{
+        const selected=selectDeterministicFollowUps(answers,context?.previousConfirmed?.studentRecord);
+        setFollowUps(selected);
+        setAiMeta(current=>({...current,used:false,extractionStatus:"fallback"}));
+        setMessage("AI follow-up is temporarily unavailable. The secure fallback questions are being used.");
+        setStep(selected.length?4:5);
+      }finally{setBusy(false);}
+      return;
+    }
+    if(step===4){
+      if(followUps.some(item=>(followUpAnswers[item.id]||"").trim().length<2)){setMessage("Answer each clarification before reviewing your summary. Short technical terms such as UI, UX, DB or AI are accepted.");return;}
+      if(aiMeta.used){
+        setBusy(true);
+        try{
+          const payload=await callAi("extract");
+          const result=payload.result as AiExtraction;
+          const base=buildFallbackStudentRecord(answers,followUpAnswers,Boolean(context?.previousConfirmed));
+          const refined:IntakeStudentRecord={...base,responsibility:{...base.responsibility,current:result.refinedResponsibility?.trim()||base.responsibility.current},claims:base.claims.map((claim,index)=>index?claim:{...claim,statement:result.refinedClaim?.trim()||claim.statement,scope:result.refinedScope?.trim()||claim.scope}),evidence:base.evidence.map((item,index)=>index?item:{...item,verification_method:result.refinedVerificationMethod?.trim()||item.verification_method})};
+          if(validateIntakeStudentRecord(refined).valid)setAiRecord(refined);
+          else throw new Error("schema");
+          setAiMeta(current=>({...current,promptVersion:payload.promptVersion||current.promptVersion,model:payload.model||current.model,uncertainties:result.uncertainties||current.uncertainties,flags:result.flags||current.flags,suggestedTeacherQuestions:result.suggestedTeacherQuestions||current.suggestedTeacherQuestions,extractionStatus:"completed"}));
+        }catch{
+          setAiRecord(null);
+          setAiMeta(current=>({...current,used:false,extractionStatus:"fallback"}));
+          setMessage("AI extraction could not be validated. Your original answers are preserved in the secure fallback summary.");
+        }finally{setBusy(false);}
+      }
+      setStep(5);return;
+    }
     setStep(current=>Math.min(5,current+1) as 1|2|3|4|5);
   }
-  const record=context?buildFallbackStudentRecord(answers,followUpAnswers,Boolean(context.previousConfirmed)):null;
+  const deterministicRecord=context?buildFallbackStudentRecord(answers,followUpAnswers,Boolean(context.previousConfirmed)):null;
+  const record=aiRecord||deterministicRecord;
   const validation=record?validateIntakeStudentRecord(record):null;
   const conversation:FallbackTurn[]=[
     {actor:"system",purpose:"core progress question",text:"What did you personally complete or advance since the previous Session?"},
@@ -393,12 +460,15 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
     if(!context?.isOpen||!record||!validation?.valid||validateFallbackConversation(conversation).length||!confirmed)return;
     setBusy(true);setMessage("");
     const summary=buildDeterministicSummary(record);
-    const {error}=await supabase.rpc("save_my_session_intake_fallback",{p_session_id:session.sessionId,p_source_conversation:conversation,p_student_record:record,p_student_confirmation:{status:"confirmed",attestation:STUDENT_CONFIRMATION_ATTESTATION,corrections:[],summary}});
+    const confirmation={status:"confirmed",attestation:STUDENT_CONFIRMATION_ATTESTATION,corrections:[],summary};
+    const {error}=aiMeta.used&&aiMeta.extractionStatus==="completed"
+      ? await supabase.rpc("save_my_session_intake_ai",{p_session_id:session.sessionId,p_source_conversation:conversation,p_student_record:record,p_student_confirmation:confirmation,p_prompt_version:aiMeta.promptVersion,p_ai_assistance:{used:true,model:aiMeta.model,follow_up_count:followUps.length,question_purposes:aiMeta.questionPurposes,extraction_status:"completed",uncertainties:aiMeta.uncertainties,flags:aiMeta.flags,suggested_teacher_questions:aiMeta.suggestedTeacherQuestions}})
+      : await supabase.rpc("save_my_session_intake_fallback",{p_session_id:session.sessionId,p_source_conversation:conversation,p_student_record:record,p_student_confirmation:confirmation});
     if(error)setMessage(error.message||"Session Intake could not be confirmed.");else{setMessage("Session Intake confirmed. Your claims still require Teacher verification.");const {data}=await supabase.rpc("get_my_session_intake",{p_session_id:session.sessionId});setContext(data as SessionIntakeContext);onSaved();}
     setBusy(false);
   }
   const saved=context?.confirmedRecord;
-  return createPortal(<div className="session-work-track-modal" role="presentation" onMouseDown={event=>event.target===event.currentTarget&&onClose()}><section className="session-work-track-dialog intake-dialog" role="dialog" aria-modal="true" aria-labelledby="session-intake-title"><button type="button" className="session-work-track-close" onClick={onClose} aria-label="Close Session Intake">×</button><div className="eyebrow">Structured progress evidence</div><h3 id="session-intake-title">Session Intake</h3><strong>S{session.sessionNumber} · {session.focus}</strong>
+  return createPortal(<div className="intake-workspace-backdrop"><section className="intake-workspace" aria-labelledby="session-intake-title"><header className="intake-workspace-header"><button type="button" className="secondary compact" onClick={onClose} aria-label="Back to Current Session">← Back to Sessions</button><div><div className="eyebrow">Guided evidence workspace</div><h3 id="session-intake-title">S{session.sessionNumber} · {session.focus}</h3><span>{saved?"Confirmed history · read-only":"Session Intake"}</span></div></header><div className="intake-workspace-grid"><main className="intake-conversation">
     {loading?<p className="empty-state">Loading Session Intake…</p>:saved?<div className="intake-confirmed"><CheckCircle2 size={30}/><h4>Intake confirmed</h4><p>Your submission is a claim and has not been Teacher verified.</p><dl><div><dt>Responsibility</dt><dd>{saved.studentRecord.responsibility.current}</dd></div><div><dt>Progress</dt><dd>{saved.studentRecord.claims.map(item=>item.statement).join(" · ")}</dd></div><div><dt>Next action</dt><dd>{saved.studentRecord.next_action.action} · {saved.studentRecord.next_action.due_session}</dd></div></dl><small>Confirmed {new Date(saved.confirmedAt).toLocaleString()} · deterministic fallback</small></div>:!context?.isOpen?<p className="track-readonly-note">Session Intake is closed. Your teacher controls when this pilot is available.</p>:<>
       <div className="intake-progress" aria-label={`Step ${step} of 5`}><span style={{width:`${step*20}%`}}/></div>
       {step===1&&<div className="work-track-fields"><h4>1. Your responsibility and progress</h4>{input("What are you personally responsible for?","responsibility","A specific component, analysis, workflow or deliverable")}{input("What did you personally complete or advance?","progress","Describe what changed since the previous Session")}{input("What exact part does this claim cover?","scope","Name the component, behaviour or boundary")}
@@ -406,13 +476,133 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
       {step===2&&<div className="work-track-fields"><h4>2. Evidence and verification</h4><label className="track-field"><span>Evidence type</span><select value={answers.evidenceType} onChange={event=>set("evidenceType",event.target.value as DeterministicIntakeAnswers["evidenceType"])}>{evidenceTypeOptions.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label><label className="track-field"><span>Evidence availability</span><select value={answers.evidenceAvailability} onChange={event=>set("evidenceAvailability",event.target.value as DeterministicIntakeAnswers["evidenceAvailability"])}><option value="available_now">Available now</option><option value="expected_later">Expected later</option><option value="not_produced">Not produced</option><option value="not_required">Not required</option><option value="unknown">Unknown</option></select></label>{answers.evidenceAvailability==="available_now"&&input("Evidence reference","evidenceReference","Commit, URL, file, result, screenshot or demo location")}{["available_now","expected_later"].includes(answers.evidenceAvailability)&&input("How can it be verified?","verificationMethod","A concrete check your teacher can perform")}
         <label className="track-field"><span>Testing state</span><select value={answers.testingStatus} onChange={event=>set("testingStatus",event.target.value as DeterministicIntakeAnswers["testingStatus"])}><option value="not_applicable">Not applicable</option><option value="executed">Executed</option><option value="planned_not_executed">Planned, not executed</option></select></label>{answers.testingStatus!=="not_applicable"&&input("Testing method","testingMethod","What was tested or is planned?")}{answers.testingStatus==="executed"&&<>{input("Observed result","testingResult","What actually happened?")}{input("Expected result or baseline","testingBaseline","What did you compare it with?")}</>}</div>}
       {step===3&&<div className="work-track-fields"><h4>3. Next action and blockers</h4>{input("What is your next action?","nextAction","One concrete action")}{input("What evidence should that action produce?","expectedEvidence","Expected demonstrable output")}<label className="track-field"><span>Due Session</span><select value={answers.dueSession} onChange={event=>set("dueSession",event.target.value)}>{Array.from({length:10-session.sessionNumber},(_,index)=>`S${session.sessionNumber+index+1}`).map(value=><option key={value}>{value}</option>)}</select></label><label className="track-field"><span>Blocker status</span><select value={answers.blockerStatus} onChange={event=>set("blockerStatus",event.target.value as DeterministicIntakeAnswers["blockerStatus"])}><option value="none">No blocker</option><option value="active">Active</option><option value="resolved">Resolved</option><option value="unknown">Unknown</option></select></label>{answers.blockerStatus!=="none"&&input("Describe the blocker or change","blockerDescription","What is blocked, or what changed?")}{input("Support requested (optional)","supportRequested","A specific decision, review or resource",500)}</div>}
-      {step===4&&<div className="work-track-fields"><h4>Clarify your evidence</h4><p className="form-note">These rule-based follow-ups are limited to {followUps.length}. No AI model is being used.</p>{followUps.map(item=><label className="track-field" key={item.id}><span>{item.question}</span><textarea maxLength={1000} value={followUpAnswers[item.id]||""} onChange={event=>setFollowUpAnswers(current=>({...current,[item.id]:event.target.value}))}/></label>)}</div>}
+      {step===4&&<div className="work-track-fields"><h4>Clarify your evidence</h4><p className="form-note">{aiMeta.used?`AI selected ${followUps.length} evidence-focused follow-up${followUps.length===1?"":"s"}. Your answers remain unverified claims.`:`Secure fallback selected ${followUps.length} rule-based follow-up${followUps.length===1?"":"s"}.`}</p>{followUps.map(item=><label className="track-field" key={item.id}><span>{item.question}</span><textarea maxLength={1000} value={followUpAnswers[item.id]||""} onChange={event=>setFollowUpAnswers(current=>({...current,[item.id]:event.target.value}))}/></label>)}</div>}
       {step===5&&record&&<div className="intake-review"><h4>Confirm your structured summary</h4><p className="form-note">Edit earlier answers if anything is inaccurate. This is your claim, not a Teacher verification.</p><dl><div><dt>Responsibility</dt><dd>{record.responsibility.current}</dd></div><div><dt>Progress claim</dt><dd>{record.claims[0].statement}</dd></div><div><dt>Evidence</dt><dd>{record.evidence[0].availability.replaceAll("_"," ")} · {record.evidence[0].reference||record.evidence[0].verification_method||"No evidence identified"}</dd></div><div><dt>Testing</dt><dd>{record.testing[0]?.execution_status.replaceAll("_"," ")}</dd></div><div><dt>Blocker</dt><dd>{record.blocker.status}{record.blocker.description?` · ${record.blocker.description}`:""}</dd></div><div><dt>Next action</dt><dd>{record.next_action.action} · due {record.next_action.due_session}</dd></div></dl>{validation&&!validation.valid&&<p className="admin-alert">{validation.errors.join(" · ")}</p>}<label className="intake-attestation"><input type="checkbox" checked={confirmed} onChange={event=>setConfirmed(event.target.checked)}/><span>{STUDENT_CONFIRMATION_ATTESTATION}</span></label></div>}
-      {message&&<p className="admin-alert" role="status">{message}</p>}<div className="track-dialog-actions"><button type="button" className="secondary" onClick={step===1?onClose:()=>{setMessage("");setStep(current=>(current===5?(followUps.length?4:3):current-1) as 1|2|3|4|5)}}>{step===1?"Close":"Back"}</button>{step<5?<button type="button" onClick={next}>Continue</button>:<button type="button" onClick={()=>void submit()} disabled={busy||!confirmed||!validation?.valid}>{busy?"Confirming…":"Confirm and submit"}</button>}</div></>}
-    {message&&saved&&<p className="admin-alert" role="status">{message}</p>}<div className="track-dialog-actions">{(saved||!context?.isOpen)&&<button type="button" className="secondary" onClick={onClose}>Close</button>}</div></section></div>,document.body);
+      {message&&<p className="admin-alert" role="status">{message}</p>}<div className="track-dialog-actions"><button type="button" className="secondary" onClick={step===1?onClose:()=>{setMessage("");setStep(current=>(current===5?(followUps.length?4:3):current-1) as 1|2|3|4|5)}}>{step===1?"Close":"Back"}</button>{step<5?<button type="button" onClick={()=>void next()} disabled={busy}>{busy?"Preparing…":"Continue"}</button>:<button type="button" onClick={()=>void submit()} disabled={busy||!confirmed||!validation?.valid}>{busy?"Confirming…":"Confirm and submit"}</button>}</div></>}
+    {message&&saved&&<p className="admin-alert" role="status">{message}</p>}<div className="track-dialog-actions">{(saved||!context?.isOpen)&&<button type="button" className="secondary" onClick={onClose}>Back to Sessions</button>}</div></main><aside className="intake-evidence-panel"><div><span className="eyebrow">This Session's evidence</span><h4>{saved?"Confirmed snapshot":"Builds as you answer"}</h4><p>{saved?"Student history is locked. Teacher review is stored separately.":"Review what the Intake currently understands before you confirm."}</p></div><dl><div><dt>Responsibility</dt><dd>{saved?.studentRecord.responsibility.current||answers.responsibility||"Not captured yet"}</dd></div><div><dt>Claim</dt><dd>{saved?.studentRecord.claims?.[0]?.statement||answers.progress||"Not captured yet"}</dd></div><div><dt>Evidence</dt><dd>{saved?.studentRecord.evidence?.[0]?.reference||answers.evidenceReference||"Not identified yet"}</dd></div><div><dt>Testing</dt><dd>{saved?.studentRecord.testing?.[0]?.execution_status?.replaceAll("_"," ")||answers.testingStatus.replaceAll("_"," ")}</dd></div><div><dt>Blocker</dt><dd>{saved?.studentRecord.blocker.status||answers.blockerStatus}</dd></div><div><dt>Next action</dt><dd>{saved?.studentRecord.next_action.action||answers.nextAction||"Not captured yet"}</dd></div></dl><small>Student claim · Teacher verification is separate</small></aside></div></section></div>,document.body);
 }
 
-function StudentSessions({intakePilot=false}:{intakePilot?:boolean}) {
+
+type IntakeChatTurn={actor:"system"|"student";purpose:string;text:string};
+
+function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRecord;onClose:()=>void;onSaved:()=>void}) {
+  const opening="Tell me what you were personally responsible for in this Session and what actually happened with that work.";
+  const [context,setContext]=useState<SessionIntakeContext|null>(null);
+  const [answers,setAnswers]=useState<DeterministicIntakeAnswers>(()=>newIntakeAnswers(session.sessionNumber));
+  const [turns,setTurns]=useState<IntakeChatTurn[]>([{actor:"system",purpose:"responsibility and progress",text:opening}]);
+  const [draft,setDraft]=useState("");
+  const [stage,setStage]=useState<0|1|2|3|4>(0);
+  const [noProgress,setNoProgress]=useState(false);
+  const [followUps,setFollowUps]=useState<DeterministicFollowUp[]>([]);
+  const [followIndex,setFollowIndex]=useState(0);
+  const [followUpAnswers,setFollowUpAnswers]=useState<Partial<Record<DeterministicFollowUp["id"],string>>>({});
+  const [record,setRecord]=useState<IntakeStudentRecord|null>(null);
+  const [aiMeta,setAiMeta]=useState<AiIntakeMeta>({used:false,promptVersion:null,model:null,questionPurposes:[],uncertainties:[],flags:[],suggestedTeacherQuestions:[],extractionStatus:"not_used"});
+  const [evidenceOpen,setEvidenceOpen]=useState(false);
+  const [evidenceUpdates,setEvidenceUpdates]=useState(0);
+  const [confirmed,setConfirmed]=useState(false);
+  const [loading,setLoading]=useState(true);
+  const [busy,setBusy]=useState(false);
+  const [message,setMessage]=useState("");
+  const endRef=useRef<HTMLDivElement|null>(null);
+  useEffect(()=>{let active=true;supabase.rpc("get_my_session_intake",{p_session_id:session.sessionId}).then(({data,error})=>{if(!active)return;if(error)setMessage("Session Intake is unavailable for this Session.");else setContext(data as SessionIntakeContext);setLoading(false)});return()=>{active=false}},[session.sessionId]);
+  useEffect(()=>{endRef.current?.scrollIntoView({behavior:"smooth",block:"nearest"})},[turns,stage]);
+  const addTurn=(turn:IntakeChatTurn)=>setTurns(current=>[...current,turn]);
+  async function callAi(mode:"questions"|"extract",nextAnswers:DeterministicIntakeAnswers,nextFollowUps=followUpAnswers){
+    const {data:{session:authSession}}=await supabase.auth.getSession();
+    const response=await fetch("/api/session-intake-ai",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${authSession?.access_token||""}`},body:JSON.stringify({mode,sessionId:session.sessionId,answers:nextAnswers,followUpAnswers:nextFollowUps})});
+    if(!response.ok)throw new Error("provider");
+    return response.json();
+  }
+  async function prepareReview(nextAnswers:DeterministicIntakeAnswers,nextFollowUpAnswers=followUpAnswers,nextMeta=aiMeta){
+    setBusy(true);
+    let finalRecord=buildFallbackStudentRecord(nextAnswers,nextFollowUpAnswers,Boolean(context?.previousConfirmed));
+    let finalMeta=nextMeta;
+    if(nextMeta.used){
+      try{
+        const payload=await callAi("extract",nextAnswers,nextFollowUpAnswers);
+        const result=payload.result as AiExtraction;
+        const refined:IntakeStudentRecord={...finalRecord,responsibility:{...finalRecord.responsibility,current:result.refinedResponsibility?.trim()||finalRecord.responsibility.current},claims:finalRecord.claims.map((claim,index)=>index?claim:{...claim,statement:result.refinedClaim?.trim()||claim.statement,scope:result.refinedScope?.trim()||claim.scope}),evidence:finalRecord.evidence.map((item,index)=>index?item:{...item,verification_method:result.refinedVerificationMethod?.trim()||item.verification_method})};
+        if(validateIntakeStudentRecord(refined).valid)finalRecord=refined;else throw new Error("schema");
+        finalMeta={...nextMeta,promptVersion:payload.promptVersion||nextMeta.promptVersion,model:payload.model||nextMeta.model,uncertainties:result.uncertainties||[],flags:result.flags||[],suggestedTeacherQuestions:result.suggestedTeacherQuestions||[],extractionStatus:"completed"};
+      }catch{
+        finalMeta={...nextMeta,used:false,extractionStatus:"fallback"};
+        setMessage("AI organisation is temporarily unavailable. Your answers are preserved in the secure fallback summary.");
+      }
+    }
+    setRecord(finalRecord);setAiMeta(finalMeta);setStage(4);setEvidenceUpdates(current=>current+1);setBusy(false);
+  }
+  async function finishCore(nextAnswers:DeterministicIntakeAnswers){
+    setBusy(true);
+    try{
+      const payload=await callAi("questions",nextAnswers,{});
+      const allowed=new Set(["specific_scope","evidence_plan","testing_result","blocker_change"]);
+      const seen=new Set<string>();
+      const selected=((payload.result?.followUps||[]) as DeterministicFollowUp[]).filter(item=>allowed.has(item.id)&&!seen.has(item.id)&&seen.add(item.id)&&item.question?.trim()).slice(0,3);
+      const meta:AiIntakeMeta={used:true,promptVersion:payload.promptVersion||null,model:payload.model||null,questionPurposes:selected.map(item=>item.purpose),uncertainties:payload.result?.uncertainties||[],flags:payload.result?.flags||[],suggestedTeacherQuestions:payload.result?.suggestedTeacherQuestions||[],extractionStatus:"not_used"};
+      setFollowUps(selected);setAiMeta(meta);
+      if(selected.length){setFollowIndex(0);addTurn({actor:"system",purpose:selected[0].purpose,text:selected[0].question});setStage(3);setBusy(false)}
+      else await prepareReview(nextAnswers,{},meta);
+    }catch{
+      const selected=selectDeterministicFollowUps(nextAnswers,context?.previousConfirmed?.studentRecord);
+      const meta={...aiMeta,used:false,extractionStatus:"fallback" as const};
+      setFollowUps(selected);setAiMeta(meta);
+      if(selected.length){setFollowIndex(0);addTurn({actor:"system",purpose:selected[0].purpose,text:selected[0].question});setStage(3);setMessage("AI is temporarily unavailable. A secure fallback question is being used.");setBusy(false)}
+      else await prepareReview(nextAnswers,{},meta);
+    }
+  }
+  async function send(){
+    const text=draft.trim();if(!text||busy||stage===4)return;
+    setDraft("");addTurn({actor:"student",purpose:stage===0?"progress answer":stage===1?(noProgress?"blocker answer":"evidence answer"):stage===2?"next action answer":`${followUps[followIndex]?.purpose||"clarification"} answer`,text});
+    setEvidenceOpen(false);setEvidenceUpdates(current=>current+1);
+    if(stage===0){
+      const reportedNone=/\b(no progress|nothing|did not|didn't|haven't|have not|not started)\b/i.test(text);
+      setNoProgress(reportedNone);
+      const next={...answers,responsibility:text,progress:text,scope:text,progressKind:reportedNone?"no_progress" as const:"advanced" as const,evidenceAvailability:reportedNone?"not_produced" as const:answers.evidenceAvailability,testingStatus:reportedNone?"not_applicable" as const:answers.testingStatus};
+      setAnswers(next);setStage(1);
+      addTurn({actor:"system",purpose:reportedNone?"understand blocker":"evidence and verification",text:reportedNone?"Thanks for being clear. What stopped you from starting, and what part feels unclear?":"What concrete evidence can support that claim, and how could your Teacher check it?"});
+    }else if(stage===1){
+      const next=noProgress?{...answers,blockerStatus:"active" as const,blockerDescription:text,supportRequested:/teacher|help|confirm/i.test(text)?text:answers.supportRequested}:{...answers,evidenceAvailability:"available_now" as const,evidenceReference:text,verificationMethod:text};
+      setAnswers(next);setStage(2);
+      addTurn({actor:"system",purpose:"next action",text:noProgress?"What is one small action you can complete before the next Session? You can also say that you need your Teacher to help define it.":"What is your next action, and is anything blocking it?"});
+    }else if(stage===2){
+      const teacherHelp=/teacher|help|don't know|do not know|unclear/i.test(text);
+      const next={...answers,nextAction:text,expectedEvidence:noProgress?"A concrete first deliverable agreed in this Intake":text,blockerStatus:teacherHelp?"active" as const:answers.blockerStatus,supportRequested:teacherHelp?text:answers.supportRequested};
+      setAnswers(next);await finishCore(next);
+    }else{
+      const item=followUps[followIndex];const nextFollow={...followUpAnswers,[item.id]:text};setFollowUpAnswers(nextFollow);
+      if(followIndex+1<followUps.length){const nextIndex=followIndex+1;setFollowIndex(nextIndex);addTurn({actor:"system",purpose:followUps[nextIndex].purpose,text:followUps[nextIndex].question})}
+      else await prepareReview(answers,nextFollow,aiMeta);
+    }
+  }
+  async function submit(){
+    if(!context?.isOpen||!record||!confirmed)return;
+    const validation=validateIntakeStudentRecord(record);if(!validation.valid){setMessage(validation.errors.join(" · "));return}
+    setBusy(true);setMessage("");
+    const source=turns as FallbackTurn[];
+    const confirmation={status:"confirmed",attestation:STUDENT_CONFIRMATION_ATTESTATION,corrections:[],summary:buildDeterministicSummary(record)};
+    const {error}=aiMeta.used&&aiMeta.extractionStatus==="completed"?await supabase.rpc("save_my_session_intake_ai",{p_session_id:session.sessionId,p_source_conversation:source,p_student_record:record,p_student_confirmation:confirmation,p_prompt_version:aiMeta.promptVersion,p_ai_assistance:{used:true,model:aiMeta.model,follow_up_count:followUps.length,question_purposes:aiMeta.questionPurposes,extraction_status:"completed",uncertainties:aiMeta.uncertainties,flags:aiMeta.flags,suggested_teacher_questions:aiMeta.suggestedTeacherQuestions}}):await supabase.rpc("save_my_session_intake_fallback",{p_session_id:session.sessionId,p_source_conversation:source,p_student_record:record,p_student_confirmation:confirmation});
+    if(error)setMessage(error.message||"Session Intake could not be confirmed.");else{const {data}=await supabase.rpc("get_my_session_intake",{p_session_id:session.sessionId});setContext(data as SessionIntakeContext);setMessage("Session Intake confirmed. This Session is now read-only.");onSaved()}
+    setBusy(false);
+  }
+  const saved=context?.confirmedRecord;
+  const evidence=saved?.studentRecord||record;
+  return createPortal(<div className="chat-intake-page"><header className="chat-intake-header"><button type="button" className="secondary compact" onClick={onClose}>← Sessions</button><div><span>{saved?"Session history":"AI Session Intake"}</span><h2>S{session.sessionNumber} · {session.focus}</h2></div><button type="button" className={`evidence-drawer-trigger ${evidenceUpdates&&!evidenceOpen?"has-updates":""}`} onClick={()=>{setEvidenceOpen(value=>!value);setEvidenceUpdates(0)}}>Evidence {evidenceUpdates&&!evidenceOpen?<b>{evidenceUpdates} new</b>:null}</button></header>
+    <main className="chat-intake-shell"><section className="chat-thread" aria-label="Session Intake conversation">
+      {loading?<p className="empty-state">Loading Session Intake…</p>:saved?<><div className="chat-message assistant"><span>Intake</span><p>This Session was confirmed on {new Date(saved.confirmedAt).toLocaleString()}. The conversation and evidence are now read-only.</p></div><div className="chat-message student"><span>Your confirmed claim</span><p>{saved.studentRecord.claims.map(item=>item.statement).join(" · ")}</p></div><div className="chat-message assistant"><span>Next action</span><p>{saved.studentRecord.next_action.action} · {saved.studentRecord.next_action.due_session}</p></div></>:!context?.isOpen?<div className="chat-message assistant"><p>This Session Intake is closed. Your Teacher controls when it is available.</p></div>:<>
+        {turns.map((turn,index)=><div key={index} className={`chat-message ${turn.actor==="student"?"student":"assistant"}`}><span>{turn.actor==="student"?"You":"Intake assistant"}</span><p>{turn.text}</p></div>)}
+        {busy&&<div className="chat-message assistant thinking"><span>Intake assistant</span><p>Organising your answer…</p></div>}
+        {stage===4&&record&&<div className="chat-review-card"><span>Ready for your review</span><h3>Confirm this Session record</h3><p>Your statements remain claims until your Teacher verifies them. Open Evidence to review the complete record.</p><label><input type="checkbox" checked={confirmed} onChange={event=>setConfirmed(event.target.checked)}/><span>{STUDENT_CONFIRMATION_ATTESTATION}</span></label><button type="button" onClick={()=>void submit()} disabled={!confirmed||busy}>{busy?"Confirming…":"Confirm Session Intake"}</button></div>}
+        <div ref={endRef}/>
+      </>}
+      {message&&<p className="admin-alert" role="status">{message}</p>}
+      {!loading&&!saved&&context?.isOpen&&stage<4&&<div className="chat-composer"><div className="chat-route-actions">{stage===0&&<button type="button" className="secondary compact" onClick={()=>setDraft("I made no progress in this Session.")}>No progress</button>}<button type="button" className="secondary compact" onClick={()=>setDraft("I need my Teacher to help me decide the next step.")}>I need Teacher help</button></div><div><textarea rows={2} maxLength={1800} value={draft} onChange={event=>setDraft(event.target.value)} onKeyDown={event=>{if(event.key==="Enter"&&!event.shiftKey){event.preventDefault();void send()}}} placeholder="Reply to the Intake assistant…"/><button type="button" onClick={()=>void send()} disabled={!draft.trim()||busy}>Send</button></div><small>Enter to send · Shift + Enter for a new line</small></div>}
+    </section>
+    <aside className={`evidence-drawer ${evidenceOpen?"open":""}`} aria-hidden={!evidenceOpen}><div className="evidence-drawer-head"><div><span>This Session's evidence</span><h3>{saved?"Confirmed snapshot":"What I understand so far"}</h3></div><button type="button" className="secondary compact" onClick={()=>setEvidenceOpen(false)}>Close</button></div><dl><div><dt>Responsibility</dt><dd>{evidence?.responsibility.current||answers.responsibility||"Not captured yet"}</dd></div><div><dt>Claim</dt><dd>{evidence?.claims?.[0]?.statement||answers.progress||"Not captured yet"}</dd></div><div><dt>Evidence</dt><dd>{evidence?.evidence?.[0]?.reference||answers.evidenceReference||(noProgress?"Not produced":"Not identified yet")}</dd></div><div><dt>Testing</dt><dd>{evidence?.testing?.[0]?.execution_status?.replaceAll("_"," ")||answers.testingStatus.replaceAll("_"," ")}</dd></div><div><dt>Blocker</dt><dd>{evidence?.blocker.description||answers.blockerDescription||answers.blockerStatus}</dd></div><div><dt>Next action</dt><dd>{evidence?.next_action.action||answers.nextAction||"Not captured yet"}</dd></div></dl><p>Student claim · Teacher verification is separate.</p></aside>
+    {evidenceOpen&&<button className="evidence-drawer-scrim" aria-label="Close evidence" onClick={()=>setEvidenceOpen(false)}/>}</main></div>,document.body);
+}
+
+function LegacyStudentSessions({intakePilot=false}:{intakePilot?:boolean}) {
   const [sessions, setSessions] = useState<StudentSessionRecord[]>([]);
   const [trackSession, setTrackSession] = useState<StudentSessionRecord | null>(null);
   const [feedbackSession, setFeedbackSession] = useState<StudentSessionRecord | null>(null);
@@ -458,6 +648,63 @@ function StudentSessions({intakePilot=false}:{intakePilot?:boolean}) {
     {feedbackSession&&<PlatformFeedbackModal session={feedbackSession} onClose={()=>setFeedbackSession(null)} onSaved={()=>window.dispatchEvent(new CustomEvent("student-session-checkin"))}/>}
   </section>;
 }
+function StudentSessions({intakePilot=false}:{intakePilot?:boolean}) {
+  if(!intakePilot) return <LegacyStudentSessions intakePilot={false}/>;
+  const [sessions,setSessions]=useState<StudentSessionRecord[]>([]);
+  const [intakes,setIntakes]=useState<Record<string,SessionIntakeContext|null>>({});
+  const [selected,setSelected]=useState<StudentSessionRecord|null>(null);
+  const [loading,setLoading]=useState(true);
+  const [error,setError]=useState("");
+  useEffect(()=>{
+    let active=true;
+    const refresh=async()=>{
+      const {data,error:journeyError}=await supabase.rpc("get_my_session_journey");
+      if(!active)return;
+      if(journeyError){setError("Your Sessions could not be loaded. Please refresh or tell your teacher.");setLoading(false);return;}
+      const items=((data as StudentSessionRecord[]|null)||[]).sort((a,b)=>a.sessionNumber-b.sessionNumber);
+      setSessions(items);
+      const pairs=await Promise.all(items.filter(item=>item.sessionNumber<=9).map(async item=>{
+        const {data:intake}=await supabase.rpc("get_my_session_intake",{p_session_id:item.sessionId});
+        return [item.sessionId,intake as SessionIntakeContext|null] as const;
+      }));
+      if(active){setIntakes(Object.fromEntries(pairs));setError("");setLoading(false);}
+    };
+    const onRefresh=()=>void refresh();
+    void refresh();
+    window.addEventListener("student-session-checkin",onRefresh);
+    return()=>{active=false;window.removeEventListener("student-session-checkin",onRefresh);};
+  },[]);
+  const openSessions=sessions.filter(item=>item.status==="open").sort((a,b)=>b.sessionNumber-a.sessionNumber);
+  const available=sessions.filter(item=>intakes[item.sessionId]?.isOpen&&!intakes[item.sessionId]?.confirmedRecord).sort((a,b)=>b.sessionNumber-a.sessionNumber);
+  const primary=openSessions[0]||available[0]||sessions.find(item=>item.status==="scheduled")||sessions.at(-1)||null;
+  const others=sessions.filter(item=>item.sessionId!==primary?.sessionId);
+  const catchup=others.filter(item=>intakes[item.sessionId]?.isOpen&&!intakes[item.sessionId]?.confirmedRecord);
+  const history=others.filter(item=>Boolean(intakes[item.sessionId]?.confirmedRecord)||item.status==="closed");
+  const upcoming=others.filter(item=>!catchup.includes(item)&&!history.includes(item));
+  const action=(item:StudentSessionRecord,catchUp=false)=>{
+    const intake=intakes[item.sessionId];
+    if(intake?.confirmedRecord)return <button type="button" className="secondary compact" onClick={()=>setSelected(item)}>View confirmed Intake</button>;
+    if(intake?.isOpen)return <button type="button" className={catchUp?"secondary compact":"compact"} onClick={()=>setSelected(item)}>{catchUp?"Complete catch-up Intake":"Start guided Intake"}</button>;
+    return <span className="session-intake-unavailable">Intake {item.status==="closed"?"closed":"not open yet"}</span>;
+  };
+  const compact=(item:StudentSessionRecord,catchUp=false)=><article key={item.sessionId} className="session-compact-row"><div><b>S{item.sessionNumber} · {item.focus}</b><small>{new Date(item.sessionDate+"T00:00:00").toLocaleDateString()} · {intakes[item.sessionId]?.confirmedRecord?"Confirmed":catchUp?"Catch-up available":item.status==="closed"?"Closed":"Upcoming"}</small></div>{action(item,catchUp)}</article>;
+  return <section id="sessions" className="portal-section session-first-area">
+    {loading?<p className="empty-state">Loading your Current Session…</p>:error?<p className="empty-state error-state" role="alert">{error}</p>:primary?<><article className="current-session-panel">
+      <div className="current-session-top"><div><span className="current-session-label">Current Session</span><h2>S{primary.sessionNumber} · {primary.focus}</h2><p>{primary.title}</p></div><span className={"activity-control-status "+primary.status}>{primary.status==="open"?"Current":primary.status==="closed"?"Closed":"Next"}</span></div>
+      <div className="current-session-status">
+        <div><span>Attendance</span>{primary.checkedInAt?<b><CheckCircle2 size={16}/> Checked in</b>:<b>Check-in pending</b>}</div>
+        <div><span>Session Intake</span><b>{intakes[primary.sessionId]?.confirmedRecord?"Confirmed":intakes[primary.sessionId]?.isOpen?"Ready":"Not available"}</b></div>
+      </div>
+      <div className="current-session-action"><div><span>Your evidence journey</span><p>{intakes[primary.sessionId]?.confirmedRecord?"This Session is locked as read-only history.":intakes[primary.sessionId]?.isOpen?"Describe what happened, organise evidence and agree your next step.":"Your Teacher controls when this Intake opens."}</p></div>{action(primary)}</div>
+    </article>
+    {catchup.length>0&&<details className="session-group"><summary><span><b>Catch-up available</b><small>{catchup.length} incomplete Session{catchup.length===1?"":"s"}</small></span><ChevronDown size={20}/></summary><div>{catchup.map(item=>compact(item,true))}</div></details>}
+    {history.length>0&&<details className="session-group"><summary><span><b>Session history</b><small>{history.length} previous Session{history.length===1?"":"s"} · read-only after confirmation</small></span><ChevronDown size={20}/></summary><div>{history.map(item=>compact(item))}</div></details>}
+    {upcoming.length>0&&<details className="session-group"><summary><span><b>Upcoming Sessions</b><small>{upcoming.length} prepared</small></span><ChevronDown size={20}/></summary><div>{upcoming.map(item=>compact(item))}</div></details>}
+    </>:<p className="empty-state">No Sessions have been prepared for this Block.</p>}
+    {selected&&<SessionIntakeModal session={selected} onClose={()=>setSelected(null)} onSaved={()=>window.dispatchEvent(new CustomEvent("student-session-checkin"))}/>}
+  </section>;
+}
+
 function StudentPortal({ student }: { student: AuthenticatedStudent }) {
   const [form, setForm] = useState<Kind | null>(null);
   const [reviewTarget, setReviewTarget] = useState<string | null>(null);
@@ -472,6 +719,9 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
       setPresentationOrder(order.error ? [] : ((order.data as Array<{ position: number; teamName: string; projectName: string | null }>) || []));
     });
   }, [student.blockId]);
+  const intakePilot=/^2026\s*(?:·\s*)?2B2$/i.test(student.blockLabel.trim());
+  const projectPanel=<section id="my-project" className="portal-panel portal-section"><details className={intakePilot?"project-summary-details":""} open={!intakePilot}><summary className={intakePilot?"project-summary-toggle":undefined}><div><span>My Project</span><b>{student.projectName||"Project not assigned"}</b></div>{intakePilot&&<ChevronDown size={20}/>}</summary><div className="project-summary-body"><Head label="My Project" title={student.projectName || "Project not assigned"} text={student.projectDescription || (student.projectSource === "roster" ? "This project name came from the roster but is not yet linked to the Project Catalogue. Ask your teacher to complete the team assignment." : "Your teacher has not assigned a catalogue project to this team yet.")}/><div className="student-project-summary"><div><span>Student</span><b>{student.studentName}</b><small>{student.studentId}</small></div><div><span>Team</span><b>{student.teamName}</b><small>Roster assignment</small></div><div><span>Project</span><b>{student.projectName || "Pending"}</b><small>{student.projectCategory || "Catalogue assignment pending"}{student.projectDifficulty ? ` · ${student.projectDifficulty}` : ""}</small></div></div>{student.projectSource === "catalogue" && <div className="project-detail-grid"><article><span>Problem</span><p>{student.projectProblem || "Not specified"}</p></article><article><span>Target users</span><p>{student.projectTargetUsers || "Not specified"}</p></article><article className="wide"><span>Expected outcomes</span><p>{student.projectExpectedOutcomes || "Not specified"}</p></article></div>}</div></details></section>;
+  const activities=<details className="portal-section class-activities"><summary><div><span>Class Activities</span><b>Guided together during class</b><small>{weekStates?Object.values(weekStates).filter(Boolean).length:0} weeks available</small></div><span className="class-activities-show">Show activities <ChevronDown size={20}/></span></summary><div className="portal-weekly-section"><WeeklyHub open={(kind)=>{setReviewTarget(null);setForm(kind)}} openReview={(teamName)=>{setReviewTarget(teamName);setForm("review")}} weekStates={weekStates} presentationOrder={presentationOrder}/></div></details>;
   return (
     <>
       <header>
@@ -479,9 +729,9 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
           NIT3004 <span>Engineering Studio</span>
         </a>
         <nav>
-          <a href="#weekly">This Week</a>
+          <a href="#sessions">Current Session</a>
           <a href="#my-project">My Project</a>
-          <a href="#sessions">Sessions</a>
+          <a href="#weekly">Activities</a>
           <a href="#get-help">Get Help</a>
         </nav>
       </header>
@@ -498,17 +748,7 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
           </div>
           <p>{student.blockLabel} · Complete only the activity that matters now.</p>
         </section>
-        <div className="portal-section portal-weekly-section"><WeeklyHub
-          open={(kind) => { setReviewTarget(null); setForm(kind); }}
-          openReview={(teamName) => { setReviewTarget(teamName); setForm("review"); }}
-          weekStates={weekStates}
-          presentationOrder={presentationOrder}
-        /></div>
-        <section id="my-project" className="portal-panel portal-section"><Head label="My Project" title={student.projectName || "Project not assigned"} text={student.projectDescription || (student.projectSource === "roster" ? "This project name came from the roster but is not yet linked to the Project Catalogue. Ask your teacher to complete the team assignment." : "Your teacher has not assigned a catalogue project to this team yet.")}/>
-          <div className="student-project-summary"><div><span>Student</span><b>{student.studentName}</b><small>{student.studentId}</small></div><div><span>Team</span><b>{student.teamName}</b><small>Roster assignment</small></div><div><span>Project</span><b>{student.projectName || "Pending"}</b><small>{student.projectCategory || "Catalogue assignment pending"}{student.projectDifficulty ? ` · ${student.projectDifficulty}` : ""}</small></div></div>
-          {student.projectSource === "catalogue" && <div className="project-detail-grid"><article><span>Problem</span><p>{student.projectProblem || "Not specified"}</p></article><article><span>Target users</span><p>{student.projectTargetUsers || "Not specified"}</p></article><article className="wide"><span>Expected outcomes</span><p>{student.projectExpectedOutcomes || "Not specified"}</p></article></div>}
-        </section>
-        <StudentSessions intakePilot={/^2026\s*(?:·\s*)?2B2$/i.test(student.blockLabel.trim())}/>
+        {intakePilot?<><StudentSessions intakePilot/>{projectPanel}{activities}</>:<><div className="portal-section portal-weekly-section"><WeeklyHub open={(kind)=>{setReviewTarget(null);setForm(kind)}} openReview={(teamName)=>{setReviewTarget(teamName);setForm("review")}} weekStates={weekStates} presentationOrder={presentationOrder}/></div>{projectPanel}<StudentSessions/></>}
         <section id="get-help" className="portal-panel portal-section"><Head label="Get Help" title="Bring one clear question." text="Use the support choices inside the current weekly activity so your teacher can connect help to the right evidence and session."/></section>
       </main>
       <footer>
