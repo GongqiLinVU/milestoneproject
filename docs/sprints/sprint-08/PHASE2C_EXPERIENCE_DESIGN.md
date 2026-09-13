@@ -134,6 +134,20 @@ Every outcome stores the original conversation and student-confirmed record.
 Only the fourth creates a Teacher guidance item; none creates verification
 automatically.
 
+## Immutable history
+
+A confirmed Intake is the student's final Session snapshot. The student can
+review and correct extracted fields before confirmation. After confirmation the
+conversation, extraction, corrections and confirmed evidence become read-only.
+
+A closed Session cannot continue a draft unless the Teacher explicitly reopens
+Intake access. A confirmed Intake is never unlocked by reopening access.
+
+Teacher verification, comments and actions are separate append-only records.
+They do not alter the student's historical Claim. Students can view them in
+History, but any response occurs in the next Session Intake through the carried
+Teacher Action.
+
 ## Teacher handoff
 
 Teacher views should separate two queues:
