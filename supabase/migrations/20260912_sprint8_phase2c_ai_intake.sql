@@ -106,7 +106,7 @@ begin
   end if;
 
   if p_prompt_version is null
-     or p_prompt_version <> 'session-intake-ai.v1.0.0' then
+     or p_prompt_version <> 'session-intake-ai.v1.1.0' then
     raise exception using errcode = 'P0001', message = 'AI Intake prompt version is invalid';
   end if;
 
