@@ -560,12 +560,15 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
     let finalMeta=nextMeta;
     if(nextMeta.used){
       try{
+        const extractRequest={answers:nextAnswers,followUpAnswers:nextFollowUpAnswers,conversation:turns.map(turn=>({actor:turn.actor,text:turn.text}))};
         const payload=await callAi("extract",nextAnswers,nextFollowUpAnswers);
         const result=payload.result as AiExtraction;
+        setDebugEvents(current=>[...current,{at:new Date().toISOString(),mode:"extract",request:extractRequest,response:{model:payload.model,promptVersion:payload.promptVersion,providerRequestId:payload.providerRequestId,result}}]);
         const refined:IntakeStudentRecord={...finalRecord,responsibility:{...finalRecord.responsibility,current:result.refinedResponsibility?.trim()||finalRecord.responsibility.current},claims:finalRecord.claims.map((claim,index)=>index?claim:{...claim,statement:result.refinedClaim?.trim()||claim.statement,scope:result.refinedScope?.trim()||claim.scope}),evidence:finalRecord.evidence.map((item,index)=>index?item:{...item,verification_method:result.refinedVerificationMethod?.trim()||item.verification_method})};
         if(validateIntakeStudentRecord(refined).valid)finalRecord=refined;else throw new Error("schema");
         finalMeta={...nextMeta,promptVersion:payload.promptVersion||nextMeta.promptVersion,model:payload.model||nextMeta.model,uncertainties:result.uncertainties||[],flags:result.flags||[],suggestedTeacherQuestions:result.suggestedTeacherQuestions||[],extractionStatus:"completed"};
-      }catch{
+      }catch(error){
+        setDebugEvents(current=>[...current,{at:new Date().toISOString(),mode:"extract",request:{answers:nextAnswers,followUpAnswers:nextFollowUpAnswers},error:error instanceof Error?error.message:"provider failure"}]);
         finalMeta={...nextMeta,used:false,extractionStatus:"fallback"};
         setMessage("AI organisation is temporarily unavailable. Your answers are preserved in the secure fallback summary.");
       }
