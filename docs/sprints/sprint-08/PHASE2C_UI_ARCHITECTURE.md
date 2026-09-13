@@ -152,10 +152,13 @@ its count appears in the collapsed summary; it does not move above the Session.
 ### Desktop
 
 - left: guided conversation;
-- right: live evidence workspace;
-- top: Session number, teaching focus, current/catch-up label and save state;
-- bottom of conversation: composer plus No progress and Teacher help actions;
-- previous commitment appears in a separate context strip.
+- one full-width ChatGPT-style conversation;
+- top: Session number, teaching focus, current/catch-up label and Evidence chain
+  control;
+- bottom: composer plus No progress and Teacher help actions;
+- evidence changes appear below the student answer that caused them;
+- a floating Evidence drawer opens only on request;
+- the drawer separates Current Session updates from Previous Session records.
 
 ### Mobile
 
