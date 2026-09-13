@@ -1,60 +1,85 @@
-# Sprint 8 Phase 2C — AI-Assisted Session Intake
+# Sprint 8 Phase 2C — Guided AI Session Intake
 
 **Branch:** `sprint-08-phase2c-ai-intake`  
-**Schema:** `session-intake.v1.0.0`  
-**Prompt:** `session-intake-ai.v1.0.0`  
-**Test suite:** `ai-intake-suite.v1.0.0`
+**Schema baseline:** `session-intake.v1.0.0`  
+**Prompt prototype:** `session-intake-ai.v1.0.0`  
+**Test suite baseline:** `ai-intake-suite.v1.0.0`
 
-## Goal
+## Current decision
 
-Replace Phase 2B's rule-selected clarification step with a bounded AI-assisted
-step while keeping the verified deterministic workflow as fallback and keeping
-all authority in the application and database.
+The initial implementation proved the bounded AI endpoint, structured output,
+local validation, hardened persistence and deterministic fallback. Its normal
+student experience is still form-first, so it is a technical prototype rather
+than the Phase 2C candidate experience.
 
-## Interaction
+Phase 2C now enters an experience-design round before further implementation.
+The approved direction is documented in
+`docs/sprints/sprint-08/PHASE2C_EXPERIENCE_DESIGN.md`.
 
-1. The student completes the three Evidence Contract core sections.
-2. The authenticated AI endpoint receives only those evidence fields, optional
-   follow-up answers and the same student's previous confirmed record.
-3. AI selects zero to three evidence-focused clarifications.
-4. After the student answers, AI may refine responsibility, claim, scope and
-   verification method without inventing facts.
-5. The local TypeScript validator accepts or rejects the extraction.
-6. The student reviews and confirms the record.
-7. A hardened RPC resolves identity/Block/Session again and validates before
-   persisting `source_mode=ai_assisted`.
-8. Any provider, network, schema or extraction failure returns to the Phase 2B
-   deterministic path without discarding student answers.
+## Candidate experience
 
-## Authority and privacy boundary
+The normal path will be a guided evidence workspace:
 
-Provider input excludes student name, Student ID, email, Auth ID, Block ID, Team
-and other students' raw text. The endpoint requires an activated student token
-but does not put token identity into the model prompt.
+1. one natural-language question at a time in a conversation area;
+2. a live evidence area that keeps Claim, Evidence, Testing, Blocker and Next
+   Action visibly separate;
+3. stable collection directions with adaptive question choice;
+4. current Session focus plus bounded same-student continuity;
+5. explicit routes for evidence, clarification, a small next step and Teacher
+   help;
+6. student correction and confirmation before submission;
+7. a deterministic full-form fallback if the provider fails.
 
-AI cannot set Teacher verification, Teacher Action, marks, grades, authorship,
-honesty or contribution outcomes. Allowed AI metadata is an explicit allowlist.
-The database rejects unsupported Evidence fields, invalid prompt versions,
-more than three follow-ups and direct student table mutation.
+The assistant may help a student reduce a task to a small action. The student
+must accept or edit that action. The assistant cannot allocate Team
+responsibility, make a Teacher decision, verify work, infer honesty or grade.
 
-## Initial regression cases
+## Useful Intake outcomes
 
-- S1 → S2 previous-action continuity;
-- broad 100% claim with later evidence and unexecuted testing;
-- honest failed experiment and active blocker;
-- pasted prompt injection requesting verification/marks;
-- provider failure with deterministic submission.
+A valid Intake may record:
 
-## Deployment gate
+- scoped evidence ready for Teacher verification;
+- a Claim whose evidence is explicitly missing;
+- honest little/no progress plus an accepted small next step;
+- a Teacher-help request describing the decision or support needed.
 
-1. Vercel Preview and TypeScript build pass.
-2. Review provider input/output in Preview using only mock 2B2 students.
-3. Run `20260912_sprint8_phase2c_ai_intake.sql`.
-4. Run `sprint8_phase2c_security_audit.sql` and require 5/5 PASS.
-5. Confirm one AI-assisted record has valid schema, prompt version and bounded
-   metadata.
-6. Disable the provider or force failure and confirm a deterministic record can
-   still be submitted.
-7. Confirm 2B1 retains the historical Work Track experience.
+Repeated no-progress records and unfinished actions remain continuity facts for
+Teacher guidance. They are not automatic risk scores.
 
-Do not merge until the mock candidate regression is reviewed.
+## Retained technical boundaries
+
+- authenticated activated-student endpoint;
+- server-resolved Block, Session and same-student history;
+- no direct identity or other-student raw text in provider input;
+- at most three adaptive follow-ups and six total pre-summary questions;
+- strict schema output and application/database validation;
+- separate original conversation, extraction and student confirmation;
+- deterministic completion after provider, network or schema failure;
+- AI cannot write Teacher verification, Teacher Action or marks.
+
+## Design-round deliverables
+
+1. collection routes and transition/stop rules;
+2. desktop and mobile workspace wireframes;
+3. three full conversation-to-evidence examples: strong evidence, little
+   progress, and repeated unfinished action;
+4. minimal schema delta for outcome type, source links, accepted small action
+   and Teacher-help request;
+5. revised mandatory regression suite and acceptance thresholds.
+
+No Phase 2C migration should be applied until the schema delta and candidate
+experience are reviewed.
+
+## Later implementation gate
+
+After the design round:
+
+1. refactor the form-first normal path into the guided workspace;
+2. retain the current form as provider-independent fallback;
+3. verify responsive scrolling and keyboard use;
+4. run all mandatory content and authority cases with 2B2 mock students;
+5. run the Phase 2C security audit and require every applicable check to pass;
+6. confirm 2B1 remains unchanged;
+7. merge only after explicit review.
+
+The current Draft PR remains open while this redesign is developed.
