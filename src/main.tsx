@@ -653,9 +653,13 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
       setHighlightFields(changes);setEvidenceUpdates(current=>current+changes.length);setRoute(result.route);
       setAiMeta(current=>({...current,used:true,promptVersion:payload.promptVersion||current.promptVersion,model:payload.model||current.model,uncertainties:result.uncertainties||[],suggestedTeacherQuestions:result.suggestedTeacherQuestions||[],extractionStatus:"not_used"}));
       setDebugEvents(current=>[...current,{at:new Date().toISOString(),mode:"turn",request:debugRequest,response:{model:payload.model,promptVersion:payload.promptVersion,providerRequestId:payload.providerRequestId,result}}]);
-      const assistantCount=conversation.filter(turn=>turn.actor==="system").length;
-      if(result.readyForReview||result.route==="review"||assistantCount>=6){
-        if(result.assistantMessage)addTurn({actor:"system",purpose:"review transition",source:"llm",text:result.assistantMessage});
+      const dynamicQuestionsAsked=conversation.filter(turn=>turn.actor==="system"&&turn.source==="llm").length;
+      const questionLimitReached=dynamicQuestionsAsked>=3;
+      if(result.readyForReview||result.route==="review"||questionLimitReached){
+        const transitionText=(result.readyForReview||result.route==="review")&&result.assistantMessage
+          ? result.assistantMessage
+          : "I have updated your Session evidence from that answer. Review the evidence chain before confirming.";
+        addTurn({actor:"system",purpose:"review transition",source:"llm",text:transitionText});
         await prepareReview(nextAnswers,followUpAnswers,{...aiMeta,used:true,promptVersion:payload.promptVersion||null,model:payload.model||null,uncertainties:result.uncertainties||[],suggestedTeacherQuestions:result.suggestedTeacherQuestions||[],extractionStatus:"not_used"});
       }else{
         addTurn({actor:"system",purpose:result.route,source:"llm",text:result.assistantMessage});
@@ -676,7 +680,7 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
     if(!context?.isOpen||!record||!confirmed)return;
     const validation=validateIntakeStudentRecord(record);if(!validation.valid){setMessage(validation.errors.join(" · "));return}
     setBusy(true);setMessage("");
-    const source=turns as FallbackTurn[];
+    const source:FallbackTurn[]=turns.filter(turn=>turn.purpose!=="review transition").slice(-12).map(turn=>({actor:turn.actor,purpose:turn.purpose,text:turn.text}));
     const confirmation={status:"confirmed",attestation:STUDENT_CONFIRMATION_ATTESTATION,corrections:[],summary:buildDeterministicSummary(record)};
     let saveError:{message:string}|null=null;
     if(aiMeta.used&&aiMeta.extractionStatus==="completed"){
