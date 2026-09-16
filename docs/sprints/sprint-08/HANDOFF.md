@@ -15,11 +15,12 @@ produced four valid 2B2 records, including one S1 → S2 longitudinal pair. The
 provider-independent workflow, fallback persistence and post-pilot security
 checks passed.
 
-Phase 2C is open in Draft PR #65. Its first implementation proved bounded model
-calls, validation, persistence and fallback, but retained a form-first student
-experience. Review determined that this does not satisfy the intended AI Intake
-experience. Phase 2C is now in a guided-workspace design round before further
-implementation.
+Phase 2C remains open in Draft PR #65. The form-first prototype has progressed
+to a conversational UI, floating current/history evidence panel and OpenAI
+calls in the controlled pilot. User traces revealed extraction, routing and
+confirmation failures; dialogue quality does not establish end-to-end acceptance.
+The next round prioritises source fidelity and reliable submission, then adaptive
+routing. No new acceptance result is claimed by this planning update.
 
 ## Confirmed product direction
 
@@ -30,8 +31,8 @@ three stable collection directions:
 - evidence and verification;
 - blocker and next action.
 
-The normal UI will combine a one-question-at-a-time conversation with a live
-evidence area. Current Session focus and the same student's previous confirmed
+The normal UI combines a one-question-at-a-time conversation with a floating
+evidence area, normally hidden and opened from per-answer update summaries. Current Session focus and the same student's previous confirmed
 record shape the questions, while every Session remains an independent record.
 
 The assistant supports four routes: evidence, clarification, a small next step,
@@ -54,10 +55,9 @@ Detailed candidate design:
 - archived 2B1 history remains available;
 - existing-account reuse when a student continues into a later Block.
 
-## Phase 2C current UI-first round
+## Phase 2C UI baseline
 
-The portal and Intake workspace stabilise before conversation logic is
-connected:
+Retain the agreed portal and workspace design while improving the conversation:
 
 1. show one expanded Current Session at the top;
 2. place My Project below it in compact form;
@@ -67,7 +67,7 @@ connected:
 6. keep catch-up Sessions accessible but secondary when several Intakes are
    open;
 7. validate desktop/mobile scrolling, navigation and draft protection;
-8. then connect routes, schema delta and AI extraction.
+8. refine routes and AI extraction without reopening the agreed layout.
 
 Session status determines the primary class focus. Intake access only determines
 whether a Session may accept an Intake. Therefore S1 and S2 may remain open for
@@ -76,12 +76,15 @@ catch-up while S3 is the single Current Session.
 Detailed UI decision:
 `docs/sprints/sprint-08/PHASE2C_UI_ARCHITECTURE.md`.
 
-The form-first prototype remains on the branch as a reference. Do not run the
-Phase 2C migration yet.
+This planning update does not execute or authorise a new database migration.
+Any required persistence changes must be reviewed and audited before use.
 
 ## Guardrails
 
-- maximum three adaptive follow-ups and six questions before summary;
+- approved next policy: zero to five adaptive follow-ups, normally one to three,
+  with early stopping; the existing three-follow-up/six-question contract remains
+  the implementation baseline until prompts, validators and evaluation versions
+  are updated together; do not silently relax the existing contract;
 - no identity questions or user-supplied Block/Team/Session authority;
 - no other-student raw conversation in provider input;
 - no invented evidence, progress or reason for no progress;
@@ -93,12 +96,48 @@ Phase 2C migration yet.
 - 2B1 remains unchanged;
 - merge only after explicit approval.
 
-## Review sequence
+## Next application round
 
-1. approve the experience design and three example interactions;
-2. approve wireframes and schema delta;
-3. implement the guided workspace;
-4. execute the mandatory mock candidate regression in 2B2;
-5. apply the reviewed migration and run the security audit;
-6. confirm provider failure and 2B1 isolation;
-7. review PR #65 for merge.
+1. Resolve final confirmation failures while preserving every source turn and
+   student correction; add a regression for complete conversation persistence.
+2. Correct claim/evidence classification and unknown/not-applicable handling.
+3. Implement the approved bounded adaptive policy with a compact source-linked
+   assessment: specificity, evidence/verification readiness, testing maturity,
+   uncertainty, actionability and support need. Short answers are not evidence
+   of low ability; detailed answers should not trigger redundant questions.
+4. Route to targeted clarification, a student-accepted small action or Teacher
+   help; stop early when useful collection is complete. Five follow-ups are a
+   ceiling, not a quota. Track token cost separately.
+5. Run the mandatory mock suite, including sparse/complex replies, source
+   fidelity, early stopping, budget limits, provider failure and 2B1 isolation.
+6. Review any required migration and audit results, then review PR #65 for merge
+   only after explicit user approval.
+
+## Research workstream — secondary to delivery
+
+Decision 2026-09-16: keep the research direction simple and application-led.
+Study when to ask for evidence, help define a small next action, or defer to the
+Teacher under a bounded interaction budget. This is a hypothesis to test, not
+a demonstrated contribution or claim of improved learning.
+
+Use the same application's versioned regression and pilot traces. Begin with
+fixed/rule-based and adaptive cases; once stable, compare a fixed-policy LLM
+condition under comparable model/context/budget. Do not build a separate
+research engine or require a publication result to ship the application.
+
+Aggregate at these checkpoints:
+
+- reliable confirmation/source preservation: baseline failure and regression report;
+- passing adaptive mock suite: frozen baseline/candidate comparison;
+- approved classroom pilot with Teacher reviews: usefulness, burden and review time;
+- S1–S4 with rechecks: next-action follow-through and independently verified evidence;
+- Sprint close: findings, limitations and whether a paper question is supported.
+
+Record versions, source-linked changes, routes, budgets, failures and measured
+cost/latency without inventing missing metrics. Keep raw student traces out of
+public Git. Obtain applicable ethics/consent arrangements before research use of
+classroom records; do not automatically repurpose historical teaching data.
+
+See the application-first research workstream in
+`docs/sprints/sprint-08/PLAN.md` for measures and aggregation decisions.
+IJCAI-27 is an aspirational extension, not a product gate or guaranteed outcome.
