@@ -1,18 +1,20 @@
 # Sprint 8 Plan — AI Session Intake & Evidence Verification
 
-**Status:** Phase 1 and Phase 2A complete; Phase 2B in Draft review
+**Status:** Phase 1, Phase 2A and Phase 2B complete; Phase 2C conversational pilot iteration; application-first research workstream planned
 **Source baseline:** Sprint 7 final observation of 2026 2B1  
 **Product area:** NIT3004 Engineering Studio Platform
 
 ## Sprint goal
 
-Pilot a short, adaptive AI Session Intake that replaces repetitive fixed progress
-forms with a bounded evidence interview.
+Pilot a guided AI Session Intake that helps students progress while producing
+a bounded evidence record. The experience combines a short conversation with a
+live evidence workspace instead of exposing the Evidence Schema as the normal
+student form.
 
-Each Session should produce a structured Progress Report without requiring the
-student to write a long report. AI asks personalised follow-up questions,
-extracts a stable evidence record and prepares targeted Teacher verification
-questions. Academic judgement remains with the teacher.
+Each Session should help the student state what actually happened, identify
+supporting evidence, choose a realistic next step or request Teacher help.
+Students with little or no progress remain first-class cases. Academic judgement
+and verification remain with the Teacher.
 
 ## Product proposition
 
@@ -43,7 +45,11 @@ The flexible conversation must never replace this stable output contract.
 ## Delivery principles
 
 - three to five minutes for the normal student path
-- three core questions, at most three adaptive follow-ups, then confirmation
+- cover three core directions; the approved next policy allows zero to five adaptive
+  follow-ups, normally one to three, with early stopping when sufficient
+- the existing three-follow-up/six-question contract remains the implementation
+  baseline until a coordinated versioned policy, validator and regression update;
+  five is a ceiling, not a target, and API retries are not additional questions
 - reuse authenticated Block, Team, Project, Student and previous-Session context
 - do not ask students to re-enter authoritative identity or known context
 - treat student text as a claim until supported or verified
@@ -54,6 +60,12 @@ The flexible conversation must never replace this stable output contract.
 - deterministic validation controls required fields, limits, permissions,
   Session availability and persistence
 - student confirms or corrects the generated summary before submission
+- confirmation freezes the Session conversation and confirmed evidence as
+  read-only student history
+- Teacher review, comments and actions are stored separately and cannot rewrite
+  the student's historical claim
+- students respond to unresolved Teacher Actions through the next Session
+  Intake, not by editing or replying inside history
 - preserve source conversation and structured extraction for traceability
 - every AI inference shown to a teacher links to the supporting source record
 - use “insufficient evidence to verify,” not stronger unsupported conclusions
@@ -171,6 +183,50 @@ Acceptance:
   and AI-generated summary
 - provider failure does not block deterministic submission
 
+### Phase 2C — Guided AI Intake and Evidence Workspace
+
+The form-first prototype has progressed to a conversational UI with a floating
+current/history evidence panel and OpenAI calls in the controlled pilot. User
+traces now expose extraction, routing and final-confirmation issues. Phase 2C
+remains under iteration; successful dialogue alone does not establish successful
+persistence or acceptance.
+
+Candidate interaction:
+
+- present one natural-language question at a time;
+- update a separate live evidence workspace during the conversation;
+- cover responsibility/change, evidence/verification and blocker/next action
+  through adaptive paths rather than a fixed visible questionnaire;
+- use current Session teaching focus and bounded same-student continuity;
+- support evidence, clarification, small-next-step and Teacher-help routes;
+- stop evidence interrogation when the student clearly reports no progress;
+- allow a valid outcome with evidence, missing evidence, an accepted small
+  action or a Teacher guidance request;
+- retain the full structured form as provider-independent fallback;
+- keep student confirmation and all existing authority/privacy boundaries.
+
+The UI-first design sequence remains the layout baseline:
+
+1. place one expanded Current Session at the top of the student portal;
+2. move Class Activities to a collapsed bottom section;
+3. group completed, catch-up and upcoming Sessions behind collapsed summaries;
+4. build one full-page responsive Intake workspace reused by every Session;
+5. validate navigation, scrolling and multiple-open-Session behaviour;
+6. then connect the conversation routes, schema delta and evidence extraction.
+
+The Intake record remains bound to one Session, while the UI exposes one shared
+workspace and one primary Session action. Multiple Intake-access Sessions appear
+as secondary catch-up options and cannot create parallel workspaces.
+
+Detailed design:
+`docs/sprints/sprint-08/PHASE2C_EXPERIENCE_DESIGN.md`.
+
+UI architecture:
+`docs/sprints/sprint-08/PHASE2C_UI_ARCHITECTURE.md`.
+
+Implementation status and retained technical boundaries:
+`docs/sprints/sprint-08/PHASE2C_IMPLEMENTATION.md`.
+
 ## Phase 3 — Teacher Verification Queue
 
 Do not show teachers fourteen generated essays. Provide a concise queue with:
@@ -252,6 +308,92 @@ Validate:
 
 Success is not “more reports.” Success is better verified evidence with less
 Teacher review time.
+
+## Application-first research workstream — decision 2026-09-16
+
+Research is a secondary workstream within the same application. Product delivery
+remains the priority. We will collect reproducible observations at existing
+validation gates, then decide whether they support a research contribution.
+There is no separate premium implementation or publication requirement for
+Sprint 8 acceptance.
+
+Working question:
+
+> Under a bounded interaction budget, when should the assistant ask for more
+> evidence, help a student define a small next action, or defer to the Teacher?
+
+The initial hypothesis is that routing by the remaining evidence gap and support
+need can produce more useful, verifiable records with less unnecessary
+questioning than fixed follow-ups. This is an untested hypothesis, not an
+established novelty or learning benefit. IJCAI-27 remains an aspirational
+extension; venue fit and submission scope follow the evidence.
+
+### Next application slice
+
+1. Stabilise confirmation and preserve the complete source conversation,
+   extraction and student corrections; never truncate turns to satisfy an old
+   validator.
+2. Correct evidence fidelity: responsibility is distinct from progress;
+   offered demonstration is not an executed test; unknown is distinct from
+   not applicable; planned actions are not completed work.
+3. Introduce the approved zero-to-five follow-up policy through a coordinated
+   version update across prompts, client/server limits, persistence validators
+   and evaluation cases. Retain three core collection directions, allow early
+   stopping, and budget tokens/latency separately from question count.
+4. Use a compact assessment of specificity, evidence and verification readiness,
+   testing maturity, uncertainty, actionability and support need to select the
+   next route. Complexity means information to organise, not student ability.
+   Assess and respond within the same model call where practical.
+5. For sparse answers, distinguish evidence not yet explained from evidence that
+   does not exist; offer a bounded action or Teacher help when appropriate.
+   For detailed answers, extract what is already supplied and target only the
+   material gap. Do not infer motivation or competence from length.
+6. Regression-test source fidelity, short/complex replies, no progress, honest
+   failure, route changes, early stop, maximum budget and provider failure.
+
+Record the selected route, source-linked gap and brief decision reason, not
+hidden model reasoning. Teacher verification and Teacher actions remain
+exclusively Teacher-controlled.
+
+### Lightweight study and records
+
+Begin with the existing fixed/rule-based flow as a baseline and the adaptive
+policy as a candidate in the same application. When the candidate is stable,
+compare against a fixed-policy LLM condition with comparable model, context and
+budget so that model access is not confused with routing benefit. Freeze cases
+and versions before comparison; repeat stochastic cases and retain unsuccessful
+runs. More elaborate optimisation or separate assessment calls require evidence
+of practical value first.
+
+Reuse regression/debug records: case and Session identifiers, schema/prompt/
+policy/test-suite versions, configured and returned model when available,
+source-linked extraction and corrections, route, question count, stopping
+reason, confirmation outcome, failures and measured tokens/latency. Missing
+measurements must remain missing. Keep raw student traces out of public Git.
+
+Primary application measures are claim/evidence fidelity, Teacher verification
+usefulness and review time, student burden and completion, and cost/reliability.
+Later, measure whether student-accepted next actions lead to new evidence in a
+subsequent Session and independent Teacher verification. Longer answers, more
+filled fields and student attestation alone do not establish learning or
+verified achievement.
+
+### When to aggregate results
+
+| Trigger | Summary to produce | Decision supported |
+|---|---|---|
+| Confirmation and source-preservation regressions pass | Baseline failure cases and fixes, with unresolved limitations | Is the record trustworthy enough to evaluate? |
+| Controlled mock suite passes after adaptive-policy update | Versioned baseline/candidate comparison, including failures, burden and cost | Does adaptation improve the application enough for a real pilot? |
+| Approved classroom pilot has Teacher reviews | Verification usefulness, review time, student corrections and completion | Which routes help in classroom practice? |
+| S1–S4 longitudinal records and rechecks are available | Accepted next actions versus later evidence and Teacher verification | Is there evidence of follow-through beyond a single chat? |
+| Sprint close or sufficient comparable observations | Concise evidence synthesis and limitations | Continue product iteration and decide the defensible paper question |
+
+These are event-based checkpoints, not promised research findings or a fixed
+sample-size claim. Mock cases establish controlled behaviour, not educational
+effectiveness. Before using real classroom records for research, obtain the
+applicable institutional ethics/consent arrangements and define de-identification,
+access and retention. Existing teaching records are not automatically a research
+dataset. Formal study design and sample size follow the pilot feasibility data.
 
 ## Deferred until pilot evidence exists
 
