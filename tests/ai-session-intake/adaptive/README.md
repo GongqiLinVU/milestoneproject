@@ -1,6 +1,6 @@
 # Adaptive Intake candidate — ai-intake-suite.v1.1.0
 
-Candidate policy: `adaptive-intake.v1.0.0`; chat prompt: `session-intake-ai.v1.2.0`;
+Candidate policy: `adaptive-intake.v1.1.0`; chat prompt: `session-intake-ai.v1.3.0`;
 chat record: `session-intake.v1.1.0`. The historical v1.0 suite is retained.
 
 The candidate replaces the old three-follow-up/six-question limit for the chat
@@ -35,6 +35,7 @@ Intakes to repeat a test. Retain model/prompt/policy versions and all failed run
 | Correction | Change an extracted claim at review | Attestation resets; original extraction and final correction saved separately |
 | Teacher help | Ask Teacher to choose between two small tasks | Support request, no implied Teacher decision or dispatched notification |
 | Locked history | Reopen a confirmed Intake | Read-only; endpoint refuses new turns |
+| Accepted future test | State a completed loading change, a verifiable reference, and “Before next Session I will simulate API 500”; if prompted, say “I will do that next Session” | Move to review when evidence and verification are clear; never ask for a future test result now. Keep any executed loading observation even if an API 500 test is planned. Repeated unchanged extraction shows zero new fields. |
 
 For each completed case verify the new RPC's saved schema version, full ordered
 source conversation, metadata/extracted_record, student_confirmation/corrections,
@@ -42,6 +43,6 @@ and final student_record. Verify duplicate submission and cross-Block rejection
 with authenticated mock accounts. Run `sprint8_adaptive_intake_security_audit.sql`.
 Repeat each real model case at least three times before declaring candidate quality.
 
-Current evidence: 15 policy/record tests and 4 mocked-endpoint tests pass locally.
+Current evidence: 18 policy/record tests and 4 mocked-endpoint tests pass locally.
 Database audit, authenticated UI submission, real-model quality and longitudinal
 teaching outcomes are not established by these tests.

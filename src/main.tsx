@@ -1,4 +1,4 @@
-import { applyEvidenceUpdates, sourceConversation, questionCount, MAX_INTAKE_QUESTIONS, INTAKE_POLICY_VERSION, INTAKE_PROMPT_VERSION, type EvidenceUpdate } from "./intakePolicy";
+import { applyEvidenceUpdates, changedEvidenceFields, shouldReviewAcceptedAction, sourceConversation, questionCount, MAX_INTAKE_QUESTIONS, INTAKE_POLICY_VERSION, INTAKE_PROMPT_VERSION, type EvidenceUpdate } from "./intakePolicy";
 import { StrictMode, useEffect, useRef, useState, type FormEvent, type MouseEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { createRoot } from "react-dom/client";
@@ -558,7 +558,7 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
     const payload=await response.json().catch(()=>({}));
     if(!response.ok){
       const code=typeof payload.code==="string"?payload.code:"http_error";
-      const detail=[`${response.status}`,typeof payload.stage==="string"?payload.stage:"unknown_stage",code,typeof payload.providerStatus==="number"?`provider_${payload.providerStatus}`:"",typeof payload.providerErrorCode==="string"?payload.providerErrorCode:"",typeof payload.providerErrorType==="string"?payload.providerErrorType:"",typeof payload.providerRequestId==="string"?`request_${payload.providerRequestId}`:""].filter(Boolean).join(":");
+      const detail=[`${response.status}`,typeof payload.stage==="string"?payload.stage:"unknown_stage",code,typeof payload.reason==="string"?payload.reason:"",typeof payload.providerStatus==="number"?`provider_${payload.providerStatus}`:"",typeof payload.providerErrorCode==="string"?payload.providerErrorCode:"",typeof payload.providerErrorType==="string"?payload.providerErrorType:"",typeof payload.providerRequestId==="string"?`request_${payload.providerRequestId}`:""].filter(Boolean).join(":");
       throw new Error(detail);
     }
     return payload;
@@ -581,8 +581,8 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
     try{
       const payload=await callAi("turn",answers,followUpAnswers,conversation);
       const result=payload.result as IntakeTurnResult;
-      const changes=[...new Set((result.evidenceUpdates||[]).map(item=>item.field))];
       const nextAnswers=applyEvidenceUpdates(answers,result.evidenceUpdates||[],conversation);
+      const changes=changedEvidenceFields(answers,nextAnswers,result.evidenceUpdates||[]);
       const enriched={...studentTurn,evidenceChanges:changes};
       setTurns(current=>[...current.slice(0,-1),enriched]);
       setAnswers(nextAnswers);setCapturedFields(current=>[...new Set([...current,...changes])]);
@@ -590,10 +590,11 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
       setAiMeta(current=>({...current,used:true,promptVersion:payload.promptVersion||current.promptVersion,model:payload.model||current.model,uncertainties:result.uncertainties||[],suggestedTeacherQuestions:result.suggestedTeacherQuestions||[],extractionStatus:"completed"}));
       setDebugEvents(current=>[...current,{at:new Date().toISOString(),mode:"turn",request:debugRequest,response:{model:payload.model,configuredModel:payload.configuredModel,promptVersion:payload.promptVersion,policyVersion:payload.policyVersion,usage:payload.usage,latencyMs:payload.latencyMs,budget:payload.budget,providerRequestId:payload.providerRequestId,result}}]);
       const questionLimitReached=questionCount(conversation)>=MAX_INTAKE_QUESTIONS;
-      if(result.readyForReview||result.route==="review"||questionLimitReached){
+      const acceptedActionReady=shouldReviewAcceptedAction(result.assessment,result.evidenceUpdates||[],conversation);
+      if(result.readyForReview||result.route==="review"||acceptedActionReady||questionLimitReached){
         const transitionText=(result.readyForReview||result.route==="review")&&result.assistantMessage
           ? result.assistantMessage
-          : "I have updated your Session evidence from that answer. Review the evidence chain before confirming.";
+          : acceptedActionReady ? "Your next action is recorded for the next Session. Review what you did and what remains planned before confirming." : "I have updated your Session evidence from that answer. Review the evidence chain before confirming.";
         addTurn({actor:"system",purpose:"review transition",source:"llm",text:transitionText});
         prepareReview(nextAnswers,questionLimitReached?"budget_exhausted":result.route==="teacher_help"?"teacher_help":"sufficient_information");
       }else{

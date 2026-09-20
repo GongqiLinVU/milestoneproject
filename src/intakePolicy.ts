@@ -1,7 +1,7 @@
 import type { DeterministicIntakeAnswers, FallbackTurn } from './aiSessionIntake.js';
 
-export const INTAKE_POLICY_VERSION = 'adaptive-intake.v1.0.0';
-export const INTAKE_PROMPT_VERSION = 'session-intake-ai.v1.2.0';
+export const INTAKE_POLICY_VERSION = 'adaptive-intake.v1.1.0';
+export const INTAKE_PROMPT_VERSION = 'session-intake-ai.v1.3.0';
 export const MAX_INTAKE_QUESTIONS = 8; // Three core directions plus at most five follow-ups.
 export const MAX_INTAKE_TURNS = 17; // Eight question/answer pairs and final review message.
 export type ChatSource = { actor: 'system' | 'student'; purpose: string; text: string };
@@ -38,6 +38,21 @@ export type EvidenceUpdate = {
   observedResult: string | null;
   expectedEvidence: string | null;
 };
+export function shouldReviewAcceptedAction(assessment: Record<string, unknown>, updates: EvidenceUpdate[], turns: ChatSource[]) {
+  const lastStudent = turns.length - 1;
+  return assessment.evidenceReadiness === 'identified' && assessment.verificationReadiness === 'clear'
+    && assessment.actionability === 'clear'
+    && updates.some(u => u.field === 'next_action' && u.state === 'planned' && u.sourceTurn === lastStudent && Boolean(u.value.trim()));
+}
+export function changedEvidenceFields(current: DeterministicIntakeAnswers, next: DeterministicIntakeAnswers, updates: EvidenceUpdate[]) {
+  const keys: Record<EvidenceUpdate['field'], (keyof DeterministicIntakeAnswers)[]> = {
+    responsibility:['responsibility'], claim:['progress','progressKind'], scope:['scope'],
+    evidence:['evidenceType','evidenceAvailability','evidenceReference'], verification_method:['verificationMethod'],
+    testing:['testingStatus','testingMethod','testingResult'], blocker:['blockerStatus','blockerDescription','supportRequested'],
+    next_action:['nextAction','expectedEvidence']
+  };
+  return [...new Set(updates.map(u=>u.field))].filter(field=>keys[field].some(key=>current[key]!==next[key]));
+}
 export function applyEvidenceUpdates(current: DeterministicIntakeAnswers, updates: EvidenceUpdate[], turns: ChatSource[]) {
   const next = {...current};
   for (const u of updates) {
@@ -53,6 +68,8 @@ export function applyEvidenceUpdates(current: DeterministicIntakeAnswers, update
     }
     if (u.field === 'verification_method') next.verificationMethod=value;
     if (u.field === 'testing') {
+      // A future test is a next action; it cannot erase a test already performed this Session.
+      if (next.testingStatus === 'executed' && u.state !== 'executed') continue;
       next.testingStatus=u.state==='executed'?'executed':u.state==='planned'?'planned_not_executed':u.state==='not_applicable'?'not_applicable':'unknown';
       next.testingMethod=u.method || '';
       next.testingResult=u.state==='executed' ? u.observedResult || '' : '';
