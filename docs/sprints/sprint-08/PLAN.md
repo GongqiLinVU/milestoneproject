@@ -47,9 +47,10 @@ The flexible conversation must never replace this stable output contract.
 - three to five minutes for the normal student path
 - cover three core directions; the approved next policy allows zero to five adaptive
   follow-ups, normally one to three, with early stopping when sufficient
-- the existing three-follow-up/six-question contract remains the implementation
-  baseline until a coordinated versioned policy, validator and regression update;
-  five is a ceiling, not a target, and API retries are not additional questions
+- the adaptive candidate now coordinates policy, prompt, additive v1.1 chat RPC
+  and candidate tests; deployment/database acceptance remains pending (see
+  `PHASE2C_ADAPTIVE_ROUND.md`). Historical v1.0 paths remain intact.
+  Five is a ceiling, not a target, and API retries are not additional questions
 - reuse authenticated Block, Team, Project, Student and previous-Session context
 - do not ask students to re-enter authoritative identity or known context
 - treat student text as a claim until supported or verified

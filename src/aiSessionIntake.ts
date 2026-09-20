@@ -31,6 +31,7 @@ export type EvidenceType =
   | "other";
 
 export type TestingStatus =
+  | "unknown"
   | "executed"
   | "planned_not_executed"
   | "not_applicable";
@@ -230,7 +231,7 @@ const evidenceTypes = new Set<EvidenceType>([
   "meeting_or_decision_record", "external_system_record", "other",
 ]);
 const testingStatuses = new Set<TestingStatus>([
-  "executed", "planned_not_executed", "not_applicable",
+  "executed", "planned_not_executed", "not_applicable", "unknown",
 ]);
 const allowedRecordKeys = new Set([
   "responsibility", "claims", "evidence", "testing", "dependencies", "blocker", "next_action",
@@ -330,9 +331,9 @@ export function validateIntakeStudentRecord(input: unknown): IntakeValidationRes
         (!textLength(item.method, 3, 1000) || !textLength(item.observed_result, 1, 1000))) {
       errors.push("executed testing needs method and observed result");
     }
-    if (item.execution_status === "planned_not_executed" &&
+    if ((item.execution_status === "planned_not_executed" || item.execution_status === "unknown") &&
         typeof item.observed_result === "string" && item.observed_result.trim()) {
-      errors.push("planned testing cannot contain an observed result");
+      errors.push("unexecuted or unknown testing cannot contain an observed result");
     }
   });
 

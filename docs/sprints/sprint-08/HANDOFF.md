@@ -19,8 +19,9 @@ Phase 2C remains open in Draft PR #65. The form-first prototype has progressed
 to a conversational UI, floating current/history evidence panel and OpenAI
 calls in the controlled pilot. User traces revealed extraction, routing and
 confirmation failures; dialogue quality does not establish end-to-end acceptance.
-The next round prioritises source fidelity and reliable submission, then adaptive
-routing. No new acceptance result is claimed by this planning update.
+The adaptive candidate is implemented on the Draft branch; local policy and
+mocked-endpoint regressions pass. Database audit and authenticated Preview
+submission remain pending. See `PHASE2C_ADAPTIVE_ROUND.md` for rollout and cases.
 
 ## Confirmed product direction
 
@@ -82,9 +83,8 @@ Any required persistence changes must be reviewed and audited before use.
 ## Guardrails
 
 - approved next policy: zero to five adaptive follow-ups, normally one to three,
-  with early stopping; the existing three-follow-up/six-question contract remains
-  the implementation baseline until prompts, validators and evaluation versions
-  are updated together; do not silently relax the existing contract;
+  with early stopping; the new chat policy/prompt, additive v1.1 persistence RPC
+  and candidate suite are updated together. Historical v1.0 paths remain intact;
 - no identity questions or user-supplied Block/Team/Session authority;
 - no other-student raw conversation in provider input;
 - no invented evidence, progress or reason for no progress;
