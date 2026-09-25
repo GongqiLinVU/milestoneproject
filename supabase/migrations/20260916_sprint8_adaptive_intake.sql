@@ -51,7 +51,7 @@ declare
   v_payload_hash text;
   v_allowed_ai_keys text[] := array[
     'used','model','policy_version','follow_up_count','question_purposes',
-    'extraction_status','stop_reason','extracted_record','turn_results'
+    'extraction_status','stop_reason','extracted_record','turn_results','turn_decisions'
   ];
 begin
   select * into v_account
@@ -144,13 +144,13 @@ begin
   end if;
 
   if p_prompt_version is null
-     or p_prompt_version <> 'session-intake-ai.v1.2.0' then
+     or p_prompt_version not in ('session-intake-ai.v1.2.0','session-intake-ai.v1.3.0') then
     raise exception using errcode = 'P0001', message = 'AI Intake prompt version is invalid';
   end if;
 
   if p_ai_assistance is null or jsonb_typeof(p_ai_assistance) <> 'object'
      or exists (select 1 from jsonb_object_keys(p_ai_assistance) key where not (key = any(v_allowed_ai_keys)))
-     or p_ai_assistance ->> 'policy_version' is distinct from 'adaptive-intake.v1.0.0'
+     or p_ai_assistance ->> 'policy_version' not in ('adaptive-intake.v1.0.0','adaptive-intake.v1.1.0')
      or jsonb_typeof(p_ai_assistance -> 'used') is distinct from 'boolean'
      or coalesce(p_ai_assistance ->> 'extraction_status','') not in ('completed','fallback','not_used')
      or coalesce(p_ai_assistance ->> 'stop_reason','') not in ('sufficient_information','teacher_help','budget_exhausted','provider_failure')
@@ -160,6 +160,7 @@ begin
      or jsonb_typeof(p_ai_assistance -> 'extracted_record') is distinct from 'object'
      or jsonb_typeof(p_ai_assistance -> 'turn_results') is distinct from 'array'
      or jsonb_array_length(p_ai_assistance -> 'turn_results') > 8
+     or (p_ai_assistance ? 'turn_decisions' and (jsonb_typeof(p_ai_assistance -> 'turn_decisions') is distinct from 'array' or jsonb_array_length(p_ai_assistance -> 'turn_decisions') > 8))
      or length(p_ai_assistance::text) > 96000 then
     raise exception 'Chat assistance metadata is invalid';
   end if;

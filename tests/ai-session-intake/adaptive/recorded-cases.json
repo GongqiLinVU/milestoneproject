@@ -1,0 +1,32 @@
+{
+  "version": "intake-cases.v1",
+  "cases": [
+    {
+      "id": "s3-source-pointer-partial",
+      "provenance": "De-identified reproduction of session-intake-debug-S3 (11).json; provider response was unavailable in the export, so candidate values and the wrong pointer are reconstructed for replay.",
+      "conversation": [
+        {"actor":"system","purpose":"session starting point","text":"What did you change, test or discover since the previous Session?"},
+        {"actor":"student","purpose":"student response","text":"Since the last session I added the dashboard loading spinner. I changed the frontend branch in commit abc123. When I loaded the page over a slow connection, the spinner appeared until the cards loaded. I still have not tested what happens when the API returns an error."}
+      ],
+      "candidate": {
+        "assistantMessage":"You observed the spinner over a slow connection. What will you do next about the API error state?",
+        "route":"clarification","readyForReview":false,
+        "assessment":{"information":"focused","evidenceReadiness":"identified","verificationReadiness":"clear","testingMaturity":"executed","actionability":"unknown","gap":"next action","reason":"API error remains untested","sourceTurns":[1]},
+        "evidenceUpdates":[
+          {"field":"claim","value":"Added dashboard loading spinner","state":"student_claim","sourceTurn":1,"evidenceType":null,"progressKind":"advanced","method":null,"observedResult":null,"expectedEvidence":null},
+          {"field":"evidence","value":"commit abc123","state":"available","sourceTurn":0,"evidenceType":"repository_change","progressKind":null,"method":null,"observedResult":null,"expectedEvidence":null},
+          {"field":"testing","value":"Slow connection: spinner appeared until cards loaded","state":"executed","sourceTurn":1,"evidenceType":null,"progressKind":null,"method":"slow connection","observedResult":"spinner appeared until the cards loaded","expectedEvidence":null}
+        ],"uncertainties":[],"suggestedTeacherQuestions":[]
+      }
+    },
+    {
+      "id":"s3-future-api-500",
+      "provenance":"De-identified semantic reproduction of the repeated future-test trace; no real provider payload is claimed.",
+      "conversation":[
+        {"actor":"system","purpose":"session starting point","text":"What happened with the dashboard?"},
+        {"actor":"student","purpose":"student response","text":"I added the loading spinner in commit abc123 and saw it over a slow connection. API errors are untested. Next Session I will simulate an API 500 response."}
+      ],
+      "expected":{"testingStatus":"executed","testingResult":"spinner appeared","nextAction":"simulate an API 500 response","route":"review"}
+    }
+  ]
+}

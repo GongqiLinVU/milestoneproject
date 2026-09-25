@@ -24,8 +24,9 @@ text may contain identifying details; exports are not automatically de-identifie
 Review provides editable fields and resets attestation after any edit. The
 original extraction and the final student record are stored separately along
 with field corrections and the full source transcript. A failed provider call
-stops into editable fallback; its latest answer remains in the transcript but
-is explicitly not presented as successfully extracted. Teacher-help is a support
+retries once and continues with a targeted deterministic question; its latest
+answer remains in the transcript with extraction pending. At the question cap
+the student moves to editable review. Teacher-help is a support
 request; this round does not dispatch a notification or set a Teacher action.
 
 ## Database rollout

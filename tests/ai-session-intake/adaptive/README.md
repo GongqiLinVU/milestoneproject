@@ -12,7 +12,7 @@ Unknown testing is explicitly stored. All other Gate A/B/C requirements remain.
 Run deterministic and mocked-endpoint regressions (no real provider or DB):
 
 ```sh
-npx tsc --outDir .test-build --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck src/intakePolicy.ts src/aiSessionIntake.ts
+npx tsc --outDir .test-build --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck src/intakePolicy.ts src/intakeHarness.ts src/aiSessionIntake.ts
 npx tsc --outDir .test-api --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck api/session-intake-ai.ts
 node --test tests/ai-session-intake/adaptive/*.test.mjs
 npm run build
@@ -46,3 +46,8 @@ Repeat each real model case at least three times before declaring candidate qual
 Current evidence: 18 policy/record tests and 4 mocked-endpoint tests pass locally.
 Database audit, authenticated UI submission, real-model quality and longitudinal
 teaching outcomes are not established by these tests.
+
+Harness v1 adds de-identified recorded cases in `recorded-cases.json` and the
+field-decision regression suite. The S3 source-error candidate is reconstructed
+because the actual provider response was absent from the exported Debug trace.
+See `docs/sprints/sprint-08/PHASE2C_HARNESS.md` for acceptance levels and gates.

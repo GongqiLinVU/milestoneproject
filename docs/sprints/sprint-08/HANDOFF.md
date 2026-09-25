@@ -23,6 +23,12 @@ The adaptive candidate is implemented on the Draft branch; local policy and
 mocked-endpoint regressions pass. Database audit and authenticated Preview
 submission remain pending. See `PHASE2C_ADAPTIVE_ROUND.md` for rollout and cases.
 
+Harness v1 on the same Draft PR adds per-field accept/reject/repair,
+dialogue-only continuation, one bounded provider retry and nonterminal
+fallback. De-identified S3 source-pointer and future API 500 replays live in
+the adaptive suite. See `PHASE2C_HARNESS.md`; no migration execution or merge
+has been approved.
+
 ## Confirmed product direction
 
 Session Intake is a guided learning assistant and evidence workspace. It has

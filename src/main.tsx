@@ -1,4 +1,5 @@
 import { applyEvidenceUpdates, changedEvidenceFields, shouldReviewAcceptedAction, sourceConversation, questionCount, MAX_INTAKE_QUESTIONS, INTAKE_POLICY_VERSION, INTAKE_PROMPT_VERSION, type EvidenceUpdate } from "./intakePolicy";
+import { fallbackQuestion } from "./intakeHarness";
 import { StrictMode, useEffect, useRef, useState, type FormEvent, type MouseEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { createRoot } from "react-dom/client";
@@ -486,7 +487,7 @@ function FormSessionIntakePrototype({session,onClose,onSaved}:{session:StudentSe
 
 type IntakeChatTurn={actor:"system"|"student";purpose:string;text:string;source?:"system"|"llm"|"fallback";evidenceChanges?:string[]};
 type IntakeHistoryRecord={sessionNumber:number;focus:string;record:IntakeStudentRecord;confirmedAt:string};
-type IntakeTurnResult={assistantMessage:string;route:"evidence"|"clarification"|"small_step"|"teacher_help"|"review";readyForReview:boolean;evidenceUpdates:EvidenceUpdate[];assessment:Record<string,unknown>;uncertainties:string[];suggestedTeacherQuestions:string[]};
+type IntakeTurnResult={assistantMessage:string;route:"evidence"|"clarification"|"small_step"|"teacher_help"|"review"|"continue"|"provider_fallback_continue";readyForReview:boolean;evidenceUpdates:EvidenceUpdate[];assessment:Record<string,unknown>;uncertainties:string[];suggestedTeacherQuestions:string[]};
 type IntakeDebugEvent={at:string;mode:string;request:Record<string,unknown>;response?:Record<string,unknown>;error?:string};
 
 function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRecord;onClose:()=>void;onSaved:()=>void}) {
@@ -587,10 +588,10 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
       setTurns(current=>[...current.slice(0,-1),enriched]);
       setAnswers(nextAnswers);setCapturedFields(current=>[...new Set([...current,...changes])]);
       setHighlightFields(changes);setEvidenceUpdates(current=>current+changes.length);setRoute(result.route);
-      setAiMeta(current=>({...current,used:true,promptVersion:payload.promptVersion||current.promptVersion,model:payload.model||current.model,uncertainties:result.uncertainties||[],suggestedTeacherQuestions:result.suggestedTeacherQuestions||[],extractionStatus:"completed"}));
-      setDebugEvents(current=>[...current,{at:new Date().toISOString(),mode:"turn",request:debugRequest,response:{model:payload.model,configuredModel:payload.configuredModel,promptVersion:payload.promptVersion,policyVersion:payload.policyVersion,usage:payload.usage,latencyMs:payload.latencyMs,budget:payload.budget,providerRequestId:payload.providerRequestId,result}}]);
+      setAiMeta(current=>({...current,used:current.used||!payload.providerFailure,promptVersion:payload.promptVersion||current.promptVersion,model:payload.model||current.model,uncertainties:result.uncertainties||[],suggestedTeacherQuestions:result.suggestedTeacherQuestions||[],extractionStatus:payload.extractionPending?"fallback":"completed"}));
+      setDebugEvents(current=>[...current,{at:new Date().toISOString(),mode:"turn",request:debugRequest,response:{model:payload.model,configuredModel:payload.configuredModel,promptVersion:payload.promptVersion,policyVersion:payload.policyVersion,parserVersion:payload.parserVersion,manifest:payload.manifest,usage:payload.usage,latencyMs:payload.latencyMs,budget:payload.budget,providerRequestId:payload.providerRequestId,providerFailure:payload.providerFailure,acceptanceLevel:payload.acceptanceLevel,extractionPending:payload.extractionPending,fieldDecisions:payload.fieldDecisions,result}}]);
       const questionLimitReached=questionCount(conversation)>=MAX_INTAKE_QUESTIONS;
-      const acceptedActionReady=shouldReviewAcceptedAction(result.assessment,result.evidenceUpdates||[],conversation);
+      const acceptedActionReady=shouldReviewAcceptedAction(result.assessment||{},result.evidenceUpdates||[],conversation);
       if(result.readyForReview||result.route==="review"||acceptedActionReady||questionLimitReached){
         const transitionText=(result.readyForReview||result.route==="review")&&result.assistantMessage
           ? result.assistantMessage
@@ -598,15 +599,17 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
         addTurn({actor:"system",purpose:"review transition",source:"llm",text:transitionText});
         prepareReview(nextAnswers,questionLimitReached?"budget_exhausted":result.route==="teacher_help"?"teacher_help":"sufficient_information");
       }else{
-        addTurn({actor:"system",purpose:result.route,source:"llm",text:result.assistantMessage});
+        addTurn({actor:"system",purpose:result.route,source:payload.providerFailure?"fallback":"llm",text:result.assistantMessage});
         setStage(current=>Math.min(3,current+1) as 0|1|2|3);setBusy(false);
       }
     }catch(error){
       setDebugEvents(current=>[...current,{at:new Date().toISOString(),mode:"turn",request:debugRequest,error:error instanceof Error?error.message:"provider failure"}]);
       setAiMeta(current=>({...current,extractionStatus:"fallback"}));
-      setTurns([...conversation,{actor:"system",purpose:"review transition",source:"fallback",text:"Your complete answer is preserved. Review or fill the captured details below; unknown evidence or testing can remain unknown."}]);
-      prepareReview(answers,"provider_failure");
-      setMessage("AI is unavailable. Your latest answer remains in the conversation; it has not been automatically extracted. Use the review fields to record it accurately.");setBusy(false);
+      const atLimit=questionCount(conversation)>=MAX_INTAKE_QUESTIONS;
+      setTurns([...conversation,{actor:"system",purpose:atLimit?"review transition":"provider fallback",source:"fallback",text:fallbackQuestion(answers,conversation)}]);
+      if(atLimit)prepareReview(answers,"budget_exhausted");
+      else {setStage(current=>Math.min(3,current+1) as 0|1|2|3);setBusy(false)}
+      setMessage("Your answer is preserved. Extraction is pending; you can continue and correct the complete record at review.");
     }
   }
   function downloadDebug(){
@@ -622,7 +625,7 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
     let source:FallbackTurn[];
     try { source=sourceConversation(turns); } catch(error) {setMessage(String(error));setBusy(false);return;}
     const confirmation={status:"confirmed",attestation:STUDENT_CONFIRMATION_ATTESTATION,corrections,summary:buildDeterministicSummary(record)};
-    const metadata={used:aiMeta.used,model:aiMeta.model,policy_version:INTAKE_POLICY_VERSION,follow_up_count:Math.max(0,questionCount(turns)-3),question_purposes:turns.filter(t=>t.actor==="system"&&t.purpose!=="review transition").slice(3).map(t=>t.purpose),extraction_status:aiMeta.extractionStatus,stop_reason:stopReason,extracted_record:initialRecord,turn_results:debugEvents.filter(e=>e.mode==="turn"&&e.response).map(e=>e.response?.result)};
+    const metadata={used:aiMeta.used,model:aiMeta.model,policy_version:INTAKE_POLICY_VERSION,follow_up_count:Math.max(0,questionCount(turns)-3),question_purposes:turns.filter(t=>t.actor==="system"&&t.purpose!=="review transition").slice(3).map(t=>t.purpose),extraction_status:aiMeta.extractionStatus,stop_reason:stopReason,extracted_record:initialRecord,turn_results:debugEvents.filter(e=>e.mode==="turn"&&e.response).map(e=>e.response?.result),turn_decisions:debugEvents.filter(e=>e.mode==="turn"&&e.response).map(e=>({manifest:e.response?.manifest,fieldDecisions:e.response?.fieldDecisions,acceptanceLevel:e.response?.acceptanceLevel,extractionPending:e.response?.extractionPending,providerFailure:e.response?.providerFailure}))};
     const {error:saveError}=await supabase.rpc("save_my_session_intake_chat",{p_session_id:session.sessionId,p_source_conversation:source,p_student_record:record,p_student_confirmation:confirmation,p_prompt_version:INTAKE_PROMPT_VERSION,p_ai_assistance:metadata});
     setDebugEvents(current=>[...current,{at:new Date().toISOString(),mode:"save",request:{turnCount:source.length,questionCount:questionCount(turns),policyVersion:INTAKE_POLICY_VERSION},...(saveError?{error:saveError.message}:{response:{saved:true}})}]);
     if(saveError)setMessage(`${saveError.message}. Your record is still available here. If the chat RPC is missing, apply the reviewed adaptive-intake migration before retrying.`);else{const {data}=await supabase.rpc("get_my_session_intake",{p_session_id:session.sessionId});setContext(data as SessionIntakeContext);setMessage("Session Intake confirmed. This Session is now read-only.");onSaved()}

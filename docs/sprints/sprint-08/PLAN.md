@@ -192,6 +192,12 @@ traces now expose extraction, routing and final-confirmation issues. Phase 2C
 remains under iteration; successful dialogue alone does not establish successful
 persistence or acceptance.
 
+The bounded Runtime/Replay Harness contract and S3 regressions are documented
+in `PHASE2C_HARNESS.md`. Dialogue, evidence candidates and route are accepted
+independently. A field failure is logged without ending Intake. Knowledge
+retrieval stays empty until Teacher-approved scoped material exists. Authenticated
+Preview and database audit remain gates before a merge decision.
+
 Candidate interaction:
 
 - present one natural-language question at a time;

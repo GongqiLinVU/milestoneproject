@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 
-import { conversationErrors, questionCount, MAX_INTAKE_QUESTIONS, INTAKE_PROMPT_VERSION, INTAKE_POLICY_VERSION, applyEvidenceUpdates, shouldReviewAcceptedAction } from "../src/intakePolicy.js";
+import { conversationErrors, questionCount, MAX_INTAKE_QUESTIONS, INTAKE_PROMPT_VERSION, INTAKE_POLICY_VERSION } from "../src/intakePolicy.js";
+import { decideTurn, fallbackQuestion, INTAKE_PARSER_VERSION } from "../src/intakeHarness.js";
 const MAX_BODY_BYTES = 64_000;
 const PROMPT_VERSION = INTAKE_PROMPT_VERSION;
 const MODEL = process.env.OPENAI_INTAKE_MODEL || process.env.OPENAI_MODEL || "gpt-5-mini";
@@ -38,7 +39,7 @@ async function resolvePreviousRecord(admin: any, authUserId: string, sessionId: 
   if (!account) throw new Error("student_account_not_activated");
   if (sessionError || !session) throw new Error("session_record_not_found");
   const { data: block, error: blockError } = await admin.from("teaching_blocks")
-    .select("block_code").eq("id", session.block_id).maybeSingle();
+    .select("block_code,academic_year").eq("id", session.block_id).maybeSingle();
   if (blockError || !block || block.block_code !== "2B2" || session.session_number < 1 || session.session_number > 9) {
     throw new Error("session_not_eligible_for_ai_intake");
   }
@@ -48,7 +49,7 @@ async function resolvePreviousRecord(admin: any, authUserId: string, sessionId: 
   const {data: confirmed, error: confirmedError} = await admin.from("student_session_intakes").select("id").eq("session_id",session.id).eq("student_id",account.student_id).maybeSingle();
   if (confirmedError) throw new Error("intake_status_unavailable");
   if (confirmed) throw new Error("session_intake_already_confirmed");
-  const { data: roster } = await admin.from("student_roster").select("id")
+  const { data: roster } = await admin.from("student_roster").select("id,team_number,project_name")
     .eq("block_id", session.block_id).eq("student_id", account.student_id).maybeSingle();
   if (!roster) throw new Error("student_not_enrolled_in_block");
 
@@ -58,9 +59,9 @@ async function resolvePreviousRecord(admin: any, authUserId: string, sessionId: 
   for (const previousSession of previousSessions || []) {
     const { data: intake } = await admin.from("student_session_intakes").select("student_record")
       .eq("session_id", previousSession.id).eq("student_id", account.student_id).maybeSingle();
-    if (intake?.student_record) return { previousRecord: intake.student_record, sessionContext: { sessionNumber: session.session_number, focus: session.curriculum_focus } };
+    if (intake?.student_record) return { previousRecord: intake.student_record, sessionContext: { sessionNumber: session.session_number, focus: session.curriculum_focus,scope:{academicYear:block.academic_year,blockId:session.block_id,teamNumber:roster.team_number,projectName:roster.project_name,student:'authenticated_student'} } };
   }
-  return { previousRecord: null, sessionContext: { sessionNumber: session.session_number, focus: session.curriculum_focus } };
+  return { previousRecord: null, sessionContext: { sessionNumber: session.session_number, focus: session.curriculum_focus,scope:{academicYear:block.academic_year,blockId:session.block_id,teamNumber:roster.team_number,projectName:roster.project_name,student:'authenticated_student'} } };
 }
 
 function outputText(response: any) {
@@ -102,12 +103,13 @@ function sanitise(body: any, previous: any, sessionContext: any) {
     followUpAnswers: Object.fromEntries(
       Object.entries(body?.followUpAnswers || {}).slice(0, 3).map(([key, value]) => [text(key, 40), text(value, 1000)])
     ),
-    sessionContext: sessionContext ? { sessionNumber: sessionContext.sessionNumber, focus: text(sessionContext.focus, 180) } : null,
+    sessionContext: sessionContext ? { sessionNumber: sessionContext.sessionNumber, focus: text(sessionContext.focus, 180), scope:sessionContext.scope, source:'studio_sessions+student_roster' } : null,
     conversation: Array.isArray(body?.conversation) ? body.conversation.map((turn: any) => ({
       actor: turn?.actor === "student" ? "student" : "assistant",
       text: text(turn?.text, 2000),
     })).filter((turn: any) => turn.text) : [],
     previousRecord: previous && typeof previous === "object" ? {
+      source:'same_student_confirmed_intake',scope:sessionContext?.scope,
       responsibility: previous.responsibility,
       claims: previous.claims,
       evidence: previous.evidence,
@@ -115,6 +117,7 @@ function sanitise(body: any, previous: any, sessionContext: any) {
       blocker: previous.blocker,
       next_action: previous.next_action,
     } : null,
+    retrievedKnowledge:[],knowledgeVersion:'teacher-approved-kb.none',knowledgePurpose:'question_context_only',knowledgeScope:sessionContext?.scope,teacherApproved:false,
   };
 }
 
@@ -237,8 +240,7 @@ export default async function handler(req: any, res: any) {
     required: ["refinedResponsibility", "refinedClaim", "refinedScope", "refinedVerificationMethod", "uncertainties", "flags", "suggestedTeacherQuestions"],
   };
 
-  let response: Response;
-  try { response = await fetch("https://api.openai.com/v1/responses", {
+  const providerRequest = () => fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     signal: AbortSignal.timeout(45000),
     headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}`, "Content-Type": "application/json" },
@@ -255,9 +257,16 @@ export default async function handler(req: any, res: any) {
       text: { format: { type: "json_schema", name: mode === "turn" ? "intake_turn" : mode === "questions" ? "intake_questions" : "intake_extraction", strict: true, schema: mode === "turn" ? turnSchema : mode === "questions" ? questionsSchema : extractionSchema } },
     }),
   });
-
-  } catch {
-    return res.status(502).json({error:"Provider connection unavailable", code:"provider_network", stage:"provider_request", fallback:true});
+  let response: Response | undefined;
+  let failureReason = 'provider_network';
+  // One retry stays inside the same student turn and never consumes a question.
+  for (let attempt=0;attempt<2;attempt++) {
+    try { response = await providerRequest(); if (response.ok) break; failureReason=`provider_http_${response.status}`; }
+    catch { failureReason='provider_network'; }
+  }
+  if (!response || !response.ok) {
+    if (mode === 'turn') return res.status(200).json({mode,parserVersion:INTAKE_PARSER_VERSION,result:{assistantMessage:fallbackQuestion(req.body.answers,req.body.conversation),route:'provider_fallback_continue',readyForReview:questionCount(req.body.conversation)>=MAX_INTAKE_QUESTIONS,evidenceUpdates:[],assessment:{},uncertainties:[],suggestedTeacherQuestions:[]},extractionPending:true,fieldDecisions:[],retryCount:1,providerFailure:failureReason,budget});
+    return res.status(502).json({error:'Provider unavailable',code:failureReason,stage:'provider_response',fallback:true});
   }
   if (!response.ok) {
     const providerRequestId = response.headers.get("x-request-id");
@@ -282,20 +291,16 @@ export default async function handler(req: any, res: any) {
     let result;
     try { result = JSON.parse(outputText(provider)); } catch { throw new Error("output_parse"); }
     if (mode === "turn") {
-      if (!Array.isArray(result.evidenceUpdates) || result.evidenceUpdates.length > 8 || !result.assessment || !["evidence","clarification","small_step","teacher_help","review"].includes(result.route) || typeof result.readyForReview !== "boolean" || typeof result.assistantMessage !== "string" || !result.assistantMessage.trim()) throw new Error("turn_schema");
-      try { applyEvidenceUpdates(req.body.answers, result.evidenceUpdates, req.body.conversation); } catch { throw new Error("evidence_source"); }
-      if (!Array.isArray(result.assessment.sourceTurns) || result.assessment.sourceTurns.some((i: number) => !Number.isInteger(i) || req.body.conversation[i]?.actor !== "student")) throw new Error("assessment_source");
-      if (shouldReviewAcceptedAction(result.assessment, result.evidenceUpdates, req.body.conversation)) {
-        result.readyForReview = true; result.route = "review";
-        result.assistantMessage = "Your next action is recorded for the next Session. Review your current progress and evidence before confirming.";
-      }
-      if (budget.questionsAsked >= MAX_INTAKE_QUESTIONS) {
-        result.readyForReview = true; result.route = "review";
-        result.assistantMessage = "Review the captured record and correct any missing details. Unresolved questions can be discussed with your Teacher.";
-      }
+      const decision = decideTurn(result,req.body.conversation,req.body.answers);
+      if (decision.level === 'L3') throw new Error('turn_schema');
+      const safeResult = {...result,assistantMessage:decision.assistantMessage,route:decision.route,readyForReview:decision.readyForReview,evidenceUpdates:decision.accepted};
+      const latencyMs=Date.now()-startedAt;
+      const manifest={model:provider.model||MODEL,promptVersion:PROMPT_VERSION,policyVersion:INTAKE_POLICY_VERSION,parserVersion:INTAKE_PARSER_VERSION,evidenceSchemaVersion:'session-intake.v1.1.0',knowledgeVersion:'teacher-approved-kb.none',cost:null,latencyMs,stopReason:decision.readyForReview?'review':'continue'};
+      return res.status(200).json({mode,promptVersion:PROMPT_VERSION,policyVersion:INTAKE_POLICY_VERSION,parserVersion:INTAKE_PARSER_VERSION,model:provider.model||MODEL,configuredModel:MODEL,usage:provider.usage||null,latencyMs,budget,providerRequestId:response.headers.get('x-request-id'),manifest,result:safeResult,fieldDecisions:decision.decisions,extractionPending:decision.extractionPending,acceptanceLevel:decision.level});
     }
-    return res.status(200).json({ mode, promptVersion: mode === "turn" ? PROMPT_VERSION : "session-intake-ai.v1.1.0", policyVersion: INTAKE_POLICY_VERSION, model: provider.model || MODEL, configuredModel: MODEL, usage: provider.usage || null, latencyMs: Date.now()-startedAt, budget, providerRequestId: response.headers.get("x-request-id"), result });
+    return res.status(200).json({ mode, promptVersion: "session-intake-ai.v1.1.0", policyVersion: INTAKE_POLICY_VERSION, model: provider.model || MODEL, configuredModel: MODEL, usage: provider.usage || null, latencyMs: Date.now()-startedAt, budget, providerRequestId: response.headers.get("x-request-id"), result });
   } catch (error) {
+    if (mode === 'turn') return res.status(200).json({mode,parserVersion:INTAKE_PARSER_VERSION,result:{assistantMessage:fallbackQuestion(req.body.answers,req.body.conversation),route:'provider_fallback_continue',readyForReview:questionCount(req.body.conversation)>=MAX_INTAKE_QUESTIONS,evidenceUpdates:[],assessment:{},uncertainties:[],suggestedTeacherQuestions:[]},extractionPending:true,fieldDecisions:[],providerFailure:error instanceof Error?error.message:'invalid_provider_response',budget});
     const reason = error instanceof Error && ["provider_incomplete","output_parse","turn_schema","evidence_source","assessment_source"].includes(error.message) ? error.message : "unknown_validation";
     return res.status(502).json({ error: "AI Intake returned an invalid response.", code: "invalid_provider_response", stage: "schema_parsing", reason, providerRequestId: response.headers.get("x-request-id"), fallback: true });
   }
