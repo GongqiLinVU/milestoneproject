@@ -62,7 +62,9 @@ const safeMessage = (s: unknown) => typeof s === 'string' && s.trim().length > 0
 export function decideTurn(candidate: any, conversation: ChatSource[], current: DeterministicIntakeAnswers) {
   const extracted = validateCandidates(candidate?.evidenceUpdates,conversation,current);
   const message = safeMessage(candidate?.assistantMessage) ? candidate.assistantMessage.trim() : null;
-  const action = extracted.accepted.some(u => u.field === 'next_action' && u.state === 'planned' && u.sourceTurn === conversation.length-1);
+  const currentReply=conversation.at(-1)?.text || '';
+  const action = extracted.accepted.some(u => u.field === 'next_action' && u.state === 'planned' && u.sourceTurn === conversation.length-1)
+    || Boolean(current.nextAction && /\b(?:i\s+)?will do (?:it|that) next session\b/i.test(currentReply));
   const established = Boolean(extracted.answers.progress && extracted.answers.evidenceReference && extracted.answers.verificationMethod && extracted.answers.nextAction);
   const teacher = extracted.accepted.some(u => u.field === 'blocker' && u.state === 'needs_teacher') || /\bteacher\b.{0,30}\bhelp\b/i.test(conversation.at(-1)?.text || '');
   const limit = questionCount(conversation) >= MAX_INTAKE_QUESTIONS;
