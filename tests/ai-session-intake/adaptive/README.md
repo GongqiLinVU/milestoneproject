@@ -43,7 +43,7 @@ and final student_record. Verify duplicate submission and cross-Block rejection
 with authenticated mock accounts. Run `sprint8_adaptive_intake_security_audit.sql`.
 Repeat each real model case at least three times before declaring candidate quality.
 
-Current evidence: 18 policy/record tests and 4 mocked-endpoint tests pass locally.
+Current Harness v1 evidence: 29 focused policy/record and mocked-endpoint tests pass locally.
 Database audit, authenticated UI submission, real-model quality and longitudinal
 teaching outcomes are not established by these tests.
 
