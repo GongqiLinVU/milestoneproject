@@ -36,7 +36,9 @@ export function validateCandidates(raw: unknown, conversation: ChatSource[], cur
     const u = item as EvidenceUpdate;
     const base = {index,field: String(u?.field ?? 'unknown'),originalSourceTurn:u?.sourceTurn,candidate:item};
     const reject = (reason: string) => decisions.push({...base,outcome:'rejected',reason});
-    if (!validShape(u)) return reject('invalid_field_or_shape');
+    if (!fields.has(u?.field)) return reject('field_not_allowed');
+    if (!states.has(u.state) || !allowedStates[u.field].includes(u.state)) return reject('state_not_allowed_for_field');
+    if (!validShape(u)) return reject('invalid_value_or_shape');
     if (u.field === 'testing' && u.state === 'executed' && (!u.method?.trim() || !u.observedResult?.trim())) return reject('executed_test_needs_method_and_observation');
     if (u.field === 'testing' && u.state !== 'executed' && u.observedResult?.trim()) return reject('unexecuted_test_has_observation');
     if (u.field === 'evidence' && u.state === 'available' && !u.evidenceType) return reject('evidence_type_missing');
@@ -70,10 +72,11 @@ export function decideTurn(candidate: any, conversation: ChatSource[], current: 
   const limit = questionCount(conversation) >= MAX_INTAKE_QUESTIONS;
   const review = limit || teacher || (action && established);
   const route = review ? 'review' : candidate?.route === 'small_step' ? 'small_step' : 'continue';
+  const routeReason = teacher ? 'student_requested_teacher_help' : limit ? 'question_limit_reached' : action && established ? 'accepted_next_action_and_evidence_ready' : candidate?.route === 'small_step' ? 'model_small_step_proposal' : 'continue_collecting';
   const assistantMessage = review
     ? teacher ? 'Review your request for Teacher help and the evidence captured so far before confirming.' : 'Review what you completed, what you observed, and what is planned for the next Session before confirming.'
     : message && /\?\s*$/.test(message) ? message : fallbackQuestion(extracted.answers,conversation);
-  return {...extracted,route,readyForReview:review,assistantMessage,level:extracted.accepted.length ? extracted.decisions.some(d=>d.outcome==='rejected')?'L1':'L0' : message?'L2':'L3'};
+  return {...extracted,route,routeDecision:{proposed:String(candidate?.route ?? 'unspecified'),final:route,reason:routeReason},readyForReview:review,assistantMessage,level:extracted.accepted.length ? extracted.decisions.some(d=>d.outcome==='rejected')?'L1':'L0' : message?'L2':'L3'};
 }
 export function fallbackQuestion(answers: DeterministicIntakeAnswers, conversation: ChatSource[]) {
   if (questionCount(conversation) >= MAX_INTAKE_QUESTIONS) return 'Review what you have told us and correct any missing details before confirming.';
