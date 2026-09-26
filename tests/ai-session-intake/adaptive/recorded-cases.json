@@ -27,6 +27,55 @@
         {"actor":"student","purpose":"student response","text":"I added the loading spinner in commit abc123 and saw it over a slow connection. API errors are untested. Next Session I will simulate an API 500 response."}
       ],
       "expected":{"testingStatus":"executed","testingResult":"spinner appeared","nextAction":"simulate an API 500 response","route":"review"}
+    },
+    {
+      "id":"s9-safe-message-false-positive",
+      "provenance":"De-identified reproduction of session-intake-debug-S9.json turn 1. The real model message contained \"...and verified by loading the page...\" (student-attributed, benign) and was wrongly discarded by a bare word-blocklist match on \"verified\", producing the same static fallback question as a later, unrelated turn.",
+      "conversation":[
+        {"actor":"system","purpose":"session starting point","text":"This is S9: Final Readiness. Start with one specific part you personally worked on since the previous class. What changed, and what observable result exists now?"},
+        {"actor":"student","purpose":"student response","text":"Since the last session I added the dashboard loading spinner. I changed the frontend branch in commit abc123. When I loaded the page over a slow connection, the spinner appeared until the cards loaded. I still have not tested what happens when the API returns an error."}
+      ],
+      "candidate": {
+        "assistantMessage":"Got it — you implemented a dashboard loading spinner (frontend commit abc123) and verified by loading the page over a slow network: the spinner appears until cards load. You haven’t tested the API-error case yet. Can you simulate the API returning an error (e.g., a 500) and tell me exactly what the UI shows when that happens?",
+        "route":"small_step","readyForReview":false,
+        "assessment":{"information":"focused","evidenceReadiness":"identified","verificationReadiness":"clear","testingMaturity":"executed","actionability":"needs_small_step","gap":"API-error behavior untested","reason":"Spinner implemented and observed under slow network; missing explicit test of API error responses.","sourceTurns":[1]},
+        "evidenceUpdates":[],"uncertainties":[],"suggestedTeacherQuestions":[]
+      },
+      "expectedMessage":"Got it — you implemented a dashboard loading spinner (frontend commit abc123) and verified by loading the page over a slow network: the spinner appears until cards load. You haven’t tested the API-error case yet. Can you simulate the API returning an error (e.g., a 500) and tell me exactly what the UI shows when that happens?"
+    },
+    {
+      "id":"s9-non-trailing-question-mark",
+      "provenance":"De-identified reproduction of session-intake-debug-S9.json turn 2. The real model message ended \"...? Reply A or B.\" (a genuine question followed by a reply instruction) and was wrongly discarded by a trailing-question-mark-only check, producing the identical fallback question as the immediately preceding turn.",
+      "conversation":[
+        {"actor":"system","purpose":"session starting point","text":"This is S9: Final Readiness. Start with one specific part you personally worked on since the previous class. What changed, and what observable result exists now?"},
+        {"actor":"student","purpose":"student response","text":"Since the last session I added the dashboard loading spinner. I changed the frontend branch in commit abc123. When I loaded the page over a slow connection, the spinner appeared until the cards loaded. I still have not tested what happens when the API returns an error."},
+        {"actor":"system","purpose":"small_step","text":"What commit, demo, file, or observation could show that work?"},
+        {"actor":"student","purpose":"student response","text":"I will show the live demo for this changes when I see the teacher"}
+      ],
+      "candidate": {
+        "assistantMessage":"Got it — you added a dashboard loading spinner (commit abc123) and saw it appear on a slow load, but you haven’t tested the API-error path. Before the next session: will you (A) reproduce the spinner behavior when the API returns an error and record/upload a short demo, or (B) plan to demo it live to the teacher? Reply A or B.",
+        "route":"small_step","readyForReview":false,
+        "assessment":{"information":"focused","evidenceReadiness":"identified","verificationReadiness":"unclear","testingMaturity":"executed","actionability":"needs_small_step","gap":"No verification of spinner behavior when the API returns an error.","reason":"Student observed spinner on slow connection and committed code, but did not test error path or provide an artifact.","sourceTurns":[1,3]},
+        "evidenceUpdates":[],"uncertainties":[],"suggestedTeacherQuestions":[]
+      },
+      "expectedMessage":"Got it — you added a dashboard loading spinner (commit abc123) and saw it appear on a slow load, but you haven’t tested the API-error path. Before the next session: will you (A) reproduce the spinner behavior when the API returns an error and record/upload a short demo, or (B) plan to demo it live to the teacher? Reply A or B."
+    },
+    {
+      "id":"s9-no-question-mark-closing-statement",
+      "provenance":"De-identified reproduction of session-intake-debug-S9 (2).json turn 2. The real model message was a closing/summary statement with no question mark at all (\"Noted — ... For review I'll check ...\") and was wrongly discarded by a 'message must contain a ?' check, again producing the static fallback question. In the real trace this was masked by a separate client-side accepted-action override that took a different path to review, so the bug did not visibly repeat a question, but decideTurn's own output was still wrong.",
+      "conversation":[
+        {"actor":"system","purpose":"session starting point","text":"This is S9: Final Readiness. Start with one specific part you personally worked on since the previous class. What changed, and what observable result exists now?"},
+        {"actor":"student","purpose":"student response","text":"Since the last session I added the dashboard loading spinner. I changed the frontend branch in commit abc123. When I loaded the page over a slow connection, the spinner appeared until the cards loaded. I still have not tested what happens when the API returns an error."},
+        {"actor":"system","purpose":"small_step","text":"Got it — you implemented the dashboard spinner (commit abc123) and verified it appears under a slow connection, but you haven’t tested the API-error case yet. Can you reproduce the API returning an error (e.g., simulate a 500) now and tell me what you observe (spinner behavior, any error message shown, and any console log)?"},
+        {"actor":"student","purpose":"student response","text":"I am still working on the API error. After I fix it, I will report the progress next session"}
+      ],
+      "candidate": {
+        "assistantMessage":"Noted — recorded the dashboard spinner implementation (commit abc123) and your manual test under a throttled network. You plan to fix the API-error behavior and report progress next session. For review I'll check commit abc123, the manual test outcome you described, and the follow-up fix + verification of API-error handling.",
+        "route":"small_step","readyForReview":false,
+        "assessment":{"information":"focused","evidenceReadiness":"identified","verificationReadiness":"clear","testingMaturity":"executed","actionability":"clear","gap":"API-error response handling for the dashboard was not tested yet","reason":"Spinner implemented and manually verified on a slow connection; API-error case remains to be fixed and verified by the student","sourceTurns":[1,3]},
+        "evidenceUpdates":[],"uncertainties":[],"suggestedTeacherQuestions":[]
+      },
+      "expectedMessage":"Noted — recorded the dashboard spinner implementation (commit abc123) and your manual test under a throttled network. You plan to fix the API-error behavior and report progress next session. For review I'll check commit abc123, the manual test outcome you described, and the follow-up fix + verification of API-error handling."
     }
   ]
 }

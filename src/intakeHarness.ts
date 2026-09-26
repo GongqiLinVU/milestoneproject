@@ -61,8 +61,18 @@ export function validateCandidates(raw: unknown, conversation: ChatSource[], cur
   return {answers:next,accepted,decisions,extractionPending:!accepted.length};
 }
 
+// Blocks the model from asserting its OWN authority over the student (grading,
+// verifying, accusing) — not any mention of these words in a benign, first-person
+// student-attributed sentence. A bare word match (the previous check) rejected
+// safe messages like "...and verified by loading the page..." (describing what
+// the STUDENT did), which silently produced the same fallback question twice.
+const unsafeMessagePatterns = [
+  /\b(you|your work|this)\s+(?:has been|is|was)\s+(?:mark(?:ed)?|grad(?:ed)?|verified|teacher[- ]approved)\b/i,
+  /\bi\s+(?:mark|grade|verify|have verified)\b/i,
+  /\byou\s+cheated\b/i,
+];
 const safeMessage = (s: unknown) => typeof s === 'string' && s.trim().length > 0 && s.length <= 500
-  && !/\b(mark(?:s|ing)?|grade|verified|teacher approved|you cheated)\b/i.test(s);
+  && !unsafeMessagePatterns.some(pattern => pattern.test(s));
 export function decideTurn(candidate: any, conversation: ChatSource[], current: DeterministicIntakeAnswers, options: ReplayOptions = {}) {
   const extracted = validateCandidates(candidate?.evidenceUpdates,conversation,current,options);
   const message = safeMessage(candidate?.assistantMessage) ? candidate.assistantMessage.trim() : null;
@@ -75,9 +85,16 @@ export function decideTurn(candidate: any, conversation: ChatSource[], current: 
   const review = limit || teacher || (action && established);
   const route = review ? 'review' : candidate?.route === 'small_step' ? 'small_step' : 'continue';
   const routeReason = teacher ? 'student_requested_teacher_help' : limit ? 'question_limit_reached' : action && established ? 'accepted_next_action_and_evidence_ready' : candidate?.route === 'small_step' ? 'model_small_step_proposal' : 'continue_collecting';
+  // safeMessage() already rejects the actually dangerous content (the model
+  // claiming to grade/verify/accuse the student), so a punctuation shape
+  // check on top of that (must contain "?") is redundant and too strict: a
+  // legitimate closing/summary statement like "Noted — I'll check commit
+  // abc123 and the follow-up fix." has no "?" at all and was still being
+  // discarded for the same static fallback question. Any safe, non-empty
+  // message from the model is used as-is.
   const assistantMessage = review
     ? teacher ? 'Review your request for Teacher help and the evidence captured so far before confirming.' : 'Review what you completed, what you observed, and what is planned for the next Session before confirming.'
-    : message && /\?\s*$/.test(message) ? message : fallbackQuestion(extracted.answers,conversation);
+    : message || fallbackQuestion(extracted.answers,conversation);
   return {...extracted,route,routeDecision:{proposed:String(candidate?.route ?? 'unspecified'),final:route,reason:routeReason},readyForReview:review,assistantMessage,level:extracted.accepted.length ? extracted.decisions.some(d=>d.outcome==='rejected')?'L1':'L0' : message?'L2':'L3'};
 }
 export function fallbackQuestion(answers: DeterministicIntakeAnswers, conversation: ChatSource[]) {
