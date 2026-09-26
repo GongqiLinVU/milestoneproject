@@ -27,7 +27,8 @@ function validShape(u: any): u is EvidenceUpdate {
     && (u.value.trim() || ['unknown','missing','none','not_applicable'].includes(u.state))
     && ['evidenceType','progressKind','method','observedResult','expectedEvidence'].every(k => u[k] == null || typeof u[k] === 'string');
 }
-export function validateCandidates(raw: unknown, conversation: ChatSource[], current: DeterministicIntakeAnswers) {
+export type ReplayOptions = { sourcePolicy?: 'repair_unique' | 'strict_pointer' };
+export function validateCandidates(raw: unknown, conversation: ChatSource[], current: DeterministicIntakeAnswers, options: ReplayOptions = {}) {
   const decisions: FieldDecision[] = [];
   const accepted: EvidenceUpdate[] = [];
   let next = { ...current };
@@ -45,6 +46,7 @@ export function validateCandidates(raw: unknown, conversation: ChatSource[], cur
     let source = u.sourceTurn;
     let outcome: 'accepted'|'repaired' = 'accepted';
     if (!Number.isInteger(source) || conversation[source]?.actor !== 'student' || !grounded(u,conversation[source].text)) {
+      if (options.sourcePolicy === 'strict_pointer') return reject('source_pointer_invalid_strict_policy');
       const matches = conversation.flatMap((turn,i) => turn.actor === 'student' && grounded(u,turn.text) ? [i] : []);
       if (matches.length !== 1) return reject('student_source_not_uniquely_grounded');
       source = matches[0]; outcome = 'repaired';
@@ -61,8 +63,8 @@ export function validateCandidates(raw: unknown, conversation: ChatSource[], cur
 
 const safeMessage = (s: unknown) => typeof s === 'string' && s.trim().length > 0 && s.length <= 500
   && !/\b(mark(?:s|ing)?|grade|verified|teacher approved|you cheated)\b/i.test(s);
-export function decideTurn(candidate: any, conversation: ChatSource[], current: DeterministicIntakeAnswers) {
-  const extracted = validateCandidates(candidate?.evidenceUpdates,conversation,current);
+export function decideTurn(candidate: any, conversation: ChatSource[], current: DeterministicIntakeAnswers, options: ReplayOptions = {}) {
+  const extracted = validateCandidates(candidate?.evidenceUpdates,conversation,current,options);
   const message = safeMessage(candidate?.assistantMessage) ? candidate.assistantMessage.trim() : null;
   const currentReply=conversation.at(-1)?.text || '';
   const action = extracted.accepted.some(u => u.field === 'next_action' && u.state === 'planned' && u.sourceTurn === conversation.length-1)
