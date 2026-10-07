@@ -1,0 +1,200 @@
+{
+  "schema": "intake-grading-result.v1",
+  "mode": "offline_mock_grader",
+  "disclaimer": "Mock grader validates the pipeline (provider-blind tasks, evidence validation, code-owned C/R/S). It is NOT a live LLM grade.",
+  "graderProvider": "deepseek",
+  "gradedInput": "out/dynamic-t1-live-openai.json",
+  "intakeProviderHiddenFromGrader": true,
+  "codeOwnsScoring": true,
+  "knownUsd": 0,
+  "sessions": [
+    {
+      "sessionKey": "S1",
+      "grader": "deepseek",
+      "providerBlind": true,
+      "perFact": [
+        {
+          "factId": "T1S1-C1",
+          "c_score": 2,
+          "r_score": 2,
+          "needsHumanReview": false,
+          "evidenceIssues": []
+        },
+        {
+          "factId": "T1S1-C2",
+          "c_score": 2,
+          "r_score": 2,
+          "needsHumanReview": false,
+          "evidenceIssues": []
+        },
+        {
+          "factId": "T1S1-C3",
+          "c_score": 2,
+          "r_score": 2,
+          "needsHumanReview": false,
+          "evidenceIssues": []
+        },
+        {
+          "factId": "T1S1-C4",
+          "c_score": 0,
+          "r_score": 2,
+          "needsHumanReview": false,
+          "evidenceIssues": []
+        },
+        {
+          "factId": "T1S1-C5",
+          "c_score": 2,
+          "r_score": 0,
+          "needsHumanReview": true,
+          "evidenceIssues": [
+            "grader_uncertain"
+          ]
+        }
+      ],
+      "C_percent": 80,
+      "R_percent": 75,
+      "sessionSuccess": "needs_human_review",
+      "uncertainFacts": [
+        "T1S1-C5"
+      ]
+    },
+    {
+      "sessionKey": "S2",
+      "grader": "deepseek",
+      "providerBlind": true,
+      "perFact": [
+        {
+          "factId": "T1S2-C1",
+          "c_score": 0,
+          "r_score": 2,
+          "needsHumanReview": false,
+          "evidenceIssues": []
+        },
+        {
+          "factId": "T1S2-C2",
+          "c_score": 2,
+          "r_score": 2,
+          "needsHumanReview": false,
+          "evidenceIssues": []
+        },
+        {
+          "factId": "T1S2-C3",
+          "c_score": 2,
+          "r_score": 2,
+          "needsHumanReview": false,
+          "evidenceIssues": []
+        },
+        {
+          "factId": "T1S2-C4",
+          "c_score": 2,
+          "r_score": 2,
+          "needsHumanReview": false,
+          "evidenceIssues": []
+        },
+        {
+          "factId": "T1S2-C5",
+          "c_score": 2,
+          "r_score": 2,
+          "needsHumanReview": false,
+          "evidenceIssues": []
+        }
+      ],
+      "C_percent": 80,
+      "R_percent": 100,
+      "sessionSuccess": false,
+      "uncertainFacts": []
+    },
+    {
+      "sessionKey": "S3",
+      "grader": "deepseek",
+      "providerBlind": true,
+      "perFact": [
+        {
+          "factId": "T1S3-C1",
+          "c_score": 2,
+          "r_score": 2,
+          "needsHumanReview": false,
+          "evidenceIssues": []
+        },
+        {
+          "factId": "T1S3-C2",
+          "c_score": 2,
+          "r_score": 2,
+          "needsHumanReview": false,
+          "evidenceIssues": []
+        },
+        {
+          "factId": "T1S3-C3",
+          "c_score": 2,
+          "r_score": 2,
+          "needsHumanReview": false,
+          "evidenceIssues": []
+        },
+        {
+          "factId": "T1S3-C4",
+          "c_score": 2,
+          "r_score": 2,
+          "needsHumanReview": false,
+          "evidenceIssues": []
+        },
+        {
+          "factId": "T1S3-C5",
+          "c_score": 2,
+          "r_score": 2,
+          "needsHumanReview": false,
+          "evidenceIssues": []
+        }
+      ],
+      "C_percent": 100,
+      "R_percent": 100,
+      "sessionSuccess": true,
+      "uncertainFacts": []
+    },
+    {
+      "sessionKey": "S4",
+      "grader": "deepseek",
+      "providerBlind": true,
+      "perFact": [
+        {
+          "factId": "T1S4-C1",
+          "c_score": 2,
+          "r_score": 2,
+          "needsHumanReview": false,
+          "evidenceIssues": []
+        },
+        {
+          "factId": "T1S4-C2",
+          "c_score": 2,
+          "r_score": 2,
+          "needsHumanReview": false,
+          "evidenceIssues": []
+        },
+        {
+          "factId": "T1S4-C3",
+          "c_score": 2,
+          "r_score": 2,
+          "needsHumanReview": false,
+          "evidenceIssues": []
+        },
+        {
+          "factId": "T1S4-C4",
+          "c_score": 2,
+          "r_score": 2,
+          "needsHumanReview": false,
+          "evidenceIssues": []
+        },
+        {
+          "factId": "T1S4-C5",
+          "c_score": 0,
+          "r_score": 0,
+          "needsHumanReview": false,
+          "evidenceIssues": []
+        }
+      ],
+      "C_percent": 80,
+      "R_percent": 100,
+      "sessionSuccess": false,
+      "uncertainFacts": []
+    }
+  ]
+}

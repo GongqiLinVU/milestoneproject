@@ -27,7 +27,8 @@ function validShape(u: any): u is EvidenceUpdate {
     && (u.value.trim() || ['unknown','missing','none','not_applicable'].includes(u.state))
     && ['evidenceType','progressKind','method','observedResult','expectedEvidence'].every(k => u[k] == null || typeof u[k] === 'string');
 }
-export type ReplayOptions = { sourcePolicy?: 'repair_unique' | 'strict_pointer' };
+export type MessagePolicy = 'current' | 'legacy_v1' | 'none';
+export type ReplayOptions = { sourcePolicy?: 'repair_unique' | 'strict_pointer'; messagePolicy?: MessagePolicy };
 export function validateCandidates(raw: unknown, conversation: ChatSource[], current: DeterministicIntakeAnswers, options: ReplayOptions = {}) {
   const decisions: FieldDecision[] = [];
   const accepted: EvidenceUpdate[] = [];
@@ -73,9 +74,23 @@ const unsafeMessagePatterns = [
 ];
 const safeMessage = (s: unknown) => typeof s === 'string' && s.trim().length > 0 && s.length <= 500
   && !unsafeMessagePatterns.some(pattern => pattern.test(s));
+// Reconstructed pre-fix guardrail (see commit 63b1754) — kept ONLY for harness
+// replay so the three fixed regressions stay visible/comparable in the tool;
+// never used for live traffic. Represents the final pre-fix state: a bare
+// word-blocklist plus a "message contains ? anywhere" shape check (the
+// widened-but-still-broken form the fix commit removed entirely).
+const legacyUnsafeWords = /\b(mark(?:s|ing)?|grade|verified|teacher approved|you cheated)\b/i;
+const legacyQuestionShape = /\?/;
+function messageAccepted(raw: unknown, policy: MessagePolicy): string | null {
+  if (typeof raw !== 'string' || !raw.trim() || raw.length > 500) return null;
+  const trimmed = raw.trim();
+  if (policy === 'none') return trimmed; // no guardrail at all — baseline for "how much would slip through"
+  if (policy === 'legacy_v1') return !legacyUnsafeWords.test(trimmed) && legacyQuestionShape.test(trimmed) ? trimmed : null;
+  return safeMessage(trimmed) ? trimmed : null; // 'current' (default) — must match deployed behavior exactly
+}
 export function decideTurn(candidate: any, conversation: ChatSource[], current: DeterministicIntakeAnswers, options: ReplayOptions = {}) {
   const extracted = validateCandidates(candidate?.evidenceUpdates,conversation,current,options);
-  const message = safeMessage(candidate?.assistantMessage) ? candidate.assistantMessage.trim() : null;
+  const message = messageAccepted(candidate?.assistantMessage, options.messagePolicy ?? 'current');
   const currentReply=conversation.at(-1)?.text || '';
   const action = extracted.accepted.some(u => u.field === 'next_action' && u.state === 'planned' && u.sourceTurn === conversation.length-1)
     || Boolean(current.nextAction && /\b(?:i\s+)?will do (?:it|that) next session\b/i.test(currentReply));
@@ -99,8 +114,12 @@ export function decideTurn(candidate: any, conversation: ChatSource[], current: 
 }
 export function fallbackQuestion(answers: DeterministicIntakeAnswers, conversation: ChatSource[]) {
   if (questionCount(conversation) >= MAX_INTAKE_QUESTIONS) return 'Review what you have told us and correct any missing details before confirming.';
-  if (!answers.progress) return 'What is one specific thing you completed, tried, or discovered this Session?';
-  if (!answers.evidenceReference) return 'What commit, demo, file, or observation could show that work?';
-  if (!answers.nextAction) return 'What one feasible step will you take before the next Session?';
+  // answers may be absent (e.g. a first turn, or a client that only sends the
+  // conversation). The deterministic fallback must never throw — a provider
+  // failure has to still return a usable question so answers are preserved.
+  const a = answers ?? ({} as Partial<DeterministicIntakeAnswers>);
+  if (!a.progress) return 'What is one specific thing you completed, tried, or discovered this Session?';
+  if (!a.evidenceReference) return 'What commit, demo, file, or observation could show that work?';
+  if (!a.nextAction) return 'What one feasible step will you take before the next Session?';
   return 'Is anything blocking that next step or requiring Teacher help?';
 }

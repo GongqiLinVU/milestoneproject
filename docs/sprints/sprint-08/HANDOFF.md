@@ -147,3 +147,84 @@ classroom records; do not automatically repurpose historical teaching data.
 See the application-first research workstream in
 `docs/sprints/sprint-08/PLAN.md` for measures and aggregation decisions.
 IJCAI-27 is an aspirational extension, not a product gate or guaranteed outcome.
+
+---
+
+## Sprint 8 closeout direction (added 2026-09-30, Phase A)
+
+Source: `Sprint8_Closeout_Plan_Claude_Handoff_EN_2026-09-30.md`. This section
+records the closeout direction and the Phase A deliverables. It does **not** mark
+Phase B, C or D complete, and does **not** supersede the unresolved application
+acceptance requirements above (Phase 2C database audit, authenticated Preview
+submission, and PR #65 merge remain pending and required).
+
+Closeout objective: establish a small, reproducible Intake benchmark, measure a
+baseline, complete one measured improvement, perform necessary application
+acceptance checks, then close Sprint 8. Research, general productization and large
+datasets are later work, not closeout requirements.
+
+Staged plan (only A is authorized now):
+
+- **A — Standard + one trajectory prep (this round).** Deliverables produced:
+  - `docs/sprints/sprint-08/BENCHMARK_STANDARD_v1.md` (draft C/R/S standard).
+  - `docs/sprints/sprint-08/BENCHMARK_CASES_v1_DRAFT.md` (de-identified case draft
+    + missing-input inventory).
+  - `docs/sprints/sprint-08/S8-A_REPORT.md` (Phase A execution report).
+- **B — Minimal runner + baseline.** **B1** done: Phase A documents corrected and
+  one real replay baseline built (`S8-B1_REPORT.md`, `tests/ai-session-intake/replay/`),
+  reporting R + state checks on the real S9 record (deterministic, no paid calls).
+  **B2** done: one **synthetic** T1 four-Session **dynamic** baseline
+  (`S8-B2_REPORT.md`, `gold-t1.json`, `run-dynamic-t1.mjs`) with a frozen T1
+  scoring table, an offline smoke test (runner validation only:
+  `C_mean=90 R_mean=90 S=25%`, 0 critical errors), calibration controls, and a
+  prepared-but-unexecuted live mode. S9 replay kept as a separate R anchor. Live
+  3× baseline (paid) remains gated on Joseph's model/spend approval.
+  **B3** prepared (pre-paid, `S8-B3_REPORT.md`): C/R attribution corrected and
+  versioned (`intake-crs-scoring.v1.1` — a disclosed-but-unextracted fact is an R
+  failure, not a C failure; offline re-scored `C_mean=95 R_mean=90 S=25%`),
+  paraphrase routing + `pendingAdjudication` flags added, and live mode wired to
+  the **real** `/api/session-intake-ai` workflow (actual prompt/context/
+  extraction/validation/routing, `gpt-5-mini`) behind an approval gate.
+  One-trajectory budget ~$0.09 expected / ~$0.28 worst; **hard cap $0.20
+  requested**. No paid call made; the single live run is gated on Joseph's model +
+  cap approval.
+- **C — One focused improvement + regression.** Not started.
+- **D — Application acceptance + closeout.** Not started; still gated on the
+  Phase 2C database audit and authenticated application acceptance above.
+
+Current-state facts verified locally on 2026-09-30 (read-only):
+
+- Working branch: `integration-tests-m4-m10-m14` (not `main`); uncommitted
+  changes and untracked files present and preserved (not modified by Phase A/B1
+  except the new closeout/benchmark documents and the new replay runner+test).
+- Turn caps confirmed in code: `MAX_INTAKE_QUESTIONS = 8`, `MAX_INTAKE_TURNS = 17`
+  (`src/intakePolicy.ts`). The technical maximum is not the desired teaching
+  burden.
+- No real consecutive same-student Intake **conversation** trajectory exists
+  locally. The only real de-identified conversational record is a single S9
+  (`recorded-cases-v2.json`, `s9-continuing-chat-provider-fallback`). The 2B1
+  baseline is aggregated pre-Intake form analytics; the v0.5 T1/T2/T3
+  trajectories are synthetic. See the missing-input inventory in
+  `BENCHMARK_CASES_v1_DRAFT.md`.
+
+### Verified merge/acceptance status (reconciled 2026-09-30, B1)
+
+The earlier "Current state" narrative above describes Phase 2C as an open Draft
+PR #65 gated on merge approval. Verified against local + remote history, that is
+now stale and is corrected here (the narrative is retained for history, not as the
+current gate):
+
+| Item | Status | Evidence |
+|---|---|---|
+| Phase 2C guided AI Intake workspace (PR #65) | **Verified merged** | commit `a7956a6` present on `main` and `origin/main` (`git branch --contains`) |
+| Visual Harness Debug trace/replay (PR #66) | **Verified merged** | commit `55fae87` present on `main` and `origin/main` |
+| Repeated-question / token-budget fixes | **Verified merged** | commits `63b1754`, `e7f44a3` on `main`; HEAD `main...HEAD` divergence = 0/0 |
+| Phase 2C **database audit** (`sprint8_adaptive_intake_security_audit.sql`) | **Pending / unassessed** | not executed in Phase A/B1; requires a DB run, out of scope here |
+| **Authenticated application acceptance** (Preview UI submission, duplicate/cross-Block rejection, save-path RPC) | **Pending / unassessed** | requires authenticated stack; not run in Phase A/B1 |
+
+The database audit and authenticated application acceptance are kept **separate**
+from the merge status: PR #65/#66 being merged does **not** imply those acceptance
+checks passed. They remain required Sprint 8 exit items (Phase D).
+
+Phase A does not authorize a runner, production changes, paid model calls, push,
+merge, deploy or migration.

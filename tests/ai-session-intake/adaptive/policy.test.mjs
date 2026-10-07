@@ -15,6 +15,10 @@ test('a genuine question that does not end in "?" is still accepted, not just a 
 test('a safe closing/summary message with no question mark at all is still used, not the static fallback',()=>{const c=recorded[4];const initial={...defaults,progress:'',evidenceReference:'',verificationMethod:'',nextAction:''};const d=decideTurn(c.candidate,c.conversation,initial);assert.equal(d.route,'small_step');assert.equal(d.assistantMessage,c.expectedMessage);assert.notEqual(d.assistantMessage,fallbackQuestion(initial,c.conversation))});
 test('debug identifies disallowed state and explains route override',()=>{const c=recorded[0];const bad=update({field:'verification_method',state:'executed',value:'Load over slow connection'});const d=decideTurn({...c.candidate,evidenceUpdates:[bad]},c.conversation,defaults);assert.equal(d.decisions[0].reason,'state_not_allowed_for_field');assert.equal(d.routeDecision.proposed,'clarification');assert.equal(d.routeDecision.final,'continue');assert.ok(d.routeDecision.reason)});
 test('visual replay compares source policies without changing production input',()=>{const c=recorded[0];const baseline=decideTurn(c.candidate,c.conversation,defaults);const strict=decideTurn(c.candidate,c.conversation,defaults,{sourcePolicy:'strict_pointer'});assert.ok(baseline.decisions.some(d=>d.outcome==='repaired'));assert.ok(strict.decisions.some(d=>d.reason==='source_pointer_invalid_strict_policy'));assert.equal(c.candidate.evidenceUpdates[1].sourceTurn,0)});
+test('visual replay reproduces the fixed word-blocklist false positive under the legacy message policy',()=>{const c=recorded[2];const current=decideTurn(c.candidate,c.conversation,defaults);const legacy=decideTurn(c.candidate,c.conversation,defaults,{messagePolicy:'legacy_v1'});assert.equal(current.assistantMessage,c.expectedMessage);assert.equal(legacy.assistantMessage,fallbackQuestion(defaults,c.conversation));assert.notEqual(legacy.assistantMessage,c.expectedMessage)});
+test('visual replay reproduces the fixed no-question-mark false positive under the legacy message policy',()=>{const c=recorded[4];const initial={...defaults,progress:'',evidenceReference:'',verificationMethod:'',nextAction:''};const current=decideTurn(c.candidate,c.conversation,initial);const legacy=decideTurn(c.candidate,c.conversation,initial,{messagePolicy:'legacy_v1'});assert.equal(current.assistantMessage,c.expectedMessage);assert.equal(legacy.assistantMessage,fallbackQuestion(initial,c.conversation));assert.notEqual(legacy.assistantMessage,c.expectedMessage)});
+test('the none message policy lets an actually unsafe assistant message through, unlike current',()=>{const c=recorded[0];const unsafeCandidate={...c.candidate,assistantMessage:'This has been marked and verified by the teacher.'};const current=decideTurn(unsafeCandidate,c.conversation,defaults);const none=decideTurn(unsafeCandidate,c.conversation,defaults,{messagePolicy:'none'});assert.equal(current.assistantMessage,fallbackQuestion(current.answers,c.conversation));assert.equal(none.assistantMessage,'This has been marked and verified by the teacher.')});
+test('omitting messagePolicy is equivalent to the current default',()=>{const c=recorded[2];const omitted=decideTurn(c.candidate,c.conversation,defaults);const explicit=decideTurn(c.candidate,c.conversation,defaults,{messagePolicy:'current'});assert.equal(omitted.assistantMessage,explicit.assistantMessage);assert.equal(omitted.route,explicit.route)});
 test('teacher-only field and invented evidence cannot enter record',()=>{const c=recorded[0];const d=validateCandidates([{...update({field:'teacher_marks'})},{...update({field:'evidence',value:'fabricated proof XYZ-999',state:'available',evidenceType:'repository_change'})}],c.conversation,defaults);assert.equal(d.accepted.length,0);assert.equal(d.answers.evidenceReference,'');assert.ok(d.decisions.every(x=>x.outcome==='rejected'))});
 test('an untested state does not imply student acceptance of a future test',()=>{const c=recorded[0];const d=validateCandidates([update({field:'next_action',state:'planned',value:'test API error next Session'})],c.conversation,defaults);assert.equal(d.decisions[0].outcome,'rejected');assert.equal(d.decisions[0].reason,'future_action_not_student_accepted')});
 test('reaffirming an already captured next-session action closes without asking for the result',()=>{const turns=[{actor:'system',purpose:'clarification',text:'Will you simulate an API 500 response next Session?'},{actor:'student',purpose:'student response',text:'No, I will do it next session'}];const current={...defaults,progress:'Added dashboard spinner',evidenceReference:'commit abc123',verificationMethod:'Inspect commit and demonstrate over slow network',nextAction:'Simulate API 500 next Session',testingStatus:'executed',testingMethod:'Slow network',testingResult:'Spinner appeared'};const d=decideTurn({assistantMessage:'Have you simulated it yet? What happened?',route:'clarification',evidenceUpdates:[]},turns,current);assert.equal(d.route,'review');assert.equal(d.answers.testingStatus,'executed');assert.doesNotMatch(d.assistantMessage,/simulated it yet/)});
@@ -36,3 +40,80 @@ test('unknown evidence cannot be promoted to available',()=>{const a=applyEviden
 test('Teacher request populates support without inventing a next action',()=>{const a=applyEvidenceUpdates({...defaults,nextAction:''},[update({field:'blocker',state:'needs_teacher',value:'Help choose the API error approach'})],pair(0));assert.equal(a.supportRequested,'Help choose the API error approach');assert.equal(a.nextAction,'')});
 test('malformed executed test fails confirmation validation',()=>{const a=applyEvidenceUpdates(defaults,[update({field:'testing',state:'executed',value:'Test done'})],pair(0));assert.equal(validateIntakeStudentRecord(buildFallbackStudentRecord(a,{},true)).valid,false)});
 test('unknown test with fabricated observed result is rejected',()=>{const r=buildFallbackStudentRecord(defaults,{},true);r.testing[0].observed_result='Succeeded';assert.equal(validateIntakeStudentRecord(r).valid,false)});
+
+// --- Mutation-catalog killer tests (see tests/integration/mutation-catalog.md) ---
+
+// M4 (IH validateCandidates): the `unexecuted_test_has_observation` reject.
+// The catalog's originally-named killer ("unknown test with fabricated observed
+// result is rejected") targets validateIntakeStudentRecord (final-record
+// validation in aiSessionIntake.ts), NOT this candidate-validation guard, so it
+// left M4 unprotected (MEASURED SURVIVED, 2026-09-27). This test exercises the
+// candidate path directly: a planned/unknown testing candidate that carries an
+// observedResult the student never observed must be rejected at candidate
+// validation, an independently valid claim in the same response must still be
+// accepted, the student's original answer must be preserved, and no fabricated
+// observed result may reach the confirmed-record path.
+test('M4: a planned testing candidate with a fabricated observed result is rejected at candidate validation while a valid claim survives',()=>{
+  const conversation=[
+    {actor:'system',purpose:'session starting point',text:'What did you work on and what will you do next?'},
+    {actor:'student',purpose:'student response',text:'I implemented the dashboard loading spinner this Session. Next Session I will simulate an API 500 response.'},
+  ];
+  const plannedTestWithFabricatedResult=update({field:'testing',state:'planned',value:'Simulate an API 500 response',sourceTurn:1,method:'Simulate a 500',observedResult:'The error banner appeared and the spinner stopped'});
+  const validClaim=update({field:'claim',state:'student_claim',value:'Implemented the dashboard loading spinner',progressKind:'completed',sourceTurn:1});
+  const d=validateCandidates([plannedTestWithFabricatedResult,validClaim],conversation,defaults);
+  // The testing candidate is rejected for the intended reason.
+  const testingDecision=d.decisions.find(x=>x.field==='testing');
+  assert.equal(testingDecision.outcome,'rejected');
+  assert.equal(testingDecision.reason,'unexecuted_test_has_observation');
+  // The independently valid claim is still accepted.
+  assert.ok(d.accepted.some(u=>u.field==='claim'),'valid claim must remain accepted');
+  // The student's original testing answer is preserved (never overwritten by the fabricated result).
+  assert.equal(d.answers.testingStatus,defaults.testingStatus);
+  assert.equal(d.answers.testingResult,defaults.testingResult);
+  // No fabricated observed test result reaches the confirmed-record path.
+  const record=buildFallbackStudentRecord(d.answers,{},true);
+  assert.notEqual(record.testing[0].observed_result,'The error banner appeared and the spinner stopped');
+  assert.equal(validateIntakeStudentRecord(record).valid,true);
+});
+test('M4: an unknown testing candidate carrying an observed result is likewise rejected at candidate validation',()=>{
+  const conversation=[
+    {actor:'system',purpose:'session starting point',text:'Did you test the login flow?'},
+    {actor:'student',purpose:'student response',text:'I am not sure whether the login flow was tested properly.'},
+  ];
+  const unknownTestWithResult=update({field:'testing',state:'unknown',value:'Login flow testing',sourceTurn:1,observedResult:'All login tests passed'});
+  const d=validateCandidates([unknownTestWithResult],conversation,defaults);
+  assert.equal(d.decisions[0].outcome,'rejected');
+  assert.equal(d.decisions[0].reason,'unexecuted_test_has_observation');
+  assert.equal(d.accepted.length,0);
+  assert.equal(d.answers.testingResult,defaults.testingResult);
+});
+
+// M10 (IH safeMessage): if safeMessage stops applying unsafeMessagePatterns, the
+// Harness would surface a model message that claims it graded/verified/accused
+// the student. decideTurn must instead discard such a message and fall back to a
+// deterministic question, while still extracting any independently valid evidence.
+test('M10: an assistant message claiming the work was marked/verified is discarded and replaced by the deterministic fallback',()=>{
+  const conversation=[
+    {actor:'system',purpose:'session starting point',text:'What did you complete this Session?'},
+    {actor:'student',purpose:'student response',text:'I implemented the dashboard loading spinner.'},
+  ];
+  const unsafe={assistantMessage:'Your work has been verified and marked as complete by the teacher.',route:'clarification',readyForReview:false,evidenceUpdates:[]};
+  const d=decideTurn(unsafe,conversation,defaults);
+  assert.notEqual(d.assistantMessage,unsafe.assistantMessage);
+  assert.equal(d.assistantMessage,fallbackQuestion(defaults,conversation));
+});
+test('M10: an assistant message accusing the student of cheating is discarded, but valid evidence in the same turn is still extracted',()=>{
+  const conversation=[
+    {actor:'system',purpose:'session starting point',text:'What did you complete this Session?'},
+    {actor:'student',purpose:'student response',text:'I implemented the dashboard loading spinner in commit abc123.'},
+  ];
+  const validEvidence=update({field:'evidence',state:'available',value:'commit abc123',sourceTurn:1,evidenceType:'repository_change'});
+  const unsafe={assistantMessage:'You cheated on this task, so I cannot accept it.',route:'clarification',readyForReview:false,evidenceUpdates:[validEvidence]};
+  const d=decideTurn(unsafe,conversation,defaults);
+  // Unsafe message is not surfaced.
+  assert.notEqual(d.assistantMessage,unsafe.assistantMessage);
+  assert.equal(d.assistantMessage,fallbackQuestion(d.answers,conversation));
+  // Valid evidence is extracted independently of the unsafe dialogue.
+  assert.ok(d.accepted.some(u=>u.field==='evidence'),'valid evidence must still be extracted');
+  assert.equal(d.answers.evidenceReference,'commit abc123');
+});

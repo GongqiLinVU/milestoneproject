@@ -1,0 +1,1265 @@
+{
+  "schema": "intake-raw-recovery.v1",
+  "about": "Forensic recovery of what was retained from the US$0.65 T1 run. Raw provider responses were NOT saved; only derived trace survives.",
+  "source": "tests/ai-session-intake/replay/out/dynamic-t1-live.json",
+  "rawResponsesPresent": false,
+  "examples": {
+    "S1": {
+      "sessionKey": "S1",
+      "provider": "ok",
+      "capturedConversation_input": [
+        {
+          "actor": "system",
+          "purpose": "session starting point",
+          "text": "This is S1. What did you personally work on since the previous class, and what changed?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I own the booking UI. We agreed the module owners. I am drawing the flow; no UI is built yet."
+        },
+        {
+          "actor": "system",
+          "purpose": "small_step",
+          "text": "You said you own the booking UI and are currently drawing the flow (no UI built yet). Can you share a simple flow diagram (screenshot or Figma link) before the next session?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I have not recorded a repo path for booking-flow-v1.pdf; it would need checking in the report/demo."
+        },
+        {
+          "actor": "system",
+          "purpose": "small_step",
+          "text": "Got it — you own the Booking UI and are drawing the flow; booking-flow-v1.pdf isn’t checked into the repo. Can you check it in now (or share a Figma link) and reply with the repo path or link?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I have not recorded a repo path for booking-flow-v1.pdf; it would need checking in the report/demo."
+        },
+        {
+          "actor": "system",
+          "purpose": "small_step",
+          "text": "Got it — you say booking-flow-v1.pdf exists but isn’t checked into the repo. Can you check it in now (or paste a Figma link) and reply with the repo path or link?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I have not recorded a repo path for booking-flow-v1.pdf; it would need checking in the report/demo."
+        },
+        {
+          "actor": "system",
+          "purpose": "small_step",
+          "text": "Got it — you own the Booking UI and are drawing the booking flow, but booking-flow-v1.pdf isn’t checked into the repo. Please check booking-flow-v1.pdf into the repo now (or paste a Figma link) and reply here with the repo path or link."
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I have not recorded a repo path for booking-flow-v1.pdf; it would need checking in the report/demo."
+        },
+        {
+          "actor": "system",
+          "purpose": "small_step",
+          "text": "Recorded: you own the Booking UI and are drawing the booking flow; you say booking-flow-v1.pdf exists but is not checked into the repo. Can you check booking-flow-v1.pdf into the repo now (or paste a Figma link) and reply with the repo path or link?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I have not recorded a repo path for booking-flow-v1.pdf; it would need checking in the report/demo."
+        },
+        {
+          "actor": "system",
+          "purpose": "small_step",
+          "text": "Acknowledged — you own the Booking UI and are drawing the booking flow; you say booking-flow-v1.pdf exists but isn’t checked into the repo. Can you check booking-flow-v1.pdf into the repo now and reply with the repo path or paste a Figma link? If you can’t, reply 'need help'."
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I have not recorded a repo path for booking-flow-v1.pdf; it would need checking in the report/demo."
+        },
+        {
+          "actor": "system",
+          "purpose": "small_step",
+          "text": "Acknowledged — you own the Booking UI and say booking-flow-v1.pdf exists but isn’t checked into the repo. Can you check booking-flow-v1.pdf into the repo now and reply with the repo path (or paste a Figma link)? If you can’t, reply 'need help'."
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I have not recorded a repo path for booking-flow-v1.pdf; it would need checking in the report/demo."
+        },
+        {
+          "actor": "system",
+          "purpose": "review transition",
+          "text": "Review what you reported before confirming."
+        }
+      ],
+      "resolvedContext_available": {
+        "student": "t1bench01",
+        "block_code": "2B2",
+        "team_number": 4,
+        "project_name": "Booking portal",
+        "sessionIds": [
+          "06fc38a3-ff53-461a-b525-c80957f1c58f",
+          "bdb4b651-df62-4cae-90b5-6582241d94e7",
+          "e590fa1e-3717-4c97-9262-a1a2e6cc4967",
+          "e3f2de89-6011-4e2b-a40a-df4969f4bd1d"
+        ]
+      },
+      "rawProviderResponse": "MISSING — not captured (driver did not persist json.rawCandidate; endpoint store:false; no server-log capture)",
+      "parsedCandidate": "MISSING — endpoint returned json.rawCandidate but the benchmark driver did not store it",
+      "acceptedCandidates_DERIVED": [
+        {
+          "questionAsked": "You said you own the booking UI and are currently drawing the flow (no UI built yet). Can you share a simple flow diagram (screenshot or Figma link) before the next session?",
+          "acceptedFields": [
+            {
+              "field": "responsibility",
+              "state": "student_claim",
+              "sourceTurn": 1
+            },
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 1
+            }
+          ]
+        },
+        {
+          "questionAsked": "Got it — you own the Booking UI and are drawing the flow; booking-flow-v1.pdf isn’t checked into the repo. Can you check it in now (or share a Figma link) and reply with the repo path or link?",
+          "acceptedFields": [
+            {
+              "field": "responsibility",
+              "state": "student_claim",
+              "sourceTurn": 1
+            },
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 1
+            },
+            {
+              "field": "evidence",
+              "state": "missing",
+              "sourceTurn": 3
+            }
+          ]
+        },
+        {
+          "questionAsked": "Got it — you say booking-flow-v1.pdf exists but isn’t checked into the repo. Can you check it in now (or paste a Figma link) and reply with the repo path or link?",
+          "acceptedFields": []
+        },
+        {
+          "questionAsked": "Got it — you own the Booking UI and are drawing the booking flow, but booking-flow-v1.pdf isn’t checked into the repo. Please check booking-flow-v1.pdf into the repo now (or paste a Figma link) and reply here with the repo path or link.",
+          "acceptedFields": [
+            {
+              "field": "responsibility",
+              "state": "student_claim",
+              "sourceTurn": 1
+            },
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 1
+            },
+            {
+              "field": "evidence",
+              "state": "missing",
+              "sourceTurn": 7
+            }
+          ]
+        },
+        {
+          "questionAsked": "Recorded: you own the Booking UI and are drawing the booking flow; you say booking-flow-v1.pdf exists but is not checked into the repo. Can you check booking-flow-v1.pdf into the repo now (or paste a Figma link) and reply with the repo path or link?",
+          "acceptedFields": [
+            {
+              "field": "responsibility",
+              "state": "student_claim",
+              "sourceTurn": 1
+            },
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 1
+            }
+          ]
+        },
+        {
+          "questionAsked": "Acknowledged — you own the Booking UI and are drawing the booking flow; you say booking-flow-v1.pdf exists but isn’t checked into the repo. Can you check booking-flow-v1.pdf into the repo now and reply with the repo path or paste a Figma link? If you can’t, reply 'need help'.",
+          "acceptedFields": [
+            {
+              "field": "responsibility",
+              "state": "student_claim",
+              "sourceTurn": 1
+            },
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 1
+            },
+            {
+              "field": "evidence",
+              "state": "available",
+              "sourceTurn": 11
+            }
+          ]
+        },
+        {
+          "questionAsked": "Acknowledged — you own the Booking UI and say booking-flow-v1.pdf exists but isn’t checked into the repo. Can you check booking-flow-v1.pdf into the repo now and reply with the repo path (or paste a Figma link)? If you can’t, reply 'need help'.",
+          "acceptedFields": []
+        },
+        {
+          "questionAsked": "Review what you completed, what you observed, and what is planned for the next Session before confirming.",
+          "acceptedFields": [
+            {
+              "field": "responsibility",
+              "state": "student_claim",
+              "sourceTurn": 1
+            },
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 1
+            },
+            {
+              "field": "evidence",
+              "state": "available",
+              "sourceTurn": 15
+            }
+          ]
+        }
+      ],
+      "rejectedReasons_DERIVED": [
+        {
+          "questionAsked": "Got it — you say booking-flow-v1.pdf exists but isn’t checked into the repo. Can you check it in now (or paste a Figma link) and reply with the repo path or link?",
+          "rejected": [
+            "state_not_allowed_for_field",
+            "state_not_allowed_for_field"
+          ]
+        },
+        {
+          "questionAsked": "Recorded: you own the Booking UI and are drawing the booking flow; you say booking-flow-v1.pdf exists but is not checked into the repo. Can you check booking-flow-v1.pdf into the repo now (or paste a Figma link) and reply with the repo path or link?",
+          "rejected": [
+            "state_not_allowed_for_field",
+            "state_not_allowed_for_field",
+            "student_source_not_uniquely_grounded",
+            "state_not_allowed_for_field",
+            "student_source_not_uniquely_grounded"
+          ]
+        },
+        {
+          "questionAsked": "Acknowledged — you own the Booking UI and are drawing the booking flow; you say booking-flow-v1.pdf exists but isn’t checked into the repo. Can you check booking-flow-v1.pdf into the repo now and reply with the repo path or paste a Figma link? If you can’t, reply 'need help'.",
+          "rejected": [
+            "state_not_allowed_for_field",
+            "student_source_not_uniquely_grounded"
+          ]
+        },
+        {
+          "questionAsked": "Acknowledged — you own the Booking UI and say booking-flow-v1.pdf exists but isn’t checked into the repo. Can you check booking-flow-v1.pdf into the repo now and reply with the repo path (or paste a Figma link)? If you can’t, reply 'need help'.",
+          "rejected": [
+            "student_source_not_uniquely_grounded",
+            "student_source_not_uniquely_grounded",
+            "student_source_not_uniquely_grounded"
+          ]
+        }
+      ],
+      "routingAmbiguities_CAPTURED": [
+        {
+          "turn": 3,
+          "type": "repo_path_honest_no_leak",
+          "question": "You said you own the booking UI and are currently drawing the flow (no UI built yet). Can you share a simple flow diagram (screenshot or Figma link) before the next session?",
+          "pendingAdjudication": false
+        },
+        {
+          "turn": 5,
+          "type": "repo_path_honest_no_leak",
+          "question": "Got it — you own the Booking UI and are drawing the flow; booking-flow-v1.pdf isn’t checked into the repo. Can you check it in now (or share a Figma link) and reply with the repo path or link?",
+          "pendingAdjudication": false
+        },
+        {
+          "turn": 7,
+          "type": "repo_path_honest_no_leak",
+          "question": "Got it — you say booking-flow-v1.pdf exists but isn’t checked into the repo. Can you check it in now (or paste a Figma link) and reply with the repo path or link?",
+          "pendingAdjudication": false
+        },
+        {
+          "turn": 9,
+          "type": "repo_path_honest_no_leak",
+          "question": "Got it — you own the Booking UI and are drawing the booking flow, but booking-flow-v1.pdf isn’t checked into the repo. Please check booking-flow-v1.pdf into the repo now (or paste a Figma link) and reply here with the repo path or link.",
+          "pendingAdjudication": false
+        },
+        {
+          "turn": 11,
+          "type": "repo_path_honest_no_leak",
+          "question": "Recorded: you own the Booking UI and are drawing the booking flow; you say booking-flow-v1.pdf exists but is not checked into the repo. Can you check booking-flow-v1.pdf into the repo now (or paste a Figma link) and reply with the repo path or link?",
+          "pendingAdjudication": false
+        },
+        {
+          "turn": 13,
+          "type": "repo_path_honest_no_leak",
+          "question": "Acknowledged — you own the Booking UI and are drawing the booking flow; you say booking-flow-v1.pdf exists but isn’t checked into the repo. Can you check booking-flow-v1.pdf into the repo now and reply with the repo path or paste a Figma link? If you can’t, reply 'need help'.",
+          "pendingAdjudication": false
+        },
+        {
+          "turn": 15,
+          "type": "repo_path_honest_no_leak",
+          "question": "Acknowledged — you own the Booking UI and say booking-flow-v1.pdf exists but isn’t checked into the repo. Can you check booking-flow-v1.pdf into the repo now and reply with the repo path (or paste a Figma link)? If you can’t, reply 'need help'.",
+          "pendingAdjudication": false
+        }
+      ],
+      "reviewStageCorrections_CAPTURED": [
+        {
+          "field": "dueSession",
+          "before": "",
+          "after": "S2",
+          "provenance": "ui_default_due_session (production main.tsx uses a Session <select> default)"
+        },
+        {
+          "field": "nextAction",
+          "before": "",
+          "after": "Agree the API response format with B, update the diagram, then build the main screens",
+          "provenance": "student_authorized_next_action"
+        },
+        {
+          "field": "expectedEvidence",
+          "before": "",
+          "after": "updated booking flow diagram and first screens",
+          "provenance": "student_authorized_expected_evidence"
+        },
+        {
+          "field": "verificationMethod",
+          "before": "",
+          "after": "Teacher reviews booking-flow-v1.pdf design and the handoff question",
+          "provenance": "student_authorized_verification"
+        }
+      ],
+      "resultingRecord_DERIVED": {
+        "responsibility": "Booking UI",
+        "progress": "Drawing the flow; no UI built yet",
+        "progressKind": "no_progress",
+        "scope": "",
+        "completionPercent": null,
+        "evidenceType": "design_artifact",
+        "evidenceAvailability": "available_now",
+        "evidenceReference": "booking-flow-v1.pdf (flow diagram) exists but is not checked into the repo; would need checking into report/demo",
+        "verificationMethod": "Teacher reviews booking-flow-v1.pdf design and the handoff question",
+        "testingStatus": "unknown",
+        "testingMethod": "",
+        "testingResult": "",
+        "testingBaseline": "",
+        "blockerStatus": "none",
+        "blockerDescription": "",
+        "supportRequested": "",
+        "nextAction": "Agree the API response format with B, update the diagram, then build the main screens",
+        "dueSession": "S2",
+        "expectedEvidence": "updated booking flow diagram and first screens"
+      },
+      "turnLoopCandidate_DERIVED": {
+        "responsibility": "Booking UI",
+        "progress": "Drawing the flow; no UI built yet",
+        "progressKind": "no_progress",
+        "scope": "",
+        "completionPercent": null,
+        "evidenceType": "design_artifact",
+        "evidenceAvailability": "available_now",
+        "evidenceReference": "booking-flow-v1.pdf (flow diagram) exists but is not checked into the repo; would need checking into report/demo",
+        "verificationMethod": "",
+        "testingStatus": "unknown",
+        "testingMethod": "",
+        "testingResult": "",
+        "testingBaseline": "",
+        "blockerStatus": "none",
+        "blockerDescription": "",
+        "supportRequested": "",
+        "nextAction": "",
+        "dueSession": "",
+        "expectedEvidence": ""
+      },
+      "persistence": {
+        "attempted": true,
+        "ok": false,
+        "error": "Session Intake evidence is incomplete",
+        "recordValid": false,
+        "recordErrors": [
+          "one or more claims are invalid",
+          "evidence references an unknown claim"
+        ],
+        "corrections": [
+          {
+            "field": "dueSession",
+            "before": "",
+            "after": "S2",
+            "provenance": "ui_default_due_session (production main.tsx uses a Session <select> default)"
+          },
+          {
+            "field": "nextAction",
+            "before": "",
+            "after": "Agree the API response format with B, update the diagram, then build the main screens",
+            "provenance": "student_authorized_next_action"
+          },
+          {
+            "field": "expectedEvidence",
+            "before": "",
+            "after": "updated booking flow diagram and first screens",
+            "provenance": "student_authorized_expected_evidence"
+          },
+          {
+            "field": "verificationMethod",
+            "before": "",
+            "after": "Teacher reviews booking-flow-v1.pdf design and the handoff question",
+            "provenance": "student_authorized_verification"
+          }
+        ]
+      },
+      "note": "CAPTURED = original run data retained in the trace. DERIVED = computed by the benchmark driver/decideTurn, NOT the raw provider response. The raw provider response and parsed candidate for this Session are MISSING (see report)."
+    },
+    "S3": {
+      "sessionKey": "S3",
+      "provider": "ok",
+      "capturedConversation_input": [
+        {
+          "actor": "system",
+          "purpose": "session starting point",
+          "text": "This is S3. What did you personally work on since the previous class, and what changed?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "We connected the live modules and attempted the real flow."
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "text": "Got it — you connected the live modules and attempted the real flow. Did the flow complete end-to-end successfully; if not, what failed or what error messages did you see?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "No — after selecting another slot, the confirmation showed the old one. That path failed."
+        },
+        {
+          "actor": "system",
+          "purpose": "small_step",
+          "text": "Got it — you connected the live modules, ran the real booking flow, and observed a failure: after selecting a different slot the confirmation still showed the previous slot. Can you reproduce that stale-confirmation bug reliably and, before the next session, re-run the flow while checking whether the selected slot ID sent to the server (network request or server log) matches the slot you chose? Reply “Yes — will check” if feasible or “Need teacher help” if you can’t."
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I cannot rerun the journeys right now; the fix is not done yet."
+        },
+        {
+          "actor": "system",
+          "purpose": "small_step",
+          "text": "Thanks — got that you can’t rerun the journeys now and the fix isn’t finished. Can you push a branch or attach the failing network request / console log now so someone can reproduce the stale-confirmation locally?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I cannot rerun the journeys right now; the fix is not done yet."
+        },
+        {
+          "actor": "system",
+          "purpose": "small_step",
+          "text": "Got it — you can’t rerun the journeys right now and the fix isn’t finished. Can you push your current branch or attach the failing network request / console log now so someone else can reproduce the stale-confirmation?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I cannot rerun the journeys right now; the fix is not done yet."
+        },
+        {
+          "actor": "system",
+          "purpose": "small_step",
+          "text": "Got it — you can’t rerun the journeys right now and the fix isn’t finished. Can you push your current branch or attach the failing network request / console log now so someone else can reproduce the stale-confirmation?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I cannot rerun the journeys right now; the fix is not done yet."
+        },
+        {
+          "actor": "system",
+          "purpose": "small_step",
+          "text": "Understood — you can’t rerun the journeys and the fix isn’t finished. Can you push your current branch now so someone else can reproduce the stale-confirmation, or do you need teacher help?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I cannot rerun the journeys right now; the fix is not done yet."
+        },
+        {
+          "actor": "system",
+          "purpose": "small_step",
+          "text": "Understood — you can’t rerun the journeys right now and the fix isn’t finished. Can you push your current branch to the remote repo now so a teammate can reproduce? Reply “Yes — will push” or “Need teacher help”."
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I cannot rerun the journeys right now; the fix is not done yet."
+        },
+        {
+          "actor": "system",
+          "purpose": "review transition",
+          "text": "Review what you reported before confirming."
+        }
+      ],
+      "resolvedContext_available": {
+        "student": "t1bench01",
+        "block_code": "2B2",
+        "team_number": 4,
+        "project_name": "Booking portal",
+        "sessionIds": [
+          "06fc38a3-ff53-461a-b525-c80957f1c58f",
+          "bdb4b651-df62-4cae-90b5-6582241d94e7",
+          "e590fa1e-3717-4c97-9262-a1a2e6cc4967",
+          "e3f2de89-6011-4e2b-a40a-df4969f4bd1d"
+        ]
+      },
+      "rawProviderResponse": "MISSING — not captured (driver did not persist json.rawCandidate; endpoint store:false; no server-log capture)",
+      "parsedCandidate": "MISSING — endpoint returned json.rawCandidate but the benchmark driver did not store it",
+      "acceptedCandidates_DERIVED": [
+        {
+          "questionAsked": "Got it — you connected the live modules and attempted the real flow. Did the flow complete end-to-end successfully; if not, what failed or what error messages did you see?",
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 1
+            }
+          ]
+        },
+        {
+          "questionAsked": "Got it — you connected the live modules, ran the real booking flow, and observed a failure: after selecting a different slot the confirmation still showed the previous slot. Can you reproduce that stale-confirmation bug reliably and, before the next session, re-run the flow while checking whether the selected slot ID sent to the server (network request or server log) matches the slot you chose? Reply “Yes — will check” if feasible or “Need teacher help” if you can’t.",
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 1
+            },
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 3
+            },
+            {
+              "field": "blocker",
+              "state": "student_claim",
+              "sourceTurn": 3
+            }
+          ]
+        },
+        {
+          "questionAsked": "Thanks — got that you can’t rerun the journeys now and the fix isn’t finished. Can you push a branch or attach the failing network request / console log now so someone can reproduce the stale-confirmation locally?",
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 5
+            }
+          ]
+        },
+        {
+          "questionAsked": "Got it — you can’t rerun the journeys right now and the fix isn’t finished. Can you push your current branch or attach the failing network request / console log now so someone else can reproduce the stale-confirmation?",
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 7
+            }
+          ]
+        },
+        {
+          "questionAsked": "Got it — you can’t rerun the journeys right now and the fix isn’t finished. Can you push your current branch or attach the failing network request / console log now so someone else can reproduce the stale-confirmation?",
+          "acceptedFields": []
+        },
+        {
+          "questionAsked": "Understood — you can’t rerun the journeys and the fix isn’t finished. Can you push your current branch now so someone else can reproduce the stale-confirmation, or do you need teacher help?",
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 11
+            },
+            {
+              "field": "blocker",
+              "state": "student_claim",
+              "sourceTurn": 3
+            }
+          ]
+        },
+        {
+          "questionAsked": "Understood — you can’t rerun the journeys right now and the fix isn’t finished. Can you push your current branch to the remote repo now so a teammate can reproduce? Reply “Yes — will push” or “Need teacher help”.",
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 13
+            },
+            {
+              "field": "testing",
+              "state": "unknown",
+              "sourceTurn": 13
+            }
+          ]
+        },
+        {
+          "questionAsked": "Review what you completed, what you observed, and what is planned for the next Session before confirming.",
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 13
+            },
+            {
+              "field": "blocker",
+              "state": "student_claim",
+              "sourceTurn": 13
+            }
+          ]
+        }
+      ],
+      "rejectedReasons_DERIVED": [
+        {
+          "questionAsked": "Got it — you connected the live modules and attempted the real flow. Did the flow complete end-to-end successfully; if not, what failed or what error messages did you see?",
+          "rejected": [
+            "state_not_allowed_for_field",
+            "executed_test_needs_method_and_observation",
+            "state_not_allowed_for_field",
+            "state_not_allowed_for_field",
+            "state_not_allowed_for_field"
+          ]
+        },
+        {
+          "questionAsked": "Got it — you connected the live modules, ran the real booking flow, and observed a failure: after selecting a different slot the confirmation still showed the previous slot. Can you reproduce that stale-confirmation bug reliably and, before the next session, re-run the flow while checking whether the selected slot ID sent to the server (network request or server log) matches the slot you chose? Reply “Yes — will check” if feasible or “Need teacher help” if you can’t.",
+          "rejected": [
+            "executed_test_needs_method_and_observation",
+            "state_not_allowed_for_field",
+            "state_not_allowed_for_field"
+          ]
+        },
+        {
+          "questionAsked": "Thanks — got that you can’t rerun the journeys now and the fix isn’t finished. Can you push a branch or attach the failing network request / console log now so someone can reproduce the stale-confirmation locally?",
+          "rejected": [
+            "state_not_allowed_for_field",
+            "state_not_allowed_for_field",
+            "state_not_allowed_for_field"
+          ]
+        },
+        {
+          "questionAsked": "Got it — you can’t rerun the journeys right now and the fix isn’t finished. Can you push your current branch or attach the failing network request / console log now so someone else can reproduce the stale-confirmation?",
+          "rejected": [
+            "state_not_allowed_for_field",
+            "state_not_allowed_for_field"
+          ]
+        },
+        {
+          "questionAsked": "Got it — you can’t rerun the journeys right now and the fix isn’t finished. Can you push your current branch or attach the failing network request / console log now so someone else can reproduce the stale-confirmation?",
+          "rejected": [
+            "state_not_allowed_for_field",
+            "student_source_not_uniquely_grounded"
+          ]
+        },
+        {
+          "questionAsked": "Understood — you can’t rerun the journeys and the fix isn’t finished. Can you push your current branch now so someone else can reproduce the stale-confirmation, or do you need teacher help?",
+          "rejected": [
+            "state_not_allowed_for_field"
+          ]
+        }
+      ],
+      "routingAmbiguities_CAPTURED": [
+        {
+          "turn": 5,
+          "type": "run_now_declined_no_fabrication",
+          "question": "Got it — you connected the live modules, ran the real booking flow, and observed a failure: after selecting a different slot the confirmation still showed the previous slot. Can you reproduce that stale-confirmation bug reliably and, before the next session, re-run the flow while checking whether the selected slot ID sent to the server (network request or server log) matches the slot you chose? Reply “Yes — will check” if feasible or “Need teacher help” if you can’t.",
+          "pendingAdjudication": false
+        },
+        {
+          "turn": 7,
+          "type": "run_now_declined_no_fabrication",
+          "question": "Thanks — got that you can’t rerun the journeys now and the fix isn’t finished. Can you push a branch or attach the failing network request / console log now so someone can reproduce the stale-confirmation locally?",
+          "pendingAdjudication": false
+        },
+        {
+          "turn": 9,
+          "type": "run_now_declined_no_fabrication",
+          "question": "Got it — you can’t rerun the journeys right now and the fix isn’t finished. Can you push your current branch or attach the failing network request / console log now so someone else can reproduce the stale-confirmation?",
+          "pendingAdjudication": false
+        },
+        {
+          "turn": 11,
+          "type": "run_now_declined_no_fabrication",
+          "question": "Got it — you can’t rerun the journeys right now and the fix isn’t finished. Can you push your current branch or attach the failing network request / console log now so someone else can reproduce the stale-confirmation?",
+          "pendingAdjudication": false
+        },
+        {
+          "turn": 13,
+          "type": "run_now_declined_no_fabrication",
+          "question": "Understood — you can’t rerun the journeys and the fix isn’t finished. Can you push your current branch now so someone else can reproduce the stale-confirmation, or do you need teacher help?",
+          "pendingAdjudication": false
+        },
+        {
+          "turn": 15,
+          "type": "run_now_declined_no_fabrication",
+          "question": "Understood — you can’t rerun the journeys right now and the fix isn’t finished. Can you push your current branch to the remote repo now so a teammate can reproduce? Reply “Yes — will push” or “Need teacher help”.",
+          "pendingAdjudication": false
+        }
+      ],
+      "reviewStageCorrections_CAPTURED": [
+        {
+          "field": "dueSession",
+          "before": "",
+          "after": "S4",
+          "provenance": "ui_default_due_session (production main.tsx uses a Session <select> default)"
+        },
+        {
+          "field": "nextAction",
+          "before": "",
+          "after": "Check UI handling with B and rerun both the normal and changed-slot journeys after fixing",
+          "provenance": "student_authorized_next_action"
+        },
+        {
+          "field": "expectedEvidence",
+          "before": "",
+          "after": "updated booking-integration log showing both journeys rerun",
+          "provenance": "student_authorized_expected_evidence"
+        },
+        {
+          "field": "responsibility",
+          "before": "",
+          "after": "I own the booking UI",
+          "provenance": "student_authorized_responsibility"
+        }
+      ],
+      "resultingRecord_DERIVED": {
+        "responsibility": "I own the booking UI",
+        "progress": "Cannot rerun the journeys right now; the fix is not done yet.",
+        "progressKind": "investigated",
+        "scope": "",
+        "completionPercent": null,
+        "evidenceType": "other",
+        "evidenceAvailability": "unknown",
+        "evidenceReference": "",
+        "verificationMethod": "",
+        "testingStatus": "unknown",
+        "testingMethod": "",
+        "testingResult": "",
+        "testingBaseline": "",
+        "blockerStatus": "active",
+        "blockerDescription": "Fix incomplete — student cannot complete rerun to reproduce the issue now.",
+        "supportRequested": "",
+        "nextAction": "Check UI handling with B and rerun both the normal and changed-slot journeys after fixing",
+        "dueSession": "S4",
+        "expectedEvidence": "updated booking-integration log showing both journeys rerun"
+      },
+      "turnLoopCandidate_DERIVED": {
+        "responsibility": "",
+        "progress": "Cannot rerun the journeys right now; the fix is not done yet.",
+        "progressKind": "investigated",
+        "scope": "",
+        "completionPercent": null,
+        "evidenceType": "other",
+        "evidenceAvailability": "unknown",
+        "evidenceReference": "",
+        "verificationMethod": "",
+        "testingStatus": "unknown",
+        "testingMethod": "",
+        "testingResult": "",
+        "testingBaseline": "",
+        "blockerStatus": "active",
+        "blockerDescription": "Fix incomplete — student cannot complete rerun to reproduce the issue now.",
+        "supportRequested": "",
+        "nextAction": "",
+        "dueSession": "",
+        "expectedEvidence": ""
+      },
+      "persistence": {
+        "attempted": true,
+        "ok": false,
+        "error": "Session Intake evidence is incomplete",
+        "recordValid": false,
+        "recordErrors": [
+          "one or more claims are invalid",
+          "evidence references an unknown claim"
+        ],
+        "corrections": [
+          {
+            "field": "dueSession",
+            "before": "",
+            "after": "S4",
+            "provenance": "ui_default_due_session (production main.tsx uses a Session <select> default)"
+          },
+          {
+            "field": "nextAction",
+            "before": "",
+            "after": "Check UI handling with B and rerun both the normal and changed-slot journeys after fixing",
+            "provenance": "student_authorized_next_action"
+          },
+          {
+            "field": "expectedEvidence",
+            "before": "",
+            "after": "updated booking-integration log showing both journeys rerun",
+            "provenance": "student_authorized_expected_evidence"
+          },
+          {
+            "field": "responsibility",
+            "before": "",
+            "after": "I own the booking UI",
+            "provenance": "student_authorized_responsibility"
+          }
+        ]
+      },
+      "note": "CAPTURED = original run data retained in the trace. DERIVED = computed by the benchmark driver/decideTurn, NOT the raw provider response. The raw provider response and parsed candidate for this Session are MISSING (see report)."
+    },
+    "S4": {
+      "sessionKey": "S4",
+      "provider": "ok",
+      "capturedConversation_input": [
+        {
+          "actor": "system",
+          "purpose": "session starting point",
+          "text": "This is S4. What did you personally work on since the previous class, and what changed?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I changed the UI handling and B adjusted the response."
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "text": "Thanks — you said you changed the UI handling and that B adjusted the response. Can you either share the commit/PR link for your UI change or, if there is no link, briefly describe the exact UI behavior change and the page/steps to see it?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "The references are in booking-retest-s4.md; I have not recorded a separate repo path."
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "text": "Thanks — you referenced booking-retest-s4.md. Please paste the exact lines from that file that describe the UI behavior change and the page/steps to reproduce it."
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "Normal booking saved correctly on rerun. The changed-slot journey has not been rerun after the fix."
+        },
+        {
+          "actor": "system",
+          "purpose": "small_step",
+          "text": "Thanks — I see booking-retest-s4.md says: “Normal booking saved correctly on rerun. The changed-slot journey has not been rerun after the fix.” Can you rerun the changed-slot journey now and paste the exact steps you followed plus the observed result into booking-retest-s4.md, then tell me when that’s done?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I cannot rerun the changed-slot journey right now; that is still open."
+        },
+        {
+          "actor": "system",
+          "purpose": "small_step",
+          "text": "Acknowledged — you changed UI handling and referenced booking-retest-s4.md which says: “Normal booking saved correctly on rerun. The changed-slot journey has not been rerun after the fix.” You said you cannot rerun the changed-slot journey right now. Do you want me to route this to the teacher for help rerunning the changed-slot journey now, or will you be able to rerun it yourself before the next session?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I cannot rerun the changed-slot journey right now; that is still open."
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "text": "Acknowledged — you changed UI handling (B adjusted response) and referenced booking-retest-s4.md which says normal booking reran fine but the changed-slot journey has not been rerun. You said you cannot rerun the changed-slot journey right now. Do you want me to route this to the teacher now to rerun the changed-slot journey, or will you rerun it yourself before the next session?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I cannot rerun the changed-slot journey right now; that is still open."
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "text": "Acknowledged — booking-retest-s4.md notes normal booking reran but the changed-slot journey has not been rerun, and you cannot rerun it right now. Do you want me to route this to the teacher now so they can rerun/unblock the changed-slot journey, or will you rerun it before the next session?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I cannot rerun the changed-slot journey right now; that is still open."
+        },
+        {
+          "actor": "system",
+          "purpose": "review transition",
+          "text": "Review what you reported before confirming."
+        }
+      ],
+      "resolvedContext_available": {
+        "student": "t1bench01",
+        "block_code": "2B2",
+        "team_number": 4,
+        "project_name": "Booking portal",
+        "sessionIds": [
+          "06fc38a3-ff53-461a-b525-c80957f1c58f",
+          "bdb4b651-df62-4cae-90b5-6582241d94e7",
+          "e590fa1e-3717-4c97-9262-a1a2e6cc4967",
+          "e3f2de89-6011-4e2b-a40a-df4969f4bd1d"
+        ]
+      },
+      "rawProviderResponse": "MISSING — not captured (driver did not persist json.rawCandidate; endpoint store:false; no server-log capture)",
+      "parsedCandidate": "MISSING — endpoint returned json.rawCandidate but the benchmark driver did not store it",
+      "acceptedCandidates_DERIVED": [
+        {
+          "questionAsked": "Thanks — you said you changed the UI handling and that B adjusted the response. Can you either share the commit/PR link for your UI change or, if there is no link, briefly describe the exact UI behavior change and the page/steps to see it?",
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 1
+            },
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 1
+            },
+            {
+              "field": "scope",
+              "state": "student_claim",
+              "sourceTurn": 1
+            }
+          ]
+        },
+        {
+          "questionAsked": "Thanks — you referenced booking-retest-s4.md. Please paste the exact lines from that file that describe the UI behavior change and the page/steps to reproduce it.",
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 1
+            },
+            {
+              "field": "evidence",
+              "state": "available",
+              "sourceTurn": 3
+            }
+          ]
+        },
+        {
+          "questionAsked": "Thanks — I see booking-retest-s4.md says: “Normal booking saved correctly on rerun. The changed-slot journey has not been rerun after the fix.” Can you rerun the changed-slot journey now and paste the exact steps you followed plus the observed result into booking-retest-s4.md, then tell me when that’s done?",
+          "acceptedFields": [
+            {
+              "field": "scope",
+              "state": "student_claim",
+              "sourceTurn": 1
+            },
+            {
+              "field": "evidence",
+              "state": "available",
+              "sourceTurn": 5
+            }
+          ]
+        },
+        {
+          "questionAsked": "Acknowledged — you changed UI handling and referenced booking-retest-s4.md which says: “Normal booking saved correctly on rerun. The changed-slot journey has not been rerun after the fix.” You said you cannot rerun the changed-slot journey right now. Do you want me to route this to the teacher for help rerunning the changed-slot journey now, or will you be able to rerun it yourself before the next session?",
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 1
+            },
+            {
+              "field": "scope",
+              "state": "student_claim",
+              "sourceTurn": 1
+            },
+            {
+              "field": "evidence",
+              "state": "available",
+              "sourceTurn": 5
+            },
+            {
+              "field": "testing",
+              "state": "not_applicable",
+              "sourceTurn": 7
+            },
+            {
+              "field": "blocker",
+              "state": "student_claim",
+              "sourceTurn": 7
+            }
+          ]
+        },
+        {
+          "questionAsked": "Acknowledged — you changed UI handling (B adjusted response) and referenced booking-retest-s4.md which says normal booking reran fine but the changed-slot journey has not been rerun. You said you cannot rerun the changed-slot journey right now. Do you want me to route this to the teacher now to rerun the changed-slot journey, or will you rerun it yourself before the next session?",
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 1
+            },
+            {
+              "field": "scope",
+              "state": "student_claim",
+              "sourceTurn": 1
+            },
+            {
+              "field": "evidence",
+              "state": "available",
+              "sourceTurn": 5
+            }
+          ]
+        },
+        {
+          "questionAsked": "Acknowledged — booking-retest-s4.md notes normal booking reran but the changed-slot journey has not been rerun, and you cannot rerun it right now. Do you want me to route this to the teacher now so they can rerun/unblock the changed-slot journey, or will you rerun it before the next session?",
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 1
+            },
+            {
+              "field": "scope",
+              "state": "student_claim",
+              "sourceTurn": 1
+            },
+            {
+              "field": "evidence",
+              "state": "available",
+              "sourceTurn": 5
+            },
+            {
+              "field": "blocker",
+              "state": "student_claim",
+              "sourceTurn": 11
+            }
+          ]
+        },
+        {
+          "questionAsked": "Review your request for Teacher help and the evidence captured so far before confirming.",
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 1
+            },
+            {
+              "field": "evidence",
+              "state": "available",
+              "sourceTurn": 5
+            },
+            {
+              "field": "blocker",
+              "state": "needs_teacher",
+              "sourceTurn": 13
+            }
+          ]
+        }
+      ],
+      "rejectedReasons_DERIVED": [
+        {
+          "questionAsked": "Thanks — you said you changed the UI handling and that B adjusted the response. Can you either share the commit/PR link for your UI change or, if there is no link, briefly describe the exact UI behavior change and the page/steps to see it?",
+          "rejected": [
+            "student_source_not_uniquely_grounded"
+          ]
+        },
+        {
+          "questionAsked": "Thanks — you referenced booking-retest-s4.md. Please paste the exact lines from that file that describe the UI behavior change and the page/steps to reproduce it.",
+          "rejected": [
+            "state_not_allowed_for_field",
+            "state_not_allowed_for_field",
+            "student_source_not_uniquely_grounded",
+            "state_not_allowed_for_field"
+          ]
+        },
+        {
+          "questionAsked": "Thanks — I see booking-retest-s4.md says: “Normal booking saved correctly on rerun. The changed-slot journey has not been rerun after the fix.” Can you rerun the changed-slot journey now and paste the exact steps you followed plus the observed result into booking-retest-s4.md, then tell me when that’s done?",
+          "rejected": [
+            "invalid_value_or_shape",
+            "state_not_allowed_for_field",
+            "state_not_allowed_for_field"
+          ]
+        },
+        {
+          "questionAsked": "Acknowledged — you changed UI handling and referenced booking-retest-s4.md which says: “Normal booking saved correctly on rerun. The changed-slot journey has not been rerun after the fix.” You said you cannot rerun the changed-slot journey right now. Do you want me to route this to the teacher for help rerunning the changed-slot journey now, or will you be able to rerun it yourself before the next session?",
+          "rejected": [
+            "state_not_allowed_for_field",
+            "state_not_allowed_for_field",
+            "state_not_allowed_for_field"
+          ]
+        },
+        {
+          "questionAsked": "Acknowledged — you changed UI handling (B adjusted response) and referenced booking-retest-s4.md which says normal booking reran fine but the changed-slot journey has not been rerun. You said you cannot rerun the changed-slot journey right now. Do you want me to route this to the teacher now to rerun the changed-slot journey, or will you rerun it yourself before the next session?",
+          "rejected": [
+            "state_not_allowed_for_field",
+            "state_not_allowed_for_field",
+            "state_not_allowed_for_field"
+          ]
+        },
+        {
+          "questionAsked": "Acknowledged — booking-retest-s4.md notes normal booking reran but the changed-slot journey has not been rerun, and you cannot rerun it right now. Do you want me to route this to the teacher now so they can rerun/unblock the changed-slot journey, or will you rerun it before the next session?",
+          "rejected": [
+            "state_not_allowed_for_field",
+            "state_not_allowed_for_field",
+            "student_source_not_uniquely_grounded",
+            "state_not_allowed_for_field"
+          ]
+        },
+        {
+          "questionAsked": "Review your request for Teacher help and the evidence captured so far before confirming.",
+          "rejected": [
+            "state_not_allowed_for_field"
+          ]
+        }
+      ],
+      "routingAmbiguities_CAPTURED": [
+        {
+          "turn": 3,
+          "type": "repo_path_honest_no_leak",
+          "question": "Thanks — you said you changed the UI handling and that B adjusted the response. Can you either share the commit/PR link for your UI change or, if there is no link, briefly describe the exact UI behavior change and the page/steps to see it?",
+          "pendingAdjudication": false
+        },
+        {
+          "turn": 7,
+          "type": "run_now_declined_no_fabrication",
+          "question": "Thanks — I see booking-retest-s4.md says: “Normal booking saved correctly on rerun. The changed-slot journey has not been rerun after the fix.” Can you rerun the changed-slot journey now and paste the exact steps you followed plus the observed result into booking-retest-s4.md, then tell me when that’s done?",
+          "pendingAdjudication": false
+        },
+        {
+          "turn": 9,
+          "type": "run_now_declined_no_fabrication",
+          "question": "Acknowledged — you changed UI handling and referenced booking-retest-s4.md which says: “Normal booking saved correctly on rerun. The changed-slot journey has not been rerun after the fix.” You said you cannot rerun the changed-slot journey right now. Do you want me to route this to the teacher for help rerunning the changed-slot journey now, or will you be able to rerun it yourself before the next session?",
+          "pendingAdjudication": false
+        },
+        {
+          "turn": 11,
+          "type": "run_now_declined_no_fabrication",
+          "question": "Acknowledged — you changed UI handling (B adjusted response) and referenced booking-retest-s4.md which says normal booking reran fine but the changed-slot journey has not been rerun. You said you cannot rerun the changed-slot journey right now. Do you want me to route this to the teacher now to rerun the changed-slot journey, or will you rerun it yourself before the next session?",
+          "pendingAdjudication": false
+        },
+        {
+          "turn": 13,
+          "type": "run_now_declined_no_fabrication",
+          "question": "Acknowledged — booking-retest-s4.md notes normal booking reran but the changed-slot journey has not been rerun, and you cannot rerun it right now. Do you want me to route this to the teacher now so they can rerun/unblock the changed-slot journey, or will you rerun it before the next session?",
+          "pendingAdjudication": false
+        }
+      ],
+      "reviewStageCorrections_CAPTURED": [
+        {
+          "field": "dueSession",
+          "before": "",
+          "after": "S5",
+          "provenance": "ui_default_due_session (production main.tsx uses a Session <select> default)"
+        },
+        {
+          "field": "nextAction",
+          "before": "",
+          "after": "Rerun the changed-slot journey before the final demo and add the result",
+          "provenance": "student_authorized_next_action"
+        },
+        {
+          "field": "expectedEvidence",
+          "before": "",
+          "after": "changed-slot rerun result added to booking-retest-s4.md",
+          "provenance": "student_authorized_expected_evidence"
+        },
+        {
+          "field": "verificationMethod",
+          "before": "",
+          "after": "Teacher reviews booking-retest-s4.md for the normal run and the pending changed-slot retest",
+          "provenance": "student_authorized_verification"
+        },
+        {
+          "field": "responsibility",
+          "before": "",
+          "after": "I own the booking UI",
+          "provenance": "student_authorized_responsibility"
+        }
+      ],
+      "resultingRecord_DERIVED": {
+        "responsibility": "I own the booking UI",
+        "progress": "Changed UI handling; B adjusted the response",
+        "progressKind": "no_progress",
+        "scope": "UI handling (unspecified components/pages)",
+        "completionPercent": null,
+        "evidenceType": "documentation",
+        "evidenceAvailability": "available_now",
+        "evidenceReference": "\"Normal booking saved correctly on rerun. The changed-slot journey has not been rerun after the fix.\" (booking-retest-s4.md)",
+        "verificationMethod": "Teacher reviews booking-retest-s4.md for the normal run and the pending changed-slot retest",
+        "testingStatus": "not_applicable",
+        "testingMethod": "",
+        "testingResult": "",
+        "testingBaseline": "",
+        "blockerStatus": "active",
+        "blockerDescription": "Cannot rerun the changed-slot journey right now; that is still open",
+        "supportRequested": "Cannot rerun the changed-slot journey right now; that is still open",
+        "nextAction": "Rerun the changed-slot journey before the final demo and add the result",
+        "dueSession": "S5",
+        "expectedEvidence": "changed-slot rerun result added to booking-retest-s4.md"
+      },
+      "turnLoopCandidate_DERIVED": {
+        "responsibility": "",
+        "progress": "Changed UI handling; B adjusted the response",
+        "progressKind": "no_progress",
+        "scope": "UI handling (unspecified components/pages)",
+        "completionPercent": null,
+        "evidenceType": "documentation",
+        "evidenceAvailability": "available_now",
+        "evidenceReference": "\"Normal booking saved correctly on rerun. The changed-slot journey has not been rerun after the fix.\" (booking-retest-s4.md)",
+        "verificationMethod": "",
+        "testingStatus": "not_applicable",
+        "testingMethod": "",
+        "testingResult": "",
+        "testingBaseline": "",
+        "blockerStatus": "active",
+        "blockerDescription": "Cannot rerun the changed-slot journey right now; that is still open",
+        "supportRequested": "Cannot rerun the changed-slot journey right now; that is still open",
+        "nextAction": "",
+        "dueSession": "",
+        "expectedEvidence": ""
+      },
+      "persistence": {
+        "attempted": true,
+        "ok": true,
+        "error": null,
+        "recordValid": true,
+        "recordErrors": [],
+        "corrections": [
+          {
+            "field": "dueSession",
+            "before": "",
+            "after": "S5",
+            "provenance": "ui_default_due_session (production main.tsx uses a Session <select> default)"
+          },
+          {
+            "field": "nextAction",
+            "before": "",
+            "after": "Rerun the changed-slot journey before the final demo and add the result",
+            "provenance": "student_authorized_next_action"
+          },
+          {
+            "field": "expectedEvidence",
+            "before": "",
+            "after": "changed-slot rerun result added to booking-retest-s4.md",
+            "provenance": "student_authorized_expected_evidence"
+          },
+          {
+            "field": "verificationMethod",
+            "before": "",
+            "after": "Teacher reviews booking-retest-s4.md for the normal run and the pending changed-slot retest",
+            "provenance": "student_authorized_verification"
+          },
+          {
+            "field": "responsibility",
+            "before": "",
+            "after": "I own the booking UI",
+            "provenance": "student_authorized_responsibility"
+          }
+        ],
+        "saved": {
+          "intakeId": "f477a3b7-e250-47d2-bb62-11b958ead5e9",
+          "sourceMode": "ai_assisted",
+          "confirmedAt": "2026-10-03T00:52:04.605588+00:00",
+          "promptVersion": "session-intake-ai.v1.3.0",
+          "schemaVersion": "session-intake.v1.1.0",
+          "confirmedPayloadHash": "41a55acb5297824bf3f919e2487d651f"
+        }
+      },
+      "note": "CAPTURED = original run data retained in the trace. DERIVED = computed by the benchmark driver/decideTurn, NOT the raw provider response. The raw provider response and parsed candidate for this Session are MISSING (see report)."
+    }
+  }
+}

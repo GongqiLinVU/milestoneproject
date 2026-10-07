@@ -51,3 +51,13 @@ Harness v1 adds de-identified recorded cases in `recorded-cases.json` and the
 field-decision regression suite. The S3 source-error candidate is reconstructed
 because the actual provider response was absent from the exported Debug trace.
 See `docs/sprints/sprint-08/PHASE2C_HARNESS.md` for acceptance levels and gates.
+
+Harness v2 (`recorded-cases-v2.json`, tested by `policy-v2.test.mjs`, run
+automatically by the `*.test.mjs` glob above) adds realistic *multi-turn*
+scenarios chained turn-by-turn (`decideTurn`'s `answers` from turn N feed
+turn N+1's `current`, matching how `src/main.tsx` actually calls it): a
+continuing chat that ends in a provider fallback (reproducing
+`session-intake-debug-S9 (4).json`), a quick accepted-close well under
+budget, a mid-conversation Teacher-help escalation, and a full eight-question
+budget exhaustion with no clear evidence. `MAX_INTAKE_QUESTIONS` stays 8;
+v2 does not change the question budget, only adds coverage for it.

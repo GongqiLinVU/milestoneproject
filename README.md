@@ -26,6 +26,10 @@ The current module guides students through a four-week journey:
 - six-step Week 2 wizard with local draft recovery and read-only completion
 - Published Week 4 Presentation Order
 - duplicate and own-team review prevention
+- guided AI Session Intake (Sprint 8, pilot) — a bounded evidence interview that
+  captures responsibility, evidence/verification and blocker/next action, with
+  student confirmation and a deterministic fallback when the AI provider is
+  unavailable
 
 ### Teacher dashboard
 
@@ -107,6 +111,8 @@ Import this GitHub repository into Vercel and configure:
 - `VITE_SUPABASE_PUBLISHABLE_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY` (server-only; required by student account
   provisioning/login/recovery endpoints)
+- `OPENAI_API_KEY` (server-only; used by the AI Session Intake endpoint. When
+  absent, Session Intake serves its deterministic fallback rather than failing)
 
 Every push to `main` triggers a production deployment.
 
@@ -122,15 +128,30 @@ Every push to `main` triggers a production deployment.
 
 ## Current status
 
-Sprint 6 is closed after Production build, database security audit and role-based
-workflow regression all passed on 12 August 2026. Poster storage is private and
-limited to one-page PDF/PNG/JPEG files at or below 1 MB; Sprint 6 RPCs reject
-anonymous execution at the privilege boundary. Trajectory, Block Teaching
-Analytics, enhanced exports and further AI-assisted teaching work are deferred
-to Sprint 7.
+Sprints 1–6 are closed and production validated. Sprint 6 closed on 12 August
+2026 after Production build, database security audit and role-based workflow
+regression all passed. Sprint 7 completed a read-only observation of the full
+2026 · 2B1 journey, establishing that report text and self-reported completion
+cannot be treated as verified participation — Teacher Review and specific work
+evidence were decisive.
 
-See the [Sprint 6 plan](docs/sprints/sprint-06/PLAN.md), current
-[handoff](docs/sprints/sprint-06/HANDOFF.md), and reusable
+The active sprint is **Sprint 8 — AI Session Intake & Evidence Verification**.
+It pilots a bounded, guided AI Session Intake that turns a short adaptive
+evidence interview into a structured Progress Report using a versioned
+Claim / Evidence / Owner / Verification / Action model. Phase 1, Phase 2A and
+Phase 2B are merged to `main`. Phase 2C (the conversational Intake workspace,
+adaptive follow-up policy and read-only Visual Harness Debug replay tool)
+remains an open Draft under active development; its database audit and
+authenticated Preview submission are still pending, and merge is gated on
+mock-student validation.
+
+AI does not publish marks, determine authorship, accuse copying, or replace
+live demonstration and Teacher academic judgement. When the AI provider is
+unavailable, Session Intake preserves the student's answers and serves a
+deterministic fallback.
+
+See the [Sprint 8 plan](docs/sprints/sprint-08/PLAN.md), current
+[handoff](docs/sprints/sprint-08/HANDOFF.md), and reusable
 [session start protocol](prompts/START_SESSION.md).
 
 

@@ -1,0 +1,63 @@
+{
+  "schema": "intake-adjudicated-review.v2",
+  "references": {
+    "liveTrace": "tests/ai-session-intake/replay/out/dynamic-t1-live.json",
+    "preservedPriorTrace": "tests/ai-session-intake/replay/out/dynamic-t1-live.PRE-065-RUN.json",
+    "gold": "tests/ai-session-intake/replay/gold-t1.json",
+    "scoringVersion": "intake-crs-scoring.v1.1"
+  },
+  "method": "C scored against the ENTIRE conversation text (one student answer may establish multiple facts); routed disclosure IDs are NOT the scoring authority. Review-stage additions excluded from C. R scored against the pre-review record (turnLoopCandidate) for faithful retention, ownership, execution status, results and contradictions; a keyword/accepted-field alone does not earn 2. R before vs after correction kept separate. Anchors 2/1/0 unchanged. Semantic-uncertainty items flagged for human review.",
+  "candidateStateNote": "turnLoopCandidate = Intake extraction BEFORE student review. candidateConfirmedOutput = after review correction. The run's dominant artifact is a SIMULATOR defect (repo-path/run-now answers repeated 4-8x, overriding later questions), which starved collection — see routingProvenanceNotes.",
+  "sessions": {
+    "S1": {
+      "provider": "ok",
+      "facts": [
+        {"id":"T1S1-C1","metric":"C","sourceTurns":[1],"text":"I own the booking UI ... drawing the flow; no UI is built yet.","score":2,"reason":"Ownership elicited (U1)."},
+        {"id":"T1S1-C1","metric":"R_pre","value":"responsibility=\"Booking UI\"","score":2,"reason":"Ownership retained."},
+        {"id":"T1S1-C2","metric":"C","sourceTurns":[1],"text":"I am drawing the flow; no UI is built yet.","score":2,"reason":"Design-vs-implementation elicited in U1 (one answer establishes C1 and C2)."},
+        {"id":"T1S1-C2","metric":"R_pre","value":"progress=\"Drawing the flow; no UI built yet\" progressKind=no_progress","score":1,"reason":"Progress text keeps design/no-UI, but progressKind=no_progress CONTRADICTS 'drawing the flow' (design work in progress). Materially ambiguous ownership of progress state."},
+        {"id":"T1S1-C3","metric":"C","sourceTurns":[],"text":"(never asked/answered — simulator stuck on repo-path)","score":0,"reason":"API-format dependency never elicited (collection gap)."},
+        {"id":"T1S1-C4","metric":"C","sourceTurns":[1],"text":"booking-flow-v1.pdf (named in U1 and repeated)","score":1,"reason":"Evidence route partially established: the filename was named, but availability/verification route was never clarified because follow-ups were consumed by the repeated repo-path answer. FLAG: human review of partial credit."},
+        {"id":"T1S1-C4","metric":"R_pre","value":"evidenceReference=booking-flow-v1.pdf, availability=available_now, verificationMethod=\"\"","score":1,"reason":"Reference retained but available_now with EMPTY verification is internally inconsistent for a design artifact."},
+        {"id":"T1S1-C5","metric":"C","sourceTurns":[],"text":"(next step never elicited)","score":0,"reason":"Accepted next step not elicited (collection gap)."}
+      ]
+    },
+    "S3": {
+      "provider": "ok",
+      "facts": [
+        {"id":"T1S3-C1","metric":"C","sourceTurns":[1],"text":"We connected the live modules and attempted the real flow.","score":2,"reason":"Integration-attempted elicited (U1)."},
+        {"id":"T1S3-C1","metric":"R_pre","value":"progress=\"Cannot rerun the journeys right now; the fix is not done yet.\"","score":0,"reason":"LOST INTEGRATION FACT: the pre-review progress records only the 'cannot rerun now' statement; the connected-live-modules fact from U1 is NOT retained in the record."},
+        {"id":"T1S3-C2","metric":"C","sourceTurns":[],"text":"(normal-path outcome never elicited)","score":0,"reason":"Normal booking success was never asked; collection gap."},
+        {"id":"T1S3-C3","metric":"C","sourceTurns":[2],"text":"after selecting another slot, the confirmation showed the old one. That path failed.","score":2,"reason":"Changed-slot failure elicited (U2)."},
+        {"id":"T1S3-C3","metric":"R_pre","value":"testingStatus=unknown, testingResult=\"\"","score":0,"reason":"FAILED-TEST FACT LOST: the changed-slot failure disclosed in U2 is NOT retained — testing is 'unknown' with no result. Critical recording failure."},
+        {"id":"T1S3-C4","metric":"C","sourceTurns":[3],"text":"the fix is not done yet (cause not isolated implied)","score":1,"reason":"Root-cause-unresolved only weakly implied via 'fix not done'; UI-vs-API isolation never elicited. FLAG for human review."},
+        {"id":"T1S3-C5","metric":"C","sourceTurns":[],"text":"(retest/next step not cleanly elicited; U3-U8 were repeated 'cannot rerun')","score":0,"reason":"Next step / evidence route not elicited; simulator stuck."}
+      ]
+    },
+    "S4": {
+      "provider": "ok",
+      "facts": [
+        {"id":"T1S4-C1","metric":"C","sourceTurns":[1],"text":"I changed the UI handling and B adjusted the response.","score":2,"reason":"What-changed elicited (U1)."},
+        {"id":"T1S4-C1","metric":"R_pre","value":"progress=\"Changed UI handling; B adjusted the response\" progressKind=no_progress","score":1,"reason":"OWNERSHIP OK but CONTRADICTION: progressKind=no_progress contradicts a reported own UI change. Materially inconsistent."},
+        {"id":"T1S4-C3","metric":"C","sourceTurns":[3],"text":"Normal booking saved correctly on rerun. The changed-slot journey has not been rerun after the fix.","score":2,"reason":"Executed-vs-unexecuted retest elicited (U3): normal executed + passed, changed-slot not rerun."},
+        {"id":"T1S4-C3","metric":"R_pre","value":"testingStatus=not_applicable, testingResult=\"\"","score":0,"reason":"CONTRADICTORY/LOST TESTING: the student reported an EXECUTED normal retest that passed and an UNEXECUTED changed-slot retest, but the record marks testing not_applicable with no result. Both the executed pass and the unexecuted-retest distinction are lost; not_applicable contradicts U3."},
+        {"id":"T1S4-C2","metric":"C","sourceTurns":[3],"text":"The changed-slot journey has not been rerun after the fix.","score":1,"reason":"Correction/incompleteness partially elicited (U3 states not rerun), but no explicit 'I previously said complete, that was wrong' correction occurred this run. FLAG for human review on whether this satisfies the S4 correction target."},
+        {"id":"T1S4-C4","metric":"C","sourceTurns":[2],"text":"The references are in booking-retest-s4.md","score":2,"reason":"Evidence route (filename) elicited (U2) — a valid filename/report route."},
+        {"id":"T1S4-C4","metric":"R_pre","value":"evidenceReference=booking-retest-s4.md, available_now, verification=\"\"","score":1,"reason":"Reference retained; available_now with empty verification inconsistent."},
+        {"id":"T1S4-C5","metric":"C","sourceTurns":[],"text":"(next step not elicited; U4-U7 repeated 'cannot rerun')","score":0,"reason":"Next action not elicited; simulator stuck."}
+      ]
+    }
+  },
+  "R_before_after": {
+    "note": "R before = pre-review record (turnLoopCandidate). R after = post student review correction. Review only supplied missing REQUIRED fields (dueSession/nextAction/expectedEvidence/verification/responsibility/scope-not-filled) from authorized facts; it did NOT repair the lost/contradicted facts above, so the contradictions persist after correction.",
+    "S1": {"R_before_disclosed": "C1=2,C2=1,C4=1 -> partial", "R_after": "same contradictions remain; corrections added next/verification/responsibility only"},
+    "S3": {"R_before_disclosed": "C1=0,C3=0 -> integration+failed-test LOST", "R_after": "unchanged for those facts; corrections cannot recover a dropped elicited fact"},
+    "S4": {"R_before_disclosed": "C1=1,C3=0,C4=1 -> testing contradiction", "R_after": "testing contradiction remains; review does not fix progressKind/testingStatus"}
+  },
+  "routingProvenanceNotes": {
+    "dominantDefect": "SIMULATOR, not model: the deterministic student answer-bank repeated a single honest answer 4-8 times (S1 repo-path x7; S3 'cannot rerun' x6; S4 'cannot rerun' x4) because repo-path/run-now keyword rules fired regardless of the model's actual (changed) question. This starved collection of C3/C4/C5 facts.",
+    "validDisclosures": "S1-C1/C2 (U1), S3-C1 (U1)/C3 (U2), S4-C1 (U1)/C3 (U3)/C4 (U2).",
+    "flaggedForHumanReview": ["S1-C4 partial", "S3-C4 weak implication", "S4-C2 whether incompleteness statement satisfies the correction target"]
+  },
+  "falsePositivesVsDriver": "The driver's own C already scored these as gaps (C perFact matches), so no C false positive here. The adjudication ADDS the R failures the driver's R=100 masked: S3 integration+failed-test lost (R should be 0 for those), S4 testing contradiction (R 0), S1 progressKind contradiction (R 1). The driver's R=100 reflected only the FEW facts it scored, not these lost/contradicted facts — recorded here for human review."
+}

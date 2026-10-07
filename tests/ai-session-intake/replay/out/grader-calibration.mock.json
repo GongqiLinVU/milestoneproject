@@ -1,0 +1,828 @@
+{
+  "schema": "intake-grader-calibration.v3",
+  "mode": "offline_mock_mechanism_test",
+  "status": "complete",
+  "failure": null,
+  "disclaimer": "MOCK mechanism test only — NOT live LLM calibration; a real grader will differ.",
+  "graderProvider": "deepseek",
+  "calibrationSource": "out/dynamic-t1-live.PRE-065-RUN.json",
+  "calibratedSessions": [
+    "S1",
+    "S3",
+    "S4"
+  ],
+  "completedSessions": [
+    "S1",
+    "S3",
+    "S4"
+  ],
+  "attemptedSessions": [
+    "S1",
+    "S3",
+    "S4"
+  ],
+  "graderInputExcludedReferenceScores": true,
+  "cAgreement": 53,
+  "rAgreement": 13,
+  "agreementCounts": {
+    "C": {
+      "agreed": 8,
+      "judged": 15
+    },
+    "R": {
+      "agreed": 1,
+      "judged": 8
+    },
+    "invalidEvidenceFacts": [],
+    "uncertainFacts": [
+      "T1S1-C5"
+    ],
+    "humanReviewFacts": [
+      "T1S1-C5"
+    ]
+  },
+  "disagreements": [
+    {
+      "sessionKey": "S1",
+      "factId": "T1S1-C2",
+      "c_grader": 2,
+      "c_ref": 2,
+      "c_match": true,
+      "r_grader": 2,
+      "r_ref": 1,
+      "r_match": false,
+      "uncertain": false
+    },
+    {
+      "sessionKey": "S1",
+      "factId": "T1S1-C3",
+      "c_grader": 2,
+      "c_ref": 0,
+      "c_match": false,
+      "r_grader": 2,
+      "r_ref": null,
+      "r_match": null,
+      "uncertain": false
+    },
+    {
+      "sessionKey": "S1",
+      "factId": "T1S1-C4",
+      "c_grader": 0,
+      "c_ref": 1,
+      "c_match": false,
+      "r_grader": 2,
+      "r_ref": 1,
+      "r_match": false,
+      "uncertain": false
+    },
+    {
+      "sessionKey": "S1",
+      "factId": "T1S1-C5",
+      "c_grader": 2,
+      "c_ref": 0,
+      "c_match": false,
+      "r_grader": 0,
+      "r_ref": null,
+      "r_match": null,
+      "uncertain": true
+    },
+    {
+      "sessionKey": "S3",
+      "factId": "T1S3-C1",
+      "c_grader": 2,
+      "c_ref": 2,
+      "c_match": true,
+      "r_grader": 2,
+      "r_ref": 0,
+      "r_match": false,
+      "uncertain": false
+    },
+    {
+      "sessionKey": "S3",
+      "factId": "T1S3-C2",
+      "c_grader": 2,
+      "c_ref": 0,
+      "c_match": false,
+      "r_grader": 2,
+      "r_ref": null,
+      "r_match": null,
+      "uncertain": false
+    },
+    {
+      "sessionKey": "S3",
+      "factId": "T1S3-C3",
+      "c_grader": 2,
+      "c_ref": 2,
+      "c_match": true,
+      "r_grader": 2,
+      "r_ref": 0,
+      "r_match": false,
+      "uncertain": false
+    },
+    {
+      "sessionKey": "S3",
+      "factId": "T1S3-C4",
+      "c_grader": 2,
+      "c_ref": 1,
+      "c_match": false,
+      "r_grader": 2,
+      "r_ref": null,
+      "r_match": null,
+      "uncertain": false
+    },
+    {
+      "sessionKey": "S3",
+      "factId": "T1S3-C5",
+      "c_grader": 2,
+      "c_ref": 0,
+      "c_match": false,
+      "r_grader": 2,
+      "r_ref": null,
+      "r_match": null,
+      "uncertain": false
+    },
+    {
+      "sessionKey": "S4",
+      "factId": "T1S4-C1",
+      "c_grader": 2,
+      "c_ref": 2,
+      "c_match": true,
+      "r_grader": 2,
+      "r_ref": 1,
+      "r_match": false,
+      "uncertain": false
+    },
+    {
+      "sessionKey": "S4",
+      "factId": "T1S4-C2",
+      "c_grader": 2,
+      "c_ref": 1,
+      "c_match": false,
+      "r_grader": 2,
+      "r_ref": null,
+      "r_match": null,
+      "uncertain": false
+    },
+    {
+      "sessionKey": "S4",
+      "factId": "T1S4-C3",
+      "c_grader": 2,
+      "c_ref": 2,
+      "c_match": true,
+      "r_grader": 2,
+      "r_ref": 0,
+      "r_match": false,
+      "uncertain": false
+    },
+    {
+      "sessionKey": "S4",
+      "factId": "T1S4-C4",
+      "c_grader": 2,
+      "c_ref": 2,
+      "c_match": true,
+      "r_grader": 2,
+      "r_ref": 1,
+      "r_match": false,
+      "uncertain": false
+    }
+  ],
+  "allComparisonRows": [
+    {
+      "sessionKey": "S1",
+      "factId": "T1S1-C1",
+      "c_grader": 2,
+      "c_ref": 2,
+      "c_match": true,
+      "r_grader": 2,
+      "r_ref": 2,
+      "r_match": true,
+      "uncertain": false
+    },
+    {
+      "sessionKey": "S1",
+      "factId": "T1S1-C2",
+      "c_grader": 2,
+      "c_ref": 2,
+      "c_match": true,
+      "r_grader": 2,
+      "r_ref": 1,
+      "r_match": false,
+      "uncertain": false
+    },
+    {
+      "sessionKey": "S1",
+      "factId": "T1S1-C3",
+      "c_grader": 2,
+      "c_ref": 0,
+      "c_match": false,
+      "r_grader": 2,
+      "r_ref": null,
+      "r_match": null,
+      "uncertain": false
+    },
+    {
+      "sessionKey": "S1",
+      "factId": "T1S1-C4",
+      "c_grader": 0,
+      "c_ref": 1,
+      "c_match": false,
+      "r_grader": 2,
+      "r_ref": 1,
+      "r_match": false,
+      "uncertain": false
+    },
+    {
+      "sessionKey": "S1",
+      "factId": "T1S1-C5",
+      "c_grader": 2,
+      "c_ref": 0,
+      "c_match": false,
+      "r_grader": 0,
+      "r_ref": null,
+      "r_match": null,
+      "uncertain": true
+    },
+    {
+      "sessionKey": "S3",
+      "factId": "T1S3-C1",
+      "c_grader": 2,
+      "c_ref": 2,
+      "c_match": true,
+      "r_grader": 2,
+      "r_ref": 0,
+      "r_match": false,
+      "uncertain": false
+    },
+    {
+      "sessionKey": "S3",
+      "factId": "T1S3-C2",
+      "c_grader": 2,
+      "c_ref": 0,
+      "c_match": false,
+      "r_grader": 2,
+      "r_ref": null,
+      "r_match": null,
+      "uncertain": false
+    },
+    {
+      "sessionKey": "S3",
+      "factId": "T1S3-C3",
+      "c_grader": 2,
+      "c_ref": 2,
+      "c_match": true,
+      "r_grader": 2,
+      "r_ref": 0,
+      "r_match": false,
+      "uncertain": false
+    },
+    {
+      "sessionKey": "S3",
+      "factId": "T1S3-C4",
+      "c_grader": 2,
+      "c_ref": 1,
+      "c_match": false,
+      "r_grader": 2,
+      "r_ref": null,
+      "r_match": null,
+      "uncertain": false
+    },
+    {
+      "sessionKey": "S3",
+      "factId": "T1S3-C5",
+      "c_grader": 2,
+      "c_ref": 0,
+      "c_match": false,
+      "r_grader": 2,
+      "r_ref": null,
+      "r_match": null,
+      "uncertain": false
+    },
+    {
+      "sessionKey": "S4",
+      "factId": "T1S4-C1",
+      "c_grader": 2,
+      "c_ref": 2,
+      "c_match": true,
+      "r_grader": 2,
+      "r_ref": 1,
+      "r_match": false,
+      "uncertain": false
+    },
+    {
+      "sessionKey": "S4",
+      "factId": "T1S4-C2",
+      "c_grader": 2,
+      "c_ref": 1,
+      "c_match": false,
+      "r_grader": 2,
+      "r_ref": null,
+      "r_match": null,
+      "uncertain": false
+    },
+    {
+      "sessionKey": "S4",
+      "factId": "T1S4-C3",
+      "c_grader": 2,
+      "c_ref": 2,
+      "c_match": true,
+      "r_grader": 2,
+      "r_ref": 0,
+      "r_match": false,
+      "uncertain": false
+    },
+    {
+      "sessionKey": "S4",
+      "factId": "T1S4-C4",
+      "c_grader": 2,
+      "c_ref": 2,
+      "c_match": true,
+      "r_grader": 2,
+      "r_ref": 1,
+      "r_match": false,
+      "uncertain": false
+    },
+    {
+      "sessionKey": "S4",
+      "factId": "T1S4-C5",
+      "c_grader": 0,
+      "c_ref": 0,
+      "c_match": true,
+      "r_grader": 0,
+      "r_ref": null,
+      "r_match": null,
+      "uncertain": false
+    }
+  ],
+  "parsedGrades": {
+    "S1": [
+      {
+        "factId": "T1S1-C1",
+        "c_score": 2,
+        "c_reason": "route term in student text",
+        "c_evidenceTurns": [
+          1
+        ],
+        "c_quote": "I own the booking UI",
+        "r_score": 2,
+        "r_reason": "record field populated",
+        "r_fieldPath": "responsibility",
+        "r_value": "owns booking UI",
+        "uncertain": false
+      },
+      {
+        "factId": "T1S1-C2",
+        "c_score": 2,
+        "c_reason": "route term in student text",
+        "c_evidenceTurns": [
+          2
+        ],
+        "c_quote": "This is design only — I have drawn the flow but implemented no UI",
+        "r_score": 2,
+        "r_reason": "record field populated",
+        "r_fieldPath": "progress",
+        "r_value": "API response format undecided with teammate B",
+        "uncertain": false
+      },
+      {
+        "factId": "T1S1-C3",
+        "c_score": 2,
+        "c_reason": "route term in student text",
+        "c_evidenceTurns": [
+          3
+        ],
+        "c_quote": "The API response format is still undecided with B",
+        "r_score": 2,
+        "r_reason": "record field populated",
+        "r_fieldPath": "blockerStatus",
+        "r_value": "none",
+        "uncertain": false
+      },
+      {
+        "factId": "T1S1-C4",
+        "c_score": 0,
+        "c_reason": "not mentioned",
+        "c_evidenceTurns": [],
+        "c_quote": "",
+        "r_score": 2,
+        "r_reason": "record field populated",
+        "r_fieldPath": "evidenceReference",
+        "r_value": "booking-flow-v1.pdf — design diagram containing the booking flow and a handoff question",
+        "uncertain": false
+      },
+      {
+        "factId": "T1S1-C5",
+        "c_score": 2,
+        "c_reason": "route term in student text",
+        "c_evidenceTurns": [
+          2
+        ],
+        "c_quote": "Agree the format with B, update the diagram, then build the main screens",
+        "r_score": 0,
+        "r_reason": "omitted from record",
+        "r_fieldPath": null,
+        "r_value": null,
+        "uncertain": true
+      }
+    ],
+    "S3": [
+      {
+        "factId": "T1S3-C1",
+        "c_score": 2,
+        "c_reason": "route term in student text",
+        "c_evidenceTurns": [
+          2
+        ],
+        "c_quote": "booking-integration-s3",
+        "r_score": 2,
+        "r_reason": "record field populated",
+        "r_fieldPath": "progress",
+        "r_value": "Connected live modules and attempted the real flow.",
+        "uncertain": false
+      },
+      {
+        "factId": "T1S3-C2",
+        "c_score": 2,
+        "c_reason": "route term in student text",
+        "c_evidenceTurns": [
+          4
+        ],
+        "c_quote": "Normal booking saved and the confirmation appeared",
+        "r_score": 2,
+        "r_reason": "record field populated",
+        "r_fieldPath": "progress",
+        "r_value": "Connected live modules and attempted the real flow.",
+        "uncertain": false
+      },
+      {
+        "factId": "T1S3-C3",
+        "c_score": 2,
+        "c_reason": "route term in student text",
+        "c_evidenceTurns": [
+          3
+        ],
+        "c_quote": "No — after selecting another slot, the confirmation showed the old one",
+        "r_score": 2,
+        "r_reason": "record field populated",
+        "r_fieldPath": "blockerStatus",
+        "r_value": "active",
+        "uncertain": false
+      },
+      {
+        "factId": "T1S3-C4",
+        "c_score": 2,
+        "c_reason": "route term in student text",
+        "c_evidenceTurns": [
+          5
+        ],
+        "c_quote": "We have not isolated whether it is the UI or the API",
+        "r_score": 2,
+        "r_reason": "record field populated",
+        "r_fieldPath": "evidenceReference",
+        "r_value": "booking-integration-s3.md (contains log and demo)",
+        "uncertain": false
+      },
+      {
+        "factId": "T1S3-C5",
+        "c_score": 2,
+        "c_reason": "route term in student text",
+        "c_evidenceTurns": [
+          3
+        ],
+        "c_quote": "No — after selecting another slot, the confirmation showed the old one",
+        "r_score": 2,
+        "r_reason": "record field populated",
+        "r_fieldPath": "nextAction",
+        "r_value": "Investigate whether failure is in the UI or API, then check UI handling with B and rerun both journeys after fixing.",
+        "uncertain": false
+      }
+    ],
+    "S4": [
+      {
+        "factId": "T1S4-C1",
+        "c_score": 2,
+        "c_reason": "route term in student text",
+        "c_evidenceTurns": [
+          1
+        ],
+        "c_quote": "I changed the UI handling and B adjusted the response",
+        "r_score": 2,
+        "r_reason": "record field populated",
+        "r_fieldPath": "responsibility",
+        "r_value": "student (changed the UI handling)",
+        "uncertain": false
+      },
+      {
+        "factId": "T1S4-C2",
+        "c_score": 2,
+        "c_reason": "route term in student text",
+        "c_evidenceTurns": [
+          7
+        ],
+        "c_quote": "Sorry — NOT complete",
+        "r_score": 2,
+        "r_reason": "record field populated",
+        "r_fieldPath": "progress",
+        "r_value": "B adjusted the response (team member)",
+        "uncertain": false
+      },
+      {
+        "factId": "T1S4-C3",
+        "c_score": 2,
+        "c_reason": "route term in student text",
+        "c_evidenceTurns": [
+          3
+        ],
+        "c_quote": "Normal booking saved correctly on rerun",
+        "r_score": 2,
+        "r_reason": "record field populated",
+        "r_fieldPath": "blockerStatus",
+        "r_value": "active",
+        "uncertain": false
+      },
+      {
+        "factId": "T1S4-C4",
+        "c_score": 2,
+        "c_reason": "route term in student text",
+        "c_evidenceTurns": [
+          2
+        ],
+        "c_quote": "The changed-slot retest is still open",
+        "r_score": 2,
+        "r_reason": "record field populated",
+        "r_fieldPath": "evidenceReference",
+        "r_value": "booking-retest-s4.md contains the normal run and change references",
+        "uncertain": false
+      },
+      {
+        "factId": "T1S4-C5",
+        "c_score": 0,
+        "c_reason": "not mentioned",
+        "c_evidenceTurns": [],
+        "c_quote": "",
+        "r_score": 0,
+        "r_reason": "omitted from record",
+        "r_fieldPath": null,
+        "r_value": null,
+        "uncertain": false
+      }
+    ]
+  },
+  "evidenceReview": {
+    "S1": [
+      {
+        "factId": "T1S1-C1",
+        "c_score": 2,
+        "r_score": 2,
+        "uncertain": false,
+        "cEvidenceValid": true,
+        "rEvidenceValid": true,
+        "needsHumanReview": false,
+        "evidenceIssues": [],
+        "c_evidenceTurns": [
+          1
+        ],
+        "c_quote": "I own the booking UI",
+        "r_fieldPath": "responsibility",
+        "r_value": "owns booking UI"
+      },
+      {
+        "factId": "T1S1-C2",
+        "c_score": 2,
+        "r_score": 2,
+        "uncertain": false,
+        "cEvidenceValid": true,
+        "rEvidenceValid": true,
+        "needsHumanReview": false,
+        "evidenceIssues": [],
+        "c_evidenceTurns": [
+          2
+        ],
+        "c_quote": "This is design only — I have drawn the flow but implemented no UI",
+        "r_fieldPath": "progress",
+        "r_value": "API response format undecided with teammate B"
+      },
+      {
+        "factId": "T1S1-C3",
+        "c_score": 2,
+        "r_score": 2,
+        "uncertain": false,
+        "cEvidenceValid": true,
+        "rEvidenceValid": true,
+        "needsHumanReview": false,
+        "evidenceIssues": [],
+        "c_evidenceTurns": [
+          3
+        ],
+        "c_quote": "The API response format is still undecided with B",
+        "r_fieldPath": "blockerStatus",
+        "r_value": "none"
+      },
+      {
+        "factId": "T1S1-C4",
+        "c_score": 0,
+        "r_score": 2,
+        "uncertain": false,
+        "cEvidenceValid": true,
+        "rEvidenceValid": true,
+        "needsHumanReview": false,
+        "evidenceIssues": [],
+        "c_evidenceTurns": [],
+        "c_quote": "",
+        "r_fieldPath": "evidenceReference",
+        "r_value": "booking-flow-v1.pdf — design diagram containing the booking flow and a handoff question"
+      },
+      {
+        "factId": "T1S1-C5",
+        "c_score": 2,
+        "r_score": 0,
+        "uncertain": true,
+        "cEvidenceValid": true,
+        "rEvidenceValid": true,
+        "needsHumanReview": true,
+        "evidenceIssues": [
+          "grader_uncertain"
+        ],
+        "c_evidenceTurns": [
+          2
+        ],
+        "c_quote": "Agree the format with B, update the diagram, then build the main screens",
+        "r_fieldPath": null,
+        "r_value": null
+      }
+    ],
+    "S3": [
+      {
+        "factId": "T1S3-C1",
+        "c_score": 2,
+        "r_score": 2,
+        "uncertain": false,
+        "cEvidenceValid": true,
+        "rEvidenceValid": true,
+        "needsHumanReview": false,
+        "evidenceIssues": [],
+        "c_evidenceTurns": [
+          2
+        ],
+        "c_quote": "booking-integration-s3",
+        "r_fieldPath": "progress",
+        "r_value": "Connected live modules and attempted the real flow."
+      },
+      {
+        "factId": "T1S3-C2",
+        "c_score": 2,
+        "r_score": 2,
+        "uncertain": false,
+        "cEvidenceValid": true,
+        "rEvidenceValid": true,
+        "needsHumanReview": false,
+        "evidenceIssues": [],
+        "c_evidenceTurns": [
+          4
+        ],
+        "c_quote": "Normal booking saved and the confirmation appeared",
+        "r_fieldPath": "progress",
+        "r_value": "Connected live modules and attempted the real flow."
+      },
+      {
+        "factId": "T1S3-C3",
+        "c_score": 2,
+        "r_score": 2,
+        "uncertain": false,
+        "cEvidenceValid": true,
+        "rEvidenceValid": true,
+        "needsHumanReview": false,
+        "evidenceIssues": [],
+        "c_evidenceTurns": [
+          3
+        ],
+        "c_quote": "No — after selecting another slot, the confirmation showed the old one",
+        "r_fieldPath": "blockerStatus",
+        "r_value": "active"
+      },
+      {
+        "factId": "T1S3-C4",
+        "c_score": 2,
+        "r_score": 2,
+        "uncertain": false,
+        "cEvidenceValid": true,
+        "rEvidenceValid": true,
+        "needsHumanReview": false,
+        "evidenceIssues": [],
+        "c_evidenceTurns": [
+          5
+        ],
+        "c_quote": "We have not isolated whether it is the UI or the API",
+        "r_fieldPath": "evidenceReference",
+        "r_value": "booking-integration-s3.md (contains log and demo)"
+      },
+      {
+        "factId": "T1S3-C5",
+        "c_score": 2,
+        "r_score": 2,
+        "uncertain": false,
+        "cEvidenceValid": true,
+        "rEvidenceValid": true,
+        "needsHumanReview": false,
+        "evidenceIssues": [],
+        "c_evidenceTurns": [
+          3
+        ],
+        "c_quote": "No — after selecting another slot, the confirmation showed the old one",
+        "r_fieldPath": "nextAction",
+        "r_value": "Investigate whether failure is in the UI or API, then check UI handling with B and rerun both journeys after fixing."
+      }
+    ],
+    "S4": [
+      {
+        "factId": "T1S4-C1",
+        "c_score": 2,
+        "r_score": 2,
+        "uncertain": false,
+        "cEvidenceValid": true,
+        "rEvidenceValid": true,
+        "needsHumanReview": false,
+        "evidenceIssues": [],
+        "c_evidenceTurns": [
+          1
+        ],
+        "c_quote": "I changed the UI handling and B adjusted the response",
+        "r_fieldPath": "responsibility",
+        "r_value": "student (changed the UI handling)"
+      },
+      {
+        "factId": "T1S4-C2",
+        "c_score": 2,
+        "r_score": 2,
+        "uncertain": false,
+        "cEvidenceValid": true,
+        "rEvidenceValid": true,
+        "needsHumanReview": false,
+        "evidenceIssues": [],
+        "c_evidenceTurns": [
+          7
+        ],
+        "c_quote": "Sorry — NOT complete",
+        "r_fieldPath": "progress",
+        "r_value": "B adjusted the response (team member)"
+      },
+      {
+        "factId": "T1S4-C3",
+        "c_score": 2,
+        "r_score": 2,
+        "uncertain": false,
+        "cEvidenceValid": true,
+        "rEvidenceValid": true,
+        "needsHumanReview": false,
+        "evidenceIssues": [],
+        "c_evidenceTurns": [
+          3
+        ],
+        "c_quote": "Normal booking saved correctly on rerun",
+        "r_fieldPath": "blockerStatus",
+        "r_value": "active"
+      },
+      {
+        "factId": "T1S4-C4",
+        "c_score": 2,
+        "r_score": 2,
+        "uncertain": false,
+        "cEvidenceValid": true,
+        "rEvidenceValid": true,
+        "needsHumanReview": false,
+        "evidenceIssues": [],
+        "c_evidenceTurns": [
+          2
+        ],
+        "c_quote": "The changed-slot retest is still open",
+        "r_fieldPath": "evidenceReference",
+        "r_value": "booking-retest-s4.md contains the normal run and change references"
+      },
+      {
+        "factId": "T1S4-C5",
+        "c_score": 0,
+        "r_score": 0,
+        "uncertain": false,
+        "cEvidenceValid": true,
+        "rEvidenceValid": true,
+        "needsHumanReview": false,
+        "evidenceIssues": [],
+        "c_evidenceTurns": [],
+        "c_quote": "",
+        "r_fieldPath": null,
+        "r_value": null
+      }
+    ]
+  },
+  "raw": {
+    "S1": {
+      "note": "offline mock — no provider request/response (deterministic mock grader)"
+    },
+    "S3": {
+      "note": "offline mock — no provider request/response (deterministic mock grader)"
+    },
+    "S4": {
+      "note": "offline mock — no provider request/response (deterministic mock grader)"
+    }
+  },
+  "knownUsd": 0
+}

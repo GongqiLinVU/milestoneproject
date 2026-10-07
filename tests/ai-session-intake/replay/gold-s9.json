@@ -1,0 +1,44 @@
+{
+  "version": "intake-replay-gold.v1",
+  "caseId": "s9-continuing-chat-provider-fallback",
+  "source": "tests/ai-session-intake/adaptive/recorded-cases-v2.json",
+  "mode": "deterministic_replay",
+  "note": "R + state checks only. C/S are N/A for a fixed transcript. De-identified reproduction reconstructed from session-intake-debug-S9 (4).json; turn-3 provider response is a recorded provider_incomplete failure, so turn-3 R is assessed on the fallback pending snapshot only. No paid model calls.",
+  "disclosedFacts": [
+    {
+      "id": "R-S9-F1",
+      "sourceTurn": 1,
+      "description": "Spinner added, commit abc123 (student claim, completed)",
+      "match": { "field": "claim", "state": "student_claim", "progressKind": "completed", "valueIncludesAny": ["spinner", "abc123"] }
+    },
+    {
+      "id": "R-S9-F2",
+      "sourceTurn": 1,
+      "description": "Executed manual slow-network observation: spinner appeared until cards loaded",
+      "match": { "field": "evidence", "state": "available", "evidenceType": "live_demonstration", "observedResultIncludesAny": ["spinner", "cards"], "methodIncludesAny": ["slow", "manual", "connection"] }
+    },
+    {
+      "id": "R-S9-F3",
+      "sourceTurn": 1,
+      "description": "The API-error path specifically has not been tested yet (must not erase F2; must not be shown as tested)",
+      "match": { "kind": "untested_path", "notTestedFor": "api", "mustNotBeExecuted": true }
+    },
+    {
+      "id": "R-S9-F4",
+      "sourceTurn": 3,
+      "description": "Chose option A, still debugging the API error (blocked)",
+      "match": { "field": "blocker", "state": "student_claim", "progressKind": "attempted_failed", "valueIncludesAny": ["debug", "api", "error"] }
+    }
+  ],
+  "stateChecks": {
+    "turn1": { "expectExtractionPending": false, "expectAcceptedFields": ["claim", "evidence"] },
+    "turn2": { "expectExtractionPending": false, "expectAcceptedFields": ["blocker"] },
+    "turn3": { "providerFailure": "provider_incomplete", "expectPendingSnapshot": true, "finalConfirmedRecord": false }
+  },
+  "criticalErrorWatch": [
+    "no_fabricated_completion_of_api_error_path",
+    "no_plan_as_execution",
+    "executed_slow_network_observation_preserved",
+    "no_lost_correction"
+  ]
+}

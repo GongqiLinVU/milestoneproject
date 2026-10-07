@@ -1,0 +1,75 @@
+{
+  "schema": "intake-comparison-freeze.v2",
+  "frozenAt": "2026-10-04 (live-readiness update)",
+  "purpose": "Frozen configuration for the forthcoming dual-provider (OpenAI vs DeepSeek) comparison. Updated after gated endpoint instrumentation + DeepSeek key present + grader harness. Changing any version below requires a new freeze record and re-baselining.",
+  "endpointInstrumentation": {
+    "file": "api/session-intake-ai.ts",
+    "change": "GATED, trace-only: x-intake-provider (openai|deepseek) switch + x-intake-debug trace, both behind INTAKE_DEBUG_TOKEN. Default (no token) behavior is byte-identical to production. Harness decision logic (decideTurn/validation/routing/record-update) UNCHANGED and SHARED across providers; only transport differs.",
+    "behaviorPreserved": "adaptive endpoint+policy tests 8+50 pass; build passes",
+    "parityVerified": "trace-capture.realpath.mjs: both providers run the SAME instructions/context/decideTurn/validation/routing; sameSharedInstructions=true, sameParsedCandidateAccepted=true"
+  },
+  "dataset": {
+    "profile": "T1 (Booking portal, synthetic)",
+    "goldFile": "tests/ai-session-intake/replay/gold-t1.json",
+    "goldVersion": "intake-t1-dynamic-gold.v1 (+ B3 honestAnswers/authorizedRepeat/confirmField incl. scope)",
+    "sessions": ["S1", "S2", "S3", "S4"],
+    "note": "No new trajectories or metrics added. Synthetic; not classroom evidence."
+  },
+  "simulator": {
+    "file": "tests/ai-session-intake/replay/run-live-t1.mjs (studentRespond) + run-dynamic-t1.mjs",
+    "version": "intake-sim.v2 (B3 part 2 repair)",
+    "behavior": "fact routing priority over keyword honest-answers; no stuck repeats (askHistory); honest repo-path/run-now answers only on-topic and once; filename/report/demo evidence routes accepted without invented URLs; authorized repeat for clarification/summary; no future facts or gold released",
+    "determinism": "deterministic; no LLM student simulator"
+  },
+  "scorer": {
+    "version": "intake-crs-scoring.v1.1",
+    "formulas": "C/R/S unchanged; C = conversational elicitation only (excludes review-stage additions); R before vs after correction reported separately; S uses Intake-only (pre-correction) R",
+    "regression": ["scorer-regression.test.mjs (first run, backup trace)", "scorer-regression-v2.test.mjs (latest trace)"],
+    "semanticUncertainty": "flagged for human review, not auto-scored"
+  },
+  "harness": {
+    "policyVersion": "adaptive-intake.v1.1.0",
+    "promptVersion": "session-intake-ai.v1.3.0",
+    "parserVersion": "intake-parser.v1.0.0",
+    "note": "No behavioral Harness fix in this task; stable comparison target preserved. Endpoint (api/session-intake-ai.ts) unchanged.",
+    "maxQuestions": 8,
+    "maxTurns": 17
+  },
+  "driver": {
+    "file": "tests/ai-session-intake/replay/run-live-t1.mjs",
+    "reviewCorrection": "fills required fields incl. scope from student-authorized confirmField; corrections explicit with before/after + authorizedSource; no gold/scoring-target fill",
+    "persistence": "save_my_session_intake_chat (as student JWT); four-Session persistence + carryover verified offline on isolated fixture t1bench01",
+    "costAccounting": "known (actual) vs unknown (conservative reserve for unreported retries on success AND failure) kept separate; conservative budget guard (not a provable hard cap)"
+  },
+  "providers": {
+    "openai": {
+      "id": "openai",
+      "api": "responses (/v1/responses)",
+      "via": "existing deployed endpoint /api/session-intake-ai (unchanged)",
+      "model": "gpt-5-mini (OPENAI_INTAKE_MODEL || OPENAI_MODEL || gpt-5-mini)",
+      "pricing": "$0.25/1M input, $2.00/1M output"
+    },
+    "deepseek": {
+      "id": "deepseek",
+      "api": "chat_completions (OpenAI-compatible)",
+      "baseUrl": "https://api.deepseek.com",
+      "endpoint": "/chat/completions",
+      "model": "deepseek-flash (also deepseek-v4-pro)",
+      "auth": "Authorization: Bearer $DEEPSEEK_API_KEY (env only; never committed/printed)",
+      "docsVerified": "2026-10-04 https://api-docs.deepseek.com/",
+      "apiDifferences": "output in choices[0].message.content (vs output_text); max_tokens (vs max_output_tokens); response_format:{type:'json_object'} (vs text.format.json_schema); finish_reason:'length' == incomplete",
+      "adapter": "tests/ai-session-intake/replay/provider-adapter.mjs + gated endpoint provider switch (api/session-intake-ai.ts)",
+      "configuredLocally": true,
+      "pricingVerified": "2026-10-04 api-docs.deepseek.com/quick_start/pricing — deepseek-flash cache-miss: input $0.15 off-peak/$0.30 peak, output $0.60 off-peak/$1.20 peak per 1M; modelVersion DeepSeek-V4.1-Flash",
+      "note": "DEEPSEEK_API_KEY present in .env.local (value never printed). Live comparison still requires explicit paid approval."
+    }
+  },
+  "grader": {
+    "file": "tests/ai-session-intake/replay/grader-harness.mjs",
+    "design": "LLM emits per-fact 0/1/2 + evidence + uncertainty only; CODE computes C/R/S + Session-success; provider identity hidden from grader; calibrated against out/dynamic-t1-live-adjudicated-v2.json; student simulator NOT replaced by an LLM",
+    "pricingVerified": "gpt-5-mini $0.25/$2.00 per 1M (grader runs on gpt-5-mini)"
+  "comparisonModes": {
+    "fixedConversation": "identical recorded conversations fed to both providers; compare parsed candidates + extraction fidelity (no student simulation variance)",
+    "parallelDynamic": "separate mock students and separate isolated histories per provider; never share carryover across providers"
+  }
+}
