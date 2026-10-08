@@ -1,0 +1,431 @@
+{
+  "schema": "intake-complete-trace.v1",
+  "mode": "OFFLINE_MOCK — validates stage survival; not a live run; no paid calls",
+  "rawCandidateProvenance": "api/session-intake-ai.ts line ~304 sets rawCandidate = JSON.parse(outputText(provider)) = PARSED candidate object, NOT the raw provider HTTP body. The genuine raw body is captured here as providerAttempts[].rawProviderBody.",
+  "versions": {
+    "policyVersion": "adaptive-intake.v1.1.0",
+    "promptVersion": "session-intake-ai.v1.3.0",
+    "parserVersion": "intake-parser.v1.0.0",
+    "model": "gpt-5-mini (mock)"
+  },
+  "turns": [
+    {
+      "turn": 0,
+      "scenario": "success",
+      "providerInputPayload_DRIVER_SIDE": {
+        "model": "gpt-5-mini",
+        "mode": "turn",
+        "conversationLen": 2,
+        "answersSnapshot": {
+          "responsibility": "",
+          "progress": "",
+          "progressKind": "no_progress",
+          "scope": "",
+          "completionPercent": null,
+          "evidenceType": "other",
+          "evidenceAvailability": "unknown",
+          "evidenceReference": "",
+          "verificationMethod": "",
+          "testingStatus": "unknown",
+          "testingMethod": "",
+          "testingResult": "",
+          "testingBaseline": "",
+          "blockerStatus": "none",
+          "blockerDescription": "",
+          "supportRequested": "",
+          "nextAction": "",
+          "dueSession": "",
+          "expectedEvidence": ""
+        },
+        "note": "credentials excluded; this is the driver-side payload shape"
+      },
+      "providerAttempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "httpStatus": 200,
+          "providerStatus": "completed",
+          "usage": {
+            "input_tokens": 1600,
+            "output_tokens": 1400
+          },
+          "rawProviderBody": {
+            "id": "resp_mock_1",
+            "model": "gpt-5-mini",
+            "status": "completed",
+            "output_text": "{\"assistantMessage\":\"Noted — booking UI design, no UI built yet. What is one next step before the next Session?\",\"route\":\"clarification\",\"evidenceUpdates\":[{\"field\":\"claim\",\"value\":\"Drawing the booking flow; no UI built\",\"state\":\"student_claim\",\"sourceTurn\":1,\"evidenceType\":null,\"progressKind\":\"advanced\",\"method\":null,\"observedResult\":null,\"expectedEvidence\":null}],\"assessment\":{\"information\":\"focused\",\"evidenceReadiness\":\"missing\",\"verificationReadiness\":\"unclear\",\"testingMaturity\":\"unknown\",\"actionability\":\"needs_small_step\",\"gap\":\"next step\",\"reason\":\"design only\",\"sourceTurns\":[1]},\"uncertainties\":[],\"suggestedTeacherQuestions\":[]}",
+            "usage": {
+              "input_tokens": 1600,
+              "output_tokens": 1400
+            }
+          },
+          "originalOutputText": "{\"assistantMessage\":\"Noted — booking UI design, no UI built yet. What is one next step before the next Session?\",\"route\":\"clarification\",\"evidenceUpdates\":[{\"field\":\"claim\",\"value\":\"Drawing the booking flow; no UI built\",\"state\":\"student_claim\",\"sourceTurn\":1,\"evidenceType\":null,\"progressKind\":\"advanced\",\"method\":null,\"observedResult\":null,\"expectedEvidence\":null}],\"assessment\":{\"information\":\"focused\",\"evidenceReadiness\":\"missing\",\"verificationReadiness\":\"unclear\",\"testingMaturity\":\"unknown\",\"actionability\":\"needs_small_step\",\"gap\":\"next step\",\"reason\":\"design only\",\"sourceTurns\":[1]},\"uncertainties\":[],\"suggestedTeacherQuestions\":[]}"
+        }
+      ],
+      "incompleteDetails": null,
+      "parsedCandidate_aka_endpoint_rawCandidate": {
+        "assistantMessage": "Noted — booking UI design, no UI built yet. What is one next step before the next Session?",
+        "route": "clarification",
+        "evidenceUpdates": [
+          {
+            "field": "claim",
+            "value": "Drawing the booking flow; no UI built",
+            "state": "student_claim",
+            "sourceTurn": 1,
+            "evidenceType": null,
+            "progressKind": "advanced",
+            "method": null,
+            "observedResult": null,
+            "expectedEvidence": null
+          }
+        ],
+        "assessment": {
+          "information": "focused",
+          "evidenceReadiness": "missing",
+          "verificationReadiness": "unclear",
+          "testingMaturity": "unknown",
+          "actionability": "needs_small_step",
+          "gap": "next step",
+          "reason": "design only",
+          "sourceTurns": [
+            1
+          ]
+        },
+        "uncertainties": [],
+        "suggestedTeacherQuestions": []
+      },
+      "acceptedRejectedCandidates": [
+        {
+          "field": "claim",
+          "outcome": "accepted",
+          "reason": "student_source_valid",
+          "candidateValue": "Drawing the booking flow; no UI built",
+          "sourceTurn": 1
+        }
+      ],
+      "route": "continue",
+      "routeDecision": {
+        "proposed": "clarification",
+        "final": "continue",
+        "reason": "continue_collecting"
+      },
+      "recordBefore": {
+        "responsibility": "",
+        "progress": "",
+        "progressKind": "no_progress",
+        "scope": "",
+        "completionPercent": null,
+        "evidenceType": "other",
+        "evidenceAvailability": "unknown",
+        "evidenceReference": "",
+        "verificationMethod": "",
+        "testingStatus": "unknown",
+        "testingMethod": "",
+        "testingResult": "",
+        "testingBaseline": "",
+        "blockerStatus": "none",
+        "blockerDescription": "",
+        "supportRequested": "",
+        "nextAction": "",
+        "dueSession": "",
+        "expectedEvidence": ""
+      },
+      "recordAfter": {
+        "responsibility": "",
+        "progress": "Drawing the booking flow; no UI built",
+        "progressKind": "advanced",
+        "scope": "",
+        "completionPercent": null,
+        "evidenceType": "other",
+        "evidenceAvailability": "unknown",
+        "evidenceReference": "",
+        "verificationMethod": "",
+        "testingStatus": "unknown",
+        "testingMethod": "",
+        "testingResult": "",
+        "testingBaseline": "",
+        "blockerStatus": "none",
+        "blockerDescription": "",
+        "supportRequested": "",
+        "nextAction": "",
+        "dueSession": "",
+        "expectedEvidence": ""
+      },
+      "extractionPending": false,
+      "studentAnswer": "I own the booking UI; drawing the flow, no UI built yet."
+    },
+    {
+      "turn": 1,
+      "scenario": "retry_then_success",
+      "providerInputPayload_DRIVER_SIDE": {
+        "model": "gpt-5-mini",
+        "mode": "turn",
+        "conversationLen": 4,
+        "answersSnapshot": {
+          "responsibility": "",
+          "progress": "Drawing the booking flow; no UI built",
+          "progressKind": "advanced",
+          "scope": "",
+          "completionPercent": null,
+          "evidenceType": "other",
+          "evidenceAvailability": "unknown",
+          "evidenceReference": "",
+          "verificationMethod": "",
+          "testingStatus": "unknown",
+          "testingMethod": "",
+          "testingResult": "",
+          "testingBaseline": "",
+          "blockerStatus": "none",
+          "blockerDescription": "",
+          "supportRequested": "",
+          "nextAction": "",
+          "dueSession": "",
+          "expectedEvidence": ""
+        },
+        "note": "credentials excluded; this is the driver-side payload shape"
+      },
+      "providerAttempts": [
+        {
+          "attempt": 0,
+          "ok": false,
+          "httpStatus": 500,
+          "providerStatus": null,
+          "usage": null,
+          "rawProviderBody": {
+            "error": {
+              "type": "server_error",
+              "message": "transient"
+            }
+          },
+          "originalOutputText": null
+        },
+        {
+          "attempt": 1,
+          "ok": true,
+          "httpStatus": 200,
+          "providerStatus": "completed",
+          "usage": {
+            "input_tokens": 1700,
+            "output_tokens": 1500
+          },
+          "rawProviderBody": {
+            "id": "resp_mock_2",
+            "model": "gpt-5-mini",
+            "status": "completed",
+            "output_text": "{\"assistantMessage\":\"Got it. What evidence could the Teacher review?\",\"route\":\"clarification\",\"evidenceUpdates\":[],\"assessment\":{\"information\":\"sparse\",\"evidenceReadiness\":\"missing\",\"verificationReadiness\":\"unknown\",\"testingMaturity\":\"unknown\",\"actionability\":\"unknown\",\"gap\":\"evidence\",\"reason\":\"none yet\",\"sourceTurns\":[1]},\"uncertainties\":[],\"suggestedTeacherQuestions\":[]}",
+            "usage": {
+              "input_tokens": 1700,
+              "output_tokens": 1500
+            }
+          },
+          "originalOutputText": "{\"assistantMessage\":\"Got it. What evidence could the Teacher review?\",\"route\":\"clarification\",\"evidenceUpdates\":[],\"assessment\":{\"information\":\"sparse\",\"evidenceReadiness\":\"missing\",\"verificationReadiness\":\"unknown\",\"testingMaturity\":\"unknown\",\"actionability\":\"unknown\",\"gap\":\"evidence\",\"reason\":\"none yet\",\"sourceTurns\":[1]},\"uncertainties\":[],\"suggestedTeacherQuestions\":[]}"
+        }
+      ],
+      "incompleteDetails": null,
+      "parsedCandidate_aka_endpoint_rawCandidate": {
+        "assistantMessage": "Got it. What evidence could the Teacher review?",
+        "route": "clarification",
+        "evidenceUpdates": [],
+        "assessment": {
+          "information": "sparse",
+          "evidenceReadiness": "missing",
+          "verificationReadiness": "unknown",
+          "testingMaturity": "unknown",
+          "actionability": "unknown",
+          "gap": "evidence",
+          "reason": "none yet",
+          "sourceTurns": [
+            1
+          ]
+        },
+        "uncertainties": [],
+        "suggestedTeacherQuestions": []
+      },
+      "acceptedRejectedCandidates": [],
+      "route": "continue",
+      "routeDecision": {
+        "proposed": "clarification",
+        "final": "continue",
+        "reason": "continue_collecting"
+      },
+      "recordBefore": {
+        "responsibility": "",
+        "progress": "Drawing the booking flow; no UI built",
+        "progressKind": "advanced",
+        "scope": "",
+        "completionPercent": null,
+        "evidenceType": "other",
+        "evidenceAvailability": "unknown",
+        "evidenceReference": "",
+        "verificationMethod": "",
+        "testingStatus": "unknown",
+        "testingMethod": "",
+        "testingResult": "",
+        "testingBaseline": "",
+        "blockerStatus": "none",
+        "blockerDescription": "",
+        "supportRequested": "",
+        "nextAction": "",
+        "dueSession": "",
+        "expectedEvidence": ""
+      },
+      "recordAfter": {
+        "responsibility": "",
+        "progress": "Drawing the booking flow; no UI built",
+        "progressKind": "advanced",
+        "scope": "",
+        "completionPercent": null,
+        "evidenceType": "other",
+        "evidenceAvailability": "unknown",
+        "evidenceReference": "",
+        "verificationMethod": "",
+        "testingStatus": "unknown",
+        "testingMethod": "",
+        "testingResult": "",
+        "testingBaseline": "",
+        "blockerStatus": "none",
+        "blockerDescription": "",
+        "supportRequested": "",
+        "nextAction": "",
+        "dueSession": "",
+        "expectedEvidence": ""
+      },
+      "extractionPending": true,
+      "studentAnswer": "I have not recorded a repo path; it is in the report/demo."
+    },
+    {
+      "turn": 2,
+      "scenario": "incomplete",
+      "providerInputPayload_DRIVER_SIDE": {
+        "model": "gpt-5-mini",
+        "mode": "turn",
+        "conversationLen": 6,
+        "answersSnapshot": {
+          "responsibility": "",
+          "progress": "Drawing the booking flow; no UI built",
+          "progressKind": "advanced",
+          "scope": "",
+          "completionPercent": null,
+          "evidenceType": "other",
+          "evidenceAvailability": "unknown",
+          "evidenceReference": "",
+          "verificationMethod": "",
+          "testingStatus": "unknown",
+          "testingMethod": "",
+          "testingResult": "",
+          "testingBaseline": "",
+          "blockerStatus": "none",
+          "blockerDescription": "",
+          "supportRequested": "",
+          "nextAction": "",
+          "dueSession": "",
+          "expectedEvidence": ""
+        },
+        "note": "credentials excluded; this is the driver-side payload shape"
+      },
+      "providerAttempts": [
+        {
+          "attempt": 0,
+          "ok": true,
+          "httpStatus": 200,
+          "providerStatus": "incomplete",
+          "usage": {
+            "input_tokens": 1800,
+            "output_tokens": 4000
+          },
+          "rawProviderBody": {
+            "id": "resp_mock_3",
+            "model": "gpt-5-mini",
+            "status": "incomplete",
+            "incomplete_details": {
+              "reason": "max_output_tokens"
+            },
+            "output_text": "",
+            "usage": {
+              "input_tokens": 1800,
+              "output_tokens": 4000
+            }
+          },
+          "originalOutputText": ""
+        }
+      ],
+      "incompleteDetails": {
+        "reason": "max_output_tokens"
+      },
+      "parsedCandidate_aka_endpoint_rawCandidate": null,
+      "acceptedRejectedCandidates": [],
+      "route": "provider_fallback_continue",
+      "routeDecision": {
+        "reason": "provider_incomplete_fallback"
+      },
+      "recordBefore": {
+        "responsibility": "",
+        "progress": "Drawing the booking flow; no UI built",
+        "progressKind": "advanced",
+        "scope": "",
+        "completionPercent": null,
+        "evidenceType": "other",
+        "evidenceAvailability": "unknown",
+        "evidenceReference": "",
+        "verificationMethod": "",
+        "testingStatus": "unknown",
+        "testingMethod": "",
+        "testingResult": "",
+        "testingBaseline": "",
+        "blockerStatus": "none",
+        "blockerDescription": "",
+        "supportRequested": "",
+        "nextAction": "",
+        "dueSession": "",
+        "expectedEvidence": ""
+      },
+      "recordAfter": {
+        "responsibility": "",
+        "progress": "Drawing the booking flow; no UI built",
+        "progressKind": "advanced",
+        "scope": "",
+        "completionPercent": null,
+        "evidenceType": "other",
+        "evidenceAvailability": "unknown",
+        "evidenceReference": "",
+        "verificationMethod": "",
+        "testingStatus": "unknown",
+        "testingMethod": "",
+        "testingResult": "",
+        "testingBaseline": "",
+        "blockerStatus": "none",
+        "blockerDescription": "",
+        "supportRequested": "",
+        "nextAction": "",
+        "dueSession": "",
+        "expectedEvidence": ""
+      },
+      "extractionPending": true,
+      "studentAnswer": "I own the booking UI; drawing the flow, no UI built yet."
+    }
+  ],
+  "cost": {
+    "knownUsd": 0.015075,
+    "unknownUsd": 0.03975,
+    "unreportedRetryReserveUsd": 0.03975,
+    "calls": 3,
+    "callsWithUsage": 3,
+    "callsMissingUsage": 0,
+    "note": "known = actual reported; unknown = conservative reserve for unreported retry attempts (success + failure) and missing usage. Reserved amounts are NOT actual spend."
+  },
+  "stagesPresent": [
+    "providerInputPayload_DRIVER_SIDE",
+    "providerAttempts(incl retries)",
+    "rawProviderBody",
+    "originalOutputText",
+    "parsedCandidate",
+    "acceptedRejectedCandidates(value+reason)",
+    "recordBefore",
+    "recordAfter",
+    "routeDecision",
+    "incompleteDetails",
+    "usage",
+    "known-vs-unknown-cost"
+  ],
+  "limitation": "The production endpoint does not currently RETURN the raw provider body/output_text to the client; this harness captures them from the mock. A live capture would need a gated, trace-only endpoint field (documented in the report, not applied here to preserve the stable comparison target)."
+}

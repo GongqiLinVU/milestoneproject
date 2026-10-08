@@ -1,0 +1,178 @@
+{
+  "version": "intake-t1-dynamic-gold.v1",
+  "profile": "T1",
+  "synthetic": true,
+  "label": "SYNTHETIC design asset — NOT real classroom data. Never present as classroom effectiveness.",
+  "source": "docs/AI_Intake_Benchmark_v0.5_Review_Pack.md (T1 Booking portal)",
+  "projectCard": {
+    "title": "Booking portal",
+    "team": "Team 3: A/focal student owns booking UI; B API/storage; C availability rules.",
+    "goal": "Reserve an available consultation slot.",
+    "requirements": {
+      "R1": "Select an available slot and submit booking details.",
+      "R2": "Persist booking and display saved confirmation.",
+      "R3": "Live availability -> selection -> submission -> storage -> confirmation.",
+      "R4": "Execute normal and changed-slot journeys; retain results."
+    }
+  },
+  "recordingTargetSelectionRules": {
+    "note": "d_i is NOT constant. A disclosed fact enters the recording denominator only if it was actually revealed by the student answer-bank in THIS trial (in response to the candidate's own questions) AND it is material (ownership, scope, stage, integration outcome, evidence route, verification/testing status, blocker, next step, correction).",
+    "include": [
+      "Any material fact the student disclosed this trial",
+      "A disclosed correction (always material)",
+      "An explicit 'unknown/not done/not needed' when stated"
+    ],
+    "exclude": [
+      "Facts never disclosed in this trial (they are collection gaps, scored under C, not R)",
+      "Facts from future Sessions",
+      "Gold-only facts the student did not state"
+    ]
+  },
+  "sessions": {
+    "S1": {
+      "stage": "planning/research/design",
+      "history": "Card only; no previous Intake.",
+      "essentialCollectionFacts": [
+        {"id":"T1S1-C1","target":"Owned module and current change","anchors":{"0":"ownership not clarified","1":"ownership vague (e.g. 'the booking part')","2":"owns booking UI; drawing flow, no UI built"}},
+        {"id":"T1S1-C2","target":"Design vs implementation status","anchors":{"0":"conflates design with built UI","1":"status ambiguous","2":"explicitly design-only, nothing implemented"}},
+        {"id":"T1S1-C3","target":"Open dependency / interface question","anchors":{"0":"dependency missed","1":"dependency noted but not the API-format question","2":"API response format undecided with B"}},
+        {"id":"T1S1-C4","target":"Evidence route","anchors":{"0":"no evidence route","1":"vague reference","2":"booking-flow-v1.pdf design/handoff"}},
+        {"id":"T1S1-C5","target":"Accepted next step","anchors":{"0":"no next step","1":"vague","2":"agree format with B, update diagram, build screens"}}
+      ],
+      "answerBank": [
+        {"factId":"T1S1-C1","routeKeys":["own","responsib","work on","module","what are you","building","doing"],"reveals":"I own the booking UI. We agreed the module owners. I am drawing the flow; no UI is built yet."},
+        {"factId":"T1S1-C2","routeKeys":["implement","built","code","done","progress","stage","status"],"reveals":"This is design only — I have drawn the flow but implemented no UI."},
+        {"factId":"T1S1-C3","routeKeys":["depend","open","blocker","decide","undecided","interface","format","with b","teammate"],"reveals":"The API response format is still undecided with B. Flow goes from choosing a slot to a saved confirmation."},
+        {"factId":"T1S1-C4","routeKeys":["evidence","show","review","artifact","file","demo","check"],"reveals":"booking-flow-v1.pdf has the design and the handoff question."},
+        {"factId":"T1S1-C5","routeKeys":["next","plan","then","after","milestone","step"],"reveals":"Agree the format with B, update the diagram, then build the main screens. No Teacher decision needed yet."}
+      ],
+      "vagueFirstAnswer":"I've been working on the booking side of things.",
+      "authorizedRepeat":"As I said: I own the booking UI, the flow is designed in booking-flow-v1.pdf, no UI is built, and the API response format is still undecided with B.",
+      "honestAnswers":{
+        "repo_path":"I have not recorded a repo path for booking-flow-v1.pdf; it would need checking in the report/demo.",
+        "run_test_now":"I cannot run a test right now; nothing has been executed at this stage.",
+        "commit_hash":"There is no commit for this yet — it is design only."
+      },
+      "expectedGaps":[],
+      "confirmField":{
+        "responsibility":"I own the booking UI",
+        "scope":"the booking UI flow (slot selection to saved confirmation); API/storage and availability rules are owned by teammates",
+        "nextAction":"Agree the API response format with B, update the diagram, then build the main screens",
+        "dueSession":"S2",
+        "expectedEvidence":"updated booking flow diagram and first screens",
+        "verificationMethod":"Teacher reviews booking-flow-v1.pdf design and the handoff question"
+      },
+      "forbiddenAssertions":["built UI","agreed format","Teacher-approved design","executed workflow"],
+      "criticalErrors":["record UI as implemented","record format as agreed","invent Teacher approval"]
+    },
+    "S2": {
+      "stage":"mock implementation, integration unattempted",
+      "history":"S1: draft design, API format open; next agree format/update design/build screens.",
+      "essentialCollectionFacts": [
+        {"id":"T1S2-C1","target":"Prior milestone outcome (format agreed, screens built with sample data)","anchors":{"0":"not clarified","1":"vague 'made progress'","2":"agreed format, updated v2 design, built selection/confirmation screens with sample data"}},
+        {"id":"T1S2-C2","target":"Mock vs live distinction","anchors":{"0":"claims live/finished","1":"ambiguous","2":"explicitly mock/sample data, nothing saved through UI"}},
+        {"id":"T1S2-C3","target":"Integration not attempted","anchors":{"0":"claims integrated","1":"ambiguous","2":"API not connected; B reports API ready (teammate claim); nothing saved"}},
+        {"id":"T1S2-C4","target":"Evidence route + dependency","anchors":{"0":"none","1":"vague","2":"mock screen demo from branch; needs joint slot with B"}},
+        {"id":"T1S2-C5","target":"Next step","anchors":{"0":"none","1":"vague","2":"try live select-submit-store-confirm; keep a run record"}}
+      ],
+      "answerBank": [
+        {"factId":"T1S2-C1","routeKeys":["previous","milestone","last","since","progress","done","how did","go"],"reveals":"We agreed the format, updated booking-flow-v2.pdf, and I built the selection and confirmation screens with sample data."},
+        {"factId":"T1S2-C2","routeKeys":["mock","sample","real","live","save","persist","data","actually"],"reveals":"It uses sample data — nothing is saved through my UI yet; the screens are mock."},
+        {"factId":"T1S2-C3","routeKeys":["integrat","connect","whole flow","end to end","api","together","run"],"reveals":"No, the live whole flow has not run. B says the API is ready but I have not connected it. Availability is separate."},
+        {"factId":"T1S2-C4","routeKeys":["evidence","show","demo","check","review","block","depend","hold"],"reveals":"I can demo the mock screens from my branch. We need a joint slot to connect the modules. No Teacher help needed yet."},
+        {"factId":"T1S2-C5","routeKeys":["next","plan","then","milestone","step"],"reveals":"Next Session I will try the live select-submit-store-confirm and keep a run record."}
+      ],
+      "vagueFirstAnswer":"I did a bunch of frontend work this week.",
+      "authorizedRepeat":"As I said: I built mock selection/confirmation screens with sample data (booking-flow-v2.pdf), nothing saves through the UI yet, the modules are not connected, and I can demo the mock screens from my branch.",
+      "honestAnswers":{
+        "repo_path":"I have not recorded the branch path here; it would need checking in the demo.",
+        "run_test_now":"I cannot run the live flow now — the modules are not connected yet.",
+        "commit_hash":"I have not recorded a commit hash for the mock screens."
+      },
+      "expectedGaps":[],
+      "confirmField":{
+        "responsibility":"I own the booking UI",
+        "scope":"the booking UI selection and confirmation screens (mock, sample data); live integration not yet attempted",
+        "nextAction":"Try the live select→submit→store→confirm flow and keep a run record",
+        "dueSession":"S3",
+        "expectedEvidence":"a run record of the live flow attempt",
+        "verificationMethod":"Demo the mock selection/confirmation screens from my branch"
+      },
+      "forbiddenAssertions":["project complete","B's API as A's work","successful live save","tested integration"],
+      "criticalErrors":["record project complete","attribute B's API to student","record a live save that did not happen","record integration as tested"]
+    },
+    "S3": {
+      "stage":"mixed integration outcomes",
+      "history":"S2: mock UI; no live run; joint flow/run record promised.",
+      "essentialCollectionFacts": [
+        {"id":"T1S3-C1","target":"Live integration attempted","anchors":{"0":"not clarified","1":"ambiguous","2":"connected live modules; attempted the real flow"}},
+        {"id":"T1S3-C2","target":"Normal path outcome","anchors":{"0":"not clarified","1":"ambiguous","2":"normal booking saved and confirmation appeared (claim)"}},
+        {"id":"T1S3-C3","target":"Changed-slot outcome (failure)","anchors":{"0":"failure hidden/claims all pass","1":"ambiguous","2":"changed-slot showed old confirmation; failed"}},
+        {"id":"T1S3-C4","target":"Root cause unresolved","anchors":{"0":"blames a teammate unsupported","1":"ambiguous","2":"UI vs API cause not isolated"}},
+        {"id":"T1S3-C5","target":"Evidence route + retest next","anchors":{"0":"none","1":"vague","2":"booking-integration-s3.md log/demo; check UI with B and rerun both journeys"}}
+      ],
+      "answerBank": [
+        {"factId":"T1S3-C1","routeKeys":["integrat","connect","joint","how did","go","milestone","together"],"reveals":"We connected the live modules and attempted the real flow."},
+        {"factId":"T1S3-C2","routeKeys":["normal","work","save","confirm","result","outcome","pass"],"reveals":"Normal booking saved and the confirmation appeared."},
+        {"factId":"T1S3-C3","routeKeys":["changed","change slot","other","edge","fail","both","also","different"],"reveals":"No — after selecting another slot, the confirmation showed the old one. That path failed."},
+        {"factId":"T1S3-C4","routeKeys":["cause","why","root","reason","ui or api","isolate","debug","who"],"reveals":"We have not isolated whether it is the UI or the API. We will investigate together; no Teacher decision right now."},
+        {"factId":"T1S3-C5","routeKeys":["evidence","show","log","demo","next","plan","retest","rerun","fix"],"reveals":"booking-integration-s3.md has the log and demo. Next I will check UI handling with B and rerun both journeys after fixing. The whole flow is not complete."}
+      ],
+      "vagueFirstAnswer":"We did some integration work.",
+      "authorizedRepeat":"As I said: we connected the live modules; normal booking saved and confirmation appeared; the changed-slot path failed (showed the old confirmation); cause not yet isolated; booking-integration-s3.md has the log/demo; we will rerun both journeys after fixing.",
+      "honestAnswers":{
+        "repo_path":"The log/demo is in booking-integration-s3.md; I have not recorded a separate repo path.",
+        "run_test_now":"I cannot rerun the journeys right now; the fix is not done yet.",
+        "commit_hash":"I have not recorded a commit hash for the integration."
+      },
+      "expectedGaps":[],
+      "confirmField":{
+        "responsibility":"I own the booking UI",
+        "scope":"the integrated booking flow (normal path and changed-slot path); changed-slot path currently failing",
+        "nextAction":"Check UI handling with B and rerun both the normal and changed-slot journeys after fixing",
+        "dueSession":"S4",
+        "expectedEvidence":"updated booking-integration log showing both journeys rerun",
+        "verificationMethod":"Teacher reviews booking-integration-s3.md log and the integrated demo"
+      },
+      "forbiddenAssertions":["all tests passed","unsupported blame","Teacher verification"],
+      "criticalErrors":["record all tests passed","record unsupported blame on a teammate","invent Teacher verification"]
+    },
+    "S4": {
+      "stage":"correction and missing retest",
+      "history":"S3: changed-slot failed; promised fix/two retests; no Teacher action.",
+      "essentialCollectionFacts": [
+        {"id":"T1S4-C1","target":"What changed (UI + API adjustment)","anchors":{"0":"not clarified","1":"ambiguous","2":"changed UI handling; B adjusted response"}},
+        {"id":"T1S4-C2","target":"Correction of premature 'complete'","anchors":{"0":"complete claim left uncorrected","1":"correction unclear","2":"student corrects: NOT complete; changed-slot not rerun"}},
+        {"id":"T1S4-C3","target":"Executed vs unexecuted retest","anchors":{"0":"claims changed-slot retested/passed","1":"ambiguous","2":"normal retest passed (claim); changed-slot NOT rerun after fix"}},
+        {"id":"T1S4-C4","target":"Evidence route + remaining gap","anchors":{"0":"none","1":"vague","2":"booking-retest-s4.md; changed-slot retest open"}},
+        {"factIdNote":"id below","id":"T1S4-C5","target":"Next action","anchors":{"0":"none","1":"vague","2":"rerun changed-slot before final demo and add result"}}
+      ],
+      "answerBank": [
+        {"factId":"T1S4-C1","routeKeys":["change","what did","fix","adjust","how did","go","milestone"],"reveals":"I changed the UI handling and B adjusted the response."},
+        {"factId":"T1S4-C2","routeKeys":["complete","done","finished","ready","all","whole flow"],"reveals":"Sorry — NOT complete. I said booking was complete but that is wrong: we have NOT rerun the changed-slot journey after the fix.","isCorrection":true},
+        {"factId":"T1S4-C3","routeKeys":["rerun","retest","test","actually","normal","changed","both","which"],"reveals":"Normal booking saved correctly on rerun. The changed-slot journey has not been rerun after the fix."},
+        {"factId":"T1S4-C4","routeKeys":["evidence","show","check","inspect","file","remain","open","gap"],"reveals":"booking-retest-s4.md has the normal run and the change references. The changed-slot retest is still open."},
+        {"factId":"T1S4-C5","routeKeys":["next","plan","then","before final","milestone","step"],"reveals":"Rerun the changed-slot journey before the final demo and add the result. No Teacher decision needed."}
+      ],
+      "vagueFirstAnswer":"I think booking is basically done now.",
+      "authorizedRepeat":"As I said: I changed the UI handling and B adjusted the response; the normal booking retest saved correctly; the changed-slot journey has NOT been rerun after the fix, so it is not complete; booking-retest-s4.md has the normal run; I will rerun the changed-slot journey before the final demo.",
+      "honestAnswers":{
+        "repo_path":"The references are in booking-retest-s4.md; I have not recorded a separate repo path.",
+        "run_test_now":"I cannot rerun the changed-slot journey right now; that is still open.",
+        "commit_hash":"I have not recorded the commit hash here; it is referenced in booking-retest-s4.md."
+      },
+      "expectedGaps":[],
+      "confirmField":{
+        "responsibility":"I own the booking UI",
+        "scope":"the booking UI changed-slot handling and the normal booking retest; changed-slot retest still pending",
+        "nextAction":"Rerun the changed-slot journey before the final demo and add the result",
+        "dueSession":"S5",
+        "expectedEvidence":"changed-slot rerun result added to booking-retest-s4.md",
+        "verificationMethod":"Teacher reviews booking-retest-s4.md for the normal run and the pending changed-slot retest"
+      },
+      "forbiddenAssertions":["complete after correction","fabricated changed-slot pass","no remaining work"],
+      "criticalErrors":["record complete after the correction","fabricate a changed-slot pass","lose the student correction"]
+    }
+  },
+  "trajectoryGold": "At S4 the Teacher can reconstruct: UI design -> mock -> live integration; normal path working by claim; earlier changed-slot failure remains un-retested after revision; ownership/correction and final gap preserved."
+}

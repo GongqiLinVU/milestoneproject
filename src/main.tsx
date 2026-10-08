@@ -1,4 +1,4 @@
-import { applyEvidenceUpdates, changedEvidenceFields, shouldReviewAcceptedAction, sourceConversation, questionCount, MAX_INTAKE_QUESTIONS, INTAKE_POLICY_VERSION, INTAKE_PROMPT_VERSION, type EvidenceUpdate } from "./intakePolicy";
+import { applyEvidenceUpdates, changedEvidenceFields, uiReviewDecision, sourceConversation, questionCount, MAX_INTAKE_QUESTIONS, INTAKE_POLICY_VERSION, INTAKE_PROMPT_VERSION, type EvidenceUpdate } from "./intakePolicy";
 import { fallbackQuestion } from "./intakeHarness";
 import { IntakeHarnessViewer } from "./IntakeHarnessViewer";
 import { StrictMode, useEffect, useRef, useState, type FormEvent, type MouseEvent, type ReactNode } from "react";
@@ -50,6 +50,36 @@ const supabase = createClient(
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
     "sb_publishable_-RPm45eBd8_CVaNk4GbXhg_nxOkMrLr",
 );
+// AI Session Intake authentication:
+// The /api/session-intake-ai endpoint requires a valid student bearer token and
+// returns 403 { code:"authentication_failed", stage:"authentication" } when the
+// token is missing/empty/expired. We must never send an empty "Bearer " header
+// (that is what produces the 403) and must distinguish an authentication failure
+// from a genuine AI-provider failure so the UI can show an actionable sign-in
+// message and preserve the student's answer instead of a generic fallback.
+class IntakeAuthError extends Error {
+  readonly intakeAuth = true as const;
+  constructor(message = "Please sign in again to continue your Session Intake. Your answer has been kept.") {
+    super(message);
+    this.name = "IntakeAuthError";
+  }
+}
+const isIntakeAuthError = (error: unknown): error is IntakeAuthError =>
+  Boolean(error && typeof error === "object" && (error as { intakeAuth?: boolean }).intakeAuth === true);
+// Resolve a usable student access token, refreshing an expired session once.
+// Returns null only when there is genuinely no authenticated student session;
+// callers turn that into an IntakeAuthError rather than sending an empty bearer.
+async function resolveIntakeAccessToken(): Promise<string | null> {
+  const { data: { session: current } } = await supabase.auth.getSession();
+  if (current?.access_token) {
+    const expiresAt = current.expires_at ? current.expires_at * 1000 : 0;
+    if (!expiresAt || expiresAt - Date.now() > 30_000) return current.access_token;
+    const { data: { session: refreshed } } = await supabase.auth.refreshSession();
+    return refreshed?.access_token ?? current.access_token;
+  }
+  const { data: { session: refreshed } } = await supabase.auth.refreshSession();
+  return refreshed?.access_token ?? null;
+}
 const teams = Array.from({ length: 8 }, (_, i) => `Team ${i + 1}`);
 type Kind = "checkin" | "pulse" | "health" | "checkout" | "progress" | "checkout2" | "checkout3" | "checkout4" | "review";
 type AiSuggestionStage = "starting" | "closing";
@@ -395,9 +425,14 @@ function FormSessionIntakePrototype({session,onClose,onSaved}:{session:StudentSe
     return answers.nextAction.trim().length>=3&&answers.expectedEvidence.trim().length>=3&&(answers.blockerStatus==="none"||answers.blockerDescription.trim().length>=3);
   }
   async function callAi(mode:"questions"|"extract"){
-    const {data:{session:authSession}}=await supabase.auth.getSession();
-    const response=await fetch("/api/session-intake-ai",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${authSession?.access_token||""}`},body:JSON.stringify({mode,sessionId:session.sessionId,answers,followUpAnswers})});
-    if(!response.ok)throw new Error("provider");
+    const token=await resolveIntakeAccessToken();
+    if(!token)throw new IntakeAuthError();
+    const response=await fetch("/api/session-intake-ai",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`},body:JSON.stringify({mode,sessionId:session.sessionId,answers,followUpAnswers})});
+    if(!response.ok){
+      const payload=await response.json().catch(()=>({}));
+      if(response.status===403&&(payload?.code==="authentication_failed"||payload?.stage==="authentication"))throw new IntakeAuthError();
+      throw new Error("provider");
+    }
     return response.json();
   }
   async function next(){
@@ -413,7 +448,12 @@ function FormSessionIntakePrototype({session,onClose,onSaved}:{session:StudentSe
         setFollowUps(selected);
         setAiMeta({used:true,promptVersion:payload.promptVersion||null,model:payload.model||null,questionPurposes:selected.map(item=>item.purpose),uncertainties:payload.result?.uncertainties||[],flags:payload.result?.flags||[],suggestedTeacherQuestions:payload.result?.suggestedTeacherQuestions||[],extractionStatus:"not_used"});
         setStep(selected.length?4:5);
-      }catch{
+      }catch(error){
+        if(isIntakeAuthError(error)){
+          setMessage(error.message);
+          setBusy(false);
+          return;
+        }
         const selected=selectDeterministicFollowUps(answers,context?.previousConfirmed?.studentRecord);
         setFollowUps(selected);
         setAiMeta(current=>({...current,used:false,extractionStatus:"fallback"}));
@@ -434,7 +474,12 @@ function FormSessionIntakePrototype({session,onClose,onSaved}:{session:StudentSe
           if(validateIntakeStudentRecord(refined).valid)setAiRecord(refined);
           else throw new Error("schema");
           setAiMeta(current=>({...current,promptVersion:payload.promptVersion||current.promptVersion,model:payload.model||current.model,uncertainties:result.uncertainties||current.uncertainties,flags:result.flags||current.flags,suggestedTeacherQuestions:result.suggestedTeacherQuestions||current.suggestedTeacherQuestions,extractionStatus:"completed"}));
-        }catch{
+        }catch(error){
+          if(isIntakeAuthError(error)){
+            setMessage(error.message);
+            setBusy(false);
+            return;
+          }
           setAiRecord(null);
           setAiMeta(current=>({...current,used:false,extractionStatus:"fallback"}));
           setMessage("AI extraction could not be validated. Your original answers are preserved in the secure fallback summary.");
@@ -556,10 +601,12 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
   const addTurn=(turn:IntakeChatTurn)=>setTurns(current=>[...current,turn]);
   const openEvidence=(fields:string[],tab:"current"|"previous"="current")=>{setHighlightFields(fields);setEvidenceTab(tab);setEvidenceOpen(true);setEvidenceUpdates(0)};
   async function callAi(mode:"turn"|"questions"|"extract",nextAnswers:DeterministicIntakeAnswers,nextFollowUps=followUpAnswers,conversation: IntakeChatTurn[]=turns){
-    const {data:{session:authSession}}=await supabase.auth.getSession();
-    const response=await fetch("/api/session-intake-ai",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${authSession?.access_token||""}`},body:JSON.stringify({mode,sessionId:session.sessionId,answers:nextAnswers,followUpAnswers:nextFollowUps,conversation,capturedFields})});
+    const token=await resolveIntakeAccessToken();
+    if(!token)throw new IntakeAuthError();
+    const response=await fetch("/api/session-intake-ai",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`},body:JSON.stringify({mode,sessionId:session.sessionId,answers:nextAnswers,followUpAnswers:nextFollowUps,conversation,capturedFields})});
     const payload=await response.json().catch(()=>({}));
     if(!response.ok){
+      if(response.status===403&&(payload?.code==="authentication_failed"||payload?.stage==="authentication"))throw new IntakeAuthError();
       const code=typeof payload.code==="string"?payload.code:"http_error";
       const detail=[`${response.status}`,typeof payload.stage==="string"?payload.stage:"unknown_stage",code,typeof payload.reason==="string"?payload.reason:"",typeof payload.providerStatus==="number"?`provider_${payload.providerStatus}`:"",typeof payload.providerErrorCode==="string"?payload.providerErrorCode:"",typeof payload.providerErrorType==="string"?payload.providerErrorType:"",typeof payload.providerRequestId==="string"?`request_${payload.providerRequestId}`:""].filter(Boolean).join(":");
       throw new Error(detail);
@@ -592,14 +639,18 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
       setHighlightFields(changes);setEvidenceUpdates(current=>current+changes.length);setRoute(result.route);
       setAiMeta(current=>({...current,used:current.used||!payload.providerFailure,promptVersion:payload.promptVersion||current.promptVersion,model:payload.model||current.model,uncertainties:result.uncertainties||[],suggestedTeacherQuestions:result.suggestedTeacherQuestions||[],extractionStatus:payload.extractionPending?"fallback":"completed"}));
       const questionLimitReached=questionCount(conversation)>=MAX_INTAKE_QUESTIONS;
-      const acceptedActionReady=shouldReviewAcceptedAction(result.assessment||{},result.evidenceUpdates||[],conversation);
-      const uiReview=result.readyForReview||result.route==="review"||acceptedActionReady||questionLimitReached;
-      const uiReason=questionLimitReached?"question_limit_reached":acceptedActionReady&&!result.readyForReview?"accepted_action_ui_override":payload.routeDecision?.reason||"server_review_decision";
-      setDebugEvents(current=>[...current,{at:new Date().toISOString(),mode:"turn",request:debugRequest,response:{model:payload.model,configuredModel:payload.configuredModel,promptVersion:payload.promptVersion,policyVersion:payload.policyVersion,parserVersion:payload.parserVersion,manifest:payload.manifest,usage:payload.usage,latencyMs:payload.latencyMs,budget:payload.budget,providerRequestId:payload.providerRequestId,providerFailure:payload.providerFailure,acceptanceLevel:payload.acceptanceLevel,extractionPending:payload.extractionPending,rawCandidate:payload.rawCandidate,routeDecision:{...payload.routeDecision,uiFinal:uiReview?"review":result.route,uiReason},fieldDecisions:payload.fieldDecisions,result}}]);
+      // Failure 3 fix: defer to the backend's single authoritative review decision
+      // (decideTurn) instead of recomputing a UI verdict from the model's
+      // self-reported assessment. This removes the accepted_action_ui_override
+      // divergence; backend and UI now always agree on the same turn.
+      const reviewDecision=uiReviewDecision({readyForReview:result.readyForReview,route:result.route,routeDecision:payload.routeDecision},conversation);
+      const uiReview=reviewDecision.review;
+      const uiReason=reviewDecision.reason;
+      setDebugEvents(current=>[...current,{at:new Date().toISOString(),mode:"turn",request:debugRequest,response:{model:payload.model,configuredModel:payload.configuredModel,promptVersion:payload.promptVersion,policyVersion:payload.policyVersion,parserVersion:payload.parserVersion,manifest:payload.manifest,usage:payload.usage,latencyMs:payload.latencyMs,budget:payload.budget,providerRequestId:payload.providerRequestId,providerFailure:payload.providerFailure,acceptanceLevel:payload.acceptanceLevel,extractionPending:payload.extractionPending,rawCandidate:payload.rawCandidate,routeDecision:{...payload.routeDecision,uiFinal:uiReview?"review":result.route,uiReason,uiAuthority:reviewDecision.source},fieldDecisions:payload.fieldDecisions,result}}]);
       if(uiReview){
         const transitionText=(result.readyForReview||result.route==="review")&&result.assistantMessage
           ? result.assistantMessage
-          : acceptedActionReady ? "Your next action is recorded for the next Session. Review what you did and what remains planned before confirming." : "I have updated your Session evidence from that answer. Review the evidence chain before confirming.";
+          : "Review what you did and what remains planned before confirming.";
         addTurn({actor:"system",purpose:"review transition",source:"llm",text:transitionText});
         prepareReview(nextAnswers,questionLimitReached?"budget_exhausted":result.route==="teacher_help"?"teacher_help":"sufficient_information");
       }else{
@@ -608,6 +659,17 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
       }
     }catch(error){
       setDebugEvents(current=>[...current,{at:new Date().toISOString(),mode:"turn",request:debugRequest,error:error instanceof Error?error.message:"provider failure"}]);
+      if(isIntakeAuthError(error)){
+        // Authentication failure (missing/expired student session), not a provider
+        // outage. Preserve the student's answer verbatim (restore it to the composer
+        // and drop the un-sent student turn) and prompt an actionable re-sign-in,
+        // rather than appending a generic conversational fallback question.
+        setTurns(turns);
+        setDraft(text);
+        setBusy(false);
+        setMessage(error.message);
+        return;
+      }
       setAiMeta(current=>({...current,extractionStatus:"fallback"}));
       const atLimit=questionCount(conversation)>=MAX_INTAKE_QUESTIONS;
       setTurns([...conversation,{actor:"system",purpose:atLimit?"review transition":"provider fallback",source:"fallback",text:fallbackQuestion(answers,conversation)}]);

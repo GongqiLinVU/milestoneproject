@@ -4,6 +4,15 @@
 **Source baseline:** Sprint 7 final observation of 2026 2B1  
 **Product area:** NIT3004 Engineering Studio Platform
 
+> **Current closeout status (A–D) lives in `HANDOFF.md`,** which is the single
+> authoritative record: A complete (standard/case prep at current scope); B1/B2
+> implemented; B3 partial (live grader produced no parsed grades; carryover not
+> live-validated); C implemented and offline-verified this round (`S8-C_REPORT.md`,
+> three S9 fixes plus a follow-up specificity sanitiser; one general free-text
+> grounding limitation reported); D unverified (Phase 2C database audit + authenticated
+> application acceptance still gate closeout). This PLAN file is the product plan
+> and history; it is not the current closeout status.
+
 ## Sprint goal
 
 Pilot a guided AI Session Intake that helps students progress while producing

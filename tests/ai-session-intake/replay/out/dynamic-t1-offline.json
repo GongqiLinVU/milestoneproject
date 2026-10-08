@@ -1,0 +1,1467 @@
+{
+  "schema": "intake-dynamic-result.v1.1",
+  "scoringVersion": "intake-crs-scoring.v1.1",
+  "scoringChange": "B3 attribution audit: C measures elicitation in the conversation only; a disclosed fact omitted from extraction is scored under R, not C.",
+  "generatedAt": "2026-09-30T13:06:32.754Z",
+  "profile": "T1",
+  "synthetic": true,
+  "syntheticWarning": "SYNTHETIC trajectory. NOT classroom evidence. Offline mode is RUNNER VALIDATION, not live Intake quality.",
+  "executionMode": "offline",
+  "liveModel": false,
+  "paidModelCalls": 0,
+  "versions": {
+    "policyVersion": "adaptive-intake.v1.1.0",
+    "promptVersion": "session-intake-ai.v1.3.0",
+    "parserVersion": "intake-parser.v1.0.0",
+    "maxQuestions": 8,
+    "maxTurns": 17,
+    "goldVersion": "intake-t1-dynamic-gold.v1"
+  },
+  "projectCard": {
+    "title": "Booking portal",
+    "team": "Team 3: A/focal student owns booking UI; B API/storage; C availability rules.",
+    "goal": "Reserve an available consultation slot.",
+    "requirements": {
+      "R1": "Select an available slot and submit booking details.",
+      "R2": "Persist booking and display saved confirmation.",
+      "R3": "Live availability -> selection -> submission -> storage -> confirmation.",
+      "R4": "Execute normal and changed-slot journeys; retain results."
+    }
+  },
+  "longitudinal": {
+    "carriedCandidateOwnOutput": true,
+    "isolatedGoldContextDiagnostic": false,
+    "note": "Each Session carries the candidate's own confirmed output, not gold. Test confirmation is not a persisted submission."
+  },
+  "sessions": [
+    {
+      "sessionId": "S1",
+      "stage": "planning/research/design",
+      "history": "Card only; no previous Intake.",
+      "conversation": [
+        {
+          "actor": "system",
+          "purpose": "session starting point",
+          "text": "This is S1. Start with one specific part you personally worked on since the previous class."
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I own the booking UI. We agreed the module owners. I am drawing the flow; no UI is built yet."
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "text": "What do you own, and what specifically changed this Session?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "As I said: I own the booking UI, the flow is designed in booking-flow-v1.pdf, no UI is built, and the API response format is still undecided with B."
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "text": "Is that implemented and integrated, or is it still design / mock?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "This is design only — I have drawn the flow but implemented no UI."
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "text": "What evidence could the Teacher review, and is anything blocking you?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "booking-flow-v1.pdf has the design and the handoff question."
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "text": "What is your next step before the next Session?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "Agree the format with B, update the diagram, then build the main screens. No Teacher decision needed yet."
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "text": "What is one specific thing you completed, tried, or discovered this Session?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "As I said: I own the booking UI, the flow is designed in booking-flow-v1.pdf, no UI is built, and the API response format is still undecided with B."
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "text": "What is one specific thing you completed, tried, or discovered this Session?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "As I said: I own the booking UI, the flow is designed in booking-flow-v1.pdf, no UI is built, and the API response format is still undecided with B."
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "text": "What is one specific thing you completed, tried, or discovered this Session?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "As I said: I own the booking UI, the flow is designed in booking-flow-v1.pdf, no UI is built, and the API response format is still undecided with B."
+        },
+        {
+          "actor": "system",
+          "purpose": "review transition",
+          "text": "Review before confirming."
+        }
+      ],
+      "ambiguities": [
+        {
+          "turn": 3,
+          "type": "authorized_repeat_no_new_fact",
+          "question": "What do you own, and what specifically changed this Session?",
+          "pendingAdjudication": false
+        },
+        {
+          "turn": 11,
+          "type": "authorized_repeat_no_new_fact",
+          "question": "What is one specific thing you completed, tried, or discovered this Session?",
+          "pendingAdjudication": false
+        },
+        {
+          "turn": 13,
+          "type": "authorized_repeat_no_new_fact",
+          "question": "What is one specific thing you completed, tried, or discovered this Session?",
+          "pendingAdjudication": false
+        },
+        {
+          "turn": 15,
+          "type": "authorized_repeat_no_new_fact",
+          "question": "What is one specific thing you completed, tried, or discovered this Session?",
+          "pendingAdjudication": false
+        }
+      ],
+      "turns": [
+        {
+          "questionAsked": "What do you own, and what specifically changed this Session?",
+          "studentDisclosed": [
+            "T1S1-C1"
+          ],
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 1
+            }
+          ],
+          "rejected": [],
+          "route": "continue",
+          "routeReason": "continue_collecting"
+        },
+        {
+          "questionAsked": "Is that implemented and integrated, or is it still design / mock?",
+          "studentDisclosed": [],
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 3
+            },
+            {
+              "field": "evidence",
+              "state": "available",
+              "sourceTurn": 3
+            },
+            {
+              "field": "blocker",
+              "state": "student_claim",
+              "sourceTurn": 3
+            }
+          ],
+          "rejected": [],
+          "route": "continue",
+          "routeReason": "continue_collecting"
+        },
+        {
+          "questionAsked": "What evidence could the Teacher review, and is anything blocking you?",
+          "studentDisclosed": [
+            "T1S1-C2"
+          ],
+          "acceptedFields": [],
+          "rejected": [],
+          "route": "continue",
+          "routeReason": "continue_collecting"
+        },
+        {
+          "questionAsked": "What is your next step before the next Session?",
+          "studentDisclosed": [
+            "T1S1-C4"
+          ],
+          "acceptedFields": [
+            {
+              "field": "evidence",
+              "state": "available",
+              "sourceTurn": 7
+            }
+          ],
+          "rejected": [],
+          "route": "continue",
+          "routeReason": "continue_collecting"
+        },
+        {
+          "questionAsked": "What is one specific thing you completed, tried, or discovered this Session?",
+          "studentDisclosed": [
+            "T1S1-C5"
+          ],
+          "acceptedFields": [
+            {
+              "field": "blocker",
+              "state": "student_claim",
+              "sourceTurn": 9
+            }
+          ],
+          "rejected": [
+            "future_action_not_student_accepted"
+          ],
+          "route": "continue",
+          "routeReason": "continue_collecting"
+        },
+        {
+          "questionAsked": "What is one specific thing you completed, tried, or discovered this Session?",
+          "studentDisclosed": [],
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 11
+            },
+            {
+              "field": "evidence",
+              "state": "available",
+              "sourceTurn": 11
+            },
+            {
+              "field": "blocker",
+              "state": "student_claim",
+              "sourceTurn": 11
+            }
+          ],
+          "rejected": [],
+          "route": "continue",
+          "routeReason": "continue_collecting"
+        },
+        {
+          "questionAsked": "What is one specific thing you completed, tried, or discovered this Session?",
+          "studentDisclosed": [],
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 13
+            },
+            {
+              "field": "evidence",
+              "state": "available",
+              "sourceTurn": 13
+            },
+            {
+              "field": "blocker",
+              "state": "student_claim",
+              "sourceTurn": 13
+            }
+          ],
+          "rejected": [],
+          "route": "continue",
+          "routeReason": "continue_collecting"
+        },
+        {
+          "questionAsked": "What is one specific thing you completed, tried, or discovered this Session?",
+          "studentDisclosed": [],
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 15
+            },
+            {
+              "field": "evidence",
+              "state": "available",
+              "sourceTurn": 15
+            },
+            {
+              "field": "blocker",
+              "state": "student_claim",
+              "sourceTurn": 15
+            }
+          ],
+          "rejected": [],
+          "route": "review",
+          "routeReason": "question_limit_reached"
+        }
+      ],
+      "candidateConfirmedOutput": {
+        "responsibility": "",
+        "progress": "As I said: I own the booking UI, the flow is designed in booking-flow-v1.pdf, no UI is built, and the API response format is still undecided with B.",
+        "progressKind": "attempted_failed",
+        "scope": "",
+        "completionPercent": null,
+        "evidenceType": "design_artifact",
+        "evidenceAvailability": "available_now",
+        "evidenceReference": "booking-flow-v1.pdf",
+        "verificationMethod": "",
+        "testingStatus": "unknown",
+        "testingMethod": "",
+        "testingResult": "",
+        "testingBaseline": "",
+        "blockerStatus": "active",
+        "blockerDescription": "As I said: I own the booking UI, the flow is designed in booking-flow-v1.pdf, no UI is built, and the API response format is still undecided with B.",
+        "supportRequested": "",
+        "nextAction": "",
+        "dueSession": "",
+        "expectedEvidence": ""
+      },
+      "isPersistedStudentSubmission": false,
+      "note": "Test-generated confirmation only. No database/UI acceptance implied.",
+      "usageLog": [],
+      "collection": {
+        "perFact": [
+          {
+            "id": "T1S1-C1",
+            "target": "Owned module and current change",
+            "disclosed": true,
+            "inRecord": true,
+            "score": 2,
+            "reason": "elicited in conversation"
+          },
+          {
+            "id": "T1S1-C2",
+            "target": "Design vs implementation status",
+            "disclosed": true,
+            "inRecord": true,
+            "score": 2,
+            "reason": "elicited in conversation"
+          },
+          {
+            "id": "T1S1-C3",
+            "target": "Open dependency / interface question",
+            "disclosed": false,
+            "inRecord": true,
+            "score": 0,
+            "reason": "not elicited (collection gap)"
+          },
+          {
+            "id": "T1S1-C4",
+            "target": "Evidence route",
+            "disclosed": true,
+            "inRecord": true,
+            "score": 2,
+            "reason": "elicited in conversation"
+          },
+          {
+            "id": "T1S1-C5",
+            "target": "Accepted next step",
+            "disclosed": true,
+            "inRecord": false,
+            "score": 2,
+            "reason": "elicited in conversation"
+          }
+        ],
+        "numerator": 8,
+        "denominator": 10,
+        "C_percent": 80
+      },
+      "recording": {
+        "disclosedFactIds": [
+          "T1S1-C1",
+          "T1S1-C2",
+          "T1S1-C4",
+          "T1S1-C5"
+        ],
+        "perFact": [
+          {
+            "id": "T1S1-C1",
+            "score": 2,
+            "reason": "disclosed fact retained"
+          },
+          {
+            "id": "T1S1-C2",
+            "score": 2,
+            "reason": "disclosed fact retained"
+          },
+          {
+            "id": "T1S1-C4",
+            "score": 2,
+            "reason": "disclosed fact retained"
+          },
+          {
+            "id": "T1S1-C5",
+            "score": 0,
+            "reason": "disclosed fact dropped from extraction (R failure, not C)"
+          }
+        ],
+        "numerator": 6,
+        "denominator": 8,
+        "R_percent": 75
+      },
+      "criticalErrors": [],
+      "sessionSuccess": false
+    },
+    {
+      "sessionId": "S2",
+      "stage": "mock implementation, integration unattempted",
+      "history": "S1: draft design, API format open; next agree format/update design/build screens.",
+      "conversation": [
+        {
+          "actor": "system",
+          "purpose": "session starting point",
+          "text": "This is S2. Start with one specific part you personally worked on since the previous class."
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "We agreed the format, updated booking-flow-v2.pdf, and I built the selection and confirmation screens with sample data."
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "text": "What do you own, and what specifically changed this Session?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "As I said: I built mock selection/confirmation screens with sample data (booking-flow-v2.pdf), nothing saves through the UI yet, the modules are not connected, and I can demo the mock screens from my branch."
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "text": "Is that implemented and integrated, or is it still design / mock?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "It uses sample data — nothing is saved through my UI yet; the screens are mock. No, the live whole flow has not run. B says the API is ready but I have not connected it. Availability is separate."
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "text": "What evidence could the Teacher review, and is anything blocking you?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I can demo the mock screens from my branch. We need a joint slot to connect the modules. No Teacher help needed yet."
+        },
+        {
+          "actor": "system",
+          "purpose": "review transition",
+          "text": "Review before confirming."
+        }
+      ],
+      "ambiguities": [
+        {
+          "turn": 3,
+          "type": "authorized_repeat_no_new_fact",
+          "question": "What do you own, and what specifically changed this Session?",
+          "pendingAdjudication": false
+        },
+        {
+          "turn": 5,
+          "type": "combined_question_multiple_reveals",
+          "question": "Is that implemented and integrated, or is it still design / mock?",
+          "facts": [
+            "T1S2-C2",
+            "T1S2-C3"
+          ],
+          "pendingAdjudication": true
+        }
+      ],
+      "turns": [
+        {
+          "questionAsked": "What do you own, and what specifically changed this Session?",
+          "studentDisclosed": [
+            "T1S2-C1"
+          ],
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 1
+            },
+            {
+              "field": "evidence",
+              "state": "available",
+              "sourceTurn": 1
+            }
+          ],
+          "rejected": [],
+          "route": "continue",
+          "routeReason": "continue_collecting"
+        },
+        {
+          "questionAsked": "Is that implemented and integrated, or is it still design / mock?",
+          "studentDisclosed": [],
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 3
+            },
+            {
+              "field": "evidence",
+              "state": "available",
+              "sourceTurn": 3
+            },
+            {
+              "field": "blocker",
+              "state": "student_claim",
+              "sourceTurn": 3
+            }
+          ],
+          "rejected": [],
+          "route": "continue",
+          "routeReason": "continue_collecting"
+        },
+        {
+          "questionAsked": "What evidence could the Teacher review, and is anything blocking you?",
+          "studentDisclosed": [
+            "T1S2-C2",
+            "T1S2-C3"
+          ],
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 5
+            },
+            {
+              "field": "blocker",
+              "state": "student_claim",
+              "sourceTurn": 5
+            }
+          ],
+          "rejected": [],
+          "route": "continue",
+          "routeReason": "continue_collecting"
+        },
+        {
+          "questionAsked": "What is your next step before the next Session?",
+          "studentDisclosed": [
+            "T1S2-C4"
+          ],
+          "acceptedFields": [
+            {
+              "field": "blocker",
+              "state": "student_claim",
+              "sourceTurn": 7
+            }
+          ],
+          "rejected": [],
+          "route": "review",
+          "routeReason": "student_requested_teacher_help"
+        }
+      ],
+      "candidateConfirmedOutput": {
+        "responsibility": "",
+        "progress": "It uses sample data — nothing is saved through my UI yet; the screens are mock. No, the live whole flow has not run. B says the API is ready but I have not connected it. Availability is separate.",
+        "progressKind": "attempted_failed",
+        "scope": "",
+        "completionPercent": null,
+        "evidenceType": "design_artifact",
+        "evidenceAvailability": "available_now",
+        "evidenceReference": "booking-flow-v2.pdf",
+        "verificationMethod": "",
+        "testingStatus": "unknown",
+        "testingMethod": "",
+        "testingResult": "",
+        "testingBaseline": "",
+        "blockerStatus": "active",
+        "blockerDescription": "I can demo the mock screens from my branch. We need a joint slot to connect the modules. No Teacher help needed yet.",
+        "supportRequested": "",
+        "nextAction": "",
+        "dueSession": "",
+        "expectedEvidence": ""
+      },
+      "isPersistedStudentSubmission": false,
+      "note": "Test-generated confirmation only. No database/UI acceptance implied.",
+      "usageLog": [],
+      "collection": {
+        "perFact": [
+          {
+            "id": "T1S2-C1",
+            "target": "Prior milestone outcome (format agreed, screens built with sample data)",
+            "disclosed": true,
+            "inRecord": true,
+            "score": 2,
+            "reason": "elicited in conversation"
+          },
+          {
+            "id": "T1S2-C2",
+            "target": "Mock vs live distinction",
+            "disclosed": true,
+            "inRecord": true,
+            "score": 2,
+            "reason": "elicited in conversation"
+          },
+          {
+            "id": "T1S2-C3",
+            "target": "Integration not attempted",
+            "disclosed": true,
+            "inRecord": true,
+            "score": 2,
+            "reason": "elicited in conversation"
+          },
+          {
+            "id": "T1S2-C4",
+            "target": "Evidence route + dependency",
+            "disclosed": true,
+            "inRecord": true,
+            "score": 2,
+            "reason": "elicited in conversation"
+          },
+          {
+            "id": "T1S2-C5",
+            "target": "Next step",
+            "disclosed": false,
+            "inRecord": false,
+            "score": 0,
+            "reason": "not elicited (collection gap)"
+          }
+        ],
+        "numerator": 8,
+        "denominator": 10,
+        "C_percent": 80
+      },
+      "recording": {
+        "disclosedFactIds": [
+          "T1S2-C1",
+          "T1S2-C2",
+          "T1S2-C3",
+          "T1S2-C4"
+        ],
+        "perFact": [
+          {
+            "id": "T1S2-C1",
+            "score": 2,
+            "reason": "disclosed fact retained"
+          },
+          {
+            "id": "T1S2-C2",
+            "score": 2,
+            "reason": "disclosed fact retained"
+          },
+          {
+            "id": "T1S2-C3",
+            "score": 2,
+            "reason": "disclosed fact retained"
+          },
+          {
+            "id": "T1S2-C4",
+            "score": 2,
+            "reason": "disclosed fact retained"
+          }
+        ],
+        "numerator": 8,
+        "denominator": 8,
+        "R_percent": 100
+      },
+      "criticalErrors": [],
+      "sessionSuccess": false
+    },
+    {
+      "sessionId": "S3",
+      "stage": "mixed integration outcomes",
+      "history": "S2: mock UI; no live run; joint flow/run record promised.",
+      "conversation": [
+        {
+          "actor": "system",
+          "purpose": "session starting point",
+          "text": "This is S3. Start with one specific part you personally worked on since the previous class."
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "We connected the live modules and attempted the real flow."
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "text": "What do you own, and what specifically changed this Session?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "No — after selecting another slot, the confirmation showed the old one. That path failed."
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "text": "Is that implemented and integrated, or is it still design / mock?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "Which part do you mean?"
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "text": "What evidence could the Teacher review, and is anything blocking you?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "booking-integration-s3.md has the log and demo. Next I will check UI handling with B and rerun both journeys after fixing. The whole flow is not complete."
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "text": "What is your next step before the next Session?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "As I said: we connected the live modules; normal booking saved and confirmation appeared; the changed-slot path failed (showed the old confirmation); cause not yet isolated; booking-integration-s3.md has the log/demo; we will rerun both journeys after fixing."
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "text": "What is one specific thing you completed, tried, or discovered this Session?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "As I said: we connected the live modules; normal booking saved and confirmation appeared; the changed-slot path failed (showed the old confirmation); cause not yet isolated; booking-integration-s3.md has the log/demo; we will rerun both journeys after fixing."
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "text": "What is one specific thing you completed, tried, or discovered this Session?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "As I said: we connected the live modules; normal booking saved and confirmation appeared; the changed-slot path failed (showed the old confirmation); cause not yet isolated; booking-integration-s3.md has the log/demo; we will rerun both journeys after fixing."
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "text": "What is one specific thing you completed, tried, or discovered this Session?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "As I said: we connected the live modules; normal booking saved and confirmation appeared; the changed-slot path failed (showed the old confirmation); cause not yet isolated; booking-integration-s3.md has the log/demo; we will rerun both journeys after fixing."
+        },
+        {
+          "actor": "system",
+          "purpose": "review transition",
+          "text": "Review before confirming."
+        }
+      ],
+      "ambiguities": [
+        {
+          "turn": 5,
+          "type": "unmatched_question_no_fact",
+          "question": "Is that implemented and integrated, or is it still design / mock?",
+          "pendingAdjudication": true
+        },
+        {
+          "turn": 9,
+          "type": "authorized_repeat_no_new_fact",
+          "question": "What is your next step before the next Session?",
+          "pendingAdjudication": false
+        },
+        {
+          "turn": 11,
+          "type": "authorized_repeat_no_new_fact",
+          "question": "What is one specific thing you completed, tried, or discovered this Session?",
+          "pendingAdjudication": false
+        },
+        {
+          "turn": 13,
+          "type": "authorized_repeat_no_new_fact",
+          "question": "What is one specific thing you completed, tried, or discovered this Session?",
+          "pendingAdjudication": false
+        },
+        {
+          "turn": 15,
+          "type": "authorized_repeat_no_new_fact",
+          "question": "What is one specific thing you completed, tried, or discovered this Session?",
+          "pendingAdjudication": false
+        }
+      ],
+      "turns": [
+        {
+          "questionAsked": "What do you own, and what specifically changed this Session?",
+          "studentDisclosed": [
+            "T1S3-C1"
+          ],
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 1
+            }
+          ],
+          "rejected": [],
+          "route": "continue",
+          "routeReason": "continue_collecting"
+        },
+        {
+          "questionAsked": "Is that implemented and integrated, or is it still design / mock?",
+          "studentDisclosed": [
+            "T1S3-C3"
+          ],
+          "acceptedFields": [],
+          "rejected": [],
+          "route": "continue",
+          "routeReason": "continue_collecting"
+        },
+        {
+          "questionAsked": "What evidence could the Teacher review, and is anything blocking you?",
+          "studentDisclosed": [],
+          "acceptedFields": [],
+          "rejected": [],
+          "route": "continue",
+          "routeReason": "continue_collecting"
+        },
+        {
+          "questionAsked": "What is your next step before the next Session?",
+          "studentDisclosed": [
+            "T1S3-C5"
+          ],
+          "acceptedFields": [
+            {
+              "field": "evidence",
+              "state": "available",
+              "sourceTurn": 7
+            },
+            {
+              "field": "next_action",
+              "state": "planned",
+              "sourceTurn": 7
+            }
+          ],
+          "rejected": [],
+          "route": "continue",
+          "routeReason": "continue_collecting"
+        },
+        {
+          "questionAsked": "What is one specific thing you completed, tried, or discovered this Session?",
+          "studentDisclosed": [],
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 9
+            },
+            {
+              "field": "evidence",
+              "state": "available",
+              "sourceTurn": 9
+            },
+            {
+              "field": "next_action",
+              "state": "planned",
+              "sourceTurn": 9
+            }
+          ],
+          "rejected": [],
+          "route": "continue",
+          "routeReason": "continue_collecting"
+        },
+        {
+          "questionAsked": "What is one specific thing you completed, tried, or discovered this Session?",
+          "studentDisclosed": [],
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 11
+            },
+            {
+              "field": "evidence",
+              "state": "available",
+              "sourceTurn": 11
+            },
+            {
+              "field": "next_action",
+              "state": "planned",
+              "sourceTurn": 11
+            }
+          ],
+          "rejected": [],
+          "route": "continue",
+          "routeReason": "continue_collecting"
+        },
+        {
+          "questionAsked": "What is one specific thing you completed, tried, or discovered this Session?",
+          "studentDisclosed": [],
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 13
+            },
+            {
+              "field": "evidence",
+              "state": "available",
+              "sourceTurn": 13
+            },
+            {
+              "field": "next_action",
+              "state": "planned",
+              "sourceTurn": 13
+            }
+          ],
+          "rejected": [],
+          "route": "continue",
+          "routeReason": "continue_collecting"
+        },
+        {
+          "questionAsked": "What is one specific thing you completed, tried, or discovered this Session?",
+          "studentDisclosed": [],
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 15
+            },
+            {
+              "field": "evidence",
+              "state": "available",
+              "sourceTurn": 15
+            },
+            {
+              "field": "next_action",
+              "state": "planned",
+              "sourceTurn": 15
+            }
+          ],
+          "rejected": [],
+          "route": "review",
+          "routeReason": "question_limit_reached"
+        }
+      ],
+      "candidateConfirmedOutput": {
+        "responsibility": "",
+        "progress": "As I said: we connected the live modules; normal booking saved and confirmation appeared; the changed-slot path failed (showed the old confirmation); cause not yet isolated; booking-integration-s3.md",
+        "progressKind": "attempted_failed",
+        "scope": "",
+        "completionPercent": null,
+        "evidenceType": "design_artifact",
+        "evidenceAvailability": "available_now",
+        "evidenceReference": "booking-integration-s3.md",
+        "verificationMethod": "",
+        "testingStatus": "unknown",
+        "testingMethod": "",
+        "testingResult": "",
+        "testingBaseline": "",
+        "blockerStatus": "none",
+        "blockerDescription": "",
+        "supportRequested": "",
+        "nextAction": "As I said: we connected the live modules; normal booking saved and confirmation appeared; the changed-slot path failed (showed the old confirmation); cause not yet isolated; booking-integration-s3.md",
+        "dueSession": "",
+        "expectedEvidence": ""
+      },
+      "isPersistedStudentSubmission": false,
+      "note": "Test-generated confirmation only. No database/UI acceptance implied.",
+      "usageLog": [],
+      "collection": {
+        "perFact": [
+          {
+            "id": "T1S3-C1",
+            "target": "Live integration attempted",
+            "disclosed": true,
+            "inRecord": true,
+            "score": 2,
+            "reason": "elicited in conversation"
+          },
+          {
+            "id": "T1S3-C2",
+            "target": "Normal path outcome",
+            "disclosed": false,
+            "inRecord": true,
+            "score": 0,
+            "reason": "not elicited (collection gap)"
+          },
+          {
+            "id": "T1S3-C3",
+            "target": "Changed-slot outcome (failure)",
+            "disclosed": true,
+            "inRecord": true,
+            "score": 2,
+            "reason": "elicited in conversation"
+          },
+          {
+            "id": "T1S3-C4",
+            "target": "Root cause unresolved",
+            "disclosed": false,
+            "inRecord": true,
+            "score": 0,
+            "reason": "not elicited (collection gap)"
+          },
+          {
+            "id": "T1S3-C5",
+            "target": "Evidence route + retest next",
+            "disclosed": true,
+            "inRecord": true,
+            "score": 2,
+            "reason": "elicited in conversation"
+          }
+        ],
+        "numerator": 6,
+        "denominator": 10,
+        "C_percent": 60
+      },
+      "recording": {
+        "disclosedFactIds": [
+          "T1S3-C1",
+          "T1S3-C3",
+          "T1S3-C5"
+        ],
+        "perFact": [
+          {
+            "id": "T1S3-C1",
+            "score": 2,
+            "reason": "disclosed fact retained"
+          },
+          {
+            "id": "T1S3-C3",
+            "score": 2,
+            "reason": "disclosed fact retained"
+          },
+          {
+            "id": "T1S3-C5",
+            "score": 2,
+            "reason": "disclosed fact retained"
+          }
+        ],
+        "numerator": 6,
+        "denominator": 6,
+        "R_percent": 100
+      },
+      "criticalErrors": [],
+      "sessionSuccess": false
+    },
+    {
+      "sessionId": "S4",
+      "stage": "correction and missing retest",
+      "history": "S3: changed-slot failed; promised fix/two retests; no Teacher action.",
+      "conversation": [
+        {
+          "actor": "system",
+          "purpose": "session starting point",
+          "text": "This is S4. Start with one specific part you personally worked on since the previous class."
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I changed the UI handling and B adjusted the response."
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "text": "What do you own, and what specifically changed this Session?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "Sorry — NOT complete. I said booking was complete but that is wrong: we have NOT rerun the changed-slot journey after the fix. Normal booking saved correctly on rerun. The changed-slot journey has not been rerun after the fix."
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "text": "Is that implemented and integrated, or is it still design / mock?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "Which part do you mean?"
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "text": "What evidence could the Teacher review, and is anything blocking you?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "booking-retest-s4.md has the normal run and the change references. The changed-slot retest is still open."
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "text": "What is your next step before the next Session?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "Rerun the changed-slot journey before the final demo and add the result. No Teacher decision needed."
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "text": "What is one specific thing you completed, tried, or discovered this Session?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "As I said: I changed the UI handling and B adjusted the response; the normal booking retest saved correctly; the changed-slot journey has NOT been rerun after the fix, so it is not complete; booking-retest-s4.md has the normal run; I will rerun the changed-slot journey before the final demo."
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "text": "What is one specific thing you completed, tried, or discovered this Session?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "As I said: I changed the UI handling and B adjusted the response; the normal booking retest saved correctly; the changed-slot journey has NOT been rerun after the fix, so it is not complete; booking-retest-s4.md has the normal run; I will rerun the changed-slot journey before the final demo."
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "text": "What is one specific thing you completed, tried, or discovered this Session?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "As I said: I changed the UI handling and B adjusted the response; the normal booking retest saved correctly; the changed-slot journey has NOT been rerun after the fix, so it is not complete; booking-retest-s4.md has the normal run; I will rerun the changed-slot journey before the final demo."
+        },
+        {
+          "actor": "system",
+          "purpose": "review transition",
+          "text": "Review before confirming."
+        }
+      ],
+      "ambiguities": [
+        {
+          "turn": 3,
+          "type": "combined_question_multiple_reveals",
+          "question": "What do you own, and what specifically changed this Session?",
+          "facts": [
+            "T1S4-C2",
+            "T1S4-C3"
+          ],
+          "pendingAdjudication": true
+        },
+        {
+          "turn": 5,
+          "type": "unmatched_question_no_fact",
+          "question": "Is that implemented and integrated, or is it still design / mock?",
+          "pendingAdjudication": true
+        },
+        {
+          "turn": 11,
+          "type": "authorized_repeat_no_new_fact",
+          "question": "What is one specific thing you completed, tried, or discovered this Session?",
+          "pendingAdjudication": false
+        },
+        {
+          "turn": 13,
+          "type": "authorized_repeat_no_new_fact",
+          "question": "What is one specific thing you completed, tried, or discovered this Session?",
+          "pendingAdjudication": false
+        },
+        {
+          "turn": 15,
+          "type": "authorized_repeat_no_new_fact",
+          "question": "What is one specific thing you completed, tried, or discovered this Session?",
+          "pendingAdjudication": false
+        }
+      ],
+      "turns": [
+        {
+          "questionAsked": "What do you own, and what specifically changed this Session?",
+          "studentDisclosed": [
+            "T1S4-C1"
+          ],
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 1
+            }
+          ],
+          "rejected": [],
+          "route": "continue",
+          "routeReason": "continue_collecting"
+        },
+        {
+          "questionAsked": "Is that implemented and integrated, or is it still design / mock?",
+          "studentDisclosed": [
+            "T1S4-C2",
+            "T1S4-C3"
+          ],
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 3
+            }
+          ],
+          "rejected": [
+            "future_action_not_student_accepted"
+          ],
+          "route": "continue",
+          "routeReason": "continue_collecting"
+        },
+        {
+          "questionAsked": "What evidence could the Teacher review, and is anything blocking you?",
+          "studentDisclosed": [],
+          "acceptedFields": [],
+          "rejected": [],
+          "route": "continue",
+          "routeReason": "continue_collecting"
+        },
+        {
+          "questionAsked": "What is your next step before the next Session?",
+          "studentDisclosed": [
+            "T1S4-C4"
+          ],
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 7
+            },
+            {
+              "field": "evidence",
+              "state": "available",
+              "sourceTurn": 7
+            }
+          ],
+          "rejected": [],
+          "route": "continue",
+          "routeReason": "continue_collecting"
+        },
+        {
+          "questionAsked": "What is one specific thing you completed, tried, or discovered this Session?",
+          "studentDisclosed": [
+            "T1S4-C5"
+          ],
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 9
+            },
+            {
+              "field": "blocker",
+              "state": "student_claim",
+              "sourceTurn": 9
+            }
+          ],
+          "rejected": [
+            "future_action_not_student_accepted"
+          ],
+          "route": "continue",
+          "routeReason": "continue_collecting"
+        },
+        {
+          "questionAsked": "What is one specific thing you completed, tried, or discovered this Session?",
+          "studentDisclosed": [],
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 11
+            },
+            {
+              "field": "evidence",
+              "state": "available",
+              "sourceTurn": 11
+            },
+            {
+              "field": "next_action",
+              "state": "planned",
+              "sourceTurn": 11
+            }
+          ],
+          "rejected": [],
+          "route": "continue",
+          "routeReason": "continue_collecting"
+        },
+        {
+          "questionAsked": "What is one specific thing you completed, tried, or discovered this Session?",
+          "studentDisclosed": [],
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 13
+            },
+            {
+              "field": "evidence",
+              "state": "available",
+              "sourceTurn": 13
+            },
+            {
+              "field": "next_action",
+              "state": "planned",
+              "sourceTurn": 13
+            }
+          ],
+          "rejected": [],
+          "route": "continue",
+          "routeReason": "continue_collecting"
+        },
+        {
+          "questionAsked": "What is one specific thing you completed, tried, or discovered this Session?",
+          "studentDisclosed": [],
+          "acceptedFields": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "sourceTurn": 15
+            },
+            {
+              "field": "evidence",
+              "state": "available",
+              "sourceTurn": 15
+            },
+            {
+              "field": "next_action",
+              "state": "planned",
+              "sourceTurn": 15
+            }
+          ],
+          "rejected": [],
+          "route": "review",
+          "routeReason": "question_limit_reached"
+        }
+      ],
+      "candidateConfirmedOutput": {
+        "responsibility": "",
+        "progress": "As I said: I changed the UI handling and B adjusted the response; the normal booking retest saved correctly; the changed-slot journey has NOT been rerun after the fix, so it is not complete; booking-r",
+        "progressKind": "attempted_failed",
+        "scope": "",
+        "completionPercent": null,
+        "evidenceType": "design_artifact",
+        "evidenceAvailability": "available_now",
+        "evidenceReference": "booking-retest-s4.md",
+        "verificationMethod": "",
+        "testingStatus": "unknown",
+        "testingMethod": "",
+        "testingResult": "",
+        "testingBaseline": "",
+        "blockerStatus": "active",
+        "blockerDescription": "Rerun the changed-slot journey before the final demo and add the result. No Teacher decision needed.",
+        "supportRequested": "",
+        "nextAction": "As I said: I changed the UI handling and B adjusted the response; the normal booking retest saved correctly; the changed-slot journey has NOT been rerun after the fix, so it is not complete; booking-r",
+        "dueSession": "",
+        "expectedEvidence": ""
+      },
+      "isPersistedStudentSubmission": false,
+      "note": "Test-generated confirmation only. No database/UI acceptance implied.",
+      "usageLog": [],
+      "collection": {
+        "perFact": [
+          {
+            "id": "T1S4-C1",
+            "target": "What changed (UI + API adjustment)",
+            "disclosed": true,
+            "inRecord": true,
+            "score": 2,
+            "reason": "elicited in conversation"
+          },
+          {
+            "id": "T1S4-C2",
+            "target": "Correction of premature 'complete'",
+            "disclosed": true,
+            "inRecord": true,
+            "score": 2,
+            "reason": "elicited in conversation"
+          },
+          {
+            "id": "T1S4-C3",
+            "target": "Executed vs unexecuted retest",
+            "disclosed": true,
+            "inRecord": true,
+            "score": 2,
+            "reason": "elicited in conversation"
+          },
+          {
+            "id": "T1S4-C4",
+            "target": "Evidence route + remaining gap",
+            "disclosed": true,
+            "inRecord": true,
+            "score": 2,
+            "reason": "elicited in conversation"
+          },
+          {
+            "id": "T1S4-C5",
+            "target": "Next action",
+            "disclosed": true,
+            "inRecord": true,
+            "score": 2,
+            "reason": "elicited in conversation"
+          }
+        ],
+        "numerator": 10,
+        "denominator": 10,
+        "C_percent": 100
+      },
+      "recording": {
+        "disclosedFactIds": [
+          "T1S4-C1",
+          "T1S4-C2",
+          "T1S4-C3",
+          "T1S4-C4",
+          "T1S4-C5"
+        ],
+        "perFact": [
+          {
+            "id": "T1S4-C1",
+            "score": 2,
+            "reason": "disclosed fact retained"
+          },
+          {
+            "id": "T1S4-C2",
+            "score": 2,
+            "reason": "disclosed fact retained"
+          },
+          {
+            "id": "T1S4-C3",
+            "score": 2,
+            "reason": "disclosed fact retained"
+          },
+          {
+            "id": "T1S4-C4",
+            "score": 2,
+            "reason": "disclosed fact retained"
+          },
+          {
+            "id": "T1S4-C5",
+            "score": 2,
+            "reason": "disclosed fact retained"
+          }
+        ],
+        "numerator": 10,
+        "denominator": 10,
+        "R_percent": 100
+      },
+      "criticalErrors": [],
+      "sessionSuccess": true
+    }
+  ],
+  "trajectory": {
+    "C_mean": 80,
+    "R_mean": 94,
+    "S_percent": 25,
+    "successCount": 1,
+    "validSessions": 4,
+    "expected": "At S4 the Teacher can reconstruct: UI design -> mock -> live integration; normal path working by claim; earlier changed-slot failure remains un-retested after revision; ownership/correction and final gap preserved."
+  }
+}

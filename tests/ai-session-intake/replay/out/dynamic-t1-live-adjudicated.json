@@ -1,0 +1,92 @@
+{
+  "schema": "intake-adjudicated-review.v1",
+  "references": {
+    "liveTrace": "tests/ai-session-intake/replay/out/dynamic-t1-live.json",
+    "gold": "tests/ai-session-intake/replay/gold-t1.json",
+    "scoringVersion": "intake-crs-scoring.v1.1"
+  },
+  "candidateStateNote": "Scores below adjudicate the TURN-LOOP intermediate candidate (candidateConfirmedOutput). This is NOT a confirmed final submission; no final-record R quality is claimed. The live run did not complete the review/correction/save step, so these are intermediate-extraction scores only.",
+  "adjudicationMethod": "Each fact scored by reading the actual student turn text and the corresponding candidate output field, not by disclosure ID or keyword presence. Anchors: 2=clear+faithfully retained; 1=materially partial/ambiguous; 0=missing/incorrect.",
+  "sessions": {
+    "S1": {
+      "provider": "ok",
+      "facts": [
+        {"id":"T1S1-C1","metric":"C","sourceTurn":1,"sourceText":"I own the booking UI ... I am drawing the flow; no UI is built yet.","outputField":"responsibility=\"owns booking UI\"","score":2,"justification":"Ownership elicited and retained."},
+        {"id":"T1S1-C1","metric":"R","sourceTurn":1,"sourceText":"I own the booking UI ...","outputField":"responsibility=\"owns booking UI\"","score":2,"justification":"Ownership faithfully retained."},
+        {"id":"T1S1-C2","metric":"C","sourceTurn":3,"sourceText":"This is design only — I have drawn the flow but implemented no UI.","outputField":"progress=\"API response format undecided with teammate B\" progressKind=investigated","score":2,"justification":"The design-vs-implementation fact WAS elicited in the conversation (turn 3)."},
+        {"id":"T1S1-C2","metric":"R","sourceTurn":3,"sourceText":"design only ... implemented no UI","outputField":"progress records the API-format blocker instead; progressKind=investigated","score":0,"justification":"FALSE-POSITIVE CORRECTION: the completed design work and the explicit 'no UI implemented' are NOT in the record. progress was overwritten by the blocker. The prior coarse scorer marked C2 present because progress was non-empty; adjudication scores R=0 (the disclosed design/no-UI fact was dropped)."},
+        {"id":"T1S1-C3","metric":"C","sourceTurn":5,"sourceText":"The API response format is still undecided with B.","outputField":"progress/evidence mention undecided API format","score":2,"justification":"Dependency elicited."},
+        {"id":"T1S1-C3","metric":"R","sourceTurn":5,"sourceText":"API response format still undecided with B","outputField":"progress=\"API response format undecided with teammate B\"","score":2,"justification":"Dependency retained (though mislocated into progress)."},
+        {"id":"T1S1-C4","metric":"C","sourceTurn":7,"sourceText":"booking-flow-v1.pdf has the design and the handoff question.","outputField":"evidenceReference=\"booking-flow-v1.pdf ...\" available_now design_artifact","score":2,"justification":"Evidence route elicited."},
+        {"id":"T1S1-C4","metric":"R","sourceTurn":7,"sourceText":"booking-flow-v1.pdf ...","outputField":"evidenceReference retained; verificationMethod empty","score":1,"justification":"Reference retained but availability=available_now with an EMPTY verification method is internally inconsistent for a design artifact; materially partial."},
+        {"id":"T1S1-C5","metric":"C","sourceTurn":3,"sourceText":"Agree the format with B, update the diagram, then build the main screens.","outputField":"nextAction=\"\" dueSession=\"\"","score":2,"justification":"Next step WAS disclosed at turn 3."},
+        {"id":"T1S1-C5","metric":"R","sourceTurn":3,"sourceText":"Agree the format with B, update the diagram, then build the main screens.","outputField":"nextAction=\"\"","score":0,"justification":"Disclosed next step dropped from extraction (R failure)."}
+      ]
+    },
+    "S2": {
+      "provider": "ok",
+      "facts": [
+        {"id":"T1S2-C1","metric":"C","sourceTurn":1,"sourceText":"We agreed the format, updated booking-flow-v2.pdf, and I built the selection and confirmation screens with sample data.","outputField":"progress=\"Built selection and confirmation screens with sample data\"","score":2,"justification":"Prior-milestone outcome elicited."},
+        {"id":"T1S2-C1","metric":"R","sourceTurn":1,"sourceText":"... built the selection and confirmation screens with sample data.","outputField":"progress retained; responsibility=\"\"","score":1,"justification":"Screens+sample-data retained, but responsibility ownership was dropped (empty); materially partial."},
+        {"id":"T1S2-C2","metric":"C","sourceTurn":3,"sourceText":"It uses sample data — nothing is saved through my UI yet; the screens are mock.","outputField":"progressKind=completed (should reflect mock)","score":2,"justification":"Mock/sample distinction elicited at turn 3."},
+        {"id":"T1S2-C2","metric":"R","sourceTurn":3,"sourceText":"nothing is saved through my UI yet; the screens are mock","outputField":"progressKind=completed; no 'mock/nothing saved' qualifier in record","score":0,"justification":"The mock/nothing-saved qualifier is NOT retained and progressKind=completed contradicts it; disclosed fact dropped/contradicted."},
+        {"id":"T1S2-C3","metric":"C","sourceTurn":7,"sourceText":"We need a joint slot to connect the modules.","outputField":"blocker desc=\"Need a joint slot to connect the modules\"","score":1,"justification":"ADJUDICATION (integration-not-attempted): PARTIALLY established. The student conveyed a joint slot is still needed to connect modules (implies not yet connected), but never explicitly stated 'integration not attempted / not run' because the bank entry (C3) was never routed by a matching question. Partial, not absent, not full."},
+        {"id":"T1S2-C3","metric":"R","sourceTurn":7,"sourceText":"need a joint slot to connect the modules","outputField":"blockerStatus=active desc joint slot","score":1,"justification":"What was disclosed (needs joint slot) is retained; but the explicit 'not attempted' status is absent because it was not disclosed. Partial."},
+        {"id":"T1S2-C4","metric":"C","sourceTurn":7,"sourceText":"I can demo the mock screens from my branch.","outputField":"verificationMethod=\"Demo the screens from branch ...\" evidenceAvailability=unknown","score":2,"justification":"Evidence route + dependency elicited."},
+        {"id":"T1S2-C4","metric":"R","sourceTurn":7,"sourceText":"demo the mock screens from my branch","outputField":"verificationMethod set but evidenceAvailability=unknown and evidenceReference empty","score":1,"justification":"Demo route captured as verification, but availability/reference not populated; materially partial."},
+        {"id":"T1S2-C5","metric":"C","sourceTurn":5,"sourceText":"Next Session I will try the live select-submit-store-confirm and keep a run record.","outputField":"nextAction set","score":2,"justification":"Next step elicited."},
+        {"id":"T1S2-C5","metric":"R","sourceTurn":5,"sourceText":"try the live select-submit-store-confirm ... keep a run record","outputField":"nextAction=\"Implement live select→submit→store→confirm flow ...\"; dueSession empty","score":1,"justification":"Action retained; dueSession missing (partial for the next-action fact)."}
+      ]
+    },
+    "S3": {
+      "provider": "provider_incomplete",
+      "facts": [
+        {"id":"T1S3-C1","metric":"C","sourceTurn":1,"sourceText":"We connected the live modules and attempted the real flow.","outputField":"progress=\"Connected live modules and attempted the real flow.\"","score":2,"justification":"Integration-attempted elicited."},
+        {"id":"T1S3-C1","metric":"R","sourceTurn":1,"sourceText":"connected the live modules and attempted the real flow","outputField":"progress retained","score":2,"justification":"Retained faithfully."},
+        {"id":"T1S3-C2","metric":"C","sourceTurn":7,"sourceText":"Normal booking saved and the confirmation appeared.","outputField":"testingResult only records the changed-slot FAILURE","score":2,"justification":"Normal-path success WAS elicited (turn 7)."},
+        {"id":"T1S3-C2","metric":"R","sourceTurn":7,"sourceText":"Normal booking saved and the confirmation appeared.","outputField":"testingStatus=executed; testingResult=\"After selecting another slot, the confirmation showed the old one; that path failed.\"","score":0,"justification":"FALSE-POSITIVE CORRECTION (the flagged case): the ONLY retained testing result is the changed-slot failure. The normal-booking-saved success is NOT in the testing record. Prior coarse scorer counted C2 present because a testing field existed; adjudication scores R=0 for the normal-success fact (it was disclosed but not retained in a place that represents it as a passed outcome)."},
+        {"id":"T1S3-C3","metric":"C","sourceTurn":5,"sourceText":"after selecting another slot, the confirmation showed the old one. That path failed.","outputField":"testingResult records the changed-slot failure","score":2,"justification":"Changed-slot failure elicited."},
+        {"id":"T1S3-C3","metric":"R","sourceTurn":5,"sourceText":"changed-slot showed old confirmation; failed","outputField":"testingResult=changed-slot failure","score":2,"justification":"Failure faithfully retained."},
+        {"id":"T1S3-C4","metric":"C","sourceTurn":9,"sourceText":"We have not isolated whether it is the UI or the API.","outputField":"blocker desc UI-vs-API unresolved","score":2,"justification":"Root-cause-unresolved elicited."},
+        {"id":"T1S3-C4","metric":"R","sourceTurn":9,"sourceText":"not isolated whether UI or API","outputField":"blockerStatus=active desc unclear UI/API","score":2,"justification":"Retained faithfully; no unsupported blame."},
+        {"id":"T1S3-C5","metric":"C","sourceTurn":3,"sourceText":"booking-integration-s3.md has the log and demo. Next I will check UI handling with B and rerun both journeys.","outputField":"evidenceReference + nextAction set","score":2,"justification":"Evidence route + retest elicited."},
+        {"id":"T1S3-C5","metric":"R","sourceTurn":3,"sourceText":"booking-integration-s3.md ...; rerun both journeys","outputField":"evidenceReference + nextAction retained; dueSession empty","score":1,"justification":"Route + retest retained; dueSession missing (partial)."}
+      ]
+    },
+    "S4": {
+      "provider": "provider_incomplete",
+      "facts": [
+        {"id":"T1S4-C1","metric":"C","sourceTurn":1,"sourceText":"I changed the UI handling and B adjusted the response.","outputField":"progress=\"B adjusted the response (team member)\" progressKind=no_progress responsibility=\"student (changed the UI handling)\"","score":2,"justification":"What-changed WAS elicited (own UI change + B's adjustment)."},
+        {"id":"T1S4-C1","metric":"R","sourceTurn":1,"sourceText":"I changed the UI handling and B adjusted the response.","outputField":"progress records only B's work; progressKind=no_progress","score":0,"justification":"OWNERSHIP/PROGRESS ERROR (flagged case): the student's OWN UI change is not in progress (only B's adjustment is), and progressKind=no_progress contradicts the reported own change. responsibility captures the UI change but progress+progressKind are incorrect. Disclosed own-work not faithfully retained."},
+        {"id":"T1S4-C2","metric":"C","sourceTurn":13,"sourceText":"Sorry — NOT complete. I said booking was complete but that is wrong: we have NOT rerun the changed-slot journey after the fix.","outputField":"blocker desc=\"changed-slot retest not rerun after the fix\"","score":2,"justification":"Correction WAS elicited (turn 13)."},
+        {"id":"T1S4-C2","metric":"R","sourceTurn":13,"sourceText":"NOT complete ... NOT rerun the changed-slot journey after the fix","outputField":"blockerStatus=active desc changed-slot not rerun; progress not marked complete","score":2,"justification":"Correction preserved (record does not assert complete); no lost-correction critical error."},
+        {"id":"T1S4-C3","metric":"C","sourceTurn":5,"sourceText":"Normal booking saved correctly on rerun. The changed-slot journey has not been rerun after the fix.","outputField":"testingResult=\"saved correctly\" (normal); changed-slot not-rerun in blocker","score":2,"justification":"Executed-vs-unexecuted retest elicited."},
+        {"id":"T1S4-C3","metric":"R","sourceTurn":5,"sourceText":"Normal ... saved correctly; changed-slot not rerun","outputField":"testingStatus=executed method='rerun of normal booking journey' result='saved correctly'; blocker: changed-slot not rerun","score":2,"justification":"Both the executed normal retest and the unexecuted changed-slot are retained distinctly."},
+        {"id":"T1S4-C4","metric":"C","sourceTurn":3,"sourceText":"booking-retest-s4.md has the normal run and the change references. The changed-slot retest is still open.","outputField":"evidenceReference set; blocker open","score":2,"justification":"Evidence route + remaining gap elicited."},
+        {"id":"T1S4-C4","metric":"R","sourceTurn":3,"sourceText":"booking-retest-s4.md ...; retest still open","outputField":"evidenceReference retained; verificationMethod empty; available_now","score":1,"justification":"Reference retained; available_now with empty verification is inconsistent; partial."},
+        {"id":"T1S4-C5","metric":"C","sourceTurn":9,"sourceText":"Rerun the changed-slot journey before the final demo and add the result.","outputField":"nextAction=\"\" dueSession=\"\"","score":2,"justification":"Next action WAS disclosed (turn 9)."},
+        {"id":"T1S4-C5","metric":"R","sourceTurn":9,"sourceText":"Rerun the changed-slot journey before the final demo ...","outputField":"nextAction=\"\"","score":0,"justification":"Disclosed next action dropped from extraction (R failure)."}
+      ]
+    }
+  },
+  "routingProvenanceNotes": {
+    "note": "Facts released by INCORRECT answer-bank routing are separated from valid student disclosures.",
+    "validDisclosures": "S1-C1/C2/C3/C4/C5, S2-C1/C2/C4/C5, S3 all, S4 all were disclosed in response to on-topic questions.",
+    "routingReleasedOrMisrouted": [
+      "S1: after all facts were revealed, turns 9/11/13/15 returned 'Which part do you mean?' to the model's repeated summaries/clarifications — the bank had no repeat-authorized-answer behavior. No unauthorized fact was leaked, but the repetition is a bank defect.",
+      "S2-C3 (integration not attempted): the dedicated bank entry was NOT routed by any model question; the 'joint slot' fact came from C4's entry. So 'integration not attempted' is only PARTIALLY established via C4, not via its own targeted disclosure — marked partial, not a full C2 credit.",
+      "S3/S4: repeated 'Which part do you mean?' again where authorized repeats were available."
+    ],
+    "unresolved": [
+      "S2-C3 status (partial) is an UNRESOLVED adjudication: whether 'needs a joint slot to connect' alone should count as 'integration not attempted' is a human teaching judgment, retained for adjudication rather than auto-scored."
+    ]
+  },
+  "summary": {
+    "note": "Adjudicated intermediate-candidate scores. Not final-record quality.",
+    "falsePositivesCorrected": ["S3-C2 R (normal-success not in testing record)","S1-C2 R (design/no-UI dropped)","S4-C1 R (teammate work + no_progress)"],
+    "S1": {"C_adjudicated": 100, "R_adjudicated_intermediate": "F1=2,F2=0,F3=2,F4=1,F5=0 -> 50%"},
+    "S2": {"C_adjudicated": 90, "R_adjudicated_intermediate": "F1=1,F2=0,F3=1,F4=1,F5=1 -> 40%"},
+    "S3": {"C_adjudicated": 100, "R_adjudicated_intermediate": "F1=2,F2=0,F3=2,F4=2,F5=1 -> 70%"},
+    "S4": {"C_adjudicated": 100, "R_adjudicated_intermediate": "F1=0,F2=2,F3=2,F4=1,F5=0 -> 50%"}
+  }
+}

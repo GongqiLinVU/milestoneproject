@@ -30,3 +30,34 @@ test('dialogue-only response retains conversation with extraction pending',async
 test('endpoint rejects over-budget transcript before provider call',async()=>{const {res,sent}=await run([...turns,...turns.slice(0,2)]);assert.equal(res.code,400);assert.equal(sent,undefined)});
 test('endpoint retries provider once, then continues without adding a question',async()=>{const {res,providerCalls}=await run(turns.slice(0,2),result,true);assert.equal(res.code,200);assert.equal(res.body.result.route,'provider_fallback_continue');assert.equal(res.body.result.readyForReview,false);assert.equal(res.body.retryCount,1);assert.equal(providerCalls,2)});
 test('2B1 is refused before any model call',async()=>{const {res,providerCalls}=await run(turns.slice(0,2),result,false,'2B1');assert.equal(res.code,403);assert.equal(providerCalls,0)});
+
+// M14 (API auth): the missing-token 403 must fire BEFORE any network call —
+// no auth lookup, no student-context read, and no model call. The catalog's
+// existing `access control` integration scenario uses a VALID token with a bad
+// session id, so it exercises the context path, not the no-token path; it does
+// not protect the M14 branch. This test drives the real handler with no
+// Authorization header and asserts the request is refused with zero outbound
+// fetches of any kind (auth, Supabase table read, or provider).
+test('M14: an unauthenticated request (no token) is refused before any auth, student-context, or model call',async()=>{
+  const original=globalThis.fetch;
+  const calls={auth:0,supabase:0,provider:0};
+  globalThis.fetch=async(url)=>{
+    const path=String(url);
+    if(path.includes('openai.com'))calls.provider++;
+    else if(path.includes('/auth/'))calls.auth++;
+    else calls.supabase++;
+    return new Response(JSON.stringify({}),{status:200,headers:{'content-type':'application/json'}});
+  };
+  const res={setHeader(){},status(code){this.code=code;return this},json(value){this.body=value;return this}};
+  try{
+    // No `authorization` header at all — the deployed browser path always sends
+    // `Bearer <token>`; its absence must be rejected, not treated as anonymous access.
+    await handler({method:'POST',headers:{},body:{mode:'turn',sessionId:'00000000-0000-0000-0000-000000000000',answers:{},conversation:turns.slice(0,2)}},res);
+  }finally{globalThis.fetch=original}
+  assert.equal(res.code,403,`expected 403 for a missing token, got ${res.code}`);
+  assert.equal(res.body.code,'authentication_failed');
+  assert.equal(res.body.stage,'authentication');
+  assert.equal(calls.provider,0,'no model call may occur for an unauthenticated request');
+  assert.equal(calls.auth,0,'no auth lookup should occur when the token is absent');
+  assert.equal(calls.supabase,0,'no student-context read may occur for an unauthenticated request');
+});

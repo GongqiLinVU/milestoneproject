@@ -1,0 +1,119 @@
+{
+  "schema": "intake-grader-calibration.v3",
+  "mode": "paid_live_grader",
+  "status": "partial_failed",
+  "note": "Reconstructed from the preserved raw response of the single authorized live attempt (S1). NO additional paid call was made to produce this file. The runner was subsequently fixed (break + partial-write on failure, actual-cost ledger accounting) so a future authorized run persists this artifact automatically; this file is the faithful record of the attempt that already occurred.",
+  "failure": {
+    "sessionKey": "S1",
+    "error": "grader_output_parse",
+    "cause": "deepseek-flash is a reasoning model: it consumed the entire max_tokens=2000 output budget as reasoning_tokens and returned EMPTY message.content (finish_reason='length'), so there was no JSON object to parse.",
+    "finishReason": "length",
+    "knownUsd": 0.003166
+  },
+  "disclaimer": "Live grader calibration against manual references. PARTIAL: stopped on the first Session (S1) due to a provider-config blocker; no C/R agreement could be computed from a live grade. Mock agreement numbers elsewhere do NOT measure model quality.",
+  "graderProvider": "deepseek",
+  "graderModel": "deepseek-flash",
+  "calibrationSource": "out/dynamic-t1-live.PRE-065-RUN.json",
+  "calibratedSessions": ["S1", "S3", "S4"],
+  "completedSessions": [],
+  "attemptedSessions": ["S1"],
+  "graderInputExcludedReferenceScores": true,
+  "cAgreement": "N/A",
+  "rAgreement": "N/A",
+  "agreementCounts": {
+    "C": { "agreed": 0, "judged": 0 },
+    "R": { "agreed": 0, "judged": 0 },
+    "invalidEvidenceFacts": [],
+    "uncertainFacts": [],
+    "humanReviewFacts": []
+  },
+  "disagreements": [],
+  "allComparisonRows": [],
+  "parsedGrades": {},
+  "evidenceReview": {},
+  "raw": {
+    "S1": {
+      "status": "failed",
+      "error": "grader_output_parse",
+      "knownUsd": 0.003166,
+      "usage": {
+        "input_tokens": 2554,
+        "output_tokens": 2000,
+        "reasoning_tokens": 2000,
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 2554
+      },
+      "rawRequest": {
+        "provider": "deepseek",
+        "model": "deepseek-flash",
+        "url": "https://api.deepseek.com/chat/completions",
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer [REDACTED]"
+        },
+        "body": {
+          "model": "deepseek-flash",
+          "max_tokens": 2000,
+          "response_format": { "type": "json_object" },
+          "stream": false,
+          "messages": [
+            {
+              "role": "system",
+              "content": "You are a strict grader for an engineering-studio Session Intake benchmark. For EACH task, judge Collection (C) and Recording (R) separately against the anchors and the task instruction. Use ONLY the supplied conversation for C and ONLY the supplied record for R. Return a JSON object {\"grades\":[ ... ]} where each element is {factId, c_score, c_reason, c_evidenceTurns, c_quote, r_score, r_reason, r_fieldPath, r_value, uncertain}."
+            },
+            {
+              "role": "user",
+              "content": "{\"tasks\":[ 5 provider-blind T1S1 tasks (C1..C5): each carries target, 0/1/2 anchors, conversationEvidence U1..U8 (U5-U8 are the repeated 'Which part do you mean?'), recordEvidence field slice, and the separate-C/R instruction. NO reference scores/reasons and NO Intake-provider identity were included. Full verbatim payload is in the session error log of 2026-10-04T09:13Z; omitted here only for length. ]}"
+            }
+          ]
+        }
+      },
+      "rawResponse": {
+        "status": 200,
+        "body": {
+          "id": "e02b15bc-a1f6-410b-8381-a94848b07859",
+          "object": "chat.completion",
+          "created": 1791105249,
+          "model": "deepseek-flash",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "",
+                "reasoning_content": "<2000 reasoning tokens: the model deliberated about whether to return {\"grades\":[...]} vs a bare json_object and worked through C/R per fact, but never emitted the final content before hitting the token limit>"
+              },
+              "logprobs": null,
+              "finish_reason": "length"
+            }
+          ],
+          "usage": {
+            "prompt_tokens": 2554,
+            "completion_tokens": 2000,
+            "total_tokens": 4554,
+            "prompt_tokens_details": { "cached_tokens": 0 },
+            "completion_tokens_details": { "reasoning_tokens": 2000 },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 2554
+          },
+          "system_fingerprint": "aeb56401ca74e127821c4f9126dcb669"
+        },
+        "outputText": ""
+      }
+    }
+  },
+  "knownUsd": 0.003166,
+  "costAccounting": {
+    "category": "grader_evaluation",
+    "separateFrom": ["intake", "future_student_simulator", "classroom_student_use"],
+    "requests": 1,
+    "attempts": 1,
+    "retriesDisabled": true,
+    "actualKnownUsd": 0.003166,
+    "estimatedUnknownUsd": 0,
+    "estimatedUnknownNote": "Retries were disabled for this calibration and no retry was issued, so there is no unreported-attempt reserve. The one attempt's cost is fully known from the provider usage.",
+    "budgetGuardUsd": 0.10,
+    "budgetGuardScope": "this calibration only (isolated ledger out/ledger/calibration-ledger.json); the US$1.50 experiment ledger was NOT initialized"
+  }
+}

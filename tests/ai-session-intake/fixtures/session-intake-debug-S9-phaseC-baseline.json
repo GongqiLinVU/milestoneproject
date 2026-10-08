@@ -1,0 +1,735 @@
+{
+  "exportedAt": "2026-10-07T06:43:42.768Z",
+  "session": {
+    "number": 9,
+    "focus": "Final Readiness"
+  },
+  "policyVersion": "adaptive-intake.v1.1.0",
+  "stopReason": "sufficient_information",
+  "conversation": [
+    {
+      "actor": "system",
+      "purpose": "session starting point",
+      "text": "This is S9: Final Readiness. Start with one specific part you personally worked on since the previous class. What changed, and what observable result exists now?"
+    },
+    {
+      "actor": "student",
+      "purpose": "student response",
+      "text": "Since the last session I added the dashboard loading spinner. I changed\n  the frontend branch in commit abc123. When I loaded the page over a slow\n  connection, the spinner appeared until the cards loaded. I still have not\n  tested what happens when the API returns an error.",
+      "evidenceChanges": [
+        "claim",
+        "evidence",
+        "testing"
+      ]
+    },
+    {
+      "actor": "system",
+      "purpose": "small_step",
+      "source": "llm",
+      "text": "Got it — you added a dashboard loading spinner (commit abc123) and verified it appears when loading over a throttled connection; you have not tested API error handling. Can you force the API to return an error (e.g., 500), note what the UI shows, and either commit an error-state UI fix (reply with the commit SHA) or report the observed behavior here?"
+    },
+    {
+      "actor": "student",
+      "purpose": "student response",
+      "text": "Yes, I can. I will try to locate the error, then solve the problem. I will show the live demo to teacher",
+      "evidenceChanges": [
+        "evidence",
+        "next_action"
+      ]
+    },
+    {
+      "actor": "system",
+      "purpose": "review transition",
+      "source": "llm",
+      "text": "Your next action is recorded for the next Session. Review what you did and what remains planned before confirming."
+    }
+  ],
+  "record": {
+    "responsibility": {
+      "current": "",
+      "change_from_previous": "initial"
+    },
+    "claims": [
+      {
+        "claim_id": "C1",
+        "statement": "Added dashboard loading spinner in frontend",
+        "progress_kind": "completed",
+        "scope": "",
+        "completion_percent": null
+      }
+    ],
+    "evidence": [
+      {
+        "evidence_id": "E1",
+        "claim_ids": [
+          "C1"
+        ],
+        "type": "repository_change",
+        "availability": "available_now",
+        "reference": "Dashboard spinner added (commit abc123)",
+        "verification_method": null,
+        "not_required_reason": null
+      }
+    ],
+    "testing": [
+      {
+        "test_id": "T1",
+        "claim_ids": [
+          "C1"
+        ],
+        "execution_status": "executed",
+        "method": "manual functional test (throttled network)",
+        "observed_result": "Spinner appeared until cards loaded",
+        "baseline_or_expected": null
+      }
+    ],
+    "dependencies": [],
+    "blocker": {
+      "status": "unknown",
+      "description": "",
+      "support_requested": null
+    },
+    "next_action": {
+      "action": "Locate API error, fix UI error state, and demonstrate the fix live to the teacher (or provide commit SHA)",
+      "due_session": "S10",
+      "expected_evidence": "Live demonstration of error handling (or commit SHA for the fix)"
+    }
+  },
+  "corrections": [],
+  "events": [
+    {
+      "at": "2026-10-07T06:39:21.449Z",
+      "mode": "turn",
+      "request": {
+        "sessionNumber": 9,
+        "sessionFocus": "Final Readiness",
+        "conversation": [
+          {
+            "actor": "system",
+            "text": "This is S9: Final Readiness. Start with one specific part you personally worked on since the previous class. What changed, and what observable result exists now?"
+          },
+          {
+            "actor": "student",
+            "text": "Since the last session I added the dashboard loading spinner. I changed\n  the frontend branch in commit abc123. When I loaded the page over a slow\n  connection, the spinner appeared until the cards loaded. I still have not\n  tested what happens when the API returns an error."
+          }
+        ],
+        "answersSnapshot": {
+          "responsibility": "",
+          "progress": "",
+          "progressKind": "advanced",
+          "scope": "",
+          "completionPercent": null,
+          "evidenceType": "other",
+          "evidenceAvailability": "unknown",
+          "evidenceReference": "",
+          "verificationMethod": "",
+          "testingStatus": "unknown",
+          "testingMethod": "",
+          "testingResult": "",
+          "testingBaseline": "",
+          "blockerStatus": "unknown",
+          "blockerDescription": "",
+          "supportRequested": "",
+          "nextAction": "",
+          "dueSession": "S10",
+          "expectedEvidence": ""
+        },
+        "capturedFields": [],
+        "currentEvidence": {}
+      },
+      "response": {
+        "model": "gpt-5-mini-2025-08-07",
+        "configuredModel": "gpt-5-mini",
+        "promptVersion": "session-intake-ai.v1.3.0",
+        "policyVersion": "adaptive-intake.v1.1.0",
+        "parserVersion": "intake-parser.v1.0.0",
+        "manifest": {
+          "model": "gpt-5-mini-2025-08-07",
+          "promptVersion": "session-intake-ai.v1.3.0",
+          "policyVersion": "adaptive-intake.v1.1.0",
+          "parserVersion": "intake-parser.v1.0.0",
+          "evidenceSchemaVersion": "session-intake.v1.1.0",
+          "knowledgeVersion": "teacher-approved-kb.none",
+          "cost": null,
+          "latencyMs": 19941,
+          "stopReason": "continue"
+        },
+        "usage": {
+          "input_tokens": 1375,
+          "input_tokens_details": {
+            "cache_write_tokens": 0,
+            "cached_tokens": 0
+          },
+          "output_tokens": 2528,
+          "output_tokens_details": {
+            "reasoning_tokens": 1856
+          },
+          "total_tokens": 3903
+        },
+        "latencyMs": 19941,
+        "budget": {
+          "questionsAsked": 1,
+          "maxQuestions": 8,
+          "maxFollowUps": 5
+        },
+        "providerRequestId": "req_6d6b2eb7de41487894cc521c47df5ba9",
+        "acceptanceLevel": "L1",
+        "extractionPending": false,
+        "rawCandidate": {
+          "assistantMessage": "Got it — you added a dashboard loading spinner (commit abc123) and verified it appears when loading over a throttled connection; you have not tested API error handling. Can you force the API to return an error (e.g., 500), note what the UI shows, and either commit an error-state UI fix (reply with the commit SHA) or report the observed behavior here?",
+          "route": "small_step",
+          "readyForReview": false,
+          "assessment": {
+            "information": "focused",
+            "evidenceReadiness": "identified",
+            "verificationReadiness": "clear",
+            "testingMaturity": "executed",
+            "actionability": "needs_small_step",
+            "gap": "API error handling not tested",
+            "reason": "Student implemented spinner and manually verified on slow network; the API-error path remains untested and needs a small explicit test.",
+            "sourceTurns": [
+              1
+            ]
+          },
+          "evidenceUpdates": [
+            {
+              "field": "claim",
+              "value": "Added dashboard loading spinner in frontend",
+              "state": "student_claim",
+              "sourceTurn": 1,
+              "evidenceType": "repository_change",
+              "progressKind": "completed",
+              "method": null,
+              "observedResult": null,
+              "expectedEvidence": "commit abc123"
+            },
+            {
+              "field": "evidence",
+              "value": "commit abc123",
+              "state": "available",
+              "sourceTurn": 1,
+              "evidenceType": "repository_change",
+              "progressKind": "completed",
+              "method": null,
+              "observedResult": null,
+              "expectedEvidence": null
+            },
+            {
+              "field": "verification_method",
+              "value": "Manual load with network throttling (slow connection)",
+              "state": "available",
+              "sourceTurn": 1,
+              "evidenceType": "live_demonstration",
+              "progressKind": "completed",
+              "method": "loaded page over throttled network",
+              "observedResult": "Spinner appeared until the cards loaded",
+              "expectedEvidence": null
+            },
+            {
+              "field": "testing",
+              "value": "Spinner appears on slow network",
+              "state": "executed",
+              "sourceTurn": 1,
+              "evidenceType": "test_result",
+              "progressKind": "completed",
+              "method": "manual functional test (throttled network)",
+              "observedResult": "Spinner appeared until cards loaded",
+              "expectedEvidence": null
+            },
+            {
+              "field": "testing",
+              "value": "API error handling (e.g., 500) not tested",
+              "state": "missing",
+              "sourceTurn": 1,
+              "evidenceType": null,
+              "progressKind": "no_progress",
+              "method": null,
+              "observedResult": null,
+              "expectedEvidence": "Run a test forcing API error and record UI behavior (screenshot/description)"
+            },
+            {
+              "field": "next_action",
+              "value": "Force API error (e.g., 500), record UI behavior, and either commit an error-state UI fix or report the observed behavior",
+              "state": "planned",
+              "sourceTurn": 1,
+              "evidenceType": null,
+              "progressKind": null,
+              "method": null,
+              "observedResult": null,
+              "expectedEvidence": "Commit SHA for fix or a short report/screenshot describing observed UI behavior when API returns error"
+            }
+          ],
+          "uncertainties": [
+            "Only a commit id (abc123) was given; no link/screenshot of the commit provided",
+            "The manual test was described but not captured (no screenshot/log)",
+            "No acceptance criteria defined for error-state UI"
+          ],
+          "suggestedTeacherQuestions": []
+        },
+        "routeDecision": {
+          "proposed": "small_step",
+          "final": "small_step",
+          "reason": "model_small_step_proposal",
+          "uiFinal": "small_step",
+          "uiReason": "model_small_step_proposal"
+        },
+        "fieldDecisions": [
+          {
+            "index": 0,
+            "field": "claim",
+            "originalSourceTurn": 1,
+            "candidate": {
+              "field": "claim",
+              "value": "Added dashboard loading spinner in frontend",
+              "state": "student_claim",
+              "sourceTurn": 1,
+              "evidenceType": "repository_change",
+              "progressKind": "completed",
+              "method": null,
+              "observedResult": null,
+              "expectedEvidence": "commit abc123"
+            },
+            "outcome": "accepted",
+            "reason": "student_source_valid",
+            "sourceTurn": 1
+          },
+          {
+            "index": 1,
+            "field": "evidence",
+            "originalSourceTurn": 1,
+            "candidate": {
+              "field": "evidence",
+              "value": "commit abc123",
+              "state": "available",
+              "sourceTurn": 1,
+              "evidenceType": "repository_change",
+              "progressKind": "completed",
+              "method": null,
+              "observedResult": null,
+              "expectedEvidence": null
+            },
+            "outcome": "accepted",
+            "reason": "student_source_valid",
+            "sourceTurn": 1
+          },
+          {
+            "index": 2,
+            "field": "verification_method",
+            "originalSourceTurn": 1,
+            "candidate": {
+              "field": "verification_method",
+              "value": "Manual load with network throttling (slow connection)",
+              "state": "available",
+              "sourceTurn": 1,
+              "evidenceType": "live_demonstration",
+              "progressKind": "completed",
+              "method": "loaded page over throttled network",
+              "observedResult": "Spinner appeared until the cards loaded",
+              "expectedEvidence": null
+            },
+            "outcome": "rejected",
+            "reason": "state_not_allowed_for_field"
+          },
+          {
+            "index": 3,
+            "field": "testing",
+            "originalSourceTurn": 1,
+            "candidate": {
+              "field": "testing",
+              "value": "Spinner appears on slow network",
+              "state": "executed",
+              "sourceTurn": 1,
+              "evidenceType": "test_result",
+              "progressKind": "completed",
+              "method": "manual functional test (throttled network)",
+              "observedResult": "Spinner appeared until cards loaded",
+              "expectedEvidence": null
+            },
+            "outcome": "accepted",
+            "reason": "student_source_valid",
+            "sourceTurn": 1
+          },
+          {
+            "index": 4,
+            "field": "testing",
+            "originalSourceTurn": 1,
+            "candidate": {
+              "field": "testing",
+              "value": "API error handling (e.g., 500) not tested",
+              "state": "missing",
+              "sourceTurn": 1,
+              "evidenceType": null,
+              "progressKind": "no_progress",
+              "method": null,
+              "observedResult": null,
+              "expectedEvidence": "Run a test forcing API error and record UI behavior (screenshot/description)"
+            },
+            "outcome": "rejected",
+            "reason": "state_not_allowed_for_field"
+          },
+          {
+            "index": 5,
+            "field": "next_action",
+            "originalSourceTurn": 1,
+            "candidate": {
+              "field": "next_action",
+              "value": "Force API error (e.g., 500), record UI behavior, and either commit an error-state UI fix or report the observed behavior",
+              "state": "planned",
+              "sourceTurn": 1,
+              "evidenceType": null,
+              "progressKind": null,
+              "method": null,
+              "observedResult": null,
+              "expectedEvidence": "Commit SHA for fix or a short report/screenshot describing observed UI behavior when API returns error"
+            },
+            "outcome": "rejected",
+            "reason": "student_source_not_uniquely_grounded"
+          }
+        ],
+        "result": {
+          "assistantMessage": "Got it — you added a dashboard loading spinner (commit abc123) and verified it appears when loading over a throttled connection; you have not tested API error handling. Can you force the API to return an error (e.g., 500), note what the UI shows, and either commit an error-state UI fix (reply with the commit SHA) or report the observed behavior here?",
+          "route": "small_step",
+          "readyForReview": false,
+          "assessment": {
+            "information": "focused",
+            "evidenceReadiness": "identified",
+            "verificationReadiness": "clear",
+            "testingMaturity": "executed",
+            "actionability": "needs_small_step",
+            "gap": "API error handling not tested",
+            "reason": "Student implemented spinner and manually verified on slow network; the API-error path remains untested and needs a small explicit test.",
+            "sourceTurns": [
+              1
+            ]
+          },
+          "evidenceUpdates": [
+            {
+              "field": "claim",
+              "value": "Added dashboard loading spinner in frontend",
+              "state": "student_claim",
+              "sourceTurn": 1,
+              "evidenceType": "repository_change",
+              "progressKind": "completed",
+              "method": null,
+              "observedResult": null,
+              "expectedEvidence": "commit abc123"
+            },
+            {
+              "field": "evidence",
+              "value": "commit abc123",
+              "state": "available",
+              "sourceTurn": 1,
+              "evidenceType": "repository_change",
+              "progressKind": "completed",
+              "method": null,
+              "observedResult": null,
+              "expectedEvidence": null
+            },
+            {
+              "field": "testing",
+              "value": "Spinner appears on slow network",
+              "state": "executed",
+              "sourceTurn": 1,
+              "evidenceType": "test_result",
+              "progressKind": "completed",
+              "method": "manual functional test (throttled network)",
+              "observedResult": "Spinner appeared until cards loaded",
+              "expectedEvidence": null
+            }
+          ],
+          "uncertainties": [
+            "Only a commit id (abc123) was given; no link/screenshot of the commit provided",
+            "The manual test was described but not captured (no screenshot/log)",
+            "No acceptance criteria defined for error-state UI"
+          ],
+          "suggestedTeacherQuestions": []
+        }
+      }
+    },
+    {
+      "at": "2026-10-07T06:43:36.947Z",
+      "mode": "turn",
+      "request": {
+        "sessionNumber": 9,
+        "sessionFocus": "Final Readiness",
+        "conversation": [
+          {
+            "actor": "system",
+            "text": "This is S9: Final Readiness. Start with one specific part you personally worked on since the previous class. What changed, and what observable result exists now?"
+          },
+          {
+            "actor": "student",
+            "text": "Since the last session I added the dashboard loading spinner. I changed\n  the frontend branch in commit abc123. When I loaded the page over a slow\n  connection, the spinner appeared until the cards loaded. I still have not\n  tested what happens when the API returns an error."
+          },
+          {
+            "actor": "system",
+            "text": "Got it — you added a dashboard loading spinner (commit abc123) and verified it appears when loading over a throttled connection; you have not tested API error handling. Can you force the API to return an error (e.g., 500), note what the UI shows, and either commit an error-state UI fix (reply with the commit SHA) or report the observed behavior here?"
+          },
+          {
+            "actor": "student",
+            "text": "Yes, I can. I will try to locate the error, then solve the problem. I will show the live demo to teacher"
+          }
+        ],
+        "answersSnapshot": {
+          "responsibility": "",
+          "progress": "Added dashboard loading spinner in frontend",
+          "progressKind": "completed",
+          "scope": "",
+          "completionPercent": null,
+          "evidenceType": "repository_change",
+          "evidenceAvailability": "available_now",
+          "evidenceReference": "commit abc123",
+          "verificationMethod": "",
+          "testingStatus": "executed",
+          "testingMethod": "manual functional test (throttled network)",
+          "testingResult": "Spinner appeared until cards loaded",
+          "testingBaseline": "",
+          "blockerStatus": "unknown",
+          "blockerDescription": "",
+          "supportRequested": "",
+          "nextAction": "",
+          "dueSession": "S10",
+          "expectedEvidence": ""
+        },
+        "capturedFields": [
+          "claim",
+          "evidence",
+          "testing"
+        ],
+        "currentEvidence": {
+          "progress": "Added dashboard loading spinner in frontend",
+          "progressKind": "completed",
+          "completionPercent": null,
+          "evidenceType": "repository_change",
+          "evidenceAvailability": "available_now",
+          "evidenceReference": "commit abc123",
+          "testingStatus": "executed",
+          "testingMethod": "manual functional test (throttled network)",
+          "testingResult": "Spinner appeared until cards loaded",
+          "testingBaseline": ""
+        }
+      },
+      "response": {
+        "model": "gpt-5-mini-2025-08-07",
+        "configuredModel": "gpt-5-mini",
+        "promptVersion": "session-intake-ai.v1.3.0",
+        "policyVersion": "adaptive-intake.v1.1.0",
+        "parserVersion": "intake-parser.v1.0.0",
+        "manifest": {
+          "model": "gpt-5-mini-2025-08-07",
+          "promptVersion": "session-intake-ai.v1.3.0",
+          "policyVersion": "adaptive-intake.v1.1.0",
+          "parserVersion": "intake-parser.v1.0.0",
+          "evidenceSchemaVersion": "session-intake.v1.1.0",
+          "knowledgeVersion": "teacher-approved-kb.none",
+          "cost": null,
+          "latencyMs": 23267,
+          "stopReason": "continue"
+        },
+        "usage": {
+          "input_tokens": 1531,
+          "input_tokens_details": {
+            "cache_write_tokens": 0,
+            "cached_tokens": 0
+          },
+          "output_tokens": 3131,
+          "output_tokens_details": {
+            "reasoning_tokens": 2688
+          },
+          "total_tokens": 4662
+        },
+        "latencyMs": 23267,
+        "budget": {
+          "questionsAsked": 2,
+          "maxQuestions": 8,
+          "maxFollowUps": 5
+        },
+        "providerRequestId": "req_c9f71bb0b13b4ff99c4cae7d89c39bfc",
+        "acceptanceLevel": "L0",
+        "extractionPending": false,
+        "rawCandidate": {
+          "assistantMessage": "Thanks — I'll review these items: (1) dashboard spinner added (commit abc123) with a manual throttled-network test showing the spinner until cards loaded, and (2) your agreed next steps to locate and fix API error handling and demonstrate the fix live to the teacher (or provide a commit SHA). I will expect the live demo or a commit SHA as the verification artifact.",
+          "route": "review",
+          "readyForReview": true,
+          "assessment": {
+            "information": "focused",
+            "evidenceReadiness": "identified",
+            "verificationReadiness": "clear",
+            "testingMaturity": "planned",
+            "actionability": "clear",
+            "gap": "No commit SHA or timeline provided for the forthcoming error-handling fix.",
+            "reason": "Student completed spinner work and a manual test; they accepted a clear next action to debug/fix and to demo the result to teacher.",
+            "sourceTurns": [
+              1,
+              3
+            ]
+          },
+          "evidenceUpdates": [
+            {
+              "field": "evidence",
+              "value": "Dashboard spinner added (commit abc123)",
+              "state": "available",
+              "sourceTurn": 1,
+              "evidenceType": "repository_change",
+              "progressKind": "completed",
+              "method": null,
+              "observedResult": null,
+              "expectedEvidence": null
+            },
+            {
+              "field": "testing",
+              "value": "manual functional test (throttled network)",
+              "state": "executed",
+              "sourceTurn": 1,
+              "evidenceType": "test_result",
+              "progressKind": null,
+              "method": "manual functional test (throttled network)",
+              "observedResult": "Spinner appeared until cards loaded",
+              "expectedEvidence": null
+            },
+            {
+              "field": "next_action",
+              "value": "Locate API error, fix UI error state, and demonstrate the fix live to the teacher (or provide commit SHA)",
+              "state": "planned",
+              "sourceTurn": 3,
+              "evidenceType": "live_demonstration",
+              "progressKind": null,
+              "method": null,
+              "observedResult": null,
+              "expectedEvidence": "Live demonstration of error handling (or commit SHA for the fix)"
+            }
+          ],
+          "uncertainties": [
+            "Will the student produce a commit SHA for the fix before the demo?",
+            "No timeline specified for completing the fix or the demo."
+          ],
+          "suggestedTeacherQuestions": []
+        },
+        "routeDecision": {
+          "proposed": "review",
+          "final": "continue",
+          "reason": "continue_collecting",
+          "uiFinal": "review",
+          "uiReason": "accepted_action_ui_override"
+        },
+        "fieldDecisions": [
+          {
+            "index": 0,
+            "field": "evidence",
+            "originalSourceTurn": 1,
+            "candidate": {
+              "field": "evidence",
+              "value": "Dashboard spinner added (commit abc123)",
+              "state": "available",
+              "sourceTurn": 1,
+              "evidenceType": "repository_change",
+              "progressKind": "completed",
+              "method": null,
+              "observedResult": null,
+              "expectedEvidence": null
+            },
+            "outcome": "accepted",
+            "reason": "student_source_valid",
+            "sourceTurn": 1
+          },
+          {
+            "index": 1,
+            "field": "testing",
+            "originalSourceTurn": 1,
+            "candidate": {
+              "field": "testing",
+              "value": "manual functional test (throttled network)",
+              "state": "executed",
+              "sourceTurn": 1,
+              "evidenceType": "test_result",
+              "progressKind": null,
+              "method": "manual functional test (throttled network)",
+              "observedResult": "Spinner appeared until cards loaded",
+              "expectedEvidence": null
+            },
+            "outcome": "accepted",
+            "reason": "student_source_valid",
+            "sourceTurn": 1
+          },
+          {
+            "index": 2,
+            "field": "next_action",
+            "originalSourceTurn": 3,
+            "candidate": {
+              "field": "next_action",
+              "value": "Locate API error, fix UI error state, and demonstrate the fix live to the teacher (or provide commit SHA)",
+              "state": "planned",
+              "sourceTurn": 3,
+              "evidenceType": "live_demonstration",
+              "progressKind": null,
+              "method": null,
+              "observedResult": null,
+              "expectedEvidence": "Live demonstration of error handling (or commit SHA for the fix)"
+            },
+            "outcome": "accepted",
+            "reason": "student_source_valid",
+            "sourceTurn": 3
+          }
+        ],
+        "result": {
+          "assistantMessage": "Thanks — I'll review these items: (1) dashboard spinner added (commit abc123) with a manual throttled-network test showing the spinner until cards loaded, and (2) your agreed next steps to locate and fix API error handling and demonstrate the fix live to the teacher (or provide a commit SHA). I will expect the live demo or a commit SHA as the verification artifact.",
+          "route": "continue",
+          "readyForReview": false,
+          "assessment": {
+            "information": "focused",
+            "evidenceReadiness": "identified",
+            "verificationReadiness": "clear",
+            "testingMaturity": "planned",
+            "actionability": "clear",
+            "gap": "No commit SHA or timeline provided for the forthcoming error-handling fix.",
+            "reason": "Student completed spinner work and a manual test; they accepted a clear next action to debug/fix and to demo the result to teacher.",
+            "sourceTurns": [
+              1,
+              3
+            ]
+          },
+          "evidenceUpdates": [
+            {
+              "field": "evidence",
+              "value": "Dashboard spinner added (commit abc123)",
+              "state": "available",
+              "sourceTurn": 1,
+              "evidenceType": "repository_change",
+              "progressKind": "completed",
+              "method": null,
+              "observedResult": null,
+              "expectedEvidence": null
+            },
+            {
+              "field": "testing",
+              "value": "manual functional test (throttled network)",
+              "state": "executed",
+              "sourceTurn": 1,
+              "evidenceType": "test_result",
+              "progressKind": null,
+              "method": "manual functional test (throttled network)",
+              "observedResult": "Spinner appeared until cards loaded",
+              "expectedEvidence": null
+            },
+            {
+              "field": "next_action",
+              "value": "Locate API error, fix UI error state, and demonstrate the fix live to the teacher (or provide commit SHA)",
+              "state": "planned",
+              "sourceTurn": 3,
+              "evidenceType": "live_demonstration",
+              "progressKind": null,
+              "method": null,
+              "observedResult": null,
+              "expectedEvidence": "Live demonstration of error handling (or commit SHA for the fix)"
+            }
+          ],
+          "uncertainties": [
+            "Will the student produce a commit SHA for the fix before the demo?",
+            "No timeline specified for completing the fix or the demo."
+          ],
+          "suggestedTeacherQuestions": []
+        }
+      }
+    }
+  ]
+}
