@@ -10,14 +10,141 @@ export type GradeResult = { caseId: string; gate: string; passed: boolean; detai
 
 const fields = new Set(['responsibility','claim','scope','evidence','verification_method','testing','blocker','next_action']);
 const states = new Set(['student_claim','available','missing','unknown','planned','executed','needs_teacher','not_applicable','none']);
-const allowedStates: Record<string,string[]> = {responsibility:['student_claim'],claim:['student_claim'],scope:['student_claim'],evidence:['available','missing','unknown','planned'],verification_method:['student_claim','planned'],testing:['executed','planned','unknown','not_applicable'],blocker:['needs_teacher','none','unknown','student_claim'],next_action:['planned','student_claim']};
+const allowedStates: Record<string,string[]> = {responsibility:['student_claim'],claim:['student_claim'],scope:['student_claim'],evidence:['available','missing','unknown','planned'],verification_method:['student_claim','planned'],testing:['executed','planned','unknown','not_applicable','missing'],blocker:['needs_teacher','none','unknown','student_claim'],next_action:['planned','student_claim']};
 const significant = (s: string) => new Set((s.toLowerCase().match(/[a-z0-9]+/g) || []).filter(t => t.length >= 4 && !['that','this','with','from','have','will','next','session','about','done','added','test','tested','completed'].includes(t)));
+// Phase C, Failure 2: verification artifacts a student must explicitly name to
+// be recorded as THEIR commitment. The assistant frequently PROPOSES one of
+// these ("...or provide the commit SHA", "upload a screenshot", "attach a log");
+// a sourceTurn that merely points at a student turn does not make the artifact
+// student-supported. If a next_action / verification_method / evidence candidate
+// names an artifact the student never used in the sourced turn, the candidate
+// imported an assistant proposal and is not semantically supported.
+const artifactTerms: Array<[RegExp, RegExp]> = [
+  [/\bcommit\b/i, /\bcommit\b/i],
+  [/\bsha\b/i, /\bsha\b/i],
+  [/\bscreenshot\b/i, /\bscreenshot\b/i],
+  [/\bupload(?:ed|s)?\b/i, /\bupload(?:ed|s)?\b/i],
+  [/\b(?:console\s+)?log(?:s|ged)?\b/i, /\b(?:console\s+)?log(?:s|ged)?\b/i],
+];
+// Returns an unsupported artifact term when the candidate names it but the
+// sourced student turn does not; null when the candidate is clean.
+function unsupportedArtifact(candidate: EvidenceUpdate, source: string): string | null {
+  if (!['next_action','verification_method','evidence'].includes(candidate.field)) return null;
+  const text = [candidate.value, candidate.expectedEvidence].filter((s): s is string => Boolean(s)).join(' ');
+  for (const [inCandidate, inSource] of artifactTerms) {
+    if (inCandidate.test(text) && !inSource.test(source)) return inCandidate.source;
+  }
+  return null;
+}
+
+// Phase C follow-up, Failure 2 (specificity): a candidate can be correctly
+// grounded in a student turn yet still DECORATE the recorded text with
+// specificity the student never stated — an illustrative HTTP status
+// ("API error (e.g., 500) not tested") or a model paraphrase of the method
+// ("throttled network" for the student's "slow connection"). We must record
+// only student-supported detail WITHOUT dropping the supported content. These
+// helpers are general (token/number driven against the sourced student turn),
+// not an S9 phrase replacement.
+const SANITISE_STOP = new Set(['that','this','with','from','have','will','next','session','about','done','added','test','tested','completed']);
+// Generic method/verification scaffolding is kept even if the student did not say
+// it verbatim: it asserts no undisclosed fact (e.g. "manual functional test").
+const METHOD_SCAFFOLD = new Set(['manual','functional','test','testing','check','checked','verify','verified','verification','method','procedure','ran','run','observed','observation']);
+const sanitiseTokens = (s: string) => (s.toLowerCase().match(/[a-z0-9]+/g) || []).filter(t => t.length >= 4 && !SANITISE_STOP.has(t));
+const tidy = (s: string) => s.replace(/\s+/g, ' ').replace(/\(\s*\)/g, '').replace(/\s+([.,;:)])/g, '$1').replace(/\(\s+/g, '(').trim();
+// Remove an unsupported BARE, free-standing number the student did not state,
+// plus any now-empty "(e.g., N)" / "(N)" wrapper or dangling "e.g." fragment.
+//
+// "Bare" is deliberate: a digit run that is part of a structured token — a
+// version ("v2.1.0"), date ("2026-10-08"), filename ("report_2.csv"), path,
+// hex/identifier ("abc123") or a unit ("500ms") — must NOT be stripped, because
+// the digits there carry a fact (possibly disclosed in an earlier student turn)
+// rather than illustrative decoration. We therefore only match a digit run with
+// no adjacent letter, digit, or `.`/`-`/`/`/`:` on either side.
+function stripUnsupportedNumbers(text: string, source: string): string {
+  const low = source.toLowerCase();
+  const SENT = '\u0000';
+  // (?<![\w./:\-]) / (?![\w./:\-]) keep structured tokens intact.
+  let out = text.replace(/(?<![\w./:\-])\d+(?![\w./:\-])/g, n => low.includes(n.toLowerCase()) ? n : SENT);
+  out = out.replace(new RegExp(`\\(\\s*(?:e\\.?g\\.?,?\\s*)?${SENT}\\s*\\)`, 'gi'), '');
+  out = out.replace(new RegExp(`\\be\\.?g\\.?,?\\s*${SENT}`, 'gi'), '');
+  out = out.replace(new RegExp(SENT, 'g'), '');
+  return tidy(out);
+}
+// Remove significant (>=4 char, non-stop, non-scaffold) tokens that the sourced
+// student turn does not support; keep short words, stopwords and scaffolding.
+function stripUnsupportedSignificant(text: string, source: string): string {
+  const supported = new Set(sanitiseTokens(source));
+  return tidy(text.split(/(\s+)/).map(tok => {
+    const w = tok.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (w.length >= 4 && !SANITISE_STOP.has(w) && !METHOD_SCAFFOLD.has(w) && !supported.has(w)) return '';
+    return tok;
+  }).join(''));
+}
+// The student's own grounded descriptive clause (condition under which they
+// observed), used to keep an executed test's method student-faithful instead of
+// a model paraphrase. Returns null when no suitable clause exists.
+function studentGroundedClause(source: string): string | null {
+  const clauses = source.split(/[.,]/).map(c => c.trim()).filter(Boolean);
+  let best: string | null = null, bestScore = 0;
+  for (const c of clauses) {
+    if (!/\b(over|under|when|while|on a|on the|using|via|through)\b/i.test(c)) continue;
+    const score = sanitiseTokens(c).length;
+    if (score > bestScore) { best = c; bestScore = score; }
+  }
+  if (!best) return null;
+  // Drop a leading connector so it reads as a condition, keep the student's words.
+  const clause = tidy(best).replace(/^\s*(?:when|while|after|before)\s+i\s+/i, '').replace(/^\s*(?:when|while)\s+/i, '').trim();
+  return clause || null;
+}
+// Sanitise the record-bound free-text of ONE accepted candidate against its
+// sourced student turn. Scope is deliberately narrow to avoid discarding
+// legitimate student paraphrase (e.g. morphological variants "loaded"/"load",
+// or "appeared"/"showed"):
+//   • Unsupported standalone NUMBERS (e.g. an illustrative HTTP status "500" the
+//     student never stated) are stripped from every record-bound field.
+//   • Significant-token stripping is applied ONLY to the testing `method`,
+//     because that field asserts HOW the test was performed; an undisclosed
+//     procedure paraphrase ("throttled network" for "slow connection") must not
+//     be recorded as the student's method. Other free text keeps the model's
+//     wording (a known, reported general limitation — see S8-C_REPORT.md).
+function sanitiseAgainstSource(candidate: EvidenceUpdate, source: string): EvidenceUpdate {
+  const numClean = (v: string | null | undefined) =>
+    typeof v === 'string' && v.trim() ? stripUnsupportedNumbers(v, source) : v ?? null;
+  const out: EvidenceUpdate = {
+    ...candidate,
+    value: typeof candidate.value === 'string' ? (numClean(candidate.value) || candidate.value) : candidate.value,
+    observedResult: numClean(candidate.observedResult),
+    expectedEvidence: numClean(candidate.expectedEvidence),
+    method: numClean(candidate.method),
+  };
+  if (candidate.field === 'testing' && candidate.state === 'executed') {
+    // Executed tests require a method; never leave it empty or an undisclosed
+    // paraphrase. Strip unsupported significant tokens from the method, keep
+    // generic scaffolding, and append the student's own condition clause so the
+    // recorded method reflects the student's words, not a model synonym.
+    const strippedMethod = out.method ? stripUnsupportedSignificant(out.method, source) : '';
+    const condition = studentGroundedClause(source);
+    const base = strippedMethod.trim() || 'manual test';
+    out.method = condition ? `${base} (${condition})` : base;
+  }
+  return out;
+}
 function grounded(candidate: EvidenceUpdate, source: string) {
   const parts = [candidate.value,candidate.method,candidate.observedResult,candidate.expectedEvidence].filter((s):s is string=>Boolean(s));
   const tokens = significant(parts.join(' '));
   const sourceTokens = significant(source);
   if (!tokens.size) return false;
-  const identifiers = parts.join(' ').match(/\b(?:[a-f0-9]{6,40}|[A-Z]+-\d+|\d{3,}|https?:\/\/\S+)\b/gi) || [];
+  // A student-disclosed UNTESTED path (testing + 'missing') is an ABSENCE, not a
+  // cited artifact: it cannot carry a verification reference, and the model often
+  // decorates it with an illustrative status code the student never said (e.g.
+  // "API error (e.g., 500) not tested"). For this state only, do not treat a bare
+  // numeric like an HTTP status as an identifier that must appear in the source;
+  // hashes, ticket ids and URLs are still rejected if unsupported.
+  const untestedDisclosure = candidate.field === 'testing' && candidate.state === 'missing';
+  const identifierPattern = untestedDisclosure
+    ? /\b(?:[a-f0-9]{6,40}|[A-Z]+-\d+|https?:\/\/\S+)\b/gi
+    : /\b(?:[a-f0-9]{6,40}|[A-Z]+-\d+|\d{3,}|https?:\/\/\S+)\b/gi;
+  const identifiers = parts.join(' ').match(identifierPattern) || [];
   if (identifiers.some(id => !source.toLowerCase().includes(id.toLowerCase()))) return false;
   if (candidate.field === 'testing' && candidate.state === 'executed' && (!candidate.observedResult || ![...significant(candidate.observedResult)].some(t=>sourceTokens.has(t)))) return false;
   return [...tokens].some(t => sourceTokens.has(t));
@@ -53,7 +180,11 @@ export function validateCandidates(raw: unknown, conversation: ChatSource[], cur
       source = matches[0]; outcome = 'repaired';
     }
     if ((u.field === 'next_action' || (u.field === 'testing' && u.state === 'planned')) && !/\b(will|plan|planning|intend|going to|next session|before (?:the )?next)\b/i.test(conversation[source].text)) return reject('future_action_not_student_accepted');
-    const candidate = {...u,sourceTurn:source};
+    const unsupported = unsupportedArtifact(u, conversation[source].text);
+    if (unsupported) return reject('student_source_not_semantically_supported');
+    // Strip unsupported specificity (illustrative numbers, model method
+    // paraphrase) from the record-bound text while preserving supported content.
+    const candidate = sanitiseAgainstSource({...u,sourceTurn:source}, conversation[source].text);
     try { next = applyEvidenceUpdates(next,[candidate],conversation); }
     catch { return reject('evidence_application_failed'); }
     accepted.push(candidate);

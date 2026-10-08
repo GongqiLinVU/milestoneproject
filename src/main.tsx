@@ -1,4 +1,4 @@
-import { applyEvidenceUpdates, changedEvidenceFields, shouldReviewAcceptedAction, sourceConversation, questionCount, MAX_INTAKE_QUESTIONS, INTAKE_POLICY_VERSION, INTAKE_PROMPT_VERSION, type EvidenceUpdate } from "./intakePolicy";
+import { applyEvidenceUpdates, changedEvidenceFields, uiReviewDecision, sourceConversation, questionCount, MAX_INTAKE_QUESTIONS, INTAKE_POLICY_VERSION, INTAKE_PROMPT_VERSION, type EvidenceUpdate } from "./intakePolicy";
 import { fallbackQuestion } from "./intakeHarness";
 import { IntakeHarnessViewer } from "./IntakeHarnessViewer";
 import { StrictMode, useEffect, useRef, useState, type FormEvent, type MouseEvent, type ReactNode } from "react";
@@ -639,14 +639,18 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
       setHighlightFields(changes);setEvidenceUpdates(current=>current+changes.length);setRoute(result.route);
       setAiMeta(current=>({...current,used:current.used||!payload.providerFailure,promptVersion:payload.promptVersion||current.promptVersion,model:payload.model||current.model,uncertainties:result.uncertainties||[],suggestedTeacherQuestions:result.suggestedTeacherQuestions||[],extractionStatus:payload.extractionPending?"fallback":"completed"}));
       const questionLimitReached=questionCount(conversation)>=MAX_INTAKE_QUESTIONS;
-      const acceptedActionReady=shouldReviewAcceptedAction(result.assessment||{},result.evidenceUpdates||[],conversation);
-      const uiReview=result.readyForReview||result.route==="review"||acceptedActionReady||questionLimitReached;
-      const uiReason=questionLimitReached?"question_limit_reached":acceptedActionReady&&!result.readyForReview?"accepted_action_ui_override":payload.routeDecision?.reason||"server_review_decision";
-      setDebugEvents(current=>[...current,{at:new Date().toISOString(),mode:"turn",request:debugRequest,response:{model:payload.model,configuredModel:payload.configuredModel,promptVersion:payload.promptVersion,policyVersion:payload.policyVersion,parserVersion:payload.parserVersion,manifest:payload.manifest,usage:payload.usage,latencyMs:payload.latencyMs,budget:payload.budget,providerRequestId:payload.providerRequestId,providerFailure:payload.providerFailure,acceptanceLevel:payload.acceptanceLevel,extractionPending:payload.extractionPending,rawCandidate:payload.rawCandidate,routeDecision:{...payload.routeDecision,uiFinal:uiReview?"review":result.route,uiReason},fieldDecisions:payload.fieldDecisions,result}}]);
+      // Failure 3 fix: defer to the backend's single authoritative review decision
+      // (decideTurn) instead of recomputing a UI verdict from the model's
+      // self-reported assessment. This removes the accepted_action_ui_override
+      // divergence; backend and UI now always agree on the same turn.
+      const reviewDecision=uiReviewDecision({readyForReview:result.readyForReview,route:result.route,routeDecision:payload.routeDecision},conversation);
+      const uiReview=reviewDecision.review;
+      const uiReason=reviewDecision.reason;
+      setDebugEvents(current=>[...current,{at:new Date().toISOString(),mode:"turn",request:debugRequest,response:{model:payload.model,configuredModel:payload.configuredModel,promptVersion:payload.promptVersion,policyVersion:payload.policyVersion,parserVersion:payload.parserVersion,manifest:payload.manifest,usage:payload.usage,latencyMs:payload.latencyMs,budget:payload.budget,providerRequestId:payload.providerRequestId,providerFailure:payload.providerFailure,acceptanceLevel:payload.acceptanceLevel,extractionPending:payload.extractionPending,rawCandidate:payload.rawCandidate,routeDecision:{...payload.routeDecision,uiFinal:uiReview?"review":result.route,uiReason,uiAuthority:reviewDecision.source},fieldDecisions:payload.fieldDecisions,result}}]);
       if(uiReview){
         const transitionText=(result.readyForReview||result.route==="review")&&result.assistantMessage
           ? result.assistantMessage
-          : acceptedActionReady ? "Your next action is recorded for the next Session. Review what you did and what remains planned before confirming." : "I have updated your Session evidence from that answer. Review the evidence chain before confirming.";
+          : "Review what you did and what remains planned before confirming.";
         addTurn({actor:"system",purpose:"review transition",source:"llm",text:transitionText});
         prepareReview(nextAnswers,questionLimitReached?"budget_exhausted":result.route==="teacher_help"?"teacher_help":"sufficient_information");
       }else{

@@ -15,19 +15,22 @@ produced four valid 2B2 records, including one S1 → S2 longitudinal pair. The
 provider-independent workflow, fallback persistence and post-pilot security
 checks passed.
 
-Phase 2C remains open in Draft PR #65. The form-first prototype has progressed
-to a conversational UI, floating current/history evidence panel and OpenAI
-calls in the controlled pilot. User traces revealed extraction, routing and
-confirmation failures; dialogue quality does not establish end-to-end acceptance.
-The adaptive candidate is implemented on the Draft branch; local policy and
-mocked-endpoint regressions pass. Database audit and authenticated Preview
-submission remain pending. See `PHASE2C_ADAPTIVE_ROUND.md` for rollout and cases.
+Phase 2C guided AI Intake workspace is **merged** (PR #65, commit `a7956a6`,
+present on `main` and `origin/main`). The form-first prototype progressed to a
+conversational UI, floating current/history evidence panel and OpenAI calls in
+the controlled pilot. User traces revealed extraction, routing and confirmation
+failures; **merge of the code does not establish end-to-end application
+acceptance.** Local policy and mocked-endpoint regressions pass. The Phase 2C
+**database audit** and **authenticated Preview submission remain pending** and
+gate closeout (Phase D). See `PHASE2C_ADAPTIVE_ROUND.md` for rollout and cases,
+and the reconciled merge/acceptance table below.
 
-Harness v1 on the same Draft PR adds per-field accept/reject/repair,
-dialogue-only continuation, one bounded provider retry and nonterminal
-fallback. De-identified S3 source-pointer and future API 500 replays live in
-the adaptive suite. See `PHASE2C_HARNESS.md`; no migration execution or merge
-has been approved.
+Harness v1 (Visual Harness Debug) is **merged** (PR #66, commit `55fae87`, on
+`main` and `origin/main`): per-field accept/reject/repair, dialogue-only
+continuation, one bounded provider retry and nonterminal fallback. De-identified
+S3 source-pointer and future API 500 replays live in the adaptive suite. See
+`PHASE2C_HARNESS.md`. No migration execution has been approved; no deploy has
+been performed.
 
 ## Confirmed product direction
 
@@ -154,9 +157,10 @@ IJCAI-27 is an aspirational extension, not a product gate or guaranteed outcome.
 
 Source: `Sprint8_Closeout_Plan_Claude_Handoff_EN_2026-09-30.md`. This section
 records the closeout direction and the Phase A deliverables. It does **not** mark
-Phase B, C or D complete, and does **not** supersede the unresolved application
-acceptance requirements above (Phase 2C database audit, authenticated Preview
-submission, and PR #65 merge remain pending and required).
+Phase D complete, and does **not** supersede the unresolved application
+acceptance requirements above (Phase 2C database audit and authenticated Preview
+submission remain pending and required). PR #65 and PR #66 are **verified merged**
+(see the reconciled table below); the merge is no longer a pending gate.
 
 Closeout objective: establish a small, reproducible Intake benchmark, measure a
 baseline, complete one measured improvement, perform necessary application
@@ -179,18 +183,35 @@ Staged plan (only A is authorized now):
   `C_mean=90 R_mean=90 S=25%`, 0 critical errors), calibration controls, and a
   prepared-but-unexecuted live mode. S9 replay kept as a separate R anchor. Live
   3× baseline (paid) remains gated on Joseph's model/spend approval.
-  **B3** prepared (pre-paid, `S8-B3_REPORT.md`): C/R attribution corrected and
-  versioned (`intake-crs-scoring.v1.1` — a disclosed-but-unextracted fact is an R
-  failure, not a C failure; offline re-scored `C_mean=95 R_mean=90 S=25%`),
-  paraphrase routing + `pendingAdjudication` flags added, and live mode wired to
-  the **real** `/api/session-intake-ai` workflow (actual prompt/context/
-  extraction/validation/routing, `gpt-5-mini`) behind an approval gate.
-  One-trajectory budget ~$0.09 expected / ~$0.28 worst; **hard cap $0.20
-  requested**. No paid call made; the single live run is gated on Joseph's model +
-  cap approval.
-- **C — One focused improvement + regression.** Not started.
-- **D — Application acceptance + closeout.** Not started; still gated on the
-  Phase 2C database audit and authenticated application acceptance above.
+  **B3** — **partial.** C/R attribution corrected and versioned
+  (`intake-crs-scoring.v1.1` — a disclosed-but-unextracted fact is an R failure,
+  not a C failure; offline re-scored `C_mean=95 R_mean=90 S=25%`), paraphrase
+  routing + `pendingAdjudication` flags added, and live mode wired to the **real**
+  `/api/session-intake-ai` workflow behind an approval gate (`S8-B3_REPORT.md`).
+  **Live grader status:** the attempted live grader run produced **no parsed
+  grades**, and same-student **carryover is not live-validated**. The single paid
+  live trajectory remains gated on Joseph's model + spend approval (hard cap
+  $0.20 requested; no paid call made).
+- **C — One focused improvement + regression.** **Implemented and
+  offline-verified this round** (`S8-C_REPORT.md`, incl. the Phase C follow-up).
+  Three S9 failures fixed with the smallest coherent changes: (1) the
+  explicitly-untested API-error path is preserved alongside the executed
+  slow-connection test; (2) assistant-proposed details no longer enter the record
+  — the "commit SHA" next action is rejected (semantic support now required
+  beyond `sourceTurn` validity), and the **follow-up** removes the remaining
+  unsupported specifics (the illustrative "500" and the method paraphrase
+  "throttled network") so the record reflects the student's own "slow connection"
+  words; (3) the UI defers to the backend's single authoritative review decision
+  (the `accepted_action_ui_override` divergence is removed; correct outcome under
+  policy is `continue`). Verified offline against the preserved S9 fixture with
+  64 adaptive + 62 replay tests passing and a clean build; **no live S9 re-run and
+  no paid provider call** were performed. A remaining general free-text
+  semantic-grounding limitation is reported honestly (scoped sanitiser; §6 of the
+  report). The single bounded live re-run is proposed as the next acceptance step.
+- **D — Application acceptance + closeout.** **Not started / unverified.** The
+  Phase 2C database audit and authenticated application acceptance (Preview UI
+  submission, duplicate/cross-Block rejection, save-path RPC) remain unverified
+  and gate closeout.
 
 Current-state facts verified locally on 2026-09-30 (read-only):
 
@@ -207,7 +228,7 @@ Current-state facts verified locally on 2026-09-30 (read-only):
   trajectories are synthetic. See the missing-input inventory in
   `BENCHMARK_CASES_v1_DRAFT.md`.
 
-### Verified merge/acceptance status (reconciled 2026-09-30, B1)
+### Verified merge/acceptance status (reconciled 2026-09-30 B1; re-verified 2026-10-07 Phase C)
 
 The earlier "Current state" narrative above describes Phase 2C as an open Draft
 PR #65 gated on merge approval. Verified against local + remote history, that is
