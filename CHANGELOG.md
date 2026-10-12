@@ -1,5 +1,16 @@
 # Changelog
 
+## Sprint 10 S10-01 — unreleased
+
+- Extended Work Track entry, teacher controls and server contracts to S1–S9.
+- Added short S1–S5 responsibility/progress/next-action records without computed
+  percentages, preserving existing S6–S9 calculation and verification.
+- Clarified collection-method guidance, separate submission windows and Check-in.
+- Enforced selected-method Work Track writes and retained source-specific history.
+- Added a new reviewed migration and isolated SQL/browser validation evidence.
+  Not applied or deployed to production.
+
+
 ## Sprint 8 Phase 2B — Draft
 
 - Added a 2B2-only deterministic Session Intake journey for S1–S9.

@@ -2,9 +2,12 @@
 
 ## Current checkpoint
 
-13 October 2026: repository inspected and Sprint 10 plan prepared.
-**Stop before feature implementation.** This branch contains planning documents
-only. No SQL execution, production data change, paid call, merge or deployment.
+13 October 2026: Joseph approved the plan and authorized implementation.
+**S10-01 is implemented and locally validated; stop for PR review before
+feature merge or deployment.** Joseph applied the range migration; the
+follow-up anon-grant correction must be applied next. See S10-01_REPORT.md.
+Planning PR #70 merged. No student-data change or paid call; feature PR #71
+remains unmerged and the frontend has not been deployed.
 
 Start the next task by fetching actual latest main and inspecting the planning
 PR status. Reviewed main for this checkpoint:
@@ -60,15 +63,14 @@ Do not create/activate any Block, fabricate dates/rosters or execute SQL in
 this planning task. If Joseph creates 2B4 himself, inspect and verify that
 configuration before proposing further writes.
 
-## Next implementation slice: S10-01
+## Implemented review candidate: S10-01
 
 S1–S9 Work Track availability + clear teacher submission-method guidance.
 
-**Before coding**, Joseph must resolve the proposed S1–S5 question treatment:
-short responsibility/current-progress/next-action fields, optional evidence/
-blocker-help, with no mandatory late completion percentage (recommended),
-or retain the three-requirement assessment from S1.
-Do not silently choose this teaching tradeoff.
+Joseph approved the planned S1–S5 treatment: short responsibility/current-progress/
+next-action fields, optional evidence/blocker-help, without late completion percentages.
+The next step is reviewing S10-01 and authorizing its release/application; S10-02
+is the next feature increment after that review.
 
 Methods share a progress-recording goal but not persistence semantics:
 - disabled → Existing classroom workflow → updateable Work Track.
@@ -132,7 +134,7 @@ See PLAN.md for target windows, scope and acceptance:
   Five dataset levels remain unchanged; no grading/authorship/contribution verdict.
 - Acceptance by 29 Oct; 30 Oct release/configuration/contingency; teaching 2 Nov.
 
-## Planning validation and limits
+## Original planning validation (history)
 
 Inspected latest main, Sprint 9 PLAN/HANDOFF, root release report, development
 policy, student/teacher Work Track and Intake controls, SQL get/save/read gates,

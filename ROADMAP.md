@@ -1,5 +1,15 @@
 # Product Roadmap
 
+## Sprint 10 — active
+
+Classroom continuity and November readiness: S10-01 extends Work Track to S1–S9
+and clarifies teacher collection methods; S10-02 prepares synthetic 2B3 and real
+2B4 setup/account activation/recovery; S10-03 verifies continuity and remaining
+hosted gaps. AI usage controls and bounded quality/safety acceptance remain
+optional later work. Acceptance ends 29 October, contingency 30 October, teaching
+starts 2 November 2026. See `docs/sprints/sprint-10/PLAN.md` and `HANDOFF.md`.
+
+
 ## Product direction
 
 Engineering Studio Platform will evolve from a single-course delivery portal into a reusable studio-based teaching platform. The roadmap deliberately prioritises reliable teaching workflows before analytics and AI.
