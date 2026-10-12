@@ -2,12 +2,38 @@
 
 ## Current checkpoint
 
-13 October 2026: Joseph approved the plan and authorized implementation.
-**S10-01 is implemented and locally validated; stop for PR review before
-feature merge or deployment.** Joseph applied the range migration; the
-follow-up anon-grant correction must be applied next. See S10-01_REPORT.md.
-Planning PR #70 merged. No student-data change or paid call; feature PR #71
-remains unmerged and the frontend has not been deployed.
+## Latest release checkpoint — S10-01b (13 October)
+
+- Joseph confirmed 20261013_sprint10_s01b_compact_work_track.sql applied.
+- Anonymous get_my_session_work_track and save_my_session_work_track both refuse
+  HTTP 401 / SQLSTATE 42501; no student row modified by the probes.
+- PR #73 merged as **6b2009c4c2941cc9c93545b2d3ec92b951972e76**.
+- Vercel production status success:
+  https://vercel.com/guccimasters-projects/milestoneproject/8ChWCdd5ZWJTHF5x8nccR9paJuzG
+- /student returns 200 and serves /assets/index-Dsy_bNWw.js containing the compact
+  choices, explicit responsibility confirmation and compact.v1 capability.
+- No production student writes, Block mode changes or AI calls by ChatGPT.
+- **Pending:** Joseph's authorized test account fills one early Session, saves,
+  reloads and checks teacher read; a following Session can verify explicit
+  responsibility/prior-action carryover. Local evidence is already recorded in
+  S10-01B_REPORT.md; that implementation-time report is superseded for release
+  status by this checkpoint and PR #73.
+- Session AI override / durable usage controls remain next optional development;
+  2B3 rehearsal and actual 2B4 setup remain separate. Do not assume AI readiness.
+
+
+
+13 October 2026: **S10-01 released to production**, PR #71 merged as
+ff66c6f0876cb3b8a9fb4116e901f3e7e97793e9; Vercel status success and the new
+production JS bundle verified. Joseph applied both Work Track and privilege
+migrations. Anonymous reads now refuse all three checked RPCs (401/42501).
+See S10-01_REPORT.md for the authoritative checkpoint.
+
+Next: authorized test-account S1/S7 save/reload/teacher-read smoke, then S10-02.
+Do not claim that hosted acceptance passed: only isolated submission evidence,
+hosted asset checks and anonymous permission probes exist so far.
+No student-data write, paid call or Block-method change by ChatGPT.
+Planning PR #70 is also merged. Preserve current 2B2 configuration.
 
 Start the next task by fetching actual latest main and inspecting the planning
 PR status. Reviewed main for this checkpoint:
@@ -69,8 +95,8 @@ S1–S9 Work Track availability + clear teacher submission-method guidance.
 
 Joseph approved the planned S1–S5 treatment: short responsibility/current-progress/
 next-action fields, optional evidence/blocker-help, without late completion percentages.
-The next step is reviewing S10-01 and authorizing its release/application; S10-02
-is the next feature increment after that review.
+The next step is focused authenticated hosted smoke; S10-02 is the next feature
+increment. Implementation pointers below describe the already-released slice.
 
 Methods share a progress-recording goal but not persistence semantics:
 - disabled → Existing classroom workflow → updateable Work Track.
@@ -142,3 +168,20 @@ account activation/recovery endpoints and AI usage output.
 Documentation-only content/diff review; did not reinstall dependencies or rerun
 the unchanged release build/tests. Release evidence is reported as prior evidence,
 not new verification. Production configuration/data was not queried or changed.
+
+## Latest teaching direction — 13 October
+
+Joseph approved compact option-led S1–S5 Work Track: choices plus short concrete
+progress/next action, conditional help/evidence and labelled prior responsibility/
+action continuity. S10-01b is now released, preserving
+existing records and S6–S9. See PLAN.md's confirmed usability direction.
+
+November remains primarily form-based. Joseph wants selected Monday Sessions
+manually overridden to AI for observation. Plan nullable Session method override:
+inherit Block by default; "Use AI Conversation for this Session" / "Restore Block
+default", effective-method resolution across student/UI/read/save/AI gates,
+separate opening windows and no duplicate report after method changes.
+Do not implement a frontend-only switch or conflate compact Work Track with the
+separate confirmed Intake contract. This later slice must include durable paid
+usage limits and bounded live/safety acceptance before student observation.
+No AI enabled or paid call authorized by this planning update.

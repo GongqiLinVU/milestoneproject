@@ -1,6 +1,6 @@
 # Sprint 10 — Classroom continuity and November readiness
 
-Status: plan approved by Joseph on 13 October; S10-01 review candidate: Joseph applied the range migration; a post-apply anon-grant correction is pending. Frontend not deployed. See S10-01_REPORT.md.
+Status: S10-01 and S10-01b released; compact form deployed as 6b2009c. Joseph applied all three migrations and anonymous get/save permissions were rechecked. Authenticated hosted smoke pending.
 Planning baseline inspected on 13 October 2026 (Australia/Melbourne).
 
 ## Goal and ownership
@@ -246,3 +246,62 @@ AI readiness does not block non-AI teaching.
 Resolved product decision: Joseph approved the plan and implementation on
 13 October; S1–S5 use short progress records with no mandatory late assessment.
 November inputs block S10-02 configuration, not S10-01 development.
+
+
+## Confirmed usability direction — 13 October (next increments)
+
+Joseph approved an option-led, compact non-AI Work Track and wants the November
+Block primarily form-based, with selected Monday Sessions using AI Conversation
+for in-class observation. Monday is a manually selected Session, not a recurring
+scheduler rule. No AI activation, paid run or institutional acceptance is implied.
+
+### S10-01b: compact S1–S5 form (released; hosted smoke pending)
+
+Replace large free-text boxes with work-area choices, progress-state choice plus
+one concrete sentence, a short next action, conditional help details and optional
+evidence reference. Retain responsibilities without forcing retyping; any reuse
+is labelled and explicitly confirmed. Previous next action is shown as historical
+context; completion/partial/not done/changed-plan is a current self-report, not
+proof of completion. Target 1–2 minutes, subject to Joseph's hands-on review.
+Keep S6–S9 unchanged and preserve existing early records/readability.
+Existing classroom Work Track and Guided Form still have different save and
+confirmation contracts; compact Work Track is not automatically Guided Form.
+Do not force schema unification to create the future AI handoff.
+
+### S10-Session method override: bounded AI observation (later slice)
+
+Keep Block collection method as the default. Add a nullable Session override
+using the existing method enum; null means inherit Block. The common teacher
+action when the default is form-based is "Use AI Conversation for this Session",
+with "Restore Block default" afterward. Show the **effective** method and whether
+it is inherited or overridden; restoring inheritance is not universally "AI off"
+if a Block itself defaults to AI.
+
+Resolve the effective method from trusted Session + Block data everywhere:
+student Session entry, read/open metadata, Intake save RPCs, Work Track write
+gate and AI endpoint. Retain Block-level default metadata; do not use it alone
+to route every Session after mixed methods are supported. A new additive
+migration and focused mixed-Session contract tests are required. Collection
+method and submission window remain independent; selecting AI does not open a
+Session or start a provider request.
+
+Example: a form-default Block has Monday Session AI, next Session inheriting form.
+Each student has one active collection entry; saved source-specific history
+remains readable. A method switch after a confirmed submission does not require
+another report or convert/delete the confirmed record. Preserve unsaved work and
+make the current method authoritative before another save/provider request.
+If a record already exists in the alternative family, show completion/history
+rather than introduce a second reporting requirement. No cross-schema merge.
+
+Implement the override only alongside minimum durable server attempt/spend limits,
+measured usage, provider-independent completion and a bounded quality/safety
+check. The live observation remains separately authorized for model, student/
+Session scope, calls and hard budget; institutional readiness remains a dependency
+for classroom AI. The switch must not imply that AI has already been accepted.
+No automatic marking or contribution/authorship verdicts.
+
+Focused acceptance: form-default Block with one AI-overridden Session and one
+inherited form Session; UI/server agree, closed window still refuses, forged
+client mode cannot call AI, confirmed history survives restore-default and no
+second progress submission is requested. Extend existing checks only for these
+changed boundaries.
