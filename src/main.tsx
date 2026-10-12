@@ -1,6 +1,12 @@
 import { applyEvidenceUpdates, changedEvidenceFields, uiReviewDecision, sourceConversation, questionCount, MAX_INTAKE_QUESTIONS, INTAKE_POLICY_VERSION, INTAKE_PROMPT_VERSION, type EvidenceUpdate } from "./intakePolicy";
 import { fallbackQuestion } from "./intakeHarness";
 import { IntakeHarnessViewer } from "./IntakeHarnessViewer";
+import {
+  registerUnsavedBlocker,
+  confirmExitIfBlocked,
+  deterministicFormDirty,
+  chatIntakeDirty,
+} from "./intakeExitGuard";
 import { StrictMode, useEffect, useRef, useState, type FormEvent, type MouseEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { createRoot } from "react-dom/client";
@@ -146,6 +152,7 @@ function PublicLanding() {
 
 type AuthenticatedStudent = {
   studentId: string; studentName: string; blockId: string; blockLabel: string; teamName: string; projectName: string | null;
+  intakeMode?: "disabled" | "deterministic" | "ai";
   projectProblem: string | null; projectDescription: string | null; projectTargetUsers: string | null;
   projectExpectedOutcomes: string | null; projectCategory: string | null; projectDifficulty: string | null;
   projectSource: "catalogue" | "roster" | "none";
@@ -404,7 +411,20 @@ function newIntakeAnswers(sessionNumber:number):DeterministicIntakeAnswers {
   };
 }
 
-function FormSessionIntakePrototype({session,onClose,onSaved}:{session:StudentSessionRecord;onClose:()=>void;onSaved:()=>void}) {
+// Sprint 9 R05 — share one unsaved-exit guard across an Intake modal's lifetime.
+// Registers the modal's current dirtiness in the process-wide registry (which
+// also owns the single `beforeunload` listener), and returns a `guardedClose`
+// that confirms discarding before running the real close. Cancelling leaves all
+// entered answers/corrections intact in memory. The registry entry is removed on
+// unmount so a confirmed/closed modal never blocks a later exit.
+function useIntakeUnsavedGuard(id: string, isDirty: () => boolean) {
+  const dirtyRef = useRef(isDirty);
+  dirtyRef.current = isDirty;
+  useEffect(() => registerUnsavedBlocker(id, () => dirtyRef.current()), [id]);
+  return (onClose: () => void) => { if (confirmExitIfBlocked()) onClose(); };
+}
+
+function FormSessionIntakePrototype({session,onClose,onSaved,aiEnabled=true}:{session:StudentSessionRecord;onClose:()=>void;onSaved:()=>void;aiEnabled?:boolean}) {
   const [context,setContext]=useState<SessionIntakeContext|null>(null);
   const [answers,setAnswers]=useState<DeterministicIntakeAnswers>(()=>newIntakeAnswers(session.sessionNumber));
   const [followUps,setFollowUps]=useState<DeterministicFollowUp[]>([]);
@@ -439,6 +459,16 @@ function FormSessionIntakePrototype({session,onClose,onSaved}:{session:StudentSe
     if(step<=3&&!coreComplete(step)){setMessage(step===1?(answers.responsibility.trim().length<2?"Responsibility is required. Short technical terms such as UI, UX, DB or AI are accepted.":answers.progress.trim().length<3?"Describe what you personally completed or advanced.":"Describe the exact part covered by this claim."):step===2?"Complete the evidence and verification fields that apply to your selected evidence state.":"Complete your next action, expected evidence and any active blocker details.");return;}
     setMessage("");
     if(step===3){
+      // R01 deterministic mode: a provider-independent Intake. Never call the
+      // model; select rule-based follow-ups locally and keep aiMeta.used=false so
+      // the step-4 extract call is also skipped and the fallback save path is used.
+      if(!aiEnabled){
+        const selected=selectDeterministicFollowUps(answers,context?.previousConfirmed?.studentRecord);
+        setFollowUps(selected);
+        setAiMeta(current=>({...current,used:false,extractionStatus:"not_used"}));
+        setStep(selected.length?4:5);
+        return;
+      }
       setBusy(true);
       try{
         const payload=await callAi("questions");
@@ -516,7 +546,18 @@ function FormSessionIntakePrototype({session,onClose,onSaved}:{session:StudentSe
     setBusy(false);
   }
   const saved=context?.confirmedRecord;
-  return createPortal(<div className="intake-workspace-backdrop"><section className="intake-workspace" aria-labelledby="session-intake-title"><header className="intake-workspace-header"><button type="button" className="secondary compact" onClick={onClose} aria-label="Back to Current Session">← Back to Sessions</button><div><div className="eyebrow">Guided evidence workspace</div><h3 id="session-intake-title">S{session.sessionNumber} · {session.focus}</h3><span>{saved?"Confirmed history · read-only":"Session Intake"}</span></div></header><div className="intake-workspace-grid"><main className="intake-conversation">
+  // R05: unsaved-exit protection for the deterministic Form lifecycle. Dirty when
+  // the student has entered content into an open, not-yet-confirmed Intake.
+  const baselineAnswers=newIntakeAnswers(session.sessionNumber);
+  const answersTouched=(Object.keys(answers) as Array<keyof DeterministicIntakeAnswers>)
+    .some(key=>answers[key]!==baselineAnswers[key]);
+  const guardedClose=useIntakeUnsavedGuard(`form-intake-${session.sessionId}`,()=>deterministicFormDirty({
+    saved:Boolean(saved),isOpen:Boolean(context?.isOpen),step,answersTouched,
+    followUpAnswersCount:Object.values(followUpAnswers).filter(value=>(value||"").trim().length>0).length,
+    confirmedChecked:confirmed,
+  }));
+  const closeNow=()=>guardedClose(onClose);
+  return createPortal(<div className="intake-workspace-backdrop"><section className="intake-workspace" aria-labelledby="session-intake-title"><header className="intake-workspace-header"><button type="button" className="secondary compact" onClick={closeNow} aria-label="Back to Current Session">← Back to Sessions</button><div><div className="eyebrow">Guided evidence workspace</div><h3 id="session-intake-title">S{session.sessionNumber} · {session.focus}</h3><span>{saved?"Confirmed history · read-only":"Session Intake"}</span></div></header><div className="intake-workspace-grid"><main className="intake-conversation">
     {loading?<p className="empty-state">Loading Session Intake…</p>:saved?<div className="intake-confirmed"><CheckCircle2 size={30}/><h4>Intake confirmed</h4><p>Your submission is a claim and has not been Teacher verified.</p><dl><div><dt>Responsibility</dt><dd>{saved.studentRecord.responsibility.current}</dd></div><div><dt>Progress</dt><dd>{saved.studentRecord.claims.map(item=>item.statement).join(" · ")}</dd></div><div><dt>Next action</dt><dd>{saved.studentRecord.next_action.action} · {saved.studentRecord.next_action.due_session}</dd></div></dl><small>Confirmed {new Date(saved.confirmedAt).toLocaleString()} · deterministic fallback</small></div>:!context?.isOpen?<p className="track-readonly-note">Session Intake is closed. Your teacher controls when this pilot is available.</p>:<>
       <div className="intake-progress" aria-label={`Step ${step} of 5`}><span style={{width:`${step*20}%`}}/></div>
       {step===1&&<div className="work-track-fields"><h4>1. Your responsibility and progress</h4>{input("What are you personally responsible for?","responsibility","A specific component, analysis, workflow or deliverable")}{input("What did you personally complete or advance?","progress","Describe what changed since the previous Session")}{input("What exact part does this claim cover?","scope","Name the component, behaviour or boundary")}
@@ -525,9 +566,9 @@ function FormSessionIntakePrototype({session,onClose,onSaved}:{session:StudentSe
         <label className="track-field"><span>Testing state</span><select value={answers.testingStatus} onChange={event=>set("testingStatus",event.target.value as DeterministicIntakeAnswers["testingStatus"])}><option value="not_applicable">Not applicable</option><option value="executed">Executed</option><option value="planned_not_executed">Planned, not executed</option></select></label>{answers.testingStatus!=="not_applicable"&&input("Testing method","testingMethod","What was tested or is planned?")}{answers.testingStatus==="executed"&&<>{input("Observed result","testingResult","What actually happened?")}{input("Expected result or baseline","testingBaseline","What did you compare it with?")}</>}</div>}
       {step===3&&<div className="work-track-fields"><h4>3. Next action and blockers</h4>{input("What is your next action?","nextAction","One concrete action")}{input("What evidence should that action produce?","expectedEvidence","Expected demonstrable output")}<label className="track-field"><span>Due Session</span><select value={answers.dueSession} onChange={event=>set("dueSession",event.target.value)}>{Array.from({length:10-session.sessionNumber},(_,index)=>`S${session.sessionNumber+index+1}`).map(value=><option key={value}>{value}</option>)}</select></label><label className="track-field"><span>Blocker status</span><select value={answers.blockerStatus} onChange={event=>set("blockerStatus",event.target.value as DeterministicIntakeAnswers["blockerStatus"])}><option value="none">No blocker</option><option value="active">Active</option><option value="resolved">Resolved</option><option value="unknown">Unknown</option></select></label>{answers.blockerStatus!=="none"&&input("Describe the blocker or change","blockerDescription","What is blocked, or what changed?")}{input("Support requested (optional)","supportRequested","A specific decision, review or resource",500)}</div>}
       {step===4&&<div className="work-track-fields"><h4>Clarify your evidence</h4><p className="form-note">{aiMeta.used?`AI selected ${followUps.length} evidence-focused follow-up${followUps.length===1?"":"s"}. Your answers remain unverified claims.`:`Secure fallback selected ${followUps.length} rule-based follow-up${followUps.length===1?"":"s"}.`}</p>{followUps.map(item=><label className="track-field" key={item.id}><span>{item.question}</span><textarea maxLength={1000} value={followUpAnswers[item.id]||""} onChange={event=>setFollowUpAnswers(current=>({...current,[item.id]:event.target.value}))}/></label>)}</div>}
-      {step===5&&record&&<div className="intake-review"><h4>Confirm your structured summary</h4><p className="form-note">Edit earlier answers if anything is inaccurate. This is your claim, not a Teacher verification.</p><dl><div><dt>Responsibility</dt><dd>{record.responsibility.current}</dd></div><div><dt>Progress claim</dt><dd>{record.claims[0].statement}</dd></div><div><dt>Evidence</dt><dd>{record.evidence[0].availability.replaceAll("_"," ")} · {record.evidence[0].reference||record.evidence[0].verification_method||"No evidence identified"}</dd></div><div><dt>Testing</dt><dd>{record.testing[0]?.execution_status.replaceAll("_"," ")}</dd></div><div><dt>Blocker</dt><dd>{record.blocker.status}{record.blocker.description?` · ${record.blocker.description}`:""}</dd></div><div><dt>Next action</dt><dd>{record.next_action.action} · due {record.next_action.due_session}</dd></div></dl>{validation&&!validation.valid&&<p className="admin-alert">{validation.errors.join(" · ")}</p>}<label className="intake-attestation"><input type="checkbox" checked={confirmed} onChange={event=>setConfirmed(event.target.checked)}/><span>{STUDENT_CONFIRMATION_ATTESTATION}</span></label></div>}
-      {message&&<p className="admin-alert" role="status">{message}</p>}<div className="track-dialog-actions"><button type="button" className="secondary" onClick={step===1?onClose:()=>{setMessage("");setStep(current=>(current===5?(followUps.length?4:3):current-1) as 1|2|3|4|5)}}>{step===1?"Close":"Back"}</button>{step<5?<button type="button" onClick={()=>void next()} disabled={busy}>{busy?"Preparing…":"Continue"}</button>:<button type="button" onClick={()=>void submit()} disabled={busy||!confirmed||!validation?.valid}>{busy?"Confirming…":"Confirm and submit"}</button>}</div></>}
-    {message&&saved&&<p className="admin-alert" role="status">{message}</p>}<div className="track-dialog-actions">{(saved||!context?.isOpen)&&<button type="button" className="secondary" onClick={onClose}>Back to Sessions</button>}</div></main><aside className="intake-evidence-panel"><div><span className="eyebrow">This Session's evidence</span><h4>{saved?"Confirmed snapshot":"Builds as you answer"}</h4><p>{saved?"Student history is locked. Teacher review is stored separately.":"Review what the Intake currently understands before you confirm."}</p></div><dl><div><dt>Responsibility</dt><dd>{saved?.studentRecord.responsibility.current||answers.responsibility||"Not captured yet"}</dd></div><div><dt>Claim</dt><dd>{saved?.studentRecord.claims?.[0]?.statement||answers.progress||"Not captured yet"}</dd></div><div><dt>Evidence</dt><dd>{saved?.studentRecord.evidence?.[0]?.reference||answers.evidenceReference||"Not identified yet"}</dd></div><div><dt>Testing</dt><dd>{saved?.studentRecord.testing?.[0]?.execution_status?.replaceAll("_"," ")||answers.testingStatus.replaceAll("_"," ")}</dd></div><div><dt>Blocker</dt><dd>{saved?.studentRecord.blocker.status||answers.blockerStatus}</dd></div><div><dt>Next action</dt><dd>{saved?.studentRecord.next_action.action||answers.nextAction||"Not captured yet"}</dd></div></dl><small>Student claim · Teacher verification is separate</small></aside></div></section></div>,document.body);
+      {step===5&&record&&<div className="intake-review"><h4>Confirm your structured summary</h4><p className="form-note">Edit earlier answers if anything is inaccurate. This is your claim, not a Teacher verification.</p><dl><div><dt>Responsibility</dt><dd>{record.responsibility.current}</dd></div><div><dt>Progress claim</dt><dd>{record.claims[0].statement}</dd></div><div><dt>Evidence</dt><dd>{record.evidence[0].availability.replaceAll("_"," ")} · {record.evidence[0].reference||record.evidence[0].verification_method||"No evidence identified"}</dd></div><div><dt>Testing</dt><dd>{record.testing[0]?.execution_status.replaceAll("_"," ")}{record.testing[0]?.observed_result?` · ${record.testing[0].observed_result}`:""}{record.testing[0]?.baseline_or_expected?<p className="form-note">Expected / limitation: {record.testing[0].baseline_or_expected}</p>:null}</dd></div><div><dt>Blocker</dt><dd>{record.blocker.status}{record.blocker.description?` · ${record.blocker.description}`:""}</dd></div><div><dt>Next action</dt><dd>{record.next_action.action} · due {record.next_action.due_session}</dd></div></dl>{validation&&!validation.valid&&<p className="admin-alert">{validation.errors.join(" · ")}</p>}<label className="intake-attestation"><input type="checkbox" checked={confirmed} onChange={event=>setConfirmed(event.target.checked)}/><span>{STUDENT_CONFIRMATION_ATTESTATION}</span></label></div>}
+      {message&&<p className="admin-alert" role="status">{message}</p>}<div className="track-dialog-actions"><button type="button" className="secondary" onClick={step===1?closeNow:()=>{setMessage("");setStep(current=>(current===5?(followUps.length?4:3):current-1) as 1|2|3|4|5)}}>{step===1?"Close":"Back"}</button>{step<5?<button type="button" onClick={()=>void next()} disabled={busy}>{busy?"Preparing…":"Continue"}</button>:<button type="button" onClick={()=>void submit()} disabled={busy||!confirmed||!validation?.valid}>{busy?"Confirming…":"Confirm and submit"}</button>}</div></>}
+    {message&&saved&&<p className="admin-alert" role="status">{message}</p>}<div className="track-dialog-actions">{(saved||!context?.isOpen)&&<button type="button" className="secondary" onClick={closeNow}>Back to Sessions</button>}</div></main><aside className="intake-evidence-panel"><div><span className="eyebrow">This Session's evidence</span><h4>{saved?"Confirmed snapshot":"Builds as you answer"}</h4><p>{saved?"Student history is locked. Teacher review is stored separately.":"Review what the Intake currently understands before you confirm."}</p></div><dl><div><dt>Responsibility</dt><dd>{saved?.studentRecord.responsibility.current||answers.responsibility||"Not captured yet"}</dd></div><div><dt>Claim</dt><dd>{saved?.studentRecord.claims?.[0]?.statement||answers.progress||"Not captured yet"}</dd></div><div><dt>Evidence</dt><dd>{saved?.studentRecord.evidence?.[0]?.reference||answers.evidenceReference||"Not identified yet"}</dd></div><div><dt>Testing</dt><dd>{saved?.studentRecord.testing?.[0]?.execution_status?.replaceAll("_"," ")||answers.testingStatus.replaceAll("_"," ")}{(saved?.studentRecord.testing?.[0]?.baseline_or_expected||answers.testingBaseline)&&<p>Expected / limitation: {saved?.studentRecord.testing?.[0]?.baseline_or_expected||answers.testingBaseline}</p>}</dd></div><div><dt>Blocker</dt><dd>{saved?.studentRecord.blocker.status||answers.blockerStatus}</dd></div><div><dt>Next action</dt><dd>{saved?.studentRecord.next_action.action||answers.nextAction||"Not captured yet"}</dd></div></dl><small>Student claim · Teacher verification is separate</small></aside></div></section></div>,document.body);
 }
 
 
@@ -670,6 +711,24 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
         setMessage(error.message);
         return;
       }
+      // R01: the Block capability may have changed away from 'ai' mid-conversation
+      // (teacher set it to deterministic/disabled). The server rejects the AI call
+      // with session_not_eligible_for_ai_intake. Do NOT discard entered work:
+      // preserve the student's answer and the conversation, move to the review
+      // step so they can confirm through the provider-independent save path, and
+      // explain the available next action.
+      if(error instanceof Error&&/session_not_eligible_for_ai_intake|session_intake_closed/.test(error.message)){
+        // Append the required 'review transition' turn so the preserved
+        // conversation satisfies the save contract (odd length, final review
+        // transition). Without it, sourceConversation() would reject a
+        // deterministic-mode save on conversation shape, not on capability.
+        const reviewConversation=[...conversation,{actor:"system" as const,purpose:"review transition",source:"fallback" as const,text:"AI Intake became unavailable. Review your preserved answers and confirm."}];
+        setTurns(reviewConversation);
+        setAiMeta(current=>({...current,used:false,extractionStatus:"fallback"}));
+        prepareReview(answers,"provider_failure");
+        setMessage("AI Intake is no longer available for this Session (your Teacher changed its mode). Your answers are preserved below. Review them and try Confirm: if this Session now accepts a provider-independent Intake it will save without any AI call; if Intake has been turned off, confirming will report that submission is unavailable and your answers will stay here.");
+        return;
+      }
       setAiMeta(current=>({...current,extractionStatus:"fallback"}));
       const atLimit=questionCount(conversation)>=MAX_INTAKE_QUESTIONS;
       setTurns([...conversation,{actor:"system",purpose:atLimit?"review transition":"provider fallback",source:"fallback",text:fallbackQuestion(answers,conversation)}]);
@@ -694,24 +753,35 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
     const metadata={used:aiMeta.used,model:aiMeta.model,policy_version:INTAKE_POLICY_VERSION,follow_up_count:Math.max(0,questionCount(turns)-3),question_purposes:turns.filter(t=>t.actor==="system"&&t.purpose!=="review transition").slice(3).map(t=>t.purpose),extraction_status:aiMeta.extractionStatus,stop_reason:stopReason,extracted_record:initialRecord,turn_results:debugEvents.filter(e=>e.mode==="turn"&&e.response).map(e=>e.response?.result),turn_decisions:debugEvents.filter(e=>e.mode==="turn"&&e.response).map(e=>({manifest:e.response?.manifest,fieldDecisions:e.response?.fieldDecisions,acceptanceLevel:e.response?.acceptanceLevel,extractionPending:e.response?.extractionPending,providerFailure:e.response?.providerFailure}))};
     const {error:saveError}=await supabase.rpc("save_my_session_intake_chat",{p_session_id:session.sessionId,p_source_conversation:source,p_student_record:record,p_student_confirmation:confirmation,p_prompt_version:INTAKE_PROMPT_VERSION,p_ai_assistance:metadata});
     setDebugEvents(current=>[...current,{at:new Date().toISOString(),mode:"save",request:{turnCount:source.length,questionCount:questionCount(turns),policyVersion:INTAKE_POLICY_VERSION},...(saveError?{error:saveError.message}:{response:{saved:true}})}]);
-    if(saveError)setMessage(`${saveError.message}. Your record is still available here. If the chat RPC is missing, apply the reviewed adaptive-intake migration before retrying.`);else{const {data}=await supabase.rpc("get_my_session_intake",{p_session_id:session.sessionId});setContext(data as SessionIntakeContext);setMessage("Session Intake confirmed. This Session is now read-only.");onSaved()}
+    if(saveError)setMessage(`Session Intake could not be submitted for this Session right now. Your answers are preserved here — you can retry, or ask your Teacher whether Intake is open for this Session.`);else{const {data}=await supabase.rpc("get_my_session_intake",{p_session_id:session.sessionId});setContext(data as SessionIntakeContext);setMessage("Session Intake confirmed. This Session is now read-only.");onSaved()}
     setBusy(false);
   }
   const saved=context?.confirmedRecord;
   const evidence=saved?.studentRecord||record;
-  return createPortal(<div className="chat-intake-page"><header className="chat-intake-header"><button type="button" className="secondary compact" onClick={onClose}>← Sessions</button><div><span>{saved?"Session history":"AI Session Intake"}</span><h2>S{session.sessionNumber} · {session.focus}</h2></div>{debugEvents.length>0&&<button type="button" className="secondary compact" onClick={()=>setHarnessOpen(true)}>Visual debug · {debugEvents.length}</button>}<button type="button" className={`evidence-drawer-trigger ${evidenceUpdates&&!evidenceOpen?"has-updates":""}`} onClick={()=>evidenceOpen?setEvidenceOpen(false):openEvidence([])}>Evidence chain {evidenceUpdates&&!evidenceOpen?<b>{evidenceUpdates} new</b>:null}</button></header>
+  // R05: unsaved-exit protection for the conversational AI lifecycle. The opening
+  // assistant turn is not student content; dirtiness is driven by student turns,
+  // an un-sent draft, captured evidence, review corrections, or a ticked (not yet
+  // submitted) attestation. A confirmed/closed Session is read-only and not dirty.
+  const guardedClose=useIntakeUnsavedGuard(`chat-intake-${session.sessionId}`,()=>chatIntakeDirty({
+    saved:Boolean(saved),isOpen:Boolean(context?.isOpen),
+    studentTurnCount:turns.filter(turn=>turn.actor==="student").length,
+    draftLength:draft.trim().length,capturedFieldCount:capturedFields.length,
+    correctionCount:corrections.length,confirmedChecked:confirmed,
+  }));
+  const closeNow=()=>guardedClose(onClose);
+  return createPortal(<div className="chat-intake-page"><header className="chat-intake-header"><button type="button" className="secondary compact" onClick={closeNow}>← Sessions</button><div><span>{saved?"Session history":"AI Session Intake"}</span><h2>S{session.sessionNumber} · {session.focus}</h2></div>{debugEvents.length>0&&<button type="button" className="secondary compact" onClick={()=>setHarnessOpen(true)}>Visual debug · {debugEvents.length}</button>}<button type="button" className={`evidence-drawer-trigger ${evidenceUpdates&&!evidenceOpen?"has-updates":""}`} onClick={()=>evidenceOpen?setEvidenceOpen(false):openEvidence([])}>Evidence chain {evidenceUpdates&&!evidenceOpen?<b>{evidenceUpdates} new</b>:null}</button></header>
     <main className="chat-intake-shell"><section className="chat-thread" aria-label="Session Intake conversation">
       {loading?<p className="empty-state">Loading Session Intake…</p>:saved?<><div className="chat-message assistant"><span>Intake</span><p>This Session was confirmed on {new Date(saved.confirmedAt).toLocaleString()}. The conversation and evidence are now read-only.</p></div><div className="chat-message student"><span>Your confirmed claim</span><p>{saved.studentRecord.claims.map(item=>item.statement).join(" · ")}</p></div><div className="chat-message assistant"><span>Next action</span><p>{saved.studentRecord.next_action.action} · {saved.studentRecord.next_action.due_session}</p></div></>:!context?.isOpen?<div className="chat-message assistant"><p>This Session Intake is closed. Your Teacher controls when it is available.</p></div>:<>
         {turns.map((turn,index)=><div key={index} className={`chat-message ${turn.actor==="student"?"student":"assistant"}`}><span>{turn.actor==="student"?"You":"Intake assistant"}{turn.source==="llm"?<b className="llm-message-badge">LLM</b>:turn.source==="fallback"?<b className="llm-message-badge">Fallback</b>:null}</span><p>{turn.text}</p>{turn.actor==="student"&&turn.evidenceChanges?.length?<button type="button" className="message-evidence-update" onClick={()=>openEvidence(turn.evidenceChanges||[])}><b>{turn.evidenceChanges.length} evidence field{turn.evidenceChanges.length===1?"":"s"} updated</b><span>{turn.evidenceChanges.map(value=>value.replace("_"," ")).join(" · ")} · View changes</span></button>:null}</div>)}
         {busy&&<div className="chat-message assistant thinking"><span>Intake assistant</span><p>Organising your answer…</p></div>}
-        {stage===4&&record&&<div className="chat-review-card"><span>Ready for your review</span><h3>Confirm this Session record</h3><p>Your statements remain claims until your Teacher verifies them. Open Evidence to review the complete record.</p><details open={stopReason==="provider_failure"}><summary>Review and correct captured details</summary><p>Corrections are saved separately from the original extraction. Unknown means not established.</p>{([['responsibility','Responsibility'],['progress','Progress claim'],['scope','Exact scope'],['evidenceReference','Evidence reference or demonstration'],['verificationMethod','How to verify'],['testingMethod','Test method'],['testingResult','Observed test result'],['blockerDescription','Blocker or help needed'],['supportRequested','Support requested'],['nextAction','Your accepted next action'],['expectedEvidence','Expected evidence']] as const).map(([field,label])=><label key={field} style={{display:'block'}}>{label}<textarea value={answers[field]} maxLength={field==='responsibility'||field==='scope'?500:1000} onChange={e=>correct(field,e.target.value)}/></label>)}<label>Evidence type<select value={answers.evidenceType} onChange={e=>correct('evidenceType',e.target.value)}>{evidenceTypeOptions.map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label><label>Evidence availability<select value={answers.evidenceAvailability} onChange={e=>correct('evidenceAvailability',e.target.value)}>{['unknown','available_now','expected_later','not_produced'].map(v=><option key={v} value={v}>{v.replaceAll('_',' ')}</option>)}</select></label><label>Testing<select value={answers.testingStatus} onChange={e=>correct('testingStatus',e.target.value)}>{['unknown','executed','planned_not_executed','not_applicable'].map(v=><option key={v} value={v}>{v.replaceAll('_',' ')}</option>)}</select></label><label>Progress state<select value={answers.progressKind} onChange={e=>correct('progressKind',e.target.value)}>{['completed','advanced','investigated','attempted_failed','no_progress'].map(v=><option key={v} value={v}>{v.replaceAll('_',' ')}</option>)}</select></label><label>Blocker state<select value={answers.blockerStatus} onChange={e=>correct('blockerStatus',e.target.value)}>{['unknown','none','active','resolved'].map(v=><option key={v} value={v}>{v}</option>)}</select></label><label>Due Session<select value={answers.dueSession} onChange={e=>correct('dueSession',e.target.value)}>{Array.from({length:10},(_,i)=>`S${i+1}`).map(v=><option key={v}>{v}</option>)}</select></label></details><label><input type="checkbox" checked={confirmed} onChange={event=>setConfirmed(event.target.checked)}/><span>{STUDENT_CONFIRMATION_ATTESTATION}</span></label><button type="button" onClick={()=>void submit()} disabled={!confirmed||busy}>{busy?"Confirming…":"Confirm Session Intake"}</button></div>}
+        {stage===4&&record&&<div className="chat-review-card"><span>Ready for your review</span><h3>Confirm this Session record</h3><p>Your statements remain claims until your Teacher verifies them. Open Evidence to review the complete record.</p><details open={stopReason==="provider_failure"}><summary>Review and correct captured details</summary><p>Corrections are saved separately from the original extraction. Unknown means not established.</p>{([['responsibility','Responsibility'],['progress','Progress claim'],['scope','Exact scope'],['evidenceReference','Evidence reference or demonstration'],['verificationMethod','How to verify'],['testingMethod','Test method'],['testingResult','Observed test result'],['testingBaseline','Expected result / untested limitation'],['blockerDescription','Blocker or help needed'],['supportRequested','Support requested'],['nextAction','Your accepted next action'],['expectedEvidence','Expected evidence']] as const).map(([field,label])=><label key={field} style={{display:'block'}}>{label}<textarea value={answers[field]} maxLength={field==='responsibility'||field==='scope'?500:1000} onChange={e=>correct(field,e.target.value)}/></label>)}<label>Evidence type<select value={answers.evidenceType} onChange={e=>correct('evidenceType',e.target.value)}>{evidenceTypeOptions.map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label><label>Evidence availability<select value={answers.evidenceAvailability} onChange={e=>correct('evidenceAvailability',e.target.value)}>{['unknown','available_now','expected_later','not_produced'].map(v=><option key={v} value={v}>{v.replaceAll('_',' ')}</option>)}</select></label><label>Testing<select value={answers.testingStatus} onChange={e=>correct('testingStatus',e.target.value)}>{['unknown','executed','planned_not_executed','not_applicable'].map(v=><option key={v} value={v}>{v.replaceAll('_',' ')}</option>)}</select></label><label>Progress state<select value={answers.progressKind} onChange={e=>correct('progressKind',e.target.value)}>{['completed','advanced','investigated','attempted_failed','no_progress'].map(v=><option key={v} value={v}>{v.replaceAll('_',' ')}</option>)}</select></label><label>Blocker state<select value={answers.blockerStatus} onChange={e=>correct('blockerStatus',e.target.value)}>{['unknown','none','active','resolved'].map(v=><option key={v} value={v}>{v}</option>)}</select></label><label>Due Session<select value={answers.dueSession} onChange={e=>correct('dueSession',e.target.value)}>{Array.from({length:10},(_,i)=>`S${i+1}`).map(v=><option key={v}>{v}</option>)}</select></label></details><label><input type="checkbox" checked={confirmed} onChange={event=>setConfirmed(event.target.checked)}/><span>{STUDENT_CONFIRMATION_ATTESTATION}</span></label><button type="button" onClick={()=>void submit()} disabled={!confirmed||busy}>{busy?"Confirming…":"Confirm Session Intake"}</button></div>}
         {debugEvents.length>0&&<details className="llm-debug-panel"><summary>Intake debug · {debugEvents.length} event{debugEvents.length===1?"":"s"}</summary><div><p>Contains this student's answers and structured model response. Review and remove identifying content before sharing.</p><button type="button" className="secondary compact" onClick={downloadDebug}>Download debug JSON</button><pre>{JSON.stringify(debugEvents.at(-1),null,2)}</pre></div></details>}
         <div ref={endRef}/>
       </>}
       {message&&<p className="admin-alert" role="status">{message}</p>}
       {!loading&&!saved&&context?.isOpen&&stage<4&&<div className="chat-composer"><div className="chat-route-actions">{stage===0&&<button type="button" className="secondary compact" onClick={()=>setDraft("I made no progress in this Session.")}>No progress</button>}<button type="button" className="secondary compact" onClick={()=>setDraft("I need my Teacher to help me decide the next step.")}>I need Teacher help</button></div><div><textarea rows={2} maxLength={1800} value={draft} onChange={event=>setDraft(event.target.value)} onKeyDown={event=>{if(event.key==="Enter"&&!event.shiftKey){event.preventDefault();void send()}}} placeholder="Reply to the Intake assistant…"/><button type="button" onClick={()=>void send()} disabled={!draft.trim()||busy}>Send</button></div><small>Enter to send · Shift + Enter for a new line</small></div>}
     </section>
-    <aside className={`evidence-drawer ${evidenceOpen?"open":""}`} aria-hidden={!evidenceOpen}><div className="evidence-drawer-head"><div><span>Evidence chain</span><h3>{saved?"Confirmed snapshot":"Progress across Sessions"}</h3></div><button type="button" className="secondary compact" onClick={()=>setEvidenceOpen(false)}>Close</button></div><div className="evidence-tabs" role="tablist"><button type="button" className={evidenceTab==="current"?"active":""} onClick={()=>setEvidenceTab("current")}>Current Session</button><button type="button" className={evidenceTab==="previous"?"active":""} onClick={()=>setEvidenceTab("previous")}>Previous Sessions <b>{historyRecords.length}</b></button></div>{evidenceTab==="current"?<dl><div className={highlightFields.includes("responsibility")?"highlight":""}><dt>Responsibility</dt><dd>{evidence?.responsibility.current||answers.responsibility||"Not captured yet"}</dd></div><div className={highlightFields.includes("claim")?"highlight":""}><dt>Claim</dt><dd>{evidence?.claims?.[0]?.statement||answers.progress||"Not captured yet"}</dd></div><div className={highlightFields.includes("evidence")?"highlight":""}><dt>Evidence</dt><dd>{evidence?.evidence?.[0]?.reference||answers.evidenceReference||(noProgress?"Not produced":"Not identified yet")}</dd></div><div className={highlightFields.includes("testing")?"highlight":""}><dt>Verification method</dt><dd>{evidence?.evidence?.[0]?.verification_method||answers.verificationMethod||"Not established"}</dd></div><div><dt>Testing</dt><dd>{evidence?.testing?.[0]?.execution_status?.replaceAll("_"," ")||(capturedFields.includes("testing")?answers.testingStatus.replaceAll("_"," "):"Not discussed yet")}{(evidence?.testing?.[0]?.method||answers.testingMethod)&&<p>Method: {evidence?.testing?.[0]?.method||answers.testingMethod}</p>}{(evidence?.testing?.[0]?.observed_result||answers.testingResult)&&<p>Observed: {evidence?.testing?.[0]?.observed_result||answers.testingResult}</p>}</dd></div><div className={highlightFields.includes("blocker")?"highlight":""}><dt>Blocker</dt><dd>{evidence?.blocker.description||answers.blockerDescription||answers.blockerStatus}</dd></div><div className={highlightFields.includes("next_action")?"highlight":""}><dt>Next action</dt><dd>{evidence?.next_action.action||answers.nextAction||"Not captured yet"}</dd></div></dl>:<div className="previous-evidence-list">{historyRecords.length?historyRecords.map(item=><article key={item.sessionNumber}><header><b>S{item.sessionNumber} · {item.focus}</b><small>{new Date(item.confirmedAt).toLocaleDateString()}</small></header><dl><div><dt>Responsibility</dt><dd>{item.record.responsibility.current}</dd></div><div><dt>Claim</dt><dd>{item.record.claims.map(claim=>claim.statement).join(" · ")}</dd></div><div><dt>Evidence</dt><dd>{item.record.evidence.map(value=>value.reference||value.availability.replaceAll("_"," ")).join(" · ")}</dd></div><div><dt>Next action</dt><dd>{item.record.next_action.action}</dd></div></dl></article>):<p>No previous confirmed Intake exists for this student in this Block.</p>}</div>}<p>Student claims · Teacher verification is stored separately.</p></aside></main>{harnessOpen&&<IntakeHarnessViewer events={debugEvents} onClose={()=>setHarnessOpen(false)} onDownload={downloadDebug}/>}</div>,document.body);
+    <aside className={`evidence-drawer ${evidenceOpen?"open":""}`} aria-hidden={!evidenceOpen}><div className="evidence-drawer-head"><div><span>Evidence chain</span><h3>{saved?"Confirmed snapshot":"Progress across Sessions"}</h3></div><button type="button" className="secondary compact" onClick={()=>setEvidenceOpen(false)}>Close</button></div><div className="evidence-tabs" role="tablist"><button type="button" className={evidenceTab==="current"?"active":""} onClick={()=>setEvidenceTab("current")}>Current Session</button><button type="button" className={evidenceTab==="previous"?"active":""} onClick={()=>setEvidenceTab("previous")}>Previous Sessions <b>{historyRecords.length}</b></button></div>{evidenceTab==="current"?<dl><div className={highlightFields.includes("responsibility")?"highlight":""}><dt>Responsibility</dt><dd>{evidence?.responsibility.current||answers.responsibility||"Not captured yet"}</dd></div><div className={highlightFields.includes("claim")?"highlight":""}><dt>Claim</dt><dd>{evidence?.claims?.[0]?.statement||answers.progress||"Not captured yet"}</dd></div><div className={highlightFields.includes("evidence")?"highlight":""}><dt>Evidence</dt><dd>{evidence?.evidence?.[0]?.reference||answers.evidenceReference||(noProgress?"Not produced":"Not identified yet")}</dd></div><div className={highlightFields.includes("testing")?"highlight":""}><dt>Verification method</dt><dd>{evidence?.evidence?.[0]?.verification_method||answers.verificationMethod||"Not established"}</dd></div><div><dt>Testing</dt><dd>{evidence?.testing?.[0]?.execution_status?.replaceAll("_"," ")||(capturedFields.includes("testing")?answers.testingStatus.replaceAll("_"," "):"Not discussed yet")}{(evidence?.testing?.[0]?.method||answers.testingMethod)&&<p>Method: {evidence?.testing?.[0]?.method||answers.testingMethod}</p>}{(evidence?.testing?.[0]?.observed_result||answers.testingResult)&&<p>Observed: {evidence?.testing?.[0]?.observed_result||answers.testingResult}</p>}{(evidence?.testing?.[0]?.baseline_or_expected||answers.testingBaseline)&&<p>Expected / limitation: {evidence?.testing?.[0]?.baseline_or_expected||answers.testingBaseline}</p>}</dd></div><div className={highlightFields.includes("blocker")?"highlight":""}><dt>Blocker</dt><dd>{evidence?.blocker.description||answers.blockerDescription||answers.blockerStatus}</dd></div><div className={highlightFields.includes("next_action")?"highlight":""}><dt>Next action</dt><dd>{evidence?.next_action.action||answers.nextAction||"Not captured yet"}</dd></div></dl>:<div className="previous-evidence-list">{historyRecords.length?historyRecords.map(item=><article key={item.sessionNumber}><header><b>S{item.sessionNumber} · {item.focus}</b><small>{new Date(item.confirmedAt).toLocaleDateString()}</small></header><dl><div><dt>Responsibility</dt><dd>{item.record.responsibility.current}</dd></div><div><dt>Claim</dt><dd>{item.record.claims.map(claim=>claim.statement).join(" · ")}</dd></div><div><dt>Evidence</dt><dd>{item.record.evidence.map(value=>value.reference||value.availability.replaceAll("_"," ")).join(" · ")}</dd></div><div><dt>Testing</dt><dd>{item.record.testing?.[0]?.execution_status?.replaceAll("_"," ")||"not discussed"}{item.record.testing?.[0]?.baseline_or_expected?<p>Expected / limitation: {item.record.testing[0].baseline_or_expected}</p>:null}</dd></div><div><dt>Next action</dt><dd>{item.record.next_action.action}</dd></div></dl></article>):<p>No previous confirmed Intake exists for this student in this Block.</p>}</div>}<p>Student claims · Teacher verification is stored separately.</p></aside></main>{harnessOpen&&<IntakeHarnessViewer events={debugEvents} onClose={()=>setHarnessOpen(false)} onDownload={downloadDebug}/>}</div>,document.body);
 }
 
 function LegacyStudentSessions({intakePilot=false}:{intakePilot?:boolean}) {
@@ -719,6 +789,12 @@ function LegacyStudentSessions({intakePilot=false}:{intakePilot?:boolean}) {
   const [trackSession, setTrackSession] = useState<StudentSessionRecord | null>(null);
   const [feedbackSession, setFeedbackSession] = useState<StudentSessionRecord | null>(null);
   const [intakeSession, setIntakeSession] = useState<StudentSessionRecord | null>(null);
+  // R04 fallback: when the Block is in the Existing classroom workflow (disabled),
+  // the Intake entry is not shown, but a student who confirmed an Intake earlier
+  // must still be able to READ it. We surface a small read-only history list that
+  // opens the existing read-only confirmed view. No submission path is added.
+  const [intakeHistory, setIntakeHistory] = useState<StudentSessionRecord[]>([]);
+  const [historyView, setHistoryView] = useState<StudentSessionRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   useEffect(() => {
@@ -729,8 +805,15 @@ function LegacyStudentSessions({intakePilot=false}:{intakePilot?:boolean}) {
       if (historyError) {
         setError("Your Project Journey could not be loaded. Please refresh or tell your teacher.");
       } else {
-        setSessions((data as StudentSessionRecord[] | null) || []);
+        const items = (data as StudentSessionRecord[] | null) || [];
+        setSessions(items);
         setError("");
+        // Read-only Intake history: which S1–S9 sessions have a confirmed record.
+        const pairs = await Promise.all(items.filter(s => s.sessionNumber <= 9).map(async s => {
+          const { data: intake } = await supabase.rpc("get_my_session_intake", { p_session_id: s.sessionId });
+          return (intake as SessionIntakeContext | null)?.confirmedRecord ? s : null;
+        }));
+        if (active) setIntakeHistory(pairs.filter((x): x is StudentSessionRecord => Boolean(x)).sort((a, b) => a.sessionNumber - b.sessionNumber));
       }
       setLoading(false);
     };
@@ -755,12 +838,14 @@ function LegacyStudentSessions({intakePilot=false}:{intakePilot?:boolean}) {
         </div>
       </article>)}
     </div> : <p className="empty-state">No sessions have been prepared for this block yet.</p>}
+    {intakeHistory.length>0 && <details className="session-group intake-history-group"><summary><span><b>Confirmed Session Intake history</b><small>{intakeHistory.length} confirmed · read-only</small></span><ChevronDown size={20}/></summary><div>{intakeHistory.map(item=><article key={item.sessionId} className="session-compact-row"><div><b>S{item.sessionNumber} · {item.focus}</b><small>Confirmed · read-only</small></div><button type="button" className="secondary compact" onClick={()=>setHistoryView(item)}>View confirmed Intake</button></article>)}</div></details>}
+    {historyView&&<FormSessionIntakePrototype session={historyView} aiEnabled={false} onClose={()=>setHistoryView(null)} onSaved={()=>{}}/>}
     {trackSession&&<SessionWorkTrackModal session={trackSession} onClose={()=>setTrackSession(null)} onSaved={()=>window.dispatchEvent(new CustomEvent("student-session-checkin"))}/>}
     {intakeSession&&<SessionIntakeModal session={intakeSession} onClose={()=>setIntakeSession(null)} onSaved={()=>window.dispatchEvent(new CustomEvent("student-session-checkin"))}/>}
     {feedbackSession&&<PlatformFeedbackModal session={feedbackSession} onClose={()=>setFeedbackSession(null)} onSaved={()=>window.dispatchEvent(new CustomEvent("student-session-checkin"))}/>}
   </section>;
 }
-function StudentSessions({intakePilot=false}:{intakePilot?:boolean}) {
+function StudentSessions({intakePilot=false,intakeMode="disabled"}:{intakePilot?:boolean;intakeMode?:"disabled"|"deterministic"|"ai"}) {
   if(!intakePilot) return <LegacyStudentSessions intakePilot={false}/>;
   const [sessions,setSessions]=useState<StudentSessionRecord[]>([]);
   const [intakes,setIntakes]=useState<Record<string,SessionIntakeContext|null>>({});
@@ -813,7 +898,9 @@ function StudentSessions({intakePilot=false}:{intakePilot?:boolean}) {
     {history.length>0&&<details className="session-group"><summary><span><b>Session history</b><small>{history.length} previous Session{history.length===1?"":"s"} · read-only after confirmation</small></span><ChevronDown size={20}/></summary><div>{history.map(item=>compact(item))}</div></details>}
     {upcoming.length>0&&<details className="session-group"><summary><span><b>Upcoming Sessions</b><small>{upcoming.length} prepared</small></span><ChevronDown size={20}/></summary><div>{upcoming.map(item=>compact(item))}</div></details>}
     </>:<p className="empty-state">No Sessions have been prepared for this Block.</p>}
-    {selected&&<SessionIntakeModal session={selected} onClose={()=>setSelected(null)} onSaved={()=>window.dispatchEvent(new CustomEvent("student-session-checkin"))}/>}
+    {selected&&(intakeMode==="ai"
+      ?<SessionIntakeModal session={selected} onClose={()=>setSelected(null)} onSaved={()=>window.dispatchEvent(new CustomEvent("student-session-checkin"))}/>
+      :<FormSessionIntakePrototype session={selected} aiEnabled={false} onClose={()=>setSelected(null)} onSaved={()=>window.dispatchEvent(new CustomEvent("student-session-checkin"))}/>)}
   </section>;
 }
 
@@ -831,7 +918,12 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
       setPresentationOrder(order.error ? [] : ((order.data as Array<{ position: number; teamName: string; projectName: string | null }>) || []));
     });
   }, [student.blockId]);
-  const intakePilot=/^2026\s*(?:·\s*)?2B2$/i.test(student.blockLabel.trim());
+  // R01: capability is server-authoritative. intakeMode comes from
+  // get_my_student_context (the student's active Block). Until the R01 migration
+  // is deployed the field is absent and the Block behaves as 'disabled' — the
+  // existing non-Intake classroom workflow. A display label is never consulted.
+  const intakeMode=student.intakeMode??"disabled";
+  const intakePilot=intakeMode!=="disabled";
   const projectPanel=<section id="my-project" className="portal-panel portal-section"><details className={intakePilot?"project-summary-details":""} open={!intakePilot}><summary className={intakePilot?"project-summary-toggle":undefined}><div><span>My Project</span><b>{student.projectName||"Project not assigned"}</b></div>{intakePilot&&<ChevronDown size={20}/>}</summary><div className="project-summary-body"><Head label="My Project" title={student.projectName || "Project not assigned"} text={student.projectDescription || (student.projectSource === "roster" ? "This project name came from the roster but is not yet linked to the Project Catalogue. Ask your teacher to complete the team assignment." : "Your teacher has not assigned a catalogue project to this team yet.")}/><div className="student-project-summary"><div><span>Student</span><b>{student.studentName}</b><small>{student.studentId}</small></div><div><span>Team</span><b>{student.teamName}</b><small>Roster assignment</small></div><div><span>Project</span><b>{student.projectName || "Pending"}</b><small>{student.projectCategory || "Catalogue assignment pending"}{student.projectDifficulty ? ` · ${student.projectDifficulty}` : ""}</small></div></div>{student.projectSource === "catalogue" && <div className="project-detail-grid"><article><span>Problem</span><p>{student.projectProblem || "Not specified"}</p></article><article><span>Target users</span><p>{student.projectTargetUsers || "Not specified"}</p></article><article className="wide"><span>Expected outcomes</span><p>{student.projectExpectedOutcomes || "Not specified"}</p></article></div>}</div></details></section>;
   const activities=<details className="portal-section class-activities"><summary><div><span>Class Activities</span><b>Guided together during class</b><small>{weekStates?Object.values(weekStates).filter(Boolean).length:0} weeks available</small></div><span className="class-activities-show">Show activities <ChevronDown size={20}/></span></summary><div className="portal-weekly-section"><WeeklyHub open={(kind)=>{setReviewTarget(null);setForm(kind)}} openReview={(teamName)=>{setReviewTarget(teamName);setForm("review")}} weekStates={weekStates} presentationOrder={presentationOrder}/></div></details>;
   return (
@@ -860,7 +952,7 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
           </div>
           <p>{student.blockLabel} · Complete only the activity that matters now.</p>
         </section>
-        {intakePilot?<><StudentSessions intakePilot/>{projectPanel}{activities}</>:<><div className="portal-section portal-weekly-section"><WeeklyHub open={(kind)=>{setReviewTarget(null);setForm(kind)}} openReview={(teamName)=>{setReviewTarget(teamName);setForm("review")}} weekStates={weekStates} presentationOrder={presentationOrder}/></div>{projectPanel}<StudentSessions/></>}
+        {intakePilot?<><StudentSessions intakePilot intakeMode={intakeMode}/>{projectPanel}{activities}</>:<><div className="portal-section portal-weekly-section"><WeeklyHub open={(kind)=>{setReviewTarget(null);setForm(kind)}} openReview={(teamName)=>{setReviewTarget(teamName);setForm("review")}} weekStates={weekStates} presentationOrder={presentationOrder}/></div>{projectPanel}<StudentSessions/></>}
         <section id="get-help" className="portal-panel portal-section"><Head label="Get Help" title="Bring one clear question." text="Use the support choices inside the current weekly activity so your teacher can connect help to the right evidence and session."/></section>
       </main>
       <footer>
@@ -1492,14 +1584,52 @@ function Modal({
     setSubmissionCheckPending(kind === "progress");
     let cancelled = false;
     if (kind === "progress") {
+      // The server record is authoritative. But the on-open check must agree
+      // with the on-change check (checkStoredSubmission reads a localStorage
+      // receipt): if the server returns no row yet a browser receipt exists
+      // (e.g. the DB row was reset/cleared, or a Block mismatch), fall back to
+      // the receipt NOW. Otherwise the blank form shows first and only flips to
+      // "Pre-check completed" after the first field change, which looks like a
+      // failed save.
       supabase.rpc("get_my_week2_precheck_submission")
-        .then(({ data, error }) => {
+        .then(async ({ data, error }) => {
           if (cancelled) return;
-          if (!error && data) setStoredSubmission(data as SubmissionReceipt);
-          setSubmissionCheckPending(false);
+          if (!error && data) {
+            setStoredSubmission(data as SubmissionReceipt);
+          } else {
+            try {
+              const key = await submissionStorageKey("progress", { sid: student.studentId }, blockId);
+              const receipt = readSubmissionReceipt(key);
+              if (!cancelled && receipt) setStoredSubmission(receipt);
+            } catch {
+              // Storage is optional and may be unavailable in restricted browsers.
+            }
+          }
+          if (!cancelled) setSubmissionCheckPending(false);
         });
     } else if (kind === "pulse") {
       submissionStorageKey(kind, {}, blockId)
+        .then((key) => {
+          const receipt = readSubmissionReceipt(key);
+          if (!cancelled && receipt) setStoredSubmission(receipt);
+        })
+        .catch(() => {
+          // Storage is optional and may be unavailable in restricted browsers.
+        });
+    } else if (
+      kind === "health" ||
+      kind === "checkout" ||
+      kind === "checkout2" ||
+      kind === "checkout3" ||
+      kind === "checkout4"
+    ) {
+      // These activities are duplicate-guarded by a per-student localStorage
+      // receipt. For an authenticated student the identity (Student ID) is known
+      // at open time, so resolve the receipt NOW — otherwise the blank form shows
+      // first and only flips to the "already submitted" view after the first
+      // field change, which looks like a failed save. (progress/pulse already
+      // resolve their saved state on open; this brings these kinds in line.)
+      submissionStorageKey(kind, { sid: student.studentId }, blockId)
         .then((key) => {
           const receipt = readSubmissionReceipt(key);
           if (!cancelled && receipt) setStoredSubmission(receipt);
@@ -1511,7 +1641,7 @@ function Modal({
     return () => {
       cancelled = true;
     };
-  }, [kind, blockId]);
+  }, [kind, blockId, student.studentId]);
   useEffect(() => {
     if (kind !== "progress") return;
     try {
@@ -2316,6 +2446,8 @@ type StudioSessionRow = { id:string; session_number:number|null; week_number:num
 type AttendanceRow = { session_id:string; student_id:string; checked_in_at:string };
 type TeacherTrackRow = { studentId:string; studentName:string; teamName:string; checkedInAt:string|null; response:Record<string,any>|null; updatedAt:string|null; teacherVerifiedCompletion:number|null; teacherVerificationStatus:"confirmed"|"adjusted"|null; teacherVerificationReason:string|null; teacherVerifiedAt:string|null };
 type TeacherFeedbackRow = { studentId:string; studentName:string; teamName:string; completedAt:string|null; updatedAt:string|null };
+type TeacherIntakeRow = { studentId:string; studentName:string; teamName:string|null; onRoster:boolean; submitted:boolean; intakeId:string|null; sourceMode:string|null; confirmedAt:string|null; studentRecord:IntakeStudentRecord|null; sourceConversation:Array<{actor:string;purpose:string;text:string}>|null; corrections:Array<{field:string;before:unknown;after:unknown}>|null; studentAttestation:string|null; teacherVerification:{status:string;recorded:boolean} };
+type TeacherIntakeData = { sessionId:string; sessionNumber:number|null; blockId:string|null; submittedCount:number; missingCount:number; rosterSize?:number; rosterSubmittedCount?:number; offRosterCount?:number; intakes:TeacherIntakeRow[] };
 
 function StudioSessionControl({
   blockId,
@@ -2323,7 +2455,7 @@ function StudioSessionControl({
   onBlockChange,
 }: {
   blockId: string;
-  blocks: Array<{ id: string; academic_year: number; block_code: string; status: string }>;
+  blocks: Array<{ id: string; academic_year: number; block_code: string; status: string; intake_mode?: "disabled" | "deterministic" | "ai" }>;
   onBlockChange: (blockId: string) => void;
 }) {
   const [sessions, setSessions] = useState<StudioSessionRow[]>([]);
@@ -2335,6 +2467,18 @@ function StudioSessionControl({
   const [feedbackStatusSession,setFeedbackStatusSession]=useState<StudioSessionRow|null>(null);
   const [feedbackStatusRows,setFeedbackStatusRows]=useState<TeacherFeedbackRow[]>([]);
   const [feedbackStatusLoading,setFeedbackStatusLoading]=useState(false);
+  const [intakeSession,setIntakeSession]=useState<StudioSessionRow|null>(null);
+  const [intakeData,setIntakeData]=useState<TeacherIntakeData|null>(null);
+  const [intakeLoading,setIntakeLoading]=useState(false);
+  const [intakeError,setIntakeError]=useState("");
+  const intakeRequestRef=useRef<string>("");
+  // Teacher Block-level Intake mode selector (R01 capability). The confirmed
+  // server value is held locally so the session-list gating reflects a change
+  // without a parent refresh; keyed by blockId so switching blocks drops it.
+  const [modeOverride,setModeOverride]=useState<{blockId:string;mode:"disabled"|"deterministic"|"ai"}|null>(null);
+  const [modeBusy,setModeBusy]=useState(false);
+  const [modeMessage,setModeMessage]=useState("");
+  const [modeError,setModeError]=useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -2356,12 +2500,34 @@ function StudioSessionControl({
   }, [blockId]);
 
   const selectedBlock = blocks.find(block => block.id === blockId);
+  // Server-authoritative Intake mode for the selected Block. Prefer a locally
+  // confirmed override (set only after re-reading the persisted value) over the
+  // prop so the gating updates immediately after a change.
+  const effectiveMode: "disabled" | "deterministic" | "ai" =
+    (modeOverride && modeOverride.blockId === blockId ? modeOverride.mode : undefined)
+    ?? selectedBlock?.intake_mode ?? "disabled";
+  async function setBlockMode(next: "disabled" | "deterministic" | "ai") {
+    if (!blockId || next === effectiveMode) return;
+    setModeBusy(true); setModeMessage(""); setModeError("");
+    // Update then CONFIRM the persisted value by reading it back before success.
+    const { error } = await supabase.from("teaching_blocks").update({ intake_mode: next }).eq("id", blockId);
+    if (error) { setModeError("The Intake mode could not be changed. Your teacher role may be required."); setModeBusy(false); return; }
+    const { data, error: readError } = await supabase.from("teaching_blocks").select("intake_mode").eq("id", blockId).maybeSingle();
+    if (readError || !data || (data as { intake_mode?: string }).intake_mode !== next) {
+      setModeError("The change was sent but could not be confirmed. Reload and check the Block mode before continuing.");
+      setModeBusy(false); return;
+    }
+    setModeOverride({ blockId, mode: next });
+    const labels = { disabled: "Existing classroom workflow", deterministic: "Intake Form", ai: "AI Intake" } as const;
+    setModeMessage(`This Block now uses: ${labels[next]}. Per-Session Intake availability is still controlled separately below.`);
+    setModeBusy(false);
+  }
 
   function effectiveStatus(item:StudioSessionRow){const now=Date.now();if(item.status==="open")return "open";if(item.status==="closed")return "closed";if(item.starts_at&&new Date(item.starts_at).getTime()<=now&&(!item.ends_at||new Date(item.ends_at).getTime()>now))return "open";if(item.ends_at&&new Date(item.ends_at).getTime()<=now)return "closed";return "scheduled";}
   function effectiveTrackStatus(item:StudioSessionRow){if(item.work_track_access==="open")return "open";if(item.work_track_access==="closed")return "closed";return effectiveStatus(item);}
   function effectiveIntakeStatus(item:StudioSessionRow){if(item.intake_access==="open")return "open";if(item.intake_access==="closed")return "closed";return effectiveStatus(item);}
   async function setTrackState(item:StudioSessionRow,next:"session"|"open"|"closed"){setBusy(true);setMessage("");const{error}=await supabase.from("studio_sessions").update({work_track_access:next}).eq("id",item.id);setMessage(error?"The Work Track access could not be updated.":next==="open"?`S${item.session_number} Work Track is open. Session Check-in is unchanged.`:next==="closed"?`S${item.session_number} Work Track is closed. Saved evidence remains available.`:`S${item.session_number} Work Track now follows the Session schedule.`);await load();setBusy(false);}
-  async function setIntakeState(item:StudioSessionRow,next:"session"|"open"|"closed"){if(selectedBlock?.block_code!=="2B2")return;setBusy(true);setMessage("");const{error}=await supabase.from("studio_sessions").update({intake_access:next}).eq("id",item.id).eq("block_id",blockId);setMessage(error?"Session Intake access could not be updated.":next==="open"?`S${item.session_number} Session Intake is open for the 2B2 pilot.`:next==="closed"?`S${item.session_number} Session Intake is closed. Confirmed records remain available.`:`S${item.session_number} Session Intake now follows the Session schedule.`);await load();setBusy(false);}
+  async function setIntakeState(item:StudioSessionRow,next:"session"|"open"|"closed"){if(effectiveMode==="disabled")return;setBusy(true);setMessage("");const{error}=await supabase.from("studio_sessions").update({intake_access:next}).eq("id",item.id).eq("block_id",blockId);setMessage(error?"Session Intake access could not be updated.":next==="open"?`S${item.session_number} Session Intake is open.`:next==="closed"?`S${item.session_number} Session Intake is closed. Confirmed records remain available.`:`S${item.session_number} Session Intake now follows the Session schedule.`);await load();setBusy(false);}
   async function prepareTen() {
     if (sessions.length >= 10) return setMessage("This block already has 10 or more sessions.");
     setBusy(true);setMessage("");
@@ -2383,6 +2549,21 @@ function StudioSessionControl({
   }
   async function openEvidence(item:StudioSessionRow){setEvidenceSession(item);setEvidenceRows([]);setEvidenceLoading(true);const{data,error}=await supabase.rpc("get_teacher_session_work_tracks",{p_session_id:item.id});setEvidenceRows(error?[]:((data as TeacherTrackRow[]|null)||[]));if(error)setMessage("Session Work Track evidence could not be loaded.");setEvidenceLoading(false);}
   async function openFeedbackStatus(item:StudioSessionRow){setFeedbackStatusSession(item);setFeedbackStatusRows([]);setFeedbackStatusLoading(true);const{data,error}=await supabase.rpc("get_teacher_platform_feedback_status",{p_session_id:item.id});setFeedbackStatusRows(error?[]:((data as TeacherFeedbackRow[]|null)||[]));if(error)setMessage("Platform Feedback completion could not be loaded.");setFeedbackStatusLoading(false);}
+  async function openIntake(item:StudioSessionRow){
+    // Stale-response guard: tag this request by block + session. When several
+    // panels/blocks are opened quickly, only the response for the most recent
+    // (session, block) request is applied; earlier in-flight responses are dropped.
+    const requestKey=`${blockId}:${item.id}`;
+    intakeRequestRef.current=requestKey;
+    setIntakeSession(item);setIntakeData(null);setIntakeError("");setIntakeLoading(true);
+    const{data,error}=await supabase.rpc("get_teacher_session_intakes",{p_session_id:item.id});
+    if(intakeRequestRef.current!==requestKey)return; // a newer request superseded this one
+    if(error){setIntakeData(null);setIntakeError("Session Intake records could not be loaded.");setIntakeLoading(false);return;}
+    const payload=data as TeacherIntakeData|null;
+    // Defensive: ignore a payload whose session does not match the open request.
+    if(payload&&payload.sessionId&&payload.sessionId!==item.id){setIntakeLoading(false);return;}
+    setIntakeData(payload);setIntakeLoading(false);
+  }
   function evidenceState(row:TeacherTrackRow){if(!row.response)return"Missing";const completion=Number(row.response.completionPercent);if(Number.isFinite(completion)){const shown=row.teacherVerifiedCompletion??completion;return (row.teacherVerifiedCompletion!=null?"Teacher verified ":"")+shown+"% · "+completionStage(shown);}return String(row.response.overallReadiness||row.response.verificationStatus||row.response.endToEnd||"Tracked");}
   function evidenceNeedsAttention(row:TeacherTrackRow){const state=evidenceState(row);return /blocked|not ready|no$|major|blocking/i.test(state)||row.response?.criticalBlocker==="Yes"||row.response?.criticalIssue==="Yes — blocks final delivery"||row.response?.mainBlocker==="Need teacher guidance";}
   function evidenceLabel(key:string){return key.replace(/([A-Z])/g," $1").replace(/^./,value=>value.toUpperCase());}
@@ -2395,7 +2576,20 @@ function StudioSessionControl({
       <h2>Studio Sessions{selectedBlock ? ` · ${selectedBlock.academic_year} ${selectedBlock.block_code}` : ""}</h2><p>The S1–S10 curriculum focus stays consistent across blocks. Dates and Check-in windows remain teacher-controlled attendance settings.</p>
     </div><div className="session-manager-actions"><label className="admin-block-filter">Teaching block<select value={blockId} onChange={event=>onBlockChange(event.target.value)} disabled={busy}>{blocks.map(block=><option key={block.id} value={block.id}>{block.academic_year} · {block.block_code}{block.status==="active"?" — Active":""}</option>)}</select></label><button disabled={busy||!blockId||sessions.length>=10} onClick={()=>void prepareTen()}><CalendarPlus size={17}/> Prepare {Math.max(0,10-sessions.length)} sessions</button></div></div>
     {message && <p className="admin-alert" role="status">{message}</p>}
-    <div className="teacher-session-list">{sessions.map(item=>{const state=effectiveStatus(item),trackState=effectiveTrackStatus(item),intakeState=effectiveIntakeStatus(item),checkins=attendance.filter(row=>row.session_id===item.id),supportsTrack=(item.session_number||0)>=6&&(item.session_number||0)<=9,supportsFeedback=item.session_number===10,supportsIntake=selectedBlock?.block_code==="2B2"&&(item.session_number||0)<=9;return <article key={item.id} className={`teacher-session ${state}`}><div className="teacher-session-summary"><div><span className={`activity-control-status ${state}`}>{state}</span><span className="session-curriculum-label">{item.session_number ? `S${item.session_number}` : "Session"}{item.week_number ? ` · Week ${item.week_number}` : ""}</span><h3>{item.curriculum_focus || item.title}</h3><p>{new Date(`${item.session_date}T00:00:00`).toLocaleDateString()} · {checkins.length} checked in</p>{item.task_guidance&&<small className="teacher-task-preview">Task: {item.task_guidance}</small>}{item.starts_at&&<small>{new Date(item.starts_at).toLocaleString()} → {item.ends_at?new Date(item.ends_at).toLocaleString():"manual close"}</small>}</div><div className="teacher-session-actions"><button className="secondary compact" onClick={()=>setEditing(item)} disabled={busy}><Pencil size={15}/> Edit</button>{supportsIntake&&<><span className={`activity-control-status ${intakeState}`}>Intake {intakeState}</span>{intakeState==="open"?<button className="danger compact" onClick={()=>void setIntakeState(item,"closed")} disabled={busy}>Close Intake</button>:<button className="compact" onClick={()=>void setIntakeState(item,"open")} disabled={busy}>Open Intake</button>}{item.intake_access!=="session"&&<button className="secondary compact" onClick={()=>void setIntakeState(item,"session")} disabled={busy}>Follow session</button>}</>}{supportsTrack&&!supportsIntake&&<><button className="secondary compact" onClick={()=>void openEvidence(item)}><ListChecks size={15}/> Work Track</button><span className={`activity-control-status ${trackState}`}>Track {trackState}</span>{trackState==="open"?<button className="danger compact" onClick={()=>void setTrackState(item,"closed")} disabled={busy}>Close Track</button>:<button className="compact" onClick={()=>void setTrackState(item,"open")} disabled={busy}>Open Track</button>}{item.work_track_access!=="session"&&<button className="secondary compact" onClick={()=>void setTrackState(item,"session")} disabled={busy}>Follow session</button>}</>}{supportsFeedback&&<button className="secondary compact" onClick={()=>void openFeedbackStatus(item)}><ClipboardCheck size={15}/> Feedback status</button>}{state==="open"?<><button className="danger compact" onClick={()=>void setState(item,"closed")} disabled={busy}>Close</button><button className="secondary compact" onClick={()=>void setState(item,"scheduled")} disabled={busy}>Reset status</button></>:state==="closed"?<><button className="compact" onClick={()=>void setState(item,"open")} disabled={busy}>Reopen</button><button className="secondary compact" onClick={()=>void setState(item,"scheduled")} disabled={busy}>Reset status</button></>:<button className="compact" onClick={()=>void setState(item,"open")} disabled={busy}>Open now</button>}<button className="secondary compact" onClick={()=>download(item)} disabled={!checkins.length}><Download size={15}/> CSV</button></div></div>{checkins.length>0&&<details><summary>View attendance</summary><table><thead><tr><th>Student ID</th><th>Check-in time</th></tr></thead><tbody>{checkins.map(row=><tr key={`${row.session_id}-${row.student_id}`}><td>{row.student_id}</td><td>{new Date(row.checked_in_at).toLocaleString()}</td></tr>)}</tbody></table></details>}</article>})}{!sessions.length&&<p className="empty-state">No sessions prepared yet. Create the standard 10-session plan to begin.</p>}</div>
+    <div className="intake-mode-selector">
+      <div className="intake-mode-head"><strong>Block Intake mode</strong><span>Applies to the whole {selectedBlock ? `${selectedBlock.academic_year} · ${selectedBlock.block_code}` : "selected"} Block. Per-Session Intake availability is still controlled separately below. The legacy Session Work Track applies to S6–S9.</span></div>
+      <label className="admin-block-filter">Mode
+        <select value={effectiveMode} disabled={modeBusy||!blockId} onChange={event=>void setBlockMode(event.target.value as "disabled"|"deterministic"|"ai")}>
+          <option value="disabled">Existing classroom workflow (disabled)</option>
+          <option value="deterministic">Intake Form (deterministic)</option>
+          <option value="ai">AI Intake (ai)</option>
+        </select>
+      </label>
+      {modeBusy && <span className="intake-mode-state" role="status">Saving…</span>}
+      {modeError && <p className="admin-alert error" role="alert">{modeError}</p>}
+      {!modeError && modeMessage && <p className="admin-alert" role="status">{modeMessage}</p>}
+    </div>
+    <div className="teacher-session-list">{sessions.map(item=>{const state=effectiveStatus(item),trackState=effectiveTrackStatus(item),intakeState=effectiveIntakeStatus(item),checkins=attendance.filter(row=>row.session_id===item.id),supportsTrack=(item.session_number||0)>=6&&(item.session_number||0)<=9,supportsFeedback=item.session_number===10,supportsIntake=effectiveMode!=="disabled"&&(item.session_number||0)<=9;return <article key={item.id} className={`teacher-session ${state}`}><div className="teacher-session-summary"><div><span className={`activity-control-status ${state}`}>{state}</span><span className="session-curriculum-label">{item.session_number ? `S${item.session_number}` : "Session"}{item.week_number ? ` · Week ${item.week_number}` : ""}</span><h3>{item.curriculum_focus || item.title}</h3><p>{new Date(`${item.session_date}T00:00:00`).toLocaleDateString()} · {checkins.length} checked in</p>{item.task_guidance&&<small className="teacher-task-preview">Task: {item.task_guidance}</small>}{item.starts_at&&<small>{new Date(item.starts_at).toLocaleString()} → {item.ends_at?new Date(item.ends_at).toLocaleString():"manual close"}</small>}</div><div className="teacher-session-actions"><button className="secondary compact" onClick={()=>setEditing(item)} disabled={busy}><Pencil size={15}/> Edit</button>{supportsIntake&&<><button className="secondary compact" onClick={()=>void openIntake(item)}><ListChecks size={15}/> Intakes</button><span className={`activity-control-status ${intakeState}`}>Intake {intakeState}</span>{intakeState==="open"?<button className="danger compact" onClick={()=>void setIntakeState(item,"closed")} disabled={busy}>Close Intake</button>:<button className="compact" onClick={()=>void setIntakeState(item,"open")} disabled={busy}>Open Intake</button>}{item.intake_access!=="session"&&<button className="secondary compact" onClick={()=>void setIntakeState(item,"session")} disabled={busy}>Follow session</button>}</>}{effectiveMode==="disabled"&&(item.session_number||0)<=9&&<button className="secondary compact" onClick={()=>void openIntake(item)}><ListChecks size={15}/> Intake history</button>}{supportsTrack&&!supportsIntake&&<><button className="secondary compact" onClick={()=>void openEvidence(item)}><ListChecks size={15}/> Work Track</button><span className={`activity-control-status ${trackState}`}>Track {trackState}</span>{trackState==="open"?<button className="danger compact" onClick={()=>void setTrackState(item,"closed")} disabled={busy}>Close Track</button>:<button className="compact" onClick={()=>void setTrackState(item,"open")} disabled={busy}>Open Track</button>}{item.work_track_access!=="session"&&<button className="secondary compact" onClick={()=>void setTrackState(item,"session")} disabled={busy}>Follow session</button>}</>}{supportsFeedback&&<button className="secondary compact" onClick={()=>void openFeedbackStatus(item)}><ClipboardCheck size={15}/> Feedback status</button>}{state==="open"?<><button className="danger compact" onClick={()=>void setState(item,"closed")} disabled={busy}>Close</button><button className="secondary compact" onClick={()=>void setState(item,"scheduled")} disabled={busy}>Reset status</button></>:state==="closed"?<><button className="compact" onClick={()=>void setState(item,"open")} disabled={busy}>Reopen</button><button className="secondary compact" onClick={()=>void setState(item,"scheduled")} disabled={busy}>Reset status</button></>:<button className="compact" onClick={()=>void setState(item,"open")} disabled={busy}>Open now</button>}<button className="secondary compact" onClick={()=>download(item)} disabled={!checkins.length}><Download size={15}/> CSV</button></div></div>{checkins.length>0&&<details><summary>View attendance</summary><table><thead><tr><th>Student ID</th><th>Check-in time</th></tr></thead><tbody>{checkins.map(row=><tr key={`${row.session_id}-${row.student_id}`}><td>{row.student_id}</td><td>{new Date(row.checked_in_at).toLocaleString()}</td></tr>)}</tbody></table></details>}</article>})}{!sessions.length&&<p className="empty-state">No sessions prepared yet. Create the standard 10-session plan to begin.</p>}</div>
     {editing&&<div className="modal"><form className="dialog session-edit-dialog" onSubmit={save}><button type="button" className="close" onClick={()=>setEditing(null)}>×</button><div className="eyebrow">Edit session</div><h2>{editing.title}</h2><label>Title<input name="title" defaultValue={editing.title} required maxLength={120}/></label><label>Session date<input name="session_date" type="date" defaultValue={editing.session_date} required/></label>{(editing.session_number||0)>=6&&(editing.session_number||0)<=9&&<><label>Session Task <small>optional guidance</small><textarea name="task_guidance" defaultValue={editing.task_guidance||""} maxLength={600} placeholder={editing.curriculum_focus||editing.title}/></label><label>Expected evidence <small>optional</small><textarea name="expected_evidence" defaultValue={editing.expected_evidence||""} maxLength={400} placeholder="What should students be able to show by the end of this session?"/></label></>}<label>Automatic start (optional)<input name="starts_at" type="datetime-local" defaultValue={editing.starts_at?new Date(new Date(editing.starts_at).getTime()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16):""}/></label><label>Automatic end (optional)<input name="ends_at" type="datetime-local" defaultValue={editing.ends_at?new Date(new Date(editing.ends_at).getTime()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16):""}/></label><p>Leave both times empty to use Open now / Close manually.</p><div className="admin-dialog-actions"><button type="button" className="secondary" onClick={()=>setEditing(null)}>Cancel</button><button disabled={busy}>{busy?"Saving…":"Save session"}</button></div></form></div>}
     {evidenceSession&&createPortal(<div className="session-work-track-modal" role="presentation" onMouseDown={event=>event.target===event.currentTarget&&setEvidenceSession(null)}><section className="session-work-track-dialog teacher-track-dialog" role="dialog" aria-modal="true">
       <button type="button" className="session-work-track-close" onClick={()=>setEvidenceSession(null)} aria-label="Close Work Track evidence">×</button>
@@ -2409,6 +2603,26 @@ function StudioSessionControl({
         <dl className="teacher-track-evidence-grid">{Object.entries(row.response).filter(([key,value])=>!["requirements","completionPercent","completionStage","progressPath"].includes(key)&&value!==""&&value!=null).map(([key,value])=><div key={key}><dt>{evidenceLabel(key)}</dt><dd>{evidenceValue(value)}</dd></div>)}</dl></>:<p>No Work Track submitted.</p>}</div>
       </details>)}</div></>}</section></div>,document.body)}
     {feedbackStatusSession&&createPortal(<div className="session-work-track-modal" role="presentation" onMouseDown={event=>event.target===event.currentTarget&&setFeedbackStatusSession(null)}><section className="session-work-track-dialog teacher-feedback-dialog" role="dialog" aria-modal="true" aria-labelledby="teacher-feedback-title"><button type="button" className="session-work-track-close" onClick={()=>setFeedbackStatusSession(null)} aria-label="Close Platform Feedback status">×</button><div className="eyebrow">Final presentation checkpoint</div><h3 id="teacher-feedback-title">S10 · Platform Feedback</h3>{feedbackStatusLoading?<p className="empty-state">Loading completion status…</p>:<><div className="teacher-track-summary"><strong>{feedbackStatusRows.filter(row=>row.completedAt).length} / {feedbackStatusRows.length} completed</strong><span>{feedbackStatusRows.filter(row=>!row.completedAt).length} pending</span></div><div className="teacher-feedback-status-list">{feedbackStatusRows.map(row=><div key={row.studentId} className={row.completedAt?"completed":"pending"}><span><b>{row.studentName}</b><small>{row.studentId} · {row.teamName}</small></span><strong>{row.completedAt?<><CheckCircle2 size={15}/> Completed</>:"Pending"}</strong>{row.completedAt&&<small>{new Date(row.completedAt).toLocaleString()}</small>}</div>)}</div></>}</section></div>,document.body)}
+    {intakeSession&&createPortal(<div className="session-work-track-modal" role="presentation" onMouseDown={event=>event.target===event.currentTarget&&setIntakeSession(null)}><section className="session-work-track-dialog teacher-track-dialog" role="dialog" aria-modal="true" aria-labelledby="teacher-intake-title"><button type="button" className="session-work-track-close" onClick={()=>setIntakeSession(null)} aria-label="Close Session Intake records">×</button>
+      <div className="eyebrow">Session Intake · student claims</div><h3 id="teacher-intake-title">S{intakeSession.session_number} · {intakeSession.curriculum_focus||intakeSession.title}</h3>
+      {intakeLoading?<p className="empty-state">Loading Session Intake records…</p>:intakeError?<p className="admin-alert" role="alert">{intakeError}</p>:!intakeData||!intakeData.intakes.length?<p className="empty-state">No roster or Session Intake records for this Session.</p>:<>
+        <div className="teacher-track-summary"><strong>{intakeData.rosterSubmittedCount??intakeData.submittedCount} / {intakeData.rosterSize??((intakeData.rosterSubmittedCount??intakeData.submittedCount)+intakeData.missingCount)} roster submitted</strong><span>{intakeData.missingCount} missing</span>{(intakeData.offRosterCount??0)>0&&<span>{intakeData.offRosterCount} off-roster (history, not counted in roster completion)</span>}</div>
+        <p className="form-note">These are student claims, not Teacher verification. Teacher academic judgement is recorded separately.</p>
+        <div className="teacher-track-list">{intakeData.intakes.map(row=>{const record=row.studentRecord;const testing=record?.testing?.[0];return <details key={row.studentId+(row.intakeId||"")} className={row.submitted?"":"needs-attention"}><summary><span><b>{row.studentName}</b><small>{row.studentId}{row.teamName?` · ${row.teamName}`:""}{row.onRoster?"":" · off-roster (history preserved)"}</small></span><span className={"track-evidence-state "+(row.submitted?"":"attention")}>{row.submitted?`Submitted${row.confirmedAt?" · "+new Date(row.confirmedAt).toLocaleString():""}`:"Missing"}</span></summary>
+          <div className="teacher-track-detail">{row.submitted&&record?<><dl className="teacher-track-evidence-grid">
+            <div><dt>Responsibility</dt><dd>{record.responsibility.current}</dd></div>
+            <div><dt>Progress claim</dt><dd>{record.claims.map(claim=>`${claim.statement} (${claim.progress_kind.replaceAll("_"," ")}${claim.completion_percent!=null?` · ${claim.completion_percent}%`:""})`).join(" · ")}</dd></div>
+            <div><dt>Evidence</dt><dd>{record.evidence.map(item=>`${item.availability.replaceAll("_"," ")}${item.reference?` · ${item.reference}`:""}${item.verification_method?` · verify: ${item.verification_method}`:""}`).join(" · ")}</dd></div>
+            <div><dt>Executed testing</dt><dd>{testing?`${testing.execution_status.replaceAll("_"," ")}${testing.method?` · ${testing.method}`:""}${testing.observed_result?` · observed: ${testing.observed_result}`:""}`:"Not discussed"}</dd></div>
+            <div><dt>Untested limitation</dt><dd>{testing?.baseline_or_expected||"None recorded"}</dd></div>
+            <div><dt>Blocker</dt><dd>{record.blocker.status}{record.blocker.description?` · ${record.blocker.description}`:""}{record.blocker.support_requested?` · support: ${record.blocker.support_requested}`:""}</dd></div>
+            <div><dt>Next action</dt><dd>{record.next_action.action} · due {record.next_action.due_session} · expects {record.next_action.expected_evidence}</dd></div>
+            <div><dt>Source mode</dt><dd>{row.sourceMode?.replaceAll("_"," ")||"—"}</dd></div>
+            <div><dt>Teacher verification</dt><dd>{row.teacherVerification.recorded?row.teacherVerification.status:"Not recorded in Intake (teacher judgement is separate)"}</dd></div>
+          </dl>
+          <details className="teacher-intake-source"><summary>Source conversation ({row.sourceConversation?.length||0} turns)</summary>{row.sourceConversation?.length?<div className="teacher-intake-conversation">{row.sourceConversation.map((turn,index)=><p key={index} className={`chat-message ${turn.actor==="student"?"student":"assistant"}`}><b>{turn.actor==="student"?"Student":"Intake"}</b> {turn.text}</p>)}</div>:<p>No source conversation stored.</p>}</details>
+          <details className="teacher-intake-corrections"><summary>Correction history ({row.corrections?.length||0})</summary>{row.corrections?.length?<dl className="teacher-track-evidence-grid">{row.corrections.map((item,index)=><div key={index}><dt>{item.field}</dt><dd>from: {String(item.before??"—")} → to: {String(item.after??"—")}</dd></div>)}</dl>:<p>No corrections recorded. The confirmed record matches the original extraction.</p>}</details></>:<p>No Session Intake submitted for this Session.</p>}</div>
+        </details>})}</div></>}</section></div>,document.body)}
   </section>;
 }
 
@@ -2418,6 +2632,7 @@ function Admin() {
     academic_year: number;
     block_code: string;
     status: string;
+    intake_mode?: "disabled" | "deterministic" | "ai";
   };
   const activityTables = [
     {
@@ -2718,7 +2933,7 @@ function Admin() {
   async function initialiseDashboard() {
     const { data, error } = await supabase
       .from("teaching_blocks")
-      .select("id, academic_year, block_code, status")
+      .select("id, academic_year, block_code, status, intake_mode")
       .order("academic_year", { ascending: false });
     if (error) {
       setDataStatus("error");

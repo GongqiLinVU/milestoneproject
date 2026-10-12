@@ -20,8 +20,13 @@ union all
 select 'Chat RPC retains full bounded conversation',
  case when count(*) filter(where proname='save_my_session_intake_chat' and definition like '%between 3 and 17%' and definition like '%Chat conversation order is invalid%')=1 then 'PASS' else 'FAIL' end from funcs
 union all
-select 'Chat RPC restricts 2B2',
- case when count(*) filter(where proname='save_my_session_intake_chat' and definition like '%block_code=''2B2''%')=1 then 'PASS' else 'FAIL' end from funcs
+-- Sprint 9 R01 replaced the hardcoded block_code='2B2' gate with the
+-- server-authoritative teaching_blocks.intake_mode capability. After R01 the
+-- chat RPC must gate on intake_mode in ('deterministic','ai'); before R01 it
+-- gated on block_code='2B2'. Either form is accepted here so the check is not a
+-- false FAIL across the R01 boundary (the R01 audit asserts the new gate).
+select 'Chat RPC restricts Intake by Block capability (2B2 pre-R01 or intake_mode post-R01)',
+ case when count(*) filter(where proname='save_my_session_intake_chat' and (definition like '%block_code=''2B2''%' or definition like '%intake_mode in (''deterministic'',''ai'')%'))=1 then 'PASS' else 'FAIL' end from funcs
 union all
 select 'Intake RLS remains enabled',case when relrowsecurity then 'PASS' else 'FAIL' end from pg_class where oid='public.student_session_intakes'::regclass
 union all

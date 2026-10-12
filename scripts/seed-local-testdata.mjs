@@ -1,14 +1,23 @@
 #!/usr/bin/env node
 // Seeds the LOCAL Docker Supabase stack (started with `supabase start`) with a
-// complete, self-consistent test fixture for exercising AI Session Intake:
+// complete, self-consistent LOCAL RELEASE CANDIDATE fixture for Joseph's
+// hands-on classroom rehearsal:
 //
 //   - one teacher admin account
 //   - a historical block (2026 1B4, archived) representing the prior NIT3003 unit
-//   - an active pilot block (2026 2B2) with:
+//   - an active LOCAL REHEARSAL block (2026 2B2) — this is a synthetic rehearsal
+//     Block, NOT the real November teaching Block (that code is still unresolved
+//     and must not be guessed/activated). 2B2 is a schema-supported code
+//     (teaching_blocks.block_code CHECK allows 1B1,1B4,2B1,2B2,2B4).
 //       - 3 teams (4 + 4 + 2 students = 10 students)
 //       - 5 AI projects across different domains, one assigned per team
 //       - 10 activated student accounts + Auth users
-//       - 10 Sessions (S1-S10) with S1-S9 open for Intake
+//       - Sessions S1-S10 with deliberate open controls (S7 is the current open
+//         Session; S6-S9 Work Track open; S1-S9 Intake access open)
+//       - Weeks 1-4 class activities opened
+//       - intake_mode = 'disabled' -> the LEGACY classroom workflow is the
+//         default. The teacher may switch the Block to 'deterministic' Intake
+//         from the dashboard for testing. AI is OFF for the release candidate.
 //
 // This talks ONLY to the local stack printed by `supabase status`. It refuses
 // to run against anything that doesn't look like a local URL, so it can never
@@ -187,6 +196,47 @@ async function ensureRoster(blockId) {
     "Upsert student roster",
   );
   ok(`Roster ready: ${STUDENTS.length} students across 3 teams (4 / 4 / 2)`);
+}
+
+async function pruneNonCanonicalFixture(blockId) {
+  // Keep the rehearsal roster EXACTLY the 10 canonical students / 3 teams.
+  // Earlier benchmark/rehearsal runs may have left stray roster rows, teams or
+  // student_accounts in the active Block; remove only those non-canonical rows
+  // (never archived blocks, never the canonical set). Idempotent and local-only.
+  const canonicalIds = new Set(STUDENTS.map((s) => s.student_id));
+  const canonicalTeams = new Set(STUDENTS.map((s) => s.team_number));
+
+  const roster = await must(
+    admin.from("student_roster").select("student_id, team_number").eq("block_id", blockId),
+    "Read roster for prune",
+  );
+  const strayStudents = (roster || []).map((r) => r.student_id).filter((id) => !canonicalIds.has(id));
+  if (strayStudents.length) {
+    // student_accounts are keyed by student_id (not block-scoped); the stray
+    // accounts belong to these stray roster rows only.
+    await must(
+      admin.from("student_accounts").delete().in("student_id", strayStudents),
+      "Delete stray student_accounts",
+    );
+    await must(
+      admin.from("student_roster").delete().eq("block_id", blockId).in("student_id", strayStudents),
+      "Delete stray roster rows",
+    );
+    warn(`Pruned ${strayStudents.length} non-canonical roster/account rows: ${strayStudents.join(", ")}`);
+  }
+
+  const teams = await must(
+    admin.from("teams").select("id, team_number").eq("block_id", blockId),
+    "Read teams for prune",
+  );
+  const strayTeams = (teams || []).filter((t) => !canonicalTeams.has(t.team_number));
+  if (strayTeams.length) {
+    await must(
+      admin.from("teams").delete().eq("block_id", blockId).in("id", strayTeams.map((t) => t.id)),
+      "Delete stray teams",
+    );
+    warn(`Pruned ${strayTeams.length} non-canonical team rows: ${strayTeams.map((t) => `Team ${t.team_number}`).join(", ")}`);
+  }
 }
 
 async function ensureTeams(blockId) {
@@ -413,6 +463,14 @@ const SESSION_FOCUS = {
 
 async function ensureSessions(blockId, teacherAuthUserId) {
   const today = new Date();
+  // Deliberate open controls for the rehearsal. Exactly one Session may be
+  // status='open' per Block (unique partial index), so S7 is the single current
+  // open Session: it exercises Session Check-in and the S6-S9 Work Track. The
+  // teacher can open/close other Sessions from the dashboard. S1-S9 keep
+  // intake_access='open' so that, when the teacher switches the Block to
+  // 'deterministic' Intake, the deterministic Form is immediately usable. S6-S9
+  // keep work_track_access='open' so the legacy Work Track is usable now.
+  const CURRENT_OPEN_SESSION = 7;
   const rows = [];
   for (let n = 1; n <= 10; n += 1) {
     const sessionDate = new Date(today);
@@ -424,13 +482,13 @@ async function ensureSessions(blockId, teacherAuthUserId) {
       title: `Session ${n}: ${SESSION_FOCUS[n]}`,
       curriculum_focus: SESSION_FOCUS[n],
       session_date: sessionDate.toISOString().slice(0, 10),
-      // studio_sessions allows at most one status='open' row per block, but
-      // Intake's own RPCs treat intake_access='open' as unconditionally open
-      // regardless of session status — so every past/future Session here can
-      // stay 'closed' (attendance-wise) while still being open for Intake.
-      status: "closed",
-      // S1-S9 are the only session_numbers Intake RPCs accept.
+      // S7 is the single current open Session; all others closed (attendance).
+      status: n === CURRENT_OPEN_SESSION ? "open" : "closed",
+      // S1-S9 are the only session_numbers Intake RPCs accept; keep Intake open
+      // there so the deterministic Form works the moment the teacher enables it.
       intake_access: n <= 9 ? "open" : "closed",
+      // S6-S9 legacy Work Track open now (independent of Intake).
+      work_track_access: n >= 6 && n <= 9 ? "open" : "session",
       created_by: teacherAuthUserId,
     });
   }
@@ -440,6 +498,13 @@ async function ensureSessions(blockId, teacherAuthUserId) {
     .select("id, session_number")
     .eq("block_id", blockId);
   const existingByNumber = new Map((existingRows || []).map((r) => [r.session_number, r.id]));
+
+  // The single-open-per-block index means we must clear any other open Session
+  // before setting S7 open. Close everything first, then apply the target rows.
+  await must(
+    admin.from("studio_sessions").update({ status: "closed" }).eq("block_id", blockId),
+    "Close all Sessions before setting the current open Session",
+  );
 
   for (const row of rows) {
     const existingId = existingByNumber.get(row.session_number);
@@ -455,7 +520,32 @@ async function ensureSessions(blockId, teacherAuthUserId) {
       );
     }
   }
-  ok("Sessions ready: S1-S10 created, S1-S9 open with Intake access = open");
+  ok(`Sessions ready: S1-S10; S${CURRENT_OPEN_SESSION} is the current open Session; S6-S9 Work Track open; S1-S9 Intake access open`);
+}
+
+async function ensureWeeklyActivitySettings(blockId) {
+  // Open Weeks 1-4 so the legacy Class Activities are visible to students now.
+  // The teacher can close/reopen any week from the dashboard. The rows already
+  // exist (created by a trigger when the Block was inserted); we flip is_open.
+  const rows = [1, 2, 3, 4].map((week_number) => ({ block_id: blockId, week_number, is_open: true }));
+  await must(
+    admin.from("weekly_activity_settings").upsert(rows, { onConflict: "block_id,week_number" }),
+    "Open Weeks 1-4 class activities",
+  );
+  ok("Class Activities ready: Weeks 1-4 opened");
+}
+
+async function ensureLegacyWorkflowDefault(blockId) {
+  // Release-candidate default: the LEGACY classroom workflow. intake_mode must
+  // be 'disabled' so the student portal shows the legacy journey (Check-in,
+  // Weekly Activities, Work Track) rather than the Intake-first layout. The
+  // teacher can switch this Block to 'deterministic' from the dashboard to test
+  // the deterministic Intake. AI mode is intentionally NOT set for the RC.
+  await must(
+    admin.from("teaching_blocks").update({ intake_mode: "disabled" }).eq("id", blockId),
+    "Set the rehearsal Block to the legacy workflow (intake_mode=disabled)",
+  );
+  ok("Workflow default ready: intake_mode = 'disabled' (legacy workflow; deterministic Intake is teacher-selectable; AI off)");
 }
 
 // ---------------------------------------------------------------------------
@@ -491,16 +581,19 @@ async function main() {
 
   await ensureRoster(pilotBlockId);
   const teamIdByNumber = await ensureTeams(pilotBlockId);
+  await pruneNonCanonicalFixture(pilotBlockId);
   const projects = await ensureProjects(pilotBlockId);
   await ensureTeamProjectAssignments(teamIdByNumber, projects);
 
   const teacher = await findAuthUserByEmail(TEACHER.email);
   await ensureSessions(pilotBlockId, teacher.id);
+  await ensureWeeklyActivitySettings(pilotBlockId);
+  await ensureLegacyWorkflowDefault(pilotBlockId);
 
   const students = await ensureAllStudents(pilotBlockId);
 
   console.log("\n──────────────────────────────────────────────────────────");
-  console.log("Local test fixture ready for AI Session Intake testing.");
+  console.log("LOCAL RELEASE CANDIDATE fixture ready (legacy workflow default).");
   console.log("──────────────────────────────────────────────────────────\n");
   console.log(`Teacher login  → ${TEACHER.email} / ${TEACHER.password}`);
   console.log(`Student login  → any of the following, password: Student123!\n`);
@@ -508,8 +601,11 @@ async function main() {
     console.log(`  ${s.student_id.padEnd(7)} Team ${s.team_number}  ${s.vu_email}`);
   }
   console.log(
-    "\nActive block: 2026 · 2B2 (Sessions S1-S9 are Intake-open; S10 is closed)." +
-    "\nHistorical block: 2026 · 1B4 (archived, no roster — represents the prior NIT3003 unit).",
+    "\nActive rehearsal block: 2026 · 2B2 (LOCAL rehearsal, NOT the real November Block)." +
+    "\n  · Workflow: LEGACY (intake_mode='disabled'). Teacher may switch to 'deterministic' Intake. AI is OFF." +
+    "\n  · Sessions: S7 is the current open Session; S6-S9 Work Track open; S1-S9 Intake-open." +
+    "\n  · Class Activities: Weeks 1-4 opened." +
+    "\nHistorical block: 2026 · 1B4 (archived, no roster — the prior NIT3003 unit).",
   );
 }
 

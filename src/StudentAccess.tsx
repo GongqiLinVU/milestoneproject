@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { createClient, type Session } from "@supabase/supabase-js";
 import { CheckCircle2, LogOut } from "lucide-react";
+import { confirmExitIfBlocked } from "./intakeExitGuard";
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL || "https://gwihaizxivclamzehupk.supabase.co",
@@ -22,6 +23,7 @@ type Context = {
   projectCategory: string | null;
   projectDifficulty: string | null;
   projectSource: "catalogue" | "roster" | "none";
+  intakeMode?: "disabled" | "deterministic" | "ai";
   checkinRecognised: boolean;
   studioSession?: StudioSession | null;
   checkInToSession?: () => Promise<void>;
@@ -193,7 +195,7 @@ export function StudentAccess({ children }: { children: ReactNode | ((context: C
   return <>
     <div className="student-session-bar">
       <span>{context.studentName} · {context.teamName} · {context.projectName || "Project pending"}</span>
-      <button className="secondary compact" onClick={() => void supabase.auth.signOut()}><LogOut size={15}/>Sign out</button>
+      <button className="secondary compact" onClick={() => { if (confirmExitIfBlocked()) void supabase.auth.signOut(); }}><LogOut size={15}/>Sign out</button>
     </div>
     {message && <p className="student-session-message admin-alert" role="status">{message}</p>}
     {typeof children === "function"
