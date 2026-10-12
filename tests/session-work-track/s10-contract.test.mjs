@@ -5,11 +5,24 @@ after(()=>db.close());
 // One coherent sequential contract exercise, avoiding shared identity races.
 test('S10 Work Track: early/late persistence, selected method, windows and identity isolation',async()=>{
   await identity();
-  const saved=await rpc('save_my_session_work_track',1,{...early,completionPercent:100,requirements:late.requirements});
+  assert.equal((await rpc("get_my_session_work_track",1)).earlyFormVersion,"compact.v1");
+  const saved=await rpc('save_my_session_work_track',1,{...early,completionPercent:100,requirements:late.requirements,helpKind:"No help needed"});
   assert.deepEqual(saved.response,early);
   assert.deepEqual((await rpc('get_my_session_work_track',1)).response,early);
   assert.equal((await rpc('get_my_session_work_track',2)).previousNextFocus,early.nextAction);
   assert.equal((await rpc('get_my_session_work_track',2)).previousCompletion,null);
+  const compact={...early,formVersion:'compact.v1',workAreas:['Development','Testing'],progressState:'No progress',helpKind:'Teacher guidance',previousActionStatus:'Not completed',responsibilityCarriedForward:true};
+  await rpc('save_my_session_work_track',2,compact);
+  assert.deepEqual((await rpc('get_my_session_work_track',2)).response,compact);
+  await identity(A,'teacher');
+  assert.deepEqual((await rpc('get_teacher_session_work_tracks',2))[0].response.workAreas,compact.workAreas);
+  await identity();
+  for(const bad of [{...compact,workAreas:[]},{...compact,workAreas:['Development','Development']},{...compact,progressState:'Verified by teacher'},{...compact,support:''},{...compact,formVersion:null},{...compact,previousActionStatus:'Verified'}]) {
+    await assert.rejects(rpc('save_my_session_work_track',2,bad),/Choose valid Work Track/);
+  }
+  const noHelp=await rpc('save_my_session_work_track',2,{...compact,helpKind:'No help needed',support:'stale help'});
+  assert.equal(noHelp.response.support,'');
+
   await assert.rejects(rpc('save_my_session_work_track',2,{...early,nextAction:''}),/Describe your responsibility/);
   await assert.rejects(rpc('save_my_session_work_track',2,{...early,evidence:{fake:true}}),/Describe your responsibility/);
   await rpc('save_my_session_work_track',7,{...late,completionPercent:99});

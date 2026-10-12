@@ -169,3 +169,12 @@ See the [Sprint 8 plan](docs/sprints/sprint-08/PLAN.md), current
 ### Sprint 3 — continuous engagement evidence
 
 Week 1 uses an individual Team Health Check and a ten-question Engagement Check-out. Week 2 adds an Implementation Pre-check. Phase 3 adds a private teacher Review & Follow-up workflow linked to each Implementation Pre-check, plus a Week 3 Check-out. The Teacher Dashboard retains raw evidence and presents descriptive teaching signals only—never an automatic mark or performance judgement. Phase 3B adds an optional AI suggestion card that a teacher may edit, use as a follow-up, regenerate or dismiss.
+
+### Compact early Work Track — S10-01b review candidate
+
+The proposed S1–S5 form uses choices plus short responsibility/progress/next-action
+answers, conditional help and optional evidence. Previous responsibility requires
+explicit confirmation; previous action stays labelled as history. S6–S9 are
+unchanged. New migration 20261013_sprint10_s01b_compact_work_track.sql must be
+reviewed/applied before the matching frontend release; currently not applied or
+deployed. Full behavior and validation: docs/sprints/sprint-10/S10-01B_REPORT.md.
