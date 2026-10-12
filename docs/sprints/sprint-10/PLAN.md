@@ -54,6 +54,29 @@ CONTRIBUTING.md and AI_CONTEXT.md. Their current workflow policies apply;
 older capability summaries are historical when contradicted by actual code.
 Documentation-only validation is content/diff review; no repeated build needed.
 
+## Confirmed Block sequence (Joseph, 13 October)
+
+| Block | Purpose | Setup status |
+|---|---|---|
+| 2026 · 2B2 | Continue existing synthetic testing | Reuse existing test context and evidence |
+| 2026 · 2B3 | Next synthetic test Block; consecutive-Block transition rehearsal | Not created by this task; dates/roster/method still to be supplied or reviewed |
+| 2026 · 2B4 | Actual November teaching Block | Identity confirmed; Joseph will supply real details or create it in the teacher UI |
+
+Use at least one continuing synthetic student with the same Student ID/account
+in 2B2 and 2B3. Verify intended current context, no account duplication or
+unnecessary password reset, retained old submissions and Block-scoped history.
+Historical evidence must remain labelled by Block; do not automatically treat
+a previous Block's evidence as current progress or blend same-number Sessions.
+This is a narrow continuation check in S10-02/S10-03, not a new scenario matrix.
+
+The repository's latest teaching_blocks_block_code_check allows
+1B1, 1B4, 2B1, 2B2 and 2B4, **not 2B3**. Test preparation therefore requires
+a new additive migration to permit 2B3, with schema synchronization; never edit
+the applied Sprint 8 migration. 2B4 is already permitted by this CHECK.
+Do not create/activate any Block, fabricate dates/rosters or execute SQL in
+this planning task. If Joseph creates 2B4 himself, inspect and verify that
+configuration before proposing further writes.
+
 ## Inspected contracts: one teaching goal, different implementations
 
 | Method label | Stored setting | Contract and behavior | Opening control |
@@ -122,7 +145,7 @@ Dates below are scheduling targets, not promises of unapproved deployment.
 | Window | Increment | Dependency / usable result |
 |---|---|---|
 | 13–16 Oct | S10-01: S1–S9 Work Track + teacher method guidance | Joseph's early-question decision; new reviewed migration; one early and one late Session accepted |
-| 16–21 Oct | S10-02: November setup preparation + activation/recovery | Joseph supplies Block identity, timetable, roster and continuing-student mapping; preview setup before any write |
+| 16–21 Oct | S10-02: November setup preparation + activation/recovery | 2B4 identity confirmed; timetable, roster and continuing-student mapping pending; rehearse 2B2→2B3 before real setup |
 | 21–26 Oct | S10-03: focused continuity / remaining non-AI hosted gaps | S1→S2 prior/current distinction; complete missing hosted Work Track and Form chain using authorized synthetic records |
 | 26–29 Oct | Close non-AI classroom blockers and acceptance | Joseph hands-on review; short changed-path smoke; record accepted/deferred results |
 | Later optional increment | S10-AI: durable usage controls, cost and bounded quality/safety evaluation | Explicit model/budget approval and institutional readiness; does not block non-AI use |
@@ -163,15 +186,17 @@ Focused acceptance:
 
 ### S10-02 — real Block and incoming accounts (P0)
 
-Joseph inputs: academic year + Block code/identity; actual S1–S10 dates,
+Confirmed real teaching identity: 2026 · 2B4. Joseph's remaining inputs: actual S1–S10 dates,
 start/end windows and Melbourne timezone; roster with IDs/VU emails/teams/
 projects; continuing-student mappings and chosen initial method.
-Do not infer November identity from mock 2B2.
+Joseph may supply those details or create 2B4 himself. Reuse 2B2 and prepare
+synthetic 2B3 for consecutive-Block rehearsal; do not use test rosters as real data.
 
 Prepare a reviewable setup preview and idempotent missing-Session preparation.
 Retain archived history and existing continuing-student identities/passwords.
-If supplied code is outside the allowed Block code CHECK, prepare a separate
-new additive migration; do not speculate or widen it during planning.
+Prepare a new additive migration permitting synthetic test code 2B3; 2B4
+already fits the current CHECK. Review only during planning; application and
+Block creation require a separately authorized setup step.
 
 Acceptance: preview matches supplied timetable/roster; retry creates no
 duplicate Sessions; continuing student lands in intended current context while
@@ -183,7 +208,8 @@ use a controlled test mailbox only after authorization.
 
 ### S10-03 — continuous use (P1)
 
-Verify S1→S2 for the chosen November method. Show previous record as previous
+Verify S1→S2 for the chosen November method and the narrow 2B2→2B3
+continuing-student transition described above. Show previous record as previous
 evidence, not a fresh current progress claim; collect what changed and next
 action. Work Track presently carries previous requirements/next focus, whereas
 Intake carries confirmed evidence/history. Do not promise cross-schema carryover
