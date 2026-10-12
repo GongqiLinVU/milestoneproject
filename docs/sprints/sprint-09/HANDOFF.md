@@ -3,15 +3,37 @@
 Current state and next implementation slice for NIT3004 classroom delivery.
 Language: English. Plan/review: Joseph and ChatGPT. Implementation: Claude.
 
-## Current position
+## First production release — DELIVERED (13 Oct 2026)
+
+The non-AI first production release is **live**. See
+`FIRST_PRODUCTION_RELEASE_REPORT.md` for the full record. Summary:
+
+- PR [#68](https://github.com/GongqiLinVU/milestoneproject/pull/68) merged to
+  `main`; release commit `bcd2d45`; merge commit **`6549171`** (new `main`
+  baseline). Previous `main` was `96d2aee` (PR #67).
+- Vercel production deployment `milestoneproject-eldvi5b1i` **Ready**; alias
+  **milestoneproject-two.vercel.app**; `/`, `/student`, `/admin` all HTTP 200.
+- The two additive migrations (`20261008` R02, then `20261009` R01) were applied
+  to the hosted database by Joseph via the Supabase SQL Editor and verified
+  present; `intake_mode` default `disabled`; AI off; November Block not
+  configured/activated.
+- Production smoke test (authorized test account `test001`): login → context
+  (`2026 · 2B2`, Team 1, legacy `disabled`) → legacy Session Check-in save →
+  reload persist → teacher read — all PASS. No real student records touched.
+
+Delivery is now **incremental**: this first release is a usable increment; the
+November Block (R08), activation/recovery, S1→S2 carryover, AI Intake and the
+remaining P1/P2 items are later increments, not first-release blockers.
+
+## Current position (pre-release working-tree history, retained for reference)
 
 Branch `integration-tests-m4-m10-m14`, **committed HEAD `656f55f`** — its tree is
 byte-identical to reviewed main `96d2aee` (PR #67 merge; `git diff` empty). The
-**working tree carries all uncommitted Sprint 9 work** (R01–R04, the teacher mode
+**working tree carried all uncommitted Sprint 9 work** (R01–R04, the teacher mode
 selector, the read-only history fixes, the **positively-restricted provider-mock
-gate**, the **R05 unsaved-exit guard**, and the local serving setup); nothing is
-committed this sprint. The earlier dev-only `window.__supabase` hook has been
-**removed**.
+gate**, the **R05 unsaved-exit guard**, and the local serving setup) that is now
+committed as `bcd2d45` and merged to `main` via PR #68 (see above). The earlier
+dev-only `window.__supabase` hook has been **removed**.
 
 ### Delivered (uncommitted, in the working tree)
 
