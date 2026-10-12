@@ -4,8 +4,10 @@
 
 13 October 2026: Joseph approved the plan and authorized implementation.
 **S10-01 is implemented and locally validated; stop for PR review before
-migration application, merge or deployment.** See S10-01_REPORT.md.
-No production data change, paid call, production SQL execution, merge or deployment.
+feature merge or deployment.** Joseph applied the range migration; the
+follow-up anon-grant correction must be applied next. See S10-01_REPORT.md.
+Planning PR #70 merged. No student-data change or paid call; feature PR #71
+remains unmerged and the frontend has not been deployed.
 
 Start the next task by fetching actual latest main and inspecting the planning
 PR status. Reviewed main for this checkpoint:

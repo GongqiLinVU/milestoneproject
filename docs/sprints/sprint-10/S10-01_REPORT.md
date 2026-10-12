@@ -97,3 +97,26 @@ Hosted acceptance/application/release pending. 2B3 CHECK support, synthetic
 full continuity acceptance is S10-03. No 2B3 or 2B4 created, timetable/roster
 invented, paid AI call made or live AI quality accepted. Draft-sync, analytics
 redesign, schema unification and additional questionnaire taxonomies remain deferred.
+
+## Post-apply checkpoint — 13 October 2026
+
+Joseph confirmed successful SQL Editor execution of s01_work_track.
+Planning PR #70 merged as 1dc655464329001b6f34aead5be8af0ea8ea7900;
+feature PR #71 retargeted to main and remains unmerged.
+Production anonymous read-only probes: get_my_session_work_track and
+get_teacher_session_work_tracks refused (42501); get_my_session_journey returned
+200 with [] (no student data). This proves the RPC remains callable by anon,
+not that its new range/body was independently authenticated-verified.
+
+Root cause: the new migration revokes PUBLIC only, leaving explicit existing
+anon EXECUTE grants intact. The isolated fixture did not model these inherited
+grants. Corrected the fixture to seed explicit anon grants and added checks for
+all three affected RPCs. The follow-up **new** migration
+20261013_sprint10_s01_rpc_privileges.sql revokes both PUBLIC and anon and retains
+authenticated access. The already-applied work_track migration remains unchanged.
+No function body/data change; schema.sql is synchronized.
+The corrected executable contract test passes with inherited grants present.
+
+**Release hold:** Joseph must apply this small follow-up SQL, then repeat anonymous
+probes. Feature merge/deployment and authenticated hosted smoke remain pending.
+Do not rerun or edit the original migration. No paid calls or student-data writes.

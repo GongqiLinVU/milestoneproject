@@ -57,6 +57,8 @@ test('S10 Work Track: early/late persistence, selected method, windows and ident
   await db.query(`update teaching_blocks set intake_mode='disabled' where id=$1`,[block]);
   await db.exec('set role anon');
   await assert.rejects(rpc('get_my_session_work_track',1),/permission denied/);
+  await assert.rejects(db.query('select get_my_session_journey()'),/permission denied/);
+  await assert.rejects(rpc('save_my_session_work_track',1,early),/permission denied/);
   await db.exec('reset role');
   await identity();
 });

@@ -1,6 +1,6 @@
 # Sprint 10 — Classroom continuity and November readiness
 
-Status: plan approved by Joseph on 13 October; S10-01 implemented as a review candidate, not applied/deployed. See S10-01_REPORT.md.
+Status: plan approved by Joseph on 13 October; S10-01 review candidate: Joseph applied the range migration; a post-apply anon-grant correction is pending. Frontend not deployed. See S10-01_REPORT.md.
 Planning baseline inspected on 13 October 2026 (Australia/Melbourne).
 
 ## Goal and ownership
