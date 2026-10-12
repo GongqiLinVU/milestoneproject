@@ -37,6 +37,29 @@ No AGENTS.md found in the repository. Read CONTRIBUTING.md and AI_CONTEXT.md;
 current connector-first and proportional-check rules apply. Repository documents
 are English, conversation with Joseph Chinese.
 
+## Confirmed Block sequence (Joseph, 13 October)
+
+| Block | Purpose | Setup status |
+|---|---|---|
+| 2026 · 2B2 | Continue existing synthetic testing | Reuse existing test context and evidence |
+| 2026 · 2B3 | Next synthetic test Block; consecutive-Block transition rehearsal | Not created by this task; dates/roster/method still to be supplied or reviewed |
+| 2026 · 2B4 | Actual November teaching Block | Identity confirmed; Joseph will supply real details or create it in the teacher UI |
+
+Use at least one continuing synthetic student with the same Student ID/account
+in 2B2 and 2B3. Verify intended current context, no account duplication or
+unnecessary password reset, retained old submissions and Block-scoped history.
+Historical evidence must remain labelled by Block; do not automatically treat
+a previous Block's evidence as current progress or blend same-number Sessions.
+This is a narrow continuation check in S10-02/S10-03, not a new scenario matrix.
+
+The repository's latest teaching_blocks_block_code_check allows
+1B1, 1B4, 2B1, 2B2 and 2B4, **not 2B3**. Test preparation therefore requires
+a new additive migration to permit 2B3, with schema synchronization; never edit
+the applied Sprint 8 migration. 2B4 is already permitted by this CHECK.
+Do not create/activate any Block, fabricate dates/rosters or execute SQL in
+this planning task. If Joseph creates 2B4 himself, inspect and verify that
+configuration before proposing further writes.
+
 ## Next implementation slice: S10-01
 
 S1–S9 Work Track availability + clear teacher submission-method guidance.
@@ -97,9 +120,10 @@ Production test writes require separate authorization.
 
 See PLAN.md for target windows, scope and acceptance:
 - S10-02: November setup preview/idempotency + activation/recovery.
-  Joseph supplies exact Block identity, timetable/timezone, roster/team/project
-  data, continuing-student transitions and initial method. Do not guess 2B2.
-  A new code outside the Block CHECK may need a separate additive migration.
+  Real Block is confirmed as 2026 · 2B4; Joseph supplies timetable/timezone,
+  roster/team/project data, continuing-student transitions and initial method,
+  or creates it himself. Continue 2B2 testing and use synthetic 2B3 for the next
+  Block rehearsal. 2B3 needs a new additive CHECK migration; 2B4 is permitted.
   Verify recovery email/redirect and reset/password flow; no mail sent here.
 - S10-03: chosen method S1→S2 continuity; distinguish prior evidence/current
   progress; complete missing hosted Form/Work Track chains once authorized.
