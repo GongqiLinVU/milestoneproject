@@ -2,6 +2,27 @@
 
 ## Current checkpoint
 
+## Latest release checkpoint — S10-01b (13 October)
+
+- Joseph confirmed 20261013_sprint10_s01b_compact_work_track.sql applied.
+- Anonymous get_my_session_work_track and save_my_session_work_track both refuse
+  HTTP 401 / SQLSTATE 42501; no student row modified by the probes.
+- PR #73 merged as **6b2009c4c2941cc9c93545b2d3ec92b951972e76**.
+- Vercel production status success:
+  https://vercel.com/guccimasters-projects/milestoneproject/8ChWCdd5ZWJTHF5x8nccR9paJuzG
+- /student returns 200 and serves /assets/index-Dsy_bNWw.js containing the compact
+  choices, explicit responsibility confirmation and compact.v1 capability.
+- No production student writes, Block mode changes or AI calls by ChatGPT.
+- **Pending:** Joseph's authorized test account fills one early Session, saves,
+  reloads and checks teacher read; a following Session can verify explicit
+  responsibility/prior-action carryover. Local evidence is already recorded in
+  S10-01B_REPORT.md; that implementation-time report is superseded for release
+  status by this checkpoint and PR #73.
+- Session AI override / durable usage controls remain next optional development;
+  2B3 rehearsal and actual 2B4 setup remain separate. Do not assume AI readiness.
+
+
+
 13 October 2026: **S10-01 released to production**, PR #71 merged as
 ff66c6f0876cb3b8a9fb4116e901f3e7e97793e9; Vercel status success and the new
 production JS bundle verified. Joseph applied both Work Track and privilege
@@ -152,7 +173,7 @@ not new verification. Production configuration/data was not queried or changed.
 
 Joseph approved compact option-led S1–S5 Work Track: choices plus short concrete
 progress/next action, conditional help/evidence and labelled prior responsibility/
-action continuity. This is S10-01b, the next implementation slice, preserving
+action continuity. S10-01b is now released, preserving
 existing records and S6–S9. See PLAN.md's confirmed usability direction.
 
 November remains primarily form-based. Joseph wants selected Monday Sessions
