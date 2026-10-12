@@ -1,6 +1,6 @@
 # Sprint 10 — Classroom continuity and November readiness
 
-Status: S10-01 deployed as ff66c6f; both migrations applied and anonymous permissions verified. Authenticated hosted S1/S7 smoke pending. See S10-01_REPORT.md.
+Status: S10-01 and S10-01b released; compact form deployed as 6b2009c. Joseph applied all three migrations and anonymous get/save permissions were rechecked. Authenticated hosted smoke pending.
 Planning baseline inspected on 13 October 2026 (Australia/Melbourne).
 
 ## Goal and ownership
@@ -255,7 +255,7 @@ Block primarily form-based, with selected Monday Sessions using AI Conversation
 for in-class observation. Monday is a manually selected Session, not a recurring
 scheduler rule. No AI activation, paid run or institutional acceptance is implied.
 
-### S10-01b: compact S1–S5 form (next implementation)
+### S10-01b: compact S1–S5 form (released; hosted smoke pending)
 
 Replace large free-text boxes with work-area choices, progress-state choice plus
 one concrete sentence, a short next action, conditional help details and optional
