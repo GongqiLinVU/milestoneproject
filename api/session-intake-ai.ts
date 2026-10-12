@@ -7,6 +7,91 @@ const PROMPT_VERSION = INTAKE_PROMPT_VERSION;
 const MODEL = process.env.OPENAI_INTAKE_MODEL || process.env.OPENAI_MODEL || "gpt-5-mini";
 
 type Mode = "turn" | "questions" | "extract";
+// LOCAL-ONLY: canned, schema-valid turn result for the provider transport mock
+// (activated only by resolveMockGate() in an isolated local test runtime — see
+// its contract below; never in Preview/production and never against a non-local
+// Supabase target).
+// Evidence is sourced from the latest student turn so decideTurn's source checks
+// pass; it is a fixed script, never a model call. Not model-quality evidence.
+function mockTurnResult(sourceTurn: number) {
+  return {
+    assistantMessage: "Thanks — that gives me a clear picture. Review and confirm your record.",
+    route: "review",
+    readyForReview: true,
+    assessment: {
+      information: "focused", evidenceReadiness: "identified", verificationReadiness: "clear",
+      testingMaturity: "executed", actionability: "clear", gap: "none", reason: "sufficient for review",
+      sourceTurns: [sourceTurn],
+    },
+    evidenceUpdates: [
+      { field: "responsibility", value: "The booking list loading banner", state: "student_claim", sourceTurn, evidenceType: null, progressKind: null, method: null, observedResult: null, expectedEvidence: null },
+      { field: "claim", value: "Added a loading state to the booking list", state: "student_claim", sourceTurn, evidenceType: null, progressKind: "advanced", method: null, observedResult: null, expectedEvidence: null },
+      { field: "evidence", value: "PR #42 booking-loading-state", state: "available", sourceTurn, evidenceType: "repository_change", progressKind: null, method: null, observedResult: null, expectedEvidence: null },
+      { field: "testing", value: "Throttled the network and reloaded", state: "executed", sourceTurn, evidenceType: null, progressKind: null, method: "Throttled the network in dev tools and reloaded the booking list", observedResult: "Spinner appeared until cards loaded", expectedEvidence: null },
+      { field: "next_action", value: "Show the live demo next session", state: "planned", sourceTurn, evidenceType: null, progressKind: null, method: null, observedResult: null, expectedEvidence: "A live demonstration of the loading banner" },
+    ],
+    uncertainties: [],
+    suggestedTeacherQuestions: [],
+  };
+}
+// --- Provider transport mock gate (isolated local test runtime only). -------
+// The provider-transport mock must be POSITIVELY restricted to an explicit,
+// isolated local test runtime and must never silently fall through to a real
+// paid provider when it is misconfigured. The previous gate
+// (`VERCEL_ENV !== "production"`) was a NEGATIVE condition that also permitted
+// Preview and unset/unknown environments; this resolver replaces it.
+//
+// All of these must hold, read ONLY from trusted SERVER configuration (never
+// from the request body/headers):
+//   1. INTAKE_MOCK_PROVIDER is exactly "1" (success) or "fail" (transport fail).
+//   2. INTAKE_MOCK_ALLOW === "local-isolated" — an explicit opt-in marker that
+//      is set only by the local rehearsal/test runtime and is never set in
+//      Preview or production.
+//   3. VERCEL_ENV is NOT "production" AND NOT "preview". We allowlist the
+//      isolated runtimes positively: it must be unset or "development".
+//   4. The resolved Supabase target (SUPABASE_URL || VITE_SUPABASE_URL) is a
+//      local loopback (http://127.0.0.1:* or http://localhost:*), mirroring the
+//      same trusted-target check enforced by scripts/dev-with-api.sh and
+//      scripts/run-integration-tests.sh.
+//
+// Outcomes:
+//   { mode: "success" | "fail" }  — mock authorized.
+//   { mode: "off" }               — flag absent; use the real provider.
+//   { mode: "invalid", reason }   — flag present but the runtime is NOT a
+//                                   trusted isolated-local one. The caller MUST
+//                                   fail clearly and MUST NOT call a provider.
+export type MockGate =
+  | { mode: "success" | "fail" }
+  | { mode: "off" }
+  | { mode: "invalid"; reason: string };
+
+export function resolveMockGate(env: NodeJS.ProcessEnv = process.env): MockGate {
+  const flag = env.INTAKE_MOCK_PROVIDER;
+  if (flag !== "1" && flag !== "fail") return { mode: "off" };
+
+  // The flag is present: from here, any failed condition is an INVALID mock
+  // configuration that must fail closed (never a silent real provider call).
+  const vercelEnv = env.VERCEL_ENV;
+  if (vercelEnv === "production" || vercelEnv === "preview") {
+    return { mode: "invalid", reason: `mock_forbidden_in_${vercelEnv}` };
+  }
+  if (vercelEnv !== undefined && vercelEnv !== "" && vercelEnv !== "development") {
+    // Unknown/unexpected VERCEL_ENV value — refuse rather than assume isolation.
+    return { mode: "invalid", reason: "mock_requires_development_or_unset_vercel_env" };
+  }
+  if (env.INTAKE_MOCK_ALLOW !== "local-isolated") {
+    return { mode: "invalid", reason: "mock_requires_local_isolated_opt_in" };
+  }
+  const supabaseTarget = env.SUPABASE_URL || env.VITE_SUPABASE_URL || "";
+  const isLocalTarget =
+    /^http:\/\/127\.0\.0\.1(:\d+)?(\/|$)/.test(supabaseTarget) ||
+    /^http:\/\/localhost(:\d+)?(\/|$)/.test(supabaseTarget);
+  if (!isLocalTarget) {
+    return { mode: "invalid", reason: "mock_requires_local_supabase_target" };
+  }
+  return { mode: flag === "fail" ? "fail" : "success" };
+}
+
 const text = (value: unknown, max: number) =>
   typeof value === "string" ? value.trim().slice(0, max) : "";
 
@@ -39,8 +124,8 @@ async function resolvePreviousRecord(admin: any, authUserId: string, sessionId: 
   if (!account) throw new Error("student_account_not_activated");
   if (sessionError || !session) throw new Error("session_record_not_found");
   const { data: block, error: blockError } = await admin.from("teaching_blocks")
-    .select("block_code,academic_year").eq("id", session.block_id).maybeSingle();
-  if (blockError || !block || block.block_code !== "2B2" || session.session_number < 1 || session.session_number > 9) {
+    .select("block_code,academic_year,intake_mode").eq("id", session.block_id).maybeSingle();
+  if (blockError || !block || block.intake_mode !== "ai" || session.session_number < 1 || session.session_number > 9) {
     throw new Error("session_not_eligible_for_ai_intake");
   }
   const now = Date.now();
@@ -130,6 +215,21 @@ const commonProperties = {
 export default async function handler(req: any, res: any) {
   res.setHeader("Cache-Control", "no-store");
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed." });
+
+  // Resolve the provider-transport mock gate from trusted SERVER config FIRST.
+  // A present-but-misconfigured flag fails CLOSED here — before auth, any
+  // Supabase read, or any provider call — so an invalid mock can never silently
+  // fall through to a real paid provider. { off } proceeds on the real path;
+  // { success | fail } authorizes the local transport mock used below.
+  const mockGate = resolveMockGate();
+  if (mockGate.mode === "invalid") {
+    return res.status(503).json({
+      error: "AI Intake provider mock is misconfigured for this runtime.",
+      code: mockGate.reason,
+      stage: "provider_mock_gate",
+      fallback: true,
+    });
+  }
 
   const token = String(req.headers.authorization || "").replace(/^Bearer /, "");
   const auth = token ? await authenticatedStudent(token) : null;
@@ -299,7 +399,32 @@ export default async function handler(req: any, res: any) {
       stream: false,
     }),
   });
-  const providerRequest = () => provider_id === "deepseek" ? deepseekRequest() : openaiRequest();
+  // --- LOCAL-ONLY provider transport mock (rehearsal). ---------------------
+  // Mocks ONLY the network transport so the real endpoint runtime, parsing,
+  // decision logic and persistence still execute. The gate was already resolved
+  // and fail-closed at the top of the handler by resolveMockGate() (trusted
+  // server config: flag + opt-in marker + non-prod/non-preview env + local
+  // Supabase target). Here we only read the already-validated outcome; an
+  // invalid config never reaches this point.
+  const mockProviderEnabled = mockGate.mode === "success";
+  const mockProviderFail = mockGate.mode === "fail";
+  const lastStudentTurn = Array.isArray(req.body?.conversation)
+    ? req.body.conversation.map((t: any, i: number) => ({ t, i })).filter((x: any) => x.t?.actor === "student").map((x: any) => x.i).pop() ?? 1
+    : 1;
+  const mockTurnBody = () => {
+    const result = provider_id === "deepseek"
+      ? { choices: [{ finish_reason: "stop", message: { content: JSON.stringify(mockTurnResult(lastStudentTurn)) } }] }
+      : { status: "completed", model: `mock-${MODEL}`, usage: { input_tokens: 1, output_tokens: 1 }, output_text: JSON.stringify(mockTurnResult(lastStudentTurn)) };
+    return new Response(JSON.stringify(result), { status: 200, headers: { "content-type": "application/json" } });
+  };
+  // "fail" mode returns a non-ok transport response (no network) so the endpoint's
+  // real provider-failure path (deterministic fallback) is exercised locally.
+  const mockFailBody = () => new Response(JSON.stringify({ error: "mock provider failure" }), { status: 503, headers: { "content-type": "application/json" } });
+  const providerRequest = () => mockProviderFail
+    ? Promise.resolve(mockFailBody())
+    : mockProviderEnabled
+      ? Promise.resolve(mockTurnBody())
+      : (provider_id === "deepseek" ? deepseekRequest() : openaiRequest());
   // Normalize either provider body to { status, outputText } for the shared parse.
   const extractOutput = (body: any): { status: string | null; outputText: string } => {
     if (provider_id === "deepseek") {

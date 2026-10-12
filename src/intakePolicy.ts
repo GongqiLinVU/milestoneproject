@@ -76,7 +76,7 @@ export function changedEvidenceFields(current: DeterministicIntakeAnswers, next:
   const keys: Record<EvidenceUpdate['field'], (keyof DeterministicIntakeAnswers)[]> = {
     responsibility:['responsibility'], claim:['progress','progressKind'], scope:['scope'],
     evidence:['evidenceType','evidenceAvailability','evidenceReference'], verification_method:['verificationMethod'],
-    testing:['testingStatus','testingMethod','testingResult'], blocker:['blockerStatus','blockerDescription','supportRequested'],
+    testing:['testingStatus','testingMethod','testingResult','testingBaseline'], blocker:['blockerStatus','blockerDescription','supportRequested'],
     next_action:['nextAction','expectedEvidence']
   };
   return [...new Set(updates.map(u=>u.field))].filter(field=>keys[field].some(key=>current[key]!==next[key]));
