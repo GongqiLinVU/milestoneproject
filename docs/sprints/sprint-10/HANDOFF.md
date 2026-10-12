@@ -147,3 +147,20 @@ account activation/recovery endpoints and AI usage output.
 Documentation-only content/diff review; did not reinstall dependencies or rerun
 the unchanged release build/tests. Release evidence is reported as prior evidence,
 not new verification. Production configuration/data was not queried or changed.
+
+## Latest teaching direction — 13 October
+
+Joseph approved compact option-led S1–S5 Work Track: choices plus short concrete
+progress/next action, conditional help/evidence and labelled prior responsibility/
+action continuity. This is S10-01b, the next implementation slice, preserving
+existing records and S6–S9. See PLAN.md's confirmed usability direction.
+
+November remains primarily form-based. Joseph wants selected Monday Sessions
+manually overridden to AI for observation. Plan nullable Session method override:
+inherit Block by default; "Use AI Conversation for this Session" / "Restore Block
+default", effective-method resolution across student/UI/read/save/AI gates,
+separate opening windows and no duplicate report after method changes.
+Do not implement a frontend-only switch or conflate compact Work Track with the
+separate confirmed Intake contract. This later slice must include durable paid
+usage limits and bounded live/safety acceptance before student observation.
+No AI enabled or paid call authorized by this planning update.
