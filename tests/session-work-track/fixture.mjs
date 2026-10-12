@@ -31,7 +31,7 @@ await db.exec(await read('20260813_sprint7_phase1a_independent_work_track.sql'))
 await db.exec('grant execute on function get_my_session_work_track(uuid),save_my_session_work_track(uuid,jsonb),get_my_session_journey() to anon');
 await db.exec(await read('20261013_sprint10_s01_work_track.sql'));
 await db.exec(await read('20261013_sprint10_s01_rpc_privileges.sql'));
-await db.exec(await read('20261013_sprint10_s01b_compact_work_track.sql')); 
+await db.exec(await read('20261013_sprint10_s01b_compact_work_track.sql'));
 for (const n of [1,2,6,7,8,9,10]) await db.query(`insert into studio_sessions(id,block_id,session_number,week_number,curriculum_focus,title,session_date,status,work_track_access) values ($1,$2,$3,1,'Progress','Session '||($3::integer)::text,'2026-10-13','open','open')`,[sid(n),block,n]);
 await db.exec(`grant usage on schema public,auth to authenticated,anon;`);
 export async function identity(user=A,role='student') {
