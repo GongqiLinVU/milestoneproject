@@ -20,3 +20,18 @@ teacher read and verification reset, closed/method/S10 write refusal, own-record
 isolation within and across Blocks, and anon/non-teacher RPC refusal. Identity is
 supplied through synthetic JWT settings; no live login or production acceptance
 is claimed. This focused test is opt-in and does not change npm test's Intake suite.
+
+## Compact S1–S5 update
+
+The fixture now applies the new S10-01b migration after the two S10-01 scripts.
+Run the SQL contract command above plus these dependency-free helper checks:
+
+```sh
+./node_modules/.bin/tsc --outDir .test-work-track --target ES2022 \
+  --module nodenext --moduleResolution nodenext --skipLibCheck src/workTrackForm.ts
+node --test tests/session-work-track/compact-form.test.mjs
+```
+
+The compact checks cover metadata round-trip, legacy payload compatibility,
+invalid/duplicate work choices, missing help detail, explicit responsibility
+carry-forward without copying current progress, and old-backend capability.

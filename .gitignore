@@ -8,3 +8,4 @@ dist
 *.tsbuildinfo
 .test-build
 .test-api
+.test-work-track/
