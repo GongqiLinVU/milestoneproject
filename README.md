@@ -1,5 +1,16 @@
 # Engineering Studio Platform
 
+## Sprint 10 S10-01 — pending release
+
+The proposed S1–S9 Work Track increment is documented in
+`docs/sprints/sprint-10/S10-01_REPORT.md`. S1–S5 use responsibility, current
+progress and next action, with optional evidence/help; S6–S9 retain their
+requirement-completion assessment. Teacher collection-method labels are
+Existing classroom workflow, Guided Form and AI Conversation.
+Apply the reviewed **new** `20261013_sprint10_s01_work_track.sql` migration
+before the matching frontend release. This is not yet a production capability.
+
+
 A production-deployed teaching platform that turns the final four weeks of NIT3004 into an engineering delivery studio.
 
 The current module guides students through a four-week journey:

@@ -1,5 +1,19 @@
 # AI Context — Engineering Studio Platform
 
+## Sprint 10 S10-01 — implementation pending production acceptance
+
+Joseph confirmed S1–S9 Work Track and short S1–S5 progress questions without
+mandatory completion percentages. S6–S9 retain their existing assessment;
+S10 retains feedback/final presentation. Collection methods preserve separate
+Work Track versus Intake contracts and a single active student reporting entry.
+A new migration aligns Work Track range, selected-method writes and prior-record
+lookup; source history remains readable after method changes. No production
+migration/deployment has been performed for this increment. See
+`docs/sprints/sprint-10/S10-01_REPORT.md` for exact evidence and release steps.
+Test sequence: existing 2026 · 2B2 → synthetic 2B3; real November is 2026 · 2B4.
+2B3 CHECK support/setup remains the next increment, not S10-01.
+
+
 ## Sprint 6 verified Production state
 
 Sprint 6 closed on 12 August 2026 after Production build, a 24/24 database

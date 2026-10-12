@@ -1,6 +1,6 @@
 # Sprint 10 — Classroom continuity and November readiness
 
-Status: planning complete; feature implementation has not started.
+Status: plan approved by Joseph on 13 October; S10-01 implemented as a review candidate, not applied/deployed. See S10-01_REPORT.md.
 Planning baseline inspected on 13 October 2026 (Australia/Melbourne).
 
 ## Goal and ownership
@@ -15,8 +15,9 @@ backup, not the default implementation environment. Repository documents and
 reports are English; discussion with Joseph is Chinese.
 
 Use focused branches and Draft PRs. Ship small usable increments after review.
-No feature code, production data changes, paid calls, migration execution,
-merge or deployment is authorized by this planning task.
+The initial planning task authorized documents only. Joseph subsequently
+approved the plan and S10-01 implementation; production data changes, paid calls,
+migration execution, merge and deployment remain separately authorized steps.
 
 ## Reconciled baseline
 
@@ -160,15 +161,14 @@ contracts and authorization. Retain S6–S9 questions and calculations.
 Use the three preferred method labels, selected-method guidance and separate
 Check-in explanations. Persisted server mode remains authoritative.
 
-Proposed early question set, **pending Joseph's product decision**:
+Early question set, **approved by Joseph with the plan on 13 October**:
 responsibility / current progress (including no progress) / next action, with
 optional evidence and blocker/help. Reuse Intake concepts and S6 next-focus/
 blocker content. Do not force report-readiness or executed testing in S1–S5.
-Recommendation: early submissions do not require the late three-requirement
+Approved treatment: early submissions do not require the late three-requirement
 percentage assessment. They are short progress records, with unavailable
 completion shown as absent rather than zero. Check teacher/trajectory consumers
-before allowing this; no broad analytics refactor. An alternative is retaining
-that assessment from S1; Joseph chooses before implementation.
+before allowing this; no broad analytics refactor. S10-01 implements this treatment.
 
 Focused acceptance:
 1. One synthetic early Session (S1): teacher opens relevant collection window;
@@ -243,6 +243,6 @@ new knowledge base, grading engine, schema unification, questionnaire expansion,
 unneeded refactor, draft-sync storage or bundle optimization in S10-01.
 AI readiness does not block non-AI teaching.
 
-Open product decision before S10-01: approve the short S1–S5 set and whether
-late completion assessment should be optional/absent (recommended).
+Resolved product decision: Joseph approved the plan and implementation on
+13 October; S1–S5 use short progress records with no mandatory late assessment.
 November inputs block S10-02 configuration, not S10-01 development.
