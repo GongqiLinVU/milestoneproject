@@ -56,17 +56,24 @@ and a budgeted live model-quality run.
 3. **Fix blockers only** — defects that block real use or violate the essential
    data-access, submission-integrity or paid-call boundaries. No broad test or
    scenario expansion or refactoring for the first release.
-4. **First production release (non-AI)** — resolve the November Block (R08), apply
-   the reviewed migrations to the hosted DB with audits, Preview deployment
-   acceptance (login → context → submission → reload → teacher read on hosted
-   routing), configure the real Block, and verify activation/recovery and S1→S2
-   carryover. AI stays off.
+4. **First production release (non-AI)** — apply the reviewed additive migrations
+   to the hosted DB with audits and do a hosted login → context → legacy save →
+   reload → teacher-read smoke test. AI stays off. *(DELIVERED 13 Oct 2026 — PR
+   #68, merge `6549171`, deploy `milestoneproject-eldvi5b1i` on
+   milestoneproject-two.vercel.app; both migrations applied and verified;
+   production smoke test PASS with the authorized test account. See
+   `FIRST_PRODUCTION_RELEASE_REPORT.md`.* **Still open for this track:** resolve
+   and configure the **real November Block (R08)**, and verify **account
+   activation/recovery** and **S1→S2 carryover** as rendered production flows —
+   these are later increments, not first-release blockers.)*
 5. **Staged improvements** — AI Intake (institutional approval + budgeted live
    run), R07 usage controls, R09 dataset/safety suite, and the remaining P1/P2
    items, delivered incrementally after the first release.
 
-Local serving is **not** proof of hosted production acceptance. Keep Sprint 8
-Phase D open until Preview/production + live evidence exist.
+Local serving is **not** proof of hosted production acceptance. The first
+production release is now live (step 4); Preview acceptance was superseded by the
+direct production release Joseph authorized. Keep AI off and the November Block
+unconfigured until their separate approvals/inputs exist.
 
 ## November Block identity — UNRESOLVED (Joseph input required)
 
