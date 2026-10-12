@@ -1,6 +1,6 @@
 # Changelog
 
-## Sprint 10 S10-01 — unreleased
+## 2026-10-13 — Sprint 10 S10-01 released
 
 - Extended Work Track entry, teacher controls and server contracts to S1–S9.
 - Added short S1–S5 responsibility/progress/next-action records without computed
@@ -8,7 +8,8 @@
 - Clarified collection-method guidance, separate submission windows and Check-in.
 - Enforced selected-method Work Track writes and retained source-specific history.
 - Added a new reviewed migration and isolated SQL/browser validation evidence.
-  Not applied or deployed to production.
+  Both migrations applied by Joseph; PR #71 deployed as ff66c6f. Anonymous
+  permissions verified; authenticated hosted submission smoke remains pending.
 
 
 ## Sprint 8 Phase 2B — Draft

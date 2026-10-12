@@ -2,12 +2,17 @@
 
 ## Current checkpoint
 
-13 October 2026: Joseph approved the plan and authorized implementation.
-**S10-01 is implemented and locally validated; stop for PR review before
-feature merge or deployment.** Joseph applied the range migration; the
-follow-up anon-grant correction must be applied next. See S10-01_REPORT.md.
-Planning PR #70 merged. No student-data change or paid call; feature PR #71
-remains unmerged and the frontend has not been deployed.
+13 October 2026: **S10-01 released to production**, PR #71 merged as
+ff66c6f0876cb3b8a9fb4116e901f3e7e97793e9; Vercel status success and the new
+production JS bundle verified. Joseph applied both Work Track and privilege
+migrations. Anonymous reads now refuse all three checked RPCs (401/42501).
+See S10-01_REPORT.md for the authoritative checkpoint.
+
+Next: authorized test-account S1/S7 save/reload/teacher-read smoke, then S10-02.
+Do not claim that hosted acceptance passed: only isolated submission evidence,
+hosted asset checks and anonymous permission probes exist so far.
+No student-data write, paid call or Block-method change by ChatGPT.
+Planning PR #70 is also merged. Preserve current 2B2 configuration.
 
 Start the next task by fetching actual latest main and inspecting the planning
 PR status. Reviewed main for this checkpoint:
@@ -69,8 +74,8 @@ S1–S9 Work Track availability + clear teacher submission-method guidance.
 
 Joseph approved the planned S1–S5 treatment: short responsibility/current-progress/
 next-action fields, optional evidence/blocker-help, without late completion percentages.
-The next step is reviewing S10-01 and authorizing its release/application; S10-02
-is the next feature increment after that review.
+The next step is focused authenticated hosted smoke; S10-02 is the next feature
+increment. Implementation pointers below describe the already-released slice.
 
 Methods share a progress-recording goal but not persistence semantics:
 - disabled → Existing classroom workflow → updateable Work Track.

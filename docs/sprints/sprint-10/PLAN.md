@@ -1,6 +1,6 @@
 # Sprint 10 — Classroom continuity and November readiness
 
-Status: plan approved by Joseph on 13 October; S10-01 review candidate: Joseph applied the range migration; a post-apply anon-grant correction is pending. Frontend not deployed. See S10-01_REPORT.md.
+Status: S10-01 deployed as ff66c6f; both migrations applied and anonymous permissions verified. Authenticated hosted S1/S7 smoke pending. See S10-01_REPORT.md.
 Planning baseline inspected on 13 October 2026 (Australia/Melbourne).
 
 ## Goal and ownership

@@ -1,9 +1,37 @@
 # S10-01 — S1–S9 Work Track and teacher collection guidance
 
-13 October 2026. **Implemented review candidate; not applied or deployed.**
+13 October 2026. **Released to production; authenticated hosted submission smoke pending.**
 Joseph approved the plan and implementation, including short S1–S5 questions.
 Baseline main checked: 6df9282220a3acf7bb2084368b0d187db66ecbfa.
 Planning PR #70 is the base for this stacked feature PR.
+
+
+## Current release checkpoint — authoritative (13 October 2026)
+
+- Joseph confirmed both S10-01 migrations applied successfully to project
+  gwihaizxivclamzehupk through SQL Editor: s01_work_track and s01_rpc_privileges.
+- Anonymous post-fix reads for get_my_session_work_track, get_my_session_journey
+  and get_teacher_session_work_tracks all refused: HTTP 401 / SQLSTATE 42501.
+  Authenticated grant/body behavior remains locally verified; no student token
+  or authenticated production save was used for this release verification.
+- Planning PR #70 merged as 1dc655464329001b6f34aead5be8af0ea8ea7900.
+- Feature PR #71 merged as **ff66c6f0876cb3b8a9fb4116e901f3e7e97793e9**.
+- GitHub Vercel status for that merge: **success**.
+  Deployment status URL:
+  https://vercel.com/guccimasters-projects/milestoneproject/CHHkvVAZ5csQsy9NpJ6JUEapSsve
+- Production alias serves **/assets/index-98m7GB3S.js** containing the new teacher
+  collection guidance, early progress questions and Work Track history entry.
+  Basic /, /student and /admin route checks returned 200.
+- No production student record was changed and no AI call was made by ChatGPT.
+  Existing test Block method was not changed; do not assume 2B2 is disabled.
+- **Remaining acceptance:** Joseph's authorized test account S1/S7 Work Track
+  save → reload → teacher read. Use Existing classroom workflow and independently
+  open those Track windows; Guided Form uses the distinct Intake route.
+  Production assets/status do not prove authenticated submission correctness.
+- 2B3 rehearsal/configuration and real 2B4 setup remain S10-02.
+
+The prior implementation/release-hold notes below are history. The privilege
+hold has been resolved; do not apply either migration again solely for Preview.
 
 ## Behavior
 
