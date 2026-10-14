@@ -145,3 +145,12 @@ to RPCs that re-enable duplicate reporting without a reviewed recovery plan.
 real November 2B4 timetable/roster and activation/recovery remain S10-02. Joseph
 supplies real details or creates 2B4 himself. Cross-schema S1→S2 carryover is not
 unified by this increment. Non-AI teaching does not wait for live AI acceptance.
+
+## Teacher layout follow-up — S10-UI01
+
+Joseph approved a focused Session workspace on 14 October. PR #74 now includes
+Block-global defaults, current-Session focus/navigation, compact all-Session
+comparison with bulk expansion and three functional control groups. Native
+submission-window and method controls reuse the existing handlers/contracts.
+No extra SQL. Build and focused Chromium smoke PASS. Details and limitations:
+[S10-UI01_REPORT.md](S10-UI01_REPORT.md). Candidate remains unmerged/unapplied.

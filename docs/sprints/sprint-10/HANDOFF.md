@@ -22,6 +22,11 @@ supersedes its pending-smoke status.
 Joseph authorized the next implementation increment on 14 October.
 Branch: feature/sprint10-session-ai-controls. Review/deploy independently.
 See [S10-AI01_REPORT.md](S10-AI01_REPORT.md) for implementation, tests and runbook.
+Draft PR #74 now also includes Joseph-approved teacher layout follow-up S10-UI01:
+Block defaults, initial current-Session focus, S1–S10 navigation, collapsed summary
+comparison/bulk expansion and grouped Attendance / Progress collection / Student
+records. See [S10-UI01_REPORT.md](S10-UI01_REPORT.md). Focused browser and build PASS;
+no extra SQL or server changes. PR remains unmerged and production unchanged.
 
 - Block method remains default; nullable Session override selects a method or
   restores inheritance. Monday observation is manual, not a scheduler rule.

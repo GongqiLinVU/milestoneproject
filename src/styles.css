@@ -2124,3 +2124,73 @@ button.danger:hover {
 .intake-mode-head{display:grid;gap:8px;margin-bottom:12px}
 .intake-mode-head span{color:var(--muted);line-height:1.5}
 .session-method-control{display:grid;gap:8px;max-width:270px;padding:10px;border:1px solid #dce4dc;border-radius:10px}.session-method-control label{display:grid;gap:5px;font-size:.8rem}.session-method-control select{max-width:100%;padding:8px}.ai-trial-controls{margin:12px 0;padding:12px;border:1px solid #dce4dc;border-radius:10px}.ai-trial-controls summary{cursor:pointer;font-weight:700}.ai-trial-controls form{display:flex;gap:12px;align-items:end;flex-wrap:wrap}.ai-trial-controls label{display:grid;gap:5px;font-size:.85rem}.ai-trial-controls input{max-width:240px}
+
+/* Teacher Session workspace: Block defaults, focused teaching, optional comparison. */
+.session-manager{gap:20px;max-width:1440px;margin-inline:auto}
+.session-manager .session-manager-heading{padding:0;border:0;background:transparent;align-items:center}
+.session-manager-heading .admin-block-filter{min-width:220px}
+.session-global-settings{background:#fff;border:1px solid #dfe5df;border-radius:16px;padding:22px 24px}
+.session-global-top{display:flex;align-items:center;justify-content:space-between;gap:28px}
+.session-global-top h3{font-size:1.15rem;margin:4px 0 8px}
+.session-global-top p,.session-default-note{color:#647168;font-size:.85rem;line-height:1.6;margin:0}
+.session-global-top p{max-width:620px}
+.session-default-method{min-width:285px;display:grid;gap:7px;font-size:.8rem;font-weight:600}
+.session-global-settings select,.session-detail-panel select{width:100%;padding:10px 12px;border:1px solid #cdd8d0;border-radius:8px;background:#fff;color:#273b30;font:inherit}
+.session-default-note{margin:14px 0 0;padding:12px 14px;background:#f5f7f4;border-radius:8px}
+.session-global-settings .ai-trial-controls,.session-plan-tools{border:0;border-top:1px solid #e7ebe6;border-radius:0;padding:13px 0 0;margin:14px 0 0}
+.session-global-settings summary{font-size:.85rem;cursor:pointer;font-weight:600;color:#445d4c}
+.session-global-settings .ai-trial-controls form{margin:16px 0}
+.session-plan-tools p,.ai-trial-controls p{font-size:.85rem;color:#647168;line-height:1.6}
+.session-global-settings small{display:block;font-size:.78rem;line-height:1.6;color:#647168}
+.session-navigation{display:grid;gap:14px}
+.session-view-toolbar,.session-view-secondary{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.session-view-switch{display:flex;gap:4px;border-radius:10px;padding:4px;background:#eaf0e9}
+.session-view-switch button{border:0;box-shadow:none}
+.session-view-switch button[aria-pressed=false]{background:transparent;color:#54675a}
+.session-view-switch button span{font-size:.75rem;margin-left:4px;opacity:.7}
+.session-jump-list{display:flex;gap:8px;flex-wrap:wrap}
+.session-manager button.session-jump{position:relative;display:flex;align-items:center;justify-content:center;gap:8px;min-width:61px;min-height:48px;padding:9px 12px;border:1px solid #dce4dc;border-radius:10px;background:#fff;color:#55685a;box-shadow:none;font-weight:600}
+.session-manager button.session-jump.selected{background:#e9f3e9;border-color:#668a6b;color:#244e31}
+.session-jump small{font-size:.65rem;font-weight:500}
+.session-jump-dot{height:6px;width:6px;border-radius:50%;background:#b3bdb5;flex:none}
+.session-jump-dot.open{background:#319353}.session-jump-dot.scheduled{background:#aebcc8}
+.session-navigation-note{font-size:.78rem;color:#748076;margin:0}
+.session-manager .teacher-session{padding:0;overflow:hidden;border-color:#dfe5df;background:#fff}
+.session-manager .teacher-session.open{border-color:#93b89b;background:#fff}
+.session-manager button.session-row-heading{display:grid;grid-template-columns:minmax(210px,2fr) minmax(100px,1fr) minmax(145px,1.3fr) minmax(125px,1fr) 18px;gap:18px;align-items:center;width:100%;padding:20px 24px;text-align:left;border:0;border-radius:0;background:#fff;color:#263e2d;box-shadow:none;font-weight:400}
+.session-manager .teacher-session.open button.session-row-heading{background:#f5faf4}
+.session-manager button.session-row-heading:hover{background:#f4f7f2}
+.session-row-heading>span{display:grid;justify-items:start;gap:5px;min-width:0}
+.session-row-heading strong{font-size:.91rem;line-height:1.45;font-weight:600}
+.session-row-identity>strong{font-size:1.05rem}
+.session-row-heading small,.session-row-heading>span>span:not(.activity-control-status){font-size:.75rem;color:#718075}
+.session-row-heading .session-curriculum-label{font-weight:600;letter-spacing:.04em;color:#57715d}
+.session-row-chevron{font-size:1.4rem;color:#7c8d80}
+.session-detail-panel{padding:0 24px 18px;border-top:1px solid #e5ebe3}
+.session-task-guidance{font-size:.85rem;line-height:1.6;color:#5e7163;margin:16px 0}
+.session-function-grid{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:0;margin-top:20px}
+.session-function-group{padding:0 22px;min-width:0;border-left:1px solid #e6ebe3}
+.session-function-group:first-child{border-left:0;padding-left:0}.session-function-group:last-child{padding-right:0}
+.session-function-group h4{font-size:.9rem;margin:0 0 9px;color:#284934}
+.session-function-group p{font-size:.8rem;line-height:1.55;color:#6d7d71;margin:7px 0 14px}
+.session-function-group button{max-width:100%}
+.session-status-line{display:flex;align-items:center;gap:10px;margin:12px 0 16px;font-size:.8rem;color:#65766b}
+.session-method-summary{display:grid;gap:4px;margin:12px 0}
+.session-method-summary strong{font-size:.9rem}.session-method-summary span{font-size:.75rem;color:#758478}
+.session-manager .teacher-session details{margin-top:16px;padding-top:12px;border-top:1px solid #e7ebe4}
+.session-manager .teacher-session summary{font-size:.78rem;font-weight:600;color:#526c59;cursor:pointer;line-height:1.5}
+.session-method-change label,.session-window-control{display:grid;gap:7px;font-size:.78rem;font-weight:600;margin:14px 0 8px}
+.session-method-change small,.session-secondary-tools small,.session-ai-note{display:block;color:#748276;font-size:.75rem;line-height:1.6;margin:8px 0}
+.session-secondary-tools button{margin:8px 6px 0 0}
+.session-attendance-table{overflow:auto;max-height:240px;margin:10px 0}.session-attendance-table table{font-size:.75rem}
+.session-manager .session-window-result{margin:8px 0;font-size:.75rem}
+.session-detail-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid #e7ebe4;margin-top:22px;padding-top:14px;font-size:.78rem;color:#7b897e}
+.session-manager button:focus-visible,.session-manager summary:focus-visible,.session-manager select:focus-visible{outline:3px solid #8bb9a0;outline-offset:3px}
+@media(max-width:1000px){.session-global-top{align-items:start;gap:18px}.session-default-method{min-width:240px}.session-manager button.session-row-heading{grid-template-columns:minmax(180px,1.6fr) 90px 125px 110px 16px;gap:12px;padding:18px}.session-detail-panel{padding-inline:18px}.session-function-group{padding-inline:15px}}
+@media(max-width:760px){.session-manager .session-manager-heading{align-items:stretch;gap:16px}.session-global-settings{padding:18px}.session-global-top{display:grid}.session-default-method{min-width:0}.session-jump-list{gap:6px}.session-manager button.session-jump{min-width:48px;min-height:44px;padding:8px}.session-jump small{display:none}.session-manager button.session-row-heading{grid-template-columns:1fr 1fr 18px;gap:14px}.session-row-identity{grid-column:1/3}.session-row-chevron{grid-column:3;grid-row:1}.session-row-window{grid-column:1/3}.session-row-heading .session-row-window{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.session-function-grid{grid-template-columns:1fr;margin-top:0}.session-function-group,.session-function-group:first-child,.session-function-group:last-child{border-left:0;border-top:1px solid #e6ebe3;padding:20px 0}.session-function-group:first-child{border-top:0}.session-detail-footer{margin-top:0}.session-view-toolbar{align-items:start}.session-view-secondary{justify-content:flex-start}.session-global-settings .ai-trial-controls form{display:grid}.session-global-settings .ai-trial-controls input{max-width:100%;width:100%}}
+.session-manager-heading>.admin-block-filter{display:grid;gap:7px;font-size:.8rem;font-weight:600;color:#596c5e}
+.session-manager-heading>.admin-block-filter select{padding:10px 12px;background:#fff;border:1px solid #cdd8d0;border-radius:9px;font:inherit;color:#273b30}
+.session-manager>.admin-alert{margin:0;background:#edf5ec;color:#375d40;font-size:.85rem}
+.session-function-group>button:not(.secondary){background:#2e5d3f;color:#fff;border-radius:8px}
+.session-function-group>button:not(.secondary):hover{background:#234b31}
+.session-view-switch button[aria-pressed=true]{background:#fff;color:#274d34;box-shadow:0 1px 4px #263f2c15}
