@@ -11,12 +11,14 @@ Joseph configured model pricing and S5 reached a real gpt-5-mini response. The
 known alias/snapshot exact-name mismatch retained provision and paused the Block;
 see S10-AI02_REPORT.md. AI readiness remains incomplete.
 
-Current repair candidate S10-AI02: explicit model identity mapping, auditable
-service-only reconciliation and direct manual review on usage-control failure.
-139/139 API tests, isolated SQL and focused browser checks PASS. New AI02 migration
-and separate narrowly scoped S5 operator script are NOT applied. No ledger reset,
-provider call, merge or deployment performed by the repair. Do not resume testing
-by increasing budget or deleting the alert; follow the report's release steps.
+Current PR #76 policy is S10-AI03: configured provider + primary request model
+and frozen rates control usage estimates. Returned names are optional opaque
+provenance; no format parsing, whitelist or model-name access gate. Unknown usage
+retains provision; over-ceiling usage still pauses calls. See S10-AI03_REPORT.md.
+140/140 API tests, isolated SQL and paused-review browser checks PASS. Use the
+self-contained AI03 migration whether or not the initial AI02 candidate was applied;
+never apply AI02 after AI03. The exact S5 operator SELECT/correction stays separate.
+No production writes, paid calls, merge or deployment in this update.
 
 
 ## Current checkpoint — 14 October 2026

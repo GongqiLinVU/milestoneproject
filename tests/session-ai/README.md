@@ -19,10 +19,11 @@ multi-connection contention test. The row/advisory locks are reviewed in SQL.
 `npm test` separately covers the real endpoint with stubbed providers/RPCs.
 See docs/sprints/sprint-10/S10-AI01_REPORT.md for browser scope and release needs.
 
-## AI02 identity / paused-review repair
+## AI03 primary-model / paused-review repair
 
 Use the same PGlite setup with `tests/session-ai/model-identity.test.mjs`. It
-recreates AI01's false alert before applying AI02; old applied SQL is untouched.
+recreates AI01's false alert before applying AI03 directly and checks upgrade from
+the earlier AI02 candidate; old applied SQL is untouched.
 The opt-in `usage-paused.browser.mjs` runs real components and isolated SQL behind
 synthetic Auth/API transport. Optional Playwright/Chromium setup and focused scope:
-`docs/sprints/sprint-10/S10-AI02_REPORT.md`. No production/provider access required.
+`docs/sprints/sprint-10/S10-AI03_REPORT.md`. No production/provider access required.

@@ -1,5 +1,10 @@
 # S10-AI02 — Model identity and interrupted Intake recovery
 
+> Historical initial candidate. Joseph replaced the alias-whitelist policy with
+> configured-primary-model accounting in S10-AI03_REPORT.md. Use the self-contained
+> AI03 migration for release; do not apply AI02 after AI03. The report below
+> records the earlier implementation and its then-current tests.
+
 15 October 2026. Implemented review candidate from main
 28069044f451901f96b90187ca60aa2affc39c6e (PR #75). No production writes, model
 requests, merge or deployment performed by this repair.

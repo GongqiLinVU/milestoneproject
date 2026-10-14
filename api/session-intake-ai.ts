@@ -1,4 +1,4 @@
-import { usagePricing, requestIdentity, reserveUsage, finishUsage } from "./intakeUsage.js";
+import { usagePricing, requestIdentity, reserveUsage, finishUsage, reportedModelLabel } from "./intakeUsage.js";
 import { effectiveCollectionMode } from "../src/sessionCollection.js";
 import { createClient } from "@supabase/supabase-js";
 
@@ -503,7 +503,9 @@ export default async function handler(req: any, res: any) {
     const normUsage = provider_id === "deepseek"
       ? (provider.usage ? { input_tokens: provider.usage.prompt_tokens ?? 0, output_tokens: provider.usage.completion_tokens ?? 0 } : null)
       : (provider.usage || null);
-    const normModel = provider.model || (provider_id === "deepseek" ? deepseekModel : MODEL);
+    // Subject identity is the server-configured request, not a returned label.
+    const normModel = configuredModel;
+    const reportedModel = reportedModelLabel(provider.model);
     if (norm.status === "incomplete") throw new Error("provider_incomplete");
     let result;
     try { result = JSON.parse(norm.outputText); } catch { throw new Error("output_parse"); }
@@ -523,10 +525,10 @@ export default async function handler(req: any, res: any) {
       if (decision.level === 'L3') throw new Error('turn_schema');
       const safeResult = {...result,assistantMessage:decision.assistantMessage,route:decision.route,readyForReview:decision.readyForReview,evidenceUpdates:decision.accepted};
       const latencyMs=Date.now()-startedAt;
-      const manifest={model:normModel,promptVersion:PROMPT_VERSION,policyVersion:INTAKE_POLICY_VERSION,parserVersion:INTAKE_PARSER_VERSION,evidenceSchemaVersion:'session-intake.v1.1.0',knowledgeVersion:'teacher-approved-kb.none',cost:usageAttempts.length&&usageAttempts.every((a:any)=>a.costUsd!=null)?usageAttempts.reduce((sum:number,a:any)=>sum+a.costUsd,0):null,costComplete:usageAttempts.length>0&&usageAttempts.every((a:any)=>a.costUsd!=null),usageAttempts,latencyMs,stopReason:decision.readyForReview?'review':'continue'};
-      return res.status(200).json({mode,provider:provider_id,promptVersion:PROMPT_VERSION,policyVersion:INTAKE_POLICY_VERSION,parserVersion:INTAKE_PARSER_VERSION,model:normModel,configuredModel:provider_id==="deepseek"?deepseekModel:MODEL,usage:normUsage,latencyMs,budget,providerRequestId:response.headers.get('x-request-id'),manifest,usageAttempts,result:safeResult,rawCandidate:result,routeDecision:decision.routeDecision,fieldDecisions:decision.decisions,extractionPending:decision.extractionPending,acceptanceLevel:decision.level,...(trace?{debugTrace:{...trace,recordBefore,recordAfter:decision.answers}}:{})});
+      const manifest={model:normModel,reportedModel,costBasis:"configured_model_rates",promptVersion:PROMPT_VERSION,policyVersion:INTAKE_POLICY_VERSION,parserVersion:INTAKE_PARSER_VERSION,evidenceSchemaVersion:'session-intake.v1.1.0',knowledgeVersion:'teacher-approved-kb.none',cost:usageAttempts.length&&usageAttempts.every((a:any)=>a.costUsd!=null)?usageAttempts.reduce((sum:number,a:any)=>sum+a.costUsd,0):null,costComplete:usageAttempts.length>0&&usageAttempts.every((a:any)=>a.costUsd!=null),usageAttempts,latencyMs,stopReason:decision.readyForReview?'review':'continue'};
+      return res.status(200).json({mode,provider:provider_id,promptVersion:PROMPT_VERSION,policyVersion:INTAKE_POLICY_VERSION,parserVersion:INTAKE_PARSER_VERSION,model:normModel,reportedModel,configuredModel:provider_id==="deepseek"?deepseekModel:MODEL,usage:normUsage,latencyMs,budget,providerRequestId:response.headers.get('x-request-id'),manifest,usageAttempts,result:safeResult,rawCandidate:result,routeDecision:decision.routeDecision,fieldDecisions:decision.decisions,extractionPending:decision.extractionPending,acceptanceLevel:decision.level,...(trace?{debugTrace:{...trace,recordBefore,recordAfter:decision.answers}}:{})});
     }
-    return res.status(200).json({ mode, provider:provider_id, promptVersion: "session-intake-ai.v1.1.0", policyVersion: INTAKE_POLICY_VERSION, model: normModel, configuredModel: provider_id==="deepseek"?deepseekModel:MODEL, usage: normUsage, latencyMs: Date.now()-startedAt, usageAttempts,budget, providerRequestId: response.headers.get("x-request-id"), result, ...(trace?{debugTrace:trace}:{}) });
+    return res.status(200).json({ mode, provider:provider_id, promptVersion: "session-intake-ai.v1.1.0", policyVersion: INTAKE_POLICY_VERSION, model: normModel, reportedModel, configuredModel: provider_id==="deepseek"?deepseekModel:MODEL, usage: normUsage, latencyMs: Date.now()-startedAt, usageAttempts,budget, providerRequestId: response.headers.get("x-request-id"), result, ...(trace?{debugTrace:trace}:{}) });
   } catch (error) {
     if (mode === 'turn') return res.status(200).json({mode,parserVersion:INTAKE_PARSER_VERSION,result:{assistantMessage:fallbackQuestion(req.body.answers,req.body.conversation),route:'provider_fallback_continue',readyForReview:questionCount(req.body.conversation)>=MAX_INTAKE_QUESTIONS,evidenceUpdates:[],assessment:{},uncertainties:[],suggestedTeacherQuestions:[]},extractionPending:true,fieldDecisions:[],providerFailure:error instanceof Error?error.message:'invalid_provider_response',budget});
     const reason = error instanceof Error && ["provider_incomplete","output_parse","turn_schema","evidence_source","assessment_source"].includes(error.message) ? error.message : "unknown_validation";

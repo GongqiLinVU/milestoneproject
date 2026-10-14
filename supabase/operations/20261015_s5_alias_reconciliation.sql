@@ -1,4 +1,4 @@
--- REVIEW BEFORE EXECUTION. Applies only after the AI02 identity migration.
+-- REVIEW BEFORE EXECUTION. Applies only after the AI03 primary-model migration.
 -- Evidence: session-intake-debug-S5-2.json, event 2026-10-14T21:34:16.735Z,
 -- provider request req_160ef7ed21d94cbdb1b00eb7b620bbee.
 -- No prompts/student answers are copied here. Keep this evidence for the audit.
@@ -33,9 +33,9 @@ begin
  and u.input_tokens=1737 and u.output_tokens=2245
  and u.input_rate=0.25 and u.output_rate=2 and u.reserved_usd=0.01231775;
  if coalesce(array_length(v_ids,1),0)<>1 then raise exception 'Expected exactly one reviewed S5 reservation; stop and inspect'; end if;
- v_result:=public.reconcile_session_intake_ai_alias(v_ids[1],1737,2245,'gpt-5-mini-2025-08-07',
- 'Reviewed session-intake-debug-S5-2.json / 2026-10-14T21:34:16.735Z / req_160ef7ed21d94cbdb1b00eb7b620bbee; approved alias-only model identity correction');
- raise notice 'Alias reconciliation result: %',v_result;
+ v_result:=public.reconcile_session_intake_ai_usage(v_ids[1],1737,2245,'gpt-5-mini-2025-08-07',
+ 'Reviewed session-intake-debug-S5-2.json / 2026-10-14T21:34:16.735Z / req_160ef7ed21d94cbdb1b00eb7b620bbee; approved configured-model usage correction');
+ raise notice 'Configured-model usage reconciliation result: %',v_result;
 end; $$;
 commit;
 -- Expected estimate: USD 0.00492425; reserved USD 0.01231775 retained for audit.

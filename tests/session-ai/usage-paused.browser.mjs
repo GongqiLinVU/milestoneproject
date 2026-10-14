@@ -4,7 +4,7 @@ import {createServer} from 'vite';import {db,A,sid,identity,owner} from './fixtu
 const {chromium}=await import(process.env.S10_PLAYWRIGHT_MODULE||'playwright');
 const root=fileURLToPath(new URL('../../',import.meta.url));const entry=root+'src/usage-pause-smoke.tsx';
 await owner();await db.query("update studio_sessions set intake_mode_override='ai',intake_access='open' where id=$1",[sid(7)]);
-await db.exec(await readFile(new URL('../../supabase/migrations/20261015_sprint10_ai02_model_identity.sql',import.meta.url),'utf8'));
+await db.exec(await readFile(new URL('../../supabase/migrations/20261015_sprint10_ai03_primary_model.sql',import.meta.url),'utf8'));
 let code=await readFile(root+'src/main.tsx','utf8');const a=code.indexOf('const supabase = createClient('),b=code.indexOf('// AI Session Intake authentication:',a);
 assert.ok(a>0&&b>a);
 code=code.slice(0,a)+`const supabase:any={auth:{getSession:async()=>({data:{session:{access_token:'synthetic'}}}),refreshSession:async()=>({data:{session:{access_token:'synthetic'}}})},rpc:async(name:string,args:any)=>{const r=await fetch('/__rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,args})});return r.json();}};\n`+code.slice(b);
