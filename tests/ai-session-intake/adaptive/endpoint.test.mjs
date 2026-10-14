@@ -1,3 +1,4 @@
+process.env.INTAKE_USAGE_PRICING_JSON=JSON.stringify({openai:{model:"gpt-5-mini",version:"test.v1",inputUsdPerMillion:1,outputUsdPerMillion:1}});
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -6,18 +7,20 @@ process.env.SUPABASE_URL='https://mock.invalid';process.env.SUPABASE_SERVICE_ROL
 const turns=Array.from({length:8},(_,i)=>[{actor:'system',purpose:'clarification',text:`Question ${i}`},{actor:'student',purpose:'student response',text:`Answer ${i}`}]).flat();
 const result={assistantMessage:'What else?',route:'clarification',readyForReview:false,evidenceUpdates:[],assessment:{sourceTurns:[15]},uncertainties:[],suggestedTeacherQuestions:[]};
 const recorded=JSON.parse(readFileSync(new URL('./recorded-cases.json',import.meta.url),'utf8')).cases;
-async function run(conversation,modelResult=result,failed=false,blockCode='2B2',intakeMode='ai'){
+async function run(conversation,modelResult=result,failed=false,blockCode='2B2',intakeMode='ai',override=null,usageState=null){
  let sent;let providerCalls=0;const original=globalThis.fetch;
  globalThis.fetch=async(url,options)=>{
   const path=String(url);
   let value={};
-  if(path.includes('openai.com')){providerCalls++;sent=JSON.parse(options.body);if(failed)throw Error('offline');return new Response(JSON.stringify({status:'completed',model:'actual-model',usage:{input_tokens:100,output_tokens:50},output_text:JSON.stringify(modelResult)}),{status:200,headers:{'content-type':'application/json'}})}
+  if(path.includes('reserve_session_intake_ai_attempt')){if(usageState&&usageState.calls>=usageState.limit)return new Response(JSON.stringify({message:'limit',code:'P0001'}),{status:400});if(usageState)usageState.calls++;value={attemptId:'mock-attempt',reservedUsd:0.1};}
+  else if(path.includes('finish_session_intake_ai_attempt'))value={costUsd:0.001,chargedUsd:0.001,status:'settled'};
+  else if(path.includes('openai.com')){providerCalls++;sent=JSON.parse(options.body);if(failed)throw Error('offline');return new Response(JSON.stringify({status:'completed',model:'actual-model',usage:{input_tokens:100,output_tokens:50},output_text:JSON.stringify(modelResult)}),{status:200,headers:{'content-type':'application/json'}})}
   if(path.includes('/auth/'))value={id:'mock-user'};
   else if(path.includes('student_accounts'))value={student_id:'mock-student'};
   else if(path.includes('teaching_blocks'))value={block_code:blockCode,academic_year:2026,intake_mode:intakeMode};
-  else if(path.includes('student_session_intakes'))value=null;
+  else if(path.includes('student_session_intakes')||path.includes('student_session_work_tracks'))value=null;
   else if(path.includes('student_roster'))value={id:'mock-roster'};
-  else if(path.includes('studio_sessions'))value=path.includes('session_number=lt.')?[]:{id:'session',block_id:'block',session_number:3,curriculum_focus:'Progress',intake_access:'open'};
+  else if(path.includes('studio_sessions'))value=path.includes('session_number=lt.')?[]:{id:'session',block_id:'block',session_number:3,curriculum_focus:'Progress',intake_access:'open',intake_mode_override:override};
   return new Response(JSON.stringify(value),{status:200,headers:{'content-type':'application/json'}});
  };
  const res={setHeader(){},status(code){this.code=code;return this},json(value){this.body=value;return this}};
@@ -62,3 +65,8 @@ test('M14: an unauthenticated request (no token) is refused before any auth, stu
   assert.equal(calls.auth,0,'no auth lookup should occur when the token is absent');
   assert.equal(calls.supabase,0,'no student-context read may occur for an unauthenticated request');
 });
+
+test('Session AI override works while the Block defaults to classroom forms',async()=>{const {res,providerCalls}=await run(turns.slice(0,2),result,false,'2B2','disabled','ai');assert.equal(res.code,200);assert.equal(providerCalls,1)});
+test('Session classroom override refuses AI even when the Block defaults to AI',async()=>{const {res,providerCalls}=await run(turns.slice(0,2),result,false,'2B2','ai','disabled');assert.equal(res.code,403);assert.equal(providerCalls,0)});
+test('durable attempt denial survives a new request and stops a paid retry',async()=>{const state={calls:0,limit:1};const first=await run(turns.slice(0,2),result,true,'2B2','ai',null,state);assert.equal(first.providerCalls,1);assert.equal(first.res.code,429);const second=await run(turns.slice(0,2),result,false,'2B2','ai',null,state);assert.equal(second.providerCalls,0);assert.equal(second.res.code,429)});
+test('missing pricing fails closed before any model call',async()=>{const saved=process.env.INTAKE_USAGE_PRICING_JSON;delete process.env.INTAKE_USAGE_PRICING_JSON;try{const {res,providerCalls}=await run(turns.slice(0,2));assert.equal(res.code,503);assert.equal(res.body.stage,'usage_control');assert.equal(providerCalls,0)}finally{process.env.INTAKE_USAGE_PRICING_JSON=saved}});

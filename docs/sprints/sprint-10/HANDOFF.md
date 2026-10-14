@@ -1,144 +1,75 @@
 # Sprint 10 — Handoff
 
-## Current checkpoint
+## Current checkpoint — 14 October 2026
 
-13 October 2026: Joseph approved the plan and authorized implementation.
-**S10-01 is implemented and locally validated; stop for PR review before
-feature merge or deployment.** Joseph applied the range migration; the
-follow-up anon-grant correction must be applied next. See S10-01_REPORT.md.
-Planning PR #70 merged. No student-data change or paid call; feature PR #71
-remains unmerged and the frontend has not been deployed.
+Latest main fetched and rechecked: **6b2009c4c2941cc9c93545b2d3ec92b951972e76**.
+Sprint 9 first production release delivered (PR #68 / 6549171); release report
+merged in PR #69 / 6df9282 at root FIRST_PRODUCTION_RELEASE_REPORT.md.
+Old pre-release statements are historical.
 
-Start the next task by fetching actual latest main and inspecting the planning
-PR status. Reviewed main for this checkpoint:
-**6df9282220a3acf7bb2084368b0d187db66ecbfa**.
-Do not branch from a stale Sprint 9 local workspace.
-GitHub connector is the normal interface; Draft PR per focused increment.
+S10-01 (PR #71) and compact S10-01b (PR #73) are released.
+Joseph applied 20261013_sprint10_s01_work_track.sql,
+20261013_sprint10_s01_rpc_privileges.sql and
+20261013_sprint10_s01b_compact_work_track.sql.
+Joseph confirmed manual UI and production save → reload → record retained →
+teacher read on 14 October. Do not repeat this as pending or infer exact Session
+coverage. Anonymous denial evidence remains in the earlier release checkpoint.
+Draft documentation PR #72 contains earlier release history; this checkpoint
+supersedes its pending-smoke status.
+
+## Current candidate — S10-AI01
+
+Joseph authorized the next implementation increment on 14 October.
+Branch: feature/sprint10-session-ai-controls. Review/deploy independently.
+See [S10-AI01_REPORT.md](S10-AI01_REPORT.md) for implementation, tests and runbook.
+
+- Block method remains default; nullable Session override selects a method or
+  restores inheritance. Monday observation is manual, not a scheduler rule.
+- Trusted effective method governs both student variants, read/write RPCs and API.
+  Method selection never opens submissions; Check-in remains separate.
+- Work Track and Intake keep different contracts. Existing source history stays
+  readable; alternate-family records prevent a second reporting obligation.
+- Durable private ledger reserves before every real provider attempt/retry.
+  Block budget and student/Session attempt limit default to zero. Pricing missing,
+  budget exhausted or reconciliation required refuses paid access.
+- Quota denial preserves answers and allows manual confirmed non-AI completion.
+  No grading, authorship accusations or contribution verdicts.
+- New migration 20261014_sprint10_ai01_session_controls.sql is not applied.
+  Applied SQL is untouched; schema.sql is synchronized.
+- Build PASS, 138/138 API suite PASS, actual isolated PostgreSQL contracts PASS,
+  focused Chromium teacher/mixed-Session/denial-save/history smoke PASS.
+  These are synthetic Auth/transports; no hosted or live-model acceptance claimed.
+
+No production data/configuration writes, provider calls, merge or deploy authorized
+by this increment. Preview and Production share gwihaizxivclamzehupk.
+Apply the new migration only after release approval and deploy the matching API;
+the old deployed API does not enforce the new ledger during transition.
+Server-only INTAKE_USAGE_PRICING_JSON must match the pinned provider model/rates.
+No real rates or positive production budgets are configured by this change.
+A live trial separately requires Joseph's model, student/Session, call and spend
+approval and classroom institutional readiness. Live quality/safety remains open.
+
+## Remaining delivery
+
+Test sequence: existing 2026 · 2B2 → synthetic 2B3 → real November 2B4.
+2B3 needs its own additive CHECK migration; this increment does not add/create it.
+Joseph supplies 2B4 timetable/timezone/roster/team/project/continuing-student details
+or creates it himself. Never fabricate inputs, delete history or reset continuing
+accounts unnecessarily.
+
+S10-02: setup preview/idempotency, activation/recovery and narrow 2B2→2B3 rehearsal.
+S10-03: chosen-method S1→S2 continuity, prior evidence distinct from current claims,
+and only remaining hosted Form/late paths. Cross-schema carryover is not unified.
+S10-AI next: separately bounded live evaluation/safety using five primary levels;
+reuse existing mocked evidence and gold anchors. AI does not block non-AI teaching.
+Acceptance ends 29 October; 30 October checks/contingency; teaching 2 November.
+
+## Working rules and next start
+
+Fetch actual latest main and PR states before further work. Read AI_CONTEXT.md and
+CONTRIBUTING.md; no repository AGENTS.md was found during inspection.
+GitHub connector, focused branches and Draft PRs remain the normal workflow.
 Joseph decides teaching/product behavior; ChatGPT develops/reviews; Claude is backup.
+English repository documents, Chinese discussion. Preserve current production modes.
+Use focused changed-path checks; no broad matrix, taxonomy or unrelated refactor.
 
-## Authoritative state
-
-- Sprint 9 **first production release delivered**, PR #68 / merge 6549171.
-- Release documentation merged through PR #69 / 6df9282.
-- Report: repository root FIRST_PRODUCTION_RELEASE_REPORT.md.
-- Production: https://milestoneproject-two.vercel.app
-- Shared Supabase target: gwihaizxivclamzehupk. Preview does not isolate data.
-- Both Sprint 9 R02/R01 migrations applied by Joseph and verified per report.
-- Existing release evidence: build PASS, tests 134/134 PASS; production login →
-  context → S3 Check-in save → reload → teacher read PASS.
-- Production Work Track submission and full Guided Form submission not accepted
-  yet. Joseph saw a Guided Form after switching test 2026 · 2B2 to deterministic.
-  Current modes were not read during planning; release-time AI-off statements
-  must not be treated as live configuration.
-- Local Work Track/Form/mocked AI and authorization evidence remains reusable.
-  Live AI quality has no release acceptance.
-- Historical contradictory Sprint 9 statuses are superseded by this checkpoint,
-  PLAN.md and merged release evidence. Phase D's remaining hosted/continuity/
-  live-quality checks stay open; do not recreate completed local acceptance.
-
-No AGENTS.md found in the repository. Read CONTRIBUTING.md and AI_CONTEXT.md;
-current connector-first and proportional-check rules apply. Repository documents
-are English, conversation with Joseph Chinese.
-
-## Confirmed Block sequence (Joseph, 13 October)
-
-| Block | Purpose | Setup status |
-|---|---|---|
-| 2026 · 2B2 | Continue existing synthetic testing | Reuse existing test context and evidence |
-| 2026 · 2B3 | Next synthetic test Block; consecutive-Block transition rehearsal | Not created by this task; dates/roster/method still to be supplied or reviewed |
-| 2026 · 2B4 | Actual November teaching Block | Identity confirmed; Joseph will supply real details or create it in the teacher UI |
-
-Use at least one continuing synthetic student with the same Student ID/account
-in 2B2 and 2B3. Verify intended current context, no account duplication or
-unnecessary password reset, retained old submissions and Block-scoped history.
-Historical evidence must remain labelled by Block; do not automatically treat
-a previous Block's evidence as current progress or blend same-number Sessions.
-This is a narrow continuation check in S10-02/S10-03, not a new scenario matrix.
-
-The repository's latest teaching_blocks_block_code_check allows
-1B1, 1B4, 2B1, 2B2 and 2B4, **not 2B3**. Test preparation therefore requires
-a new additive migration to permit 2B3, with schema synchronization; never edit
-the applied Sprint 8 migration. 2B4 is already permitted by this CHECK.
-Do not create/activate any Block, fabricate dates/rosters or execute SQL in
-this planning task. If Joseph creates 2B4 himself, inspect and verify that
-configuration before proposing further writes.
-
-## Implemented review candidate: S10-01
-
-S1–S9 Work Track availability + clear teacher submission-method guidance.
-
-Joseph approved the planned S1–S5 treatment: short responsibility/current-progress/
-next-action fields, optional evidence/blocker-help, without late completion percentages.
-The next step is reviewing S10-01 and authorizing its release/application; S10-02
-is the next feature increment after that review.
-
-Methods share a progress-recording goal but not persistence semantics:
-- disabled → Existing classroom workflow → updateable Work Track.
-- deterministic → Guided Form → confirmed read-only Intake.
-- ai → AI Conversation → same Intake family with model assistance.
-
-Keep one active reporting entry and preserve source-specific history.
-Block selects method; relevant Session control opens submissions; Check-in is
-separate attendance. S10 remains existing feedback/final presentation.
-Do not migrate or unify schemas.
-
-### Files and contracts to inspect/change in implementation
-
-- src/main.tsx: SessionWorkTrackModal (fields and isComplete), Journey routing,
-  teacher supportsTrack/task editing, method labels and selected guidance,
-  teacher early-response display and history reachability across method changes.
-- 20260813_sprint7_phase1a_independent_work_track.sql: latest Work Track
-  get/save, previous-record lookup and get_my_session_journey definitions.
-- 20260805_sprint6_phase2b_session_work_track.sql: teacher read/verification,
-  storage and grants. Check subsequent definitions before replacing any RPC.
-- src/intakePolicy.ts and existing Intake form content: reuse responsibility,
-  progress, evidence, blocker/help and next action rather than a new large form.
-- Relevant analytics/teacher consumers of completionPercent: distinguish absent
-  early assessment from 0% and do not invent comparable scores.
-- Intake save gates in applied 20261009 migration and api/session-intake-ai.ts:
-  already method-aware. Work Track save currently lacks an intake_mode check;
-  align its write permission while retaining history reads.
-
-Prepare **one new additive Work Track migration** for affected get/save/journey
-definitions and early validation. No applied migration edits. Preserve activated
-identity/roster Block checks, teacher permissions, empty search_path, grants and
-late calculation. Sync schema.sql and supply narrow verification SQL plus
-deployment compatibility/rollback notes. Migration application is a separate
-authorized step; frontend alone cannot release early Work Track.
-
-### Focused validation
-
-One early S1 and one existing late S7:
-teacher open → student submission → reload → correct teacher read.
-Check changed range/window/method gates, S10 exclusion, other-student/Block
-denial and teacher-only controls. Preserve S7 update and verification-reset
-semantics. Guidance matches selected method, Check-in independent, no paid
-calls for non-AI modes, history retained.
-Use build/relevant tests and a short browser smoke; reuse unchanged Sprint 9
-evidence. Do not expand a broad acceptance matrix.
-Production test writes require separate authorization.
-
-## Remaining sequence and inputs
-
-See PLAN.md for target windows, scope and acceptance:
-- S10-02: November setup preview/idempotency + activation/recovery.
-  Real Block is confirmed as 2026 · 2B4; Joseph supplies timetable/timezone,
-  roster/team/project data, continuing-student transitions and initial method,
-  or creates it himself. Continue 2B2 testing and use synthetic 2B3 for the next
-  Block rehearsal. 2B3 needs a new additive CHECK migration; 2B4 is permitted.
-  Verify recovery email/redirect and reset/password flow; no mail sent here.
-- S10-03: chosen method S1→S2 continuity; distinguish prior evidence/current
-  progress; complete missing hosted Form/Work Track chains once authorized.
-- S10-AI optional: durable server usage controls, measured cost, separately
-  bounded paid quality/safety run and institutional readiness.
-  Five dataset levels remain unchanged; no grading/authorship/contribution verdict.
-- Acceptance by 29 Oct; 30 Oct release/configuration/contingency; teaching 2 Nov.
-
-## Original planning validation (history)
-
-Inspected latest main, Sprint 9 PLAN/HANDOFF, root release report, development
-policy, student/teacher Work Track and Intake controls, SQL get/save/read gates,
-account activation/recovery endpoints and AI usage output.
-Documentation-only content/diff review; did not reinstall dependencies or rerun
-the unchanged release build/tests. Release evidence is reported as prior evidence,
-not new verification. Production configuration/data was not queried or changed.

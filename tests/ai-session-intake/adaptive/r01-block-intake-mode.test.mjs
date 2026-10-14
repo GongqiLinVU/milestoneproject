@@ -1,3 +1,4 @@
+process.env.INTAKE_USAGE_PRICING_JSON=JSON.stringify({openai:{model:"gpt-5-mini",version:"test.v1",inputUsdPerMillion:1,outputUsdPerMillion:1}});
 // Sprint 9 R01 regressions — server-authoritative per-Block Intake capability
 // (disabled / deterministic / ai).
 //
@@ -43,11 +44,13 @@ async function runEndpoint(intakeMode) {
   globalThis.fetch = async (url, options) => {
     const path = String(url);
     let value = {};
+    if(path.includes('reserve_session_intake_ai_attempt'))return new Response(JSON.stringify({attemptId:'mock-attempt',reservedUsd:0.1}),{status:200});
+    if(path.includes('finish_session_intake_ai_attempt'))return new Response(JSON.stringify({costUsd:0.001,chargedUsd:0.001,status:'settled'}),{status:200});
     if (path.includes('openai.com')) { providerCalls++; return new Response(JSON.stringify({ status: 'completed', model: 'm', usage: { input_tokens: 1, output_tokens: 1 }, output_text: JSON.stringify(modelResult) }), { status: 200, headers: { 'content-type': 'application/json' } }); }
     if (path.includes('/auth/')) value = { id: 'mock-user' };
     else if (path.includes('student_accounts')) value = { student_id: 'mock-student' };
     else if (path.includes('teaching_blocks')) value = { block_code: '2B2', academic_year: 2026, intake_mode: intakeMode };
-    else if (path.includes('student_session_intakes')) value = null;
+    else if ((path.includes('student_session_intakes')||path.includes('student_session_work_tracks'))) value = null;
     else if (path.includes('student_roster')) value = { id: 'mock-roster' };
     else if (path.includes('studio_sessions')) value = path.includes('session_number=lt.') ? [] : { id: 'session', block_id: 'block', session_number: 3, curriculum_focus: 'Progress', intake_access: 'open' };
     return new Response(JSON.stringify(value), { status: 200, headers: { 'content-type': 'application/json' } });

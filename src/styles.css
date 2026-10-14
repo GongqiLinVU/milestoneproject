@@ -2120,3 +2120,7 @@ button.danger:hover {
 @media(max-width:600px){.compact-track-row{grid-template-columns:1fr;}.compact-work-track .track-choice-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
 
 .compact-track-dialog .track-dialog-actions {position:sticky;bottom:0;z-index:2;background:#fff;padding-top:12px;}
+.teacher-session-actions{align-items:center}
+.intake-mode-head{display:grid;gap:8px;margin-bottom:12px}
+.intake-mode-head span{color:var(--muted);line-height:1.5}
+.session-method-control{display:grid;gap:8px;max-width:270px;padding:10px;border:1px solid #dce4dc;border-radius:10px}.session-method-control label{display:grid;gap:5px;font-size:.8rem}.session-method-control select{max-width:100%;padding:8px}.ai-trial-controls{margin:12px 0;padding:12px;border:1px solid #dce4dc;border-radius:10px}.ai-trial-controls summary{cursor:pointer;font-weight:700}.ai-trial-controls form{display:flex;gap:12px;align-items:end;flex-wrap:wrap}.ai-trial-controls label{display:grid;gap:5px;font-size:.85rem}.ai-trial-controls input{max-width:240px}
