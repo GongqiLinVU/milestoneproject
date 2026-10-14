@@ -1,7 +1,39 @@
 # Sprint 10 — Classroom continuity and November readiness
 
-Status: plan approved by Joseph on 13 October; S10-01 review candidate: Joseph applied the range migration; a post-apply anon-grant correction is pending. Frontend not deployed. See S10-01_REPORT.md.
-Planning baseline inspected on 13 October 2026 (Australia/Melbourne).
+Status (14 October 2026): S10-01 and compact S10-01b released through PRs #71/#73.
+Joseph applied the range, explicit privilege and compact migrations, confirmed
+manual UI testing and production save → reload → retained record → teacher read.
+The confirmation did not identify Session numbers or establish all late/Form paths.
+Latest main fetched for S10-AI01: **6b2009c4c2941cc9c93545b2d3ec92b951972e76**.
+
+S10-AI01 is the current implemented review candidate: nullable per-Session method
+override, effective-method authorization, retained source history/no duplicate
+report, durable server attempt/spend reservations and non-AI completion.
+New migration: 20261014_sprint10_ai01_session_controls.sql (not applied).
+Build, 138/138 API checks, isolated SQL and focused browser smoke passed.
+See [S10-AI01_REPORT.md](S10-AI01_REPORT.md) for evidence, deployment dependencies
+and limits. No production configuration change, paid run, merge or deploy here.
+Bounded live quality/safety acceptance remains open.
+
+The Block default remains primary; Joseph may manually select Monday Sessions
+for AI observation and restore inheritance. The common shortcut is “Use AI this
+Session”; method selection and opening submissions remain separate.
+Compact Work Track and Guided Form retain different contracts, without schema
+unification. S10 stays feedback. Zero budget/attempt limits refuse paid calls
+only after the matching server API is deployed; current production modes were
+not queried and must not be assumed disabled.
+
+Confirmed sequence: reuse 2B2, synthetic 2B3 consecutive-Block rehearsal, then real
+November 2B4 with details supplied/created by Joseph. 2B3 CHECK/setup and incoming
+activation/recovery remain S10-02; no fabricated timetable/roster.
+Non-AI classroom readiness continues independently of live AI acceptance.
+
+## Approved planning baseline (13 October; historical source findings)
+
+The detailed scope below is retained from the approved plan. Descriptions of
+pre-S10 code, first-migration preparation, undeployed status and pending Work Track
+smoke are historical. The checkpoint above and the increment reports supersede
+them; unmatched Form/late/continuity checks and live AI acceptance remain open.
 
 ## Goal and ownership
 
@@ -246,3 +278,4 @@ AI readiness does not block non-AI teaching.
 Resolved product decision: Joseph approved the plan and implementation on
 13 October; S1–S5 use short progress records with no mandatory late assessment.
 November inputs block S10-02 configuration, not S10-01 development.
+

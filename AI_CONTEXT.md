@@ -1,18 +1,27 @@
 # AI Context — Engineering Studio Platform
 
-## Sprint 10 S10-01 — implementation pending production acceptance
+## Sprint 10 current checkpoint — 14 October 2026
 
-Joseph confirmed S1–S9 Work Track and short S1–S5 progress questions without
-mandatory completion percentages. S6–S9 retain their existing assessment;
-S10 retains feedback/final presentation. Collection methods preserve separate
-Work Track versus Intake contracts and a single active student reporting entry.
-A new migration aligns Work Track range, selected-method writes and prior-record
-lookup; source history remains readable after method changes. No production
-migration/deployment has been performed for this increment. See
-`docs/sprints/sprint-10/S10-01_REPORT.md` for exact evidence and release steps.
-Test sequence: existing 2026 · 2B2 → synthetic 2B3; real November is 2026 · 2B4.
-2B3 CHECK support/setup remains the next increment, not S10-01.
+S10-01/compact S10-01b are released through PRs #71/#73 (latest main 6b2009c).
+Joseph applied all three Work Track migrations and confirmed UI plus production
+save → reload → retained record → teacher read. This supersedes pending-smoke
+statements in implementation-time reports; exact Session coverage is not inferred.
+S1–S9 Work Track is available, early compact questions omit mandatory percentages;
+S6–S9 retain assessment, S10 retains feedback.
 
+S10-AI01 is the next implemented review candidate: nullable Session collection
+method override, source history/no duplicate reporting and durable server paid
+attempt/budget accounting. New SQL 20261014_sprint10_ai01_session_controls.sql
+is not applied; no production configuration change or paid call in this task.
+Block selects the default, Session may override, opening windows/Check-in remain
+independent. Work Track and confirmed Intake keep separate schemas/contracts.
+Zero-default limits and missing configured server pricing fail closed only after
+the matching new API is deployed. Live quality/safety acceptance remains open.
+See docs/sprints/sprint-10/S10-AI01_REPORT.md, PLAN.md and HANDOFF.md.
+
+Test 2B2 → synthetic 2B3; real November 2B4 inputs come from Joseph.
+2B3 support/setup and activation/recovery remain S10-02. Fetch actual latest main
+before further work; do not assume current production modes are disabled.
 
 ## Sprint 6 verified Production state
 

@@ -1,3 +1,4 @@
+process.env.INTAKE_USAGE_PRICING_JSON=JSON.stringify({openai:{model:"gpt-5-mini",version:"test.v1",inputUsdPerMillion:1,outputUsdPerMillion:1}});
 // Sprint 9 R05 (mock-boundary slice): focused boundary tests for the provider
 // transport mock gate in api/session-intake-ai.ts.
 //
@@ -173,7 +174,7 @@ test('handler: a valid local-isolated success mock completes the turn with ZERO 
       if (path.includes('/auth/')) value = { id: 'mock-user' };
       else if (path.includes('student_accounts')) value = { student_id: 'mock-student' };
       else if (path.includes('teaching_blocks')) value = { block_code: '2B2', academic_year: 2026, intake_mode: 'ai' };
-      else if (path.includes('student_session_intakes')) value = null;
+      else if ((path.includes('student_session_intakes')||path.includes('student_session_work_tracks'))) value = null;
       else if (path.includes('student_roster')) value = { id: 'mock-roster' };
       else if (path.includes('studio_sessions')) value = path.includes('session_number=lt.') ? [] : { id: 'session', block_id: 'block', session_number: 3, curriculum_focus: 'Progress', intake_access: 'open' };
       return new Response(JSON.stringify(value), { status: 200, headers: { 'content-type': 'application/json' } });
@@ -204,7 +205,7 @@ test('handler: a fail mock exercises the deterministic fallback with ZERO openai
       if (path.includes('/auth/')) value = { id: 'mock-user' };
       else if (path.includes('student_accounts')) value = { student_id: 'mock-student' };
       else if (path.includes('teaching_blocks')) value = { block_code: '2B2', academic_year: 2026, intake_mode: 'ai' };
-      else if (path.includes('student_session_intakes')) value = null;
+      else if ((path.includes('student_session_intakes')||path.includes('student_session_work_tracks'))) value = null;
       else if (path.includes('student_roster')) value = { id: 'mock-roster' };
       else if (path.includes('studio_sessions')) value = path.includes('session_number=lt.') ? [] : { id: 'session', block_id: 'block', session_number: 3, curriculum_focus: 'Progress', intake_access: 'open' };
       return new Response(JSON.stringify(value), { status: 200, headers: { 'content-type': 'application/json' } });
