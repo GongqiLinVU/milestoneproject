@@ -2194,3 +2194,8 @@ button.danger:hover {
 .session-function-group>button:not(.secondary){background:#2e5d3f;color:#fff;border-radius:8px}
 .session-function-group>button:not(.secondary):hover{background:#234b31}
 .session-view-switch button[aria-pressed=true]{background:#fff;color:#274d34;box-shadow:0 1px 4px #263f2c15}
+
+/* Keep student progress guidance below its action, never against the button. */
+.journey-track-action{flex-direction:column;align-items:flex-end;gap:8px}
+.journey-track-action .journey-action-note{display:block;max-width:38ch;text-align:right;font-size:.78rem;line-height:1.5;color:#667169}
+@media(max-width:600px){.journey-track-action{align-items:stretch}.journey-track-action button{width:100%;white-space:normal}.journey-track-action .journey-action-note{max-width:none;text-align:left}}
