@@ -1,5 +1,24 @@
 # Sprint 10 — Handoff
 
+## Latest checkpoint — 15 October 2026
+
+PR #74 is merged as 349bc5f and production deployment was verified. PR #75 is
+merged as 2806904; student progress-entry wording/layout is deployed. Their
+implementation-time candidate statements below are historical. Joseph confirmed
+student UI is okay; this is not live Intake quality acceptance.
+
+Joseph configured model pricing and S5 reached a real gpt-5-mini response. The
+known alias/snapshot exact-name mismatch retained provision and paused the Block;
+see S10-AI02_REPORT.md. AI readiness remains incomplete.
+
+Current repair candidate S10-AI02: explicit model identity mapping, auditable
+service-only reconciliation and direct manual review on usage-control failure.
+139/139 API tests, isolated SQL and focused browser checks PASS. New AI02 migration
+and separate narrowly scoped S5 operator script are NOT applied. No ledger reset,
+provider call, merge or deployment performed by the repair. Do not resume testing
+by increasing budget or deleting the alert; follow the report's release steps.
+
+
 ## Current checkpoint — 14 October 2026
 
 Latest main fetched and rechecked: **6b2009c4c2941cc9c93545b2d3ec92b951972e76**.

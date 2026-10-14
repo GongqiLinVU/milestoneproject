@@ -13,7 +13,7 @@ async function run(conversation,modelResult=result,failed=false,blockCode='2B2',
   const path=String(url);
   let value={};
   if(path.includes('reserve_session_intake_ai_attempt')){if(usageState&&usageState.calls>=usageState.limit)return new Response(JSON.stringify({message:'limit',code:'P0001'}),{status:400});if(usageState)usageState.calls++;value={attemptId:'mock-attempt',reservedUsd:0.1};}
-  else if(path.includes('finish_session_intake_ai_attempt'))value={costUsd:0.001,chargedUsd:0.001,status:'settled'};
+  else if(path.includes('finish_session_intake_ai_attempt'))value=usageState?.reconciliationRequired?{costUsd:null,chargedUsd:0.1,status:'uncertain',reconciliationRequired:true}:{costUsd:0.001,chargedUsd:0.001,status:'settled'};
   else if(path.includes('openai.com')){providerCalls++;sent=JSON.parse(options.body);if(failed)throw Error('offline');return new Response(JSON.stringify({status:'completed',model:'actual-model',usage:{input_tokens:100,output_tokens:50},output_text:JSON.stringify(modelResult)}),{status:200,headers:{'content-type':'application/json'}})}
   if(path.includes('/auth/'))value={id:'mock-user'};
   else if(path.includes('student_accounts'))value={student_id:'mock-student'};
@@ -70,3 +70,5 @@ test('Session AI override works while the Block defaults to classroom forms',asy
 test('Session classroom override refuses AI even when the Block defaults to AI',async()=>{const {res,providerCalls}=await run(turns.slice(0,2),result,false,'2B2','ai','disabled');assert.equal(res.code,403);assert.equal(providerCalls,0)});
 test('durable attempt denial survives a new request and stops a paid retry',async()=>{const state={calls:0,limit:1};const first=await run(turns.slice(0,2),result,true,'2B2','ai',null,state);assert.equal(first.providerCalls,1);assert.equal(first.res.code,429);const second=await run(turns.slice(0,2),result,false,'2B2','ai',null,state);assert.equal(second.providerCalls,0);assert.equal(second.res.code,429)});
 test('missing pricing fails closed before any model call',async()=>{const saved=process.env.INTAKE_USAGE_PRICING_JSON;delete process.env.INTAKE_USAGE_PRICING_JSON;try{const {res,providerCalls}=await run(turns.slice(0,2));assert.equal(res.code,503);assert.equal(res.body.stage,'usage_control');assert.equal(providerCalls,0)}finally{process.env.INTAKE_USAGE_PRICING_JSON=saved}});
+
+test('settlement identity alert stops immediately with no retry or untrusted reply',async()=>{const state={calls:0,limit:10,reconciliationRequired:true};const {res,providerCalls}=await run(turns.slice(0,2),result,false,'2B2','ai',null,state);assert.equal(providerCalls,1);assert.equal(state.calls,1);assert.equal(res.code,503);assert.equal(res.body.code,'usage_reconciliation');assert.equal(res.body.stage,'usage_control');assert.equal(res.body.result,undefined)});
