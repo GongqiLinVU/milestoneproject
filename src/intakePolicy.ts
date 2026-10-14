@@ -1,7 +1,7 @@
 import type { DeterministicIntakeAnswers, FallbackTurn } from './aiSessionIntake.js';
 
 export const INTAKE_POLICY_VERSION = 'adaptive-intake.v1.1.0';
-export const INTAKE_PROMPT_VERSION = 'session-intake-ai.v1.3.0';
+export const INTAKE_PROMPT_VERSION = 'session-intake-ai.v1.3.1';
 export const MAX_INTAKE_QUESTIONS = 8; // Three core directions plus at most five follow-ups.
 export const MAX_INTAKE_TURNS = 17; // Eight question/answer pairs and final review message.
 export type ChatSource = { actor: 'system' | 'student'; purpose: string; text: string };

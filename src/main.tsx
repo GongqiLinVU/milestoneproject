@@ -693,7 +693,7 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
     setAnswers(next);setRecord(buildFallbackStudentRecord(next,{},Boolean(context?.previousConfirmed)));setConfirmed(false);
   }
   async function send(){
-    const text=draft.trim();if(!text||busy||stage===4)return;
+    const text=draft.trim();if(!text||busy||stage===4||aiPaused)return;
     const studentTurn:IntakeChatTurn={actor:"student",purpose:"student response",text};
     const conversation=[...turns,studentTurn];
     setDraft("");setTurns(conversation);setEvidenceOpen(false);setBusy(true);setMessage("");
@@ -716,7 +716,7 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
       const reviewDecision=uiReviewDecision({readyForReview:result.readyForReview,route:result.route,routeDecision:payload.routeDecision},conversation);
       const uiReview=reviewDecision.review;
       const uiReason=reviewDecision.reason;
-      setDebugEvents(current=>[...current,{at:new Date().toISOString(),mode:"turn",request:debugRequest,response:{model:payload.model,configuredModel:payload.configuredModel,promptVersion:payload.promptVersion,policyVersion:payload.policyVersion,parserVersion:payload.parserVersion,manifest:payload.manifest,usage:payload.usage,latencyMs:payload.latencyMs,budget:payload.budget,providerRequestId:payload.providerRequestId,providerFailure:payload.providerFailure,acceptanceLevel:payload.acceptanceLevel,extractionPending:payload.extractionPending,rawCandidate:payload.rawCandidate,routeDecision:{...payload.routeDecision,uiFinal:uiReview?"review":result.route,uiReason,uiAuthority:reviewDecision.source},fieldDecisions:payload.fieldDecisions,result}}]);
+      setDebugEvents(current=>[...current,{at:new Date().toISOString(),mode:"turn",request:debugRequest,response:{model:payload.model,reportedModel:payload.reportedModel,configuredModel:payload.configuredModel,promptVersion:payload.promptVersion,policyVersion:payload.policyVersion,parserVersion:payload.parserVersion,manifest:payload.manifest,usage:payload.usage,latencyMs:payload.latencyMs,budget:payload.budget,providerRequestId:payload.providerRequestId,providerFailure:payload.providerFailure,acceptanceLevel:payload.acceptanceLevel,extractionPending:payload.extractionPending,rawCandidate:payload.rawCandidate,routeDecision:{...payload.routeDecision,uiFinal:uiReview?"review":result.route,uiReason,uiAuthority:reviewDecision.source},fieldDecisions:payload.fieldDecisions,result}}]);
       if(uiReview){
         const transitionText=(result.readyForReview||result.route==="review")&&result.assistantMessage
           ? result.assistantMessage
@@ -738,6 +738,14 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
         setDraft(text);
         setBusy(false);
         setMessage(error.message);
+        return;
+      }
+      if(error instanceof Error&&/(^usage_control$|:usage_control:)/.test(error.message)){
+        setAiPaused(true);
+        setTurns([...conversation,{actor:"system",purpose:"review transition",source:"fallback",text:"The progress assistant is unavailable right now. Your replies are still shown above. Review and complete the fields below to finish without AI."}]);
+        setAiMeta(current=>({...current,extractionStatus:"fallback"}));
+        prepareReview(answers,"provider_failure");
+        setMessage("Your latest reply is preserved in the conversation, but could not be added to the fields automatically. Check your progress and next action below before confirming. No further AI call is needed.");
         return;
       }
       // R01: the Block capability may have changed away from 'ai' mid-conversation
@@ -798,7 +806,7 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
     correctionCount:corrections.length,confirmedChecked:confirmed,
   }));
   const closeNow=()=>guardedClose(onClose);
-  return createPortal(<div className="chat-intake-page">{aiPaused&&<div className="admin-alert"><span>AI is unavailable or its usage limit was reached. Your answers are preserved.</span><button type="button" className="secondary compact" onClick={()=>{setTurns(current=>[...(current.at(-1)?.actor==="system"?current.slice(0,-1):current),{actor:"system",purpose:"review transition",source:"fallback",text:"Review and complete your preserved answers without AI."}]);prepareReview(answers,"provider_failure");}}>Finish without AI</button></div>}<header className="chat-intake-header"><button type="button" className="secondary compact" onClick={closeNow}>← Sessions</button><div><span>{saved?"Session history":"Your progress check-in"}</span><h2>S{session.sessionNumber} · {session.focus}</h2></div>{debugEvents.length>0&&<button type="button" className="secondary compact" onClick={()=>setHarnessOpen(true)}>Visual debug · {debugEvents.length}</button>}<button type="button" className={`evidence-drawer-trigger ${evidenceUpdates&&!evidenceOpen?"has-updates":""}`} onClick={()=>evidenceOpen?setEvidenceOpen(false):openEvidence([])}>Evidence chain {evidenceUpdates&&!evidenceOpen?<b>{evidenceUpdates} new</b>:null}</button></header>
+  return createPortal(<div className="chat-intake-page">{aiPaused&&stage<4&&<div className="admin-alert"><span>AI is unavailable or its usage limit was reached. Your answers are preserved.</span><button type="button" className="secondary compact" onClick={()=>{setTurns(current=>[...(current.at(-1)?.actor==="system"?current.slice(0,-1):current),{actor:"system",purpose:"review transition",source:"fallback",text:"Review and complete your preserved answers without AI."}]);prepareReview(answers,"provider_failure");}}>Finish without AI</button></div>}<header className="chat-intake-header"><button type="button" className="secondary compact" onClick={closeNow}>← Sessions</button><div><span>{saved?"Session history":"Your progress check-in"}</span><h2>S{session.sessionNumber} · {session.focus}</h2></div>{debugEvents.length>0&&<button type="button" className="secondary compact" onClick={()=>setHarnessOpen(true)}>Visual debug · {debugEvents.length}</button>}<button type="button" className={`evidence-drawer-trigger ${evidenceUpdates&&!evidenceOpen?"has-updates":""}`} onClick={()=>evidenceOpen?setEvidenceOpen(false):openEvidence([])}>Evidence chain {evidenceUpdates&&!evidenceOpen?<b>{evidenceUpdates} new</b>:null}</button></header>
     <main className="chat-intake-shell"><section className="chat-thread" aria-label="Session Intake conversation">
       {loading?<p className="empty-state">Loading Session Intake…</p>:saved?<><div className="chat-message assistant"><span>Intake</span><p>This Session was confirmed on {new Date(saved.confirmedAt).toLocaleString()}. The conversation and evidence are now read-only.</p></div><div className="chat-message student"><span>Your confirmed claim</span><p>{saved.studentRecord.claims.map(item=>item.statement).join(" · ")}</p></div><div className="chat-message assistant"><span>Next action</span><p>{saved.studentRecord.next_action.action} · {saved.studentRecord.next_action.due_session}</p></div></>:!context?.isOpen?<div className="chat-message assistant"><p>This Session Intake is closed. Your Teacher controls when it is available.</p></div>:<>
         {turns.map((turn,index)=><div key={index} className={`chat-message ${turn.actor==="student"?"student":"assistant"}`}><span>{turn.actor==="student"?"You":"Intake assistant"}{turn.source==="llm"?<b className="llm-message-badge">LLM</b>:turn.source==="fallback"?<b className="llm-message-badge">Fallback</b>:null}</span><p>{turn.text}</p>{turn.actor==="student"&&turn.evidenceChanges?.length?<button type="button" className="message-evidence-update" onClick={()=>openEvidence(turn.evidenceChanges||[])}><b>{turn.evidenceChanges.length} evidence field{turn.evidenceChanges.length===1?"":"s"} updated</b><span>{turn.evidenceChanges.map(value=>value.replace("_"," ")).join(" · ")} · View changes</span></button>:null}</div>)}

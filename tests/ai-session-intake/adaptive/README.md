@@ -1,6 +1,6 @@
 # Adaptive Intake candidate — ai-intake-suite.v1.1.0
 
-Candidate policy: `adaptive-intake.v1.1.0`; chat prompt: `session-intake-ai.v1.3.0`;
+Candidate policy: `adaptive-intake.v1.1.0`; chat prompt: `session-intake-ai.v1.3.1`;
 chat record: `session-intake.v1.1.0`. The historical v1.0 suite is retained.
 
 The candidate replaces the old three-follow-up/six-question limit for the chat

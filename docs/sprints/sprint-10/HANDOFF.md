@@ -1,5 +1,26 @@
 # Sprint 10 — Handoff
 
+## Latest checkpoint — 15 October 2026
+
+PR #74 is merged as 349bc5f and production deployment was verified. PR #75 is
+merged as 2806904; student progress-entry wording/layout is deployed. Their
+implementation-time candidate statements below are historical. Joseph confirmed
+student UI is okay; this is not live Intake quality acceptance.
+
+Joseph configured model pricing and S5 reached a real gpt-5-mini response. The
+known alias/snapshot exact-name mismatch retained provision and paused the Block;
+see S10-AI02_REPORT.md. AI readiness remains incomplete.
+
+Current PR #76 policy is S10-AI03: configured provider + primary request model
+and frozen rates control usage estimates. Returned names are optional opaque
+provenance; no format parsing, whitelist or model-name access gate. Unknown usage
+retains provision; over-ceiling usage still pauses calls. See S10-AI03_REPORT.md.
+140/140 API tests, isolated SQL and paused-review browser checks PASS. Use the
+self-contained AI03 migration whether or not the initial AI02 candidate was applied;
+never apply AI02 after AI03. The exact S5 operator SELECT/correction stays separate.
+No production writes, paid calls, merge or deployment in this update.
+
+
 ## Current checkpoint — 14 October 2026
 
 Latest main fetched and rechecked: **6b2009c4c2941cc9c93545b2d3ec92b951972e76**.
