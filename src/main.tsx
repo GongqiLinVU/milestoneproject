@@ -1,3 +1,4 @@
+import { buildHarnessObservations } from "./intakeObservations";
 import { effectiveCollectionMode, collectionLabels, type CollectionMode } from "./sessionCollection";
 import { earlyWorkAreas, earlyProgressStates, earlyHelpKinds, previousActionStates, earlyWorkTrackComplete, buildEarlyWorkTrack, confirmPreviousResponsibility } from "./workTrackForm";
 import { applyEvidenceUpdates, changedEvidenceFields, uiReviewDecision, sourceConversation, questionCount, MAX_INTAKE_QUESTIONS, INTAKE_POLICY_VERSION, INTAKE_PROMPT_VERSION, type EvidenceUpdate } from "./intakePolicy";
@@ -775,7 +776,7 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
     }
   }
   function downloadDebug(){
-    const payload={exportedAt:new Date().toISOString(),session:{number:session.sessionNumber,focus:session.focus},policyVersion:INTAKE_POLICY_VERSION,stopReason,conversation:turns,record,corrections,events:debugEvents};
+    const payload={exportedAt:new Date().toISOString(),session:{number:session.sessionNumber,focus:session.focus},policyVersion:INTAKE_POLICY_VERSION,stopReason,conversation:turns,record,corrections,events:debugEvents,harness:buildHarnessObservations(debugEvents)};
     const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}));
     const anchor=document.createElement("a");anchor.href=url;anchor.download=`session-intake-debug-S${session.sessionNumber}.json`;anchor.click();URL.revokeObjectURL(url);
   }
