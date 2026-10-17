@@ -18,6 +18,7 @@ export function buildHarnessObservations(events:DebugEvent[]) {
     add(event,index,'turn_snapshot',{request:event.request,response:response??null,error:event.error??null});
     if(event.error)add(event,index,'request_failed',{error:event.error,cause:'Not established beyond the recorded error code.'});
     if(!response)return;
+    if(Array.isArray(response.usageWarnings)&&response.usageWarnings.length)add(event,index,'usage_warning',{warnings:response.usageWarnings,audience:'developer',displayed:false});
     if(response.extractionPending||response.providerFailure)add(event,index,'extraction_pending',{extractionPending:response.extractionPending??null,providerFailure:response.providerFailure??null});
     if(response.routeDecision)add(event,index,'routing_comparison',{routeDecision:response.routeDecision,
       legacyIntervention:response.routeDecision.proposed!==response.routeDecision.final||response.rawCandidate?.assistantMessage!==response.result?.assistantMessage,
