@@ -22,6 +22,22 @@ try{
  const reply='I added loading, but I am still working on API error handling.';
  for(const error of ['pricing_not_configured','usage_limit','usage_reconciliation']){
   denial=error;const before=calls;await page.goto('http://127.0.0.1:5178/smoke');await page.locator('.chat-composer textarea').fill(reply);await page.getByRole('button',{name:'Send',exact:true}).click();await page.getByText(/We couldn’t get a reply just now/).waitFor();assert.equal(calls,before+1);assert.equal(await page.locator('.chat-composer textarea').inputValue(),reply);assert.equal(await page.locator('.chat-review-card').count(),0);assert.equal(await page.locator('.chat-message.student').count(),0);assert.match(await page.locator('.chat-composer').innerText(),/Round 1 of up to 8/);console.log('PASS '+error+': retryable composer, exact reply restored, no forced review or consumed round');
+  if(error==='pricing_not_configured'){
+    assert.equal(await page.locator('.llm-debug-panel').count(),0);
+    const trigger=page.getByRole('button',{name:/^Intake debug ·/});
+    for(const width of [1280,390]){
+      await page.setViewportSize({width,height:900});await trigger.click();
+      const dialog=page.getByRole('dialog',{name:'Intake debug',exact:true});await dialog.waitFor();
+      const shown=JSON.parse(await dialog.getByLabel('Intake debug JSON',{exact:true}).innerText());assert.equal(shown.events.length,1);assert.equal(shown.harness.mode,'observation_only');
+      const box=await dialog.boundingBox();assert.ok(box.x>=0&&box.x+box.width<=width+1);const headerBox=await dialog.locator("header").boundingBox(),bodyBox=await dialog.locator("p").boundingBox();assert.ok(headerBox.y+headerBox.height<=bodyBox.y);
+      const pending=page.waitForEvent('download');await dialog.getByRole('button',{name:'Download debug JSON',exact:true}).click();const download=await pending;
+      assert.equal(download.suggestedFilename(),'session-intake-debug-S7.json');const stream=await download.createReadStream();const chunks=[];for await(const c of stream)chunks.push(c);const saved=JSON.parse(Buffer.concat(chunks).toString());delete saved.exportedAt;delete shown.exportedAt;assert.deepEqual(saved,shown);
+      if(width===390)await page.screenshot({path:'/tmp/intake-debug-mobile.png'});
+      await page.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});assert.equal(await page.locator('.chat-composer textarea').inputValue(),reply);
+    }
+    await page.setViewportSize({width:1280,height:900});console.log('PASS desktop/mobile header debug: full JSON, matching download, Escape closes, draft preserved');
+  }
+
  }
  denial=null;await page.getByRole('button',{name:'Send',exact:true}).click();await page.getByText('Confirm this Session record',{exact:true}).waitFor();
 
