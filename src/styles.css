@@ -2199,3 +2199,14 @@ button.danger:hover {
 .journey-track-action{flex-direction:column;align-items:flex-end;gap:8px}
 .journey-track-action .journey-action-note{display:block;max-width:38ch;text-align:right;font-size:.78rem;line-height:1.5;color:#667169}
 @media(max-width:600px){.journey-track-action{align-items:stretch}.journey-track-action button{width:100%;white-space:normal}.journey-track-action .journey-action-note{max-width:none;text-align:left}}
+/* Header access keeps raw debug out of the fixed composer area. */
+.chat-intake-header{height:auto;min-height:72px;box-sizing:border-box}
+.chat-intake-header .chat-header-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:.5rem}
+.intake-debug-dialog{width:min(1000px,calc(100vw - 32px));max-height:85dvh;box-sizing:border-box;padding:1.25rem;border:1px solid #dfe5ef;border-radius:18px;background:#fff;color:#18212b;box-shadow:0 20px 80px #18212b33}
+.intake-debug-dialog::backdrop{background:#18212b66}
+.intake-debug-dialog header,.intake-debug-dialog header>div:last-child{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.65rem}
+.intake-debug-dialog>header{height:auto;padding:0;position:static;background:transparent;backdrop-filter:none;border-bottom:0}
+.intake-debug-dialog h2{margin:.2rem 0}
+.intake-debug-dialog small,.intake-debug-dialog p{color:#526176}
+.intake-debug-dialog pre{max-height:58dvh;overflow:auto;padding:1rem;border-radius:10px;background:#f4f6fa;font-size:.8rem;line-height:1.5;white-space:pre}
+@media(max-width:700px){.chat-intake-header .chat-header-actions{grid-column:1/-1;justify-content:flex-start}.intake-debug-dialog{padding:1rem}}
