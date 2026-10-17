@@ -605,7 +605,6 @@ type IntakeTurnResult={assistantMessage:string;route:"evidence"|"clarification"|
 type IntakeDebugEvent={at:string;mode:string;request:Record<string,unknown>;response?:Record<string,unknown>;error?:string};
 
 function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRecord;onClose:()=>void;onSaved:()=>void}) {
-  const [aiPaused,setAiPaused]=useState(false);
   const [context,setContext]=useState<SessionIntakeContext|null>(null);
   const [historyRecords,setHistoryRecords]=useState<IntakeHistoryRecord[]>([]);
   const [answers,setAnswers]=useState<DeterministicIntakeAnswers>(()=>({...newIntakeAnswers(session.sessionNumber),testingStatus:"unknown",blockerStatus:"unknown",evidenceType:"other",evidenceAvailability:"unknown"}));
@@ -670,17 +669,16 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
   const addTurn=(turn:IntakeChatTurn)=>setTurns(current=>[...current,turn]);
   const openEvidence=(fields:string[],tab:"current"|"previous"="current")=>{setHighlightFields(fields);setEvidenceTab(tab);setEvidenceOpen(true);setEvidenceUpdates(0)};
   async function callAi(mode:"turn"|"questions"|"extract",nextAnswers:DeterministicIntakeAnswers,nextFollowUps=followUpAnswers,conversation: IntakeChatTurn[]=turns){
-    if(aiPaused)throw new Error("usage_control");
     const token=await resolveIntakeAccessToken();
     if(!token)throw new IntakeAuthError();
     const response=await fetch("/api/session-intake-ai",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`},body:JSON.stringify({mode,sessionId:session.sessionId,answers:nextAnswers,followUpAnswers:nextFollowUps,conversation,capturedFields})});
     const payload=await response.json().catch(()=>({}));
     if(!response.ok){
       if(response.status===403&&(payload?.code==="authentication_failed"||payload?.stage==="authentication"))throw new IntakeAuthError();
-      if(payload.stage==="usage_control")setAiPaused(true);
+
       const code=typeof payload.code==="string"?payload.code:"http_error";
       const detail=[`${response.status}`,typeof payload.stage==="string"?payload.stage:"unknown_stage",code,typeof payload.reason==="string"?payload.reason:"",typeof payload.providerStatus==="number"?`provider_${payload.providerStatus}`:"",typeof payload.providerErrorCode==="string"?payload.providerErrorCode:"",typeof payload.providerErrorType==="string"?payload.providerErrorType:"",typeof payload.providerRequestId==="string"?`request_${payload.providerRequestId}`:""].filter(Boolean).join(":");
-      throw new Error(detail);
+      throw Object.assign(new Error(detail),{usageWarnings:payload.usageWarnings,usageAttempts:payload.usageAttempts});
     }
     return payload;
   }
@@ -694,7 +692,7 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
     setAnswers(next);setRecord(buildFallbackStudentRecord(next,{},Boolean(context?.previousConfirmed)));setConfirmed(false);
   }
   async function send(){
-    const text=draft.trim();if(!text||busy||stage===4||aiPaused)return;
+    const text=draft.trim();if(!text||busy||stage===4)return;
     const studentTurn:IntakeChatTurn={actor:"student",purpose:"student response",text};
     const conversation=[...turns,studentTurn];
     setDraft("");setTurns(conversation);setEvidenceOpen(false);setBusy(true);setMessage("");
@@ -717,7 +715,7 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
       const reviewDecision=uiReviewDecision({readyForReview:result.readyForReview,route:result.route,routeDecision:payload.routeDecision},conversation);
       const uiReview=reviewDecision.review;
       const uiReason=reviewDecision.reason;
-      setDebugEvents(current=>[...current,{at:new Date().toISOString(),mode:"turn",request:debugRequest,response:{model:payload.model,reportedModel:payload.reportedModel,configuredModel:payload.configuredModel,promptVersion:payload.promptVersion,policyVersion:payload.policyVersion,parserVersion:payload.parserVersion,manifest:payload.manifest,usage:payload.usage,latencyMs:payload.latencyMs,budget:payload.budget,providerRequestId:payload.providerRequestId,providerFailure:payload.providerFailure,acceptanceLevel:payload.acceptanceLevel,extractionPending:payload.extractionPending,rawCandidate:payload.rawCandidate,routeDecision:{...payload.routeDecision,uiFinal:uiReview?"review":result.route,uiReason,uiAuthority:reviewDecision.source},fieldDecisions:payload.fieldDecisions,result}}]);
+      setDebugEvents(current=>[...current,{at:new Date().toISOString(),mode:"turn",request:debugRequest,response:{model:payload.model,reportedModel:payload.reportedModel,configuredModel:payload.configuredModel,promptVersion:payload.promptVersion,policyVersion:payload.policyVersion,parserVersion:payload.parserVersion,manifest:payload.manifest,usageWarnings:payload.usageWarnings,usageAttempts:payload.usageAttempts,usage:payload.usage,latencyMs:payload.latencyMs,budget:payload.budget,providerRequestId:payload.providerRequestId,providerFailure:payload.providerFailure,acceptanceLevel:payload.acceptanceLevel,extractionPending:payload.extractionPending,rawCandidate:payload.rawCandidate,routeDecision:{...payload.routeDecision,uiFinal:uiReview?"review":result.route,uiReason,uiAuthority:reviewDecision.source},fieldDecisions:payload.fieldDecisions,result}}]);
       if(uiReview){
         const transitionText=(result.readyForReview||result.route==="review")&&result.assistantMessage
           ? result.assistantMessage
@@ -729,7 +727,7 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
         setStage(current=>Math.min(3,current+1) as 0|1|2|3);setBusy(false);
       }
     }catch(error){
-      setDebugEvents(current=>[...current,{at:new Date().toISOString(),mode:"turn",request:debugRequest,error:error instanceof Error?error.message:"provider failure"}]);
+      setDebugEvents(current=>[...current,{at:new Date().toISOString(),mode:"turn",request:debugRequest,response:{usageWarnings:(error as any)?.usageWarnings,usageAttempts:(error as any)?.usageAttempts},error:error instanceof Error?error.message:"provider failure"}]);
       if(isIntakeAuthError(error)){
         // Authentication failure (missing/expired student session), not a provider
         // outage. Preserve the student's answer verbatim (restore it to the composer
@@ -739,14 +737,6 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
         setDraft(text);
         setBusy(false);
         setMessage(error.message);
-        return;
-      }
-      if(error instanceof Error&&/(^usage_control$|:usage_control:)/.test(error.message)){
-        setAiPaused(true);
-        setTurns([...conversation,{actor:"system",purpose:"review transition",source:"fallback",text:"The progress assistant is unavailable right now. Your replies are still shown above. Review and complete the fields below to finish without AI."}]);
-        setAiMeta(current=>({...current,extractionStatus:"fallback"}));
-        prepareReview(answers,"provider_failure");
-        setMessage("Your latest reply is preserved in the conversation, but could not be added to the fields automatically. Check your progress and next action below before confirming. No further AI call is needed.");
         return;
       }
       // R01: the Block capability may have changed away from 'ai' mid-conversation
@@ -767,12 +757,9 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
         setMessage("AI Intake is no longer available for this Session (your Teacher changed its mode). Your answers are preserved below. Review them and try Confirm: if this Session now accepts a provider-independent Intake it will save without any AI call; if Intake has been turned off, confirming will report that submission is unavailable and your answers will stay here.");
         return;
       }
-      setAiMeta(current=>({...current,extractionStatus:"fallback"}));
-      const atLimit=questionCount(conversation)>=MAX_INTAKE_QUESTIONS;
-      setTurns([...conversation,{actor:"system",purpose:atLimit?"review transition":"provider fallback",source:"fallback",text:fallbackQuestion(answers,conversation)}]);
-      if(atLimit)prepareReview(answers,"budget_exhausted");
-      else {setStage(current=>Math.min(3,current+1) as 0|1|2|3);setBusy(false)}
-      setMessage("Your answer is preserved. Extraction is pending; you can continue and correct the complete record at review.");
+      // A failed request is not a completed round or a reason to force review.
+      setTurns(turns);setDraft(text);setBusy(false);
+      setMessage("We couldn’t get a reply just now. Your answer is still in the message box. Please try Send again; this hasn’t used another round.");
     }
   }
   function downloadDebug(){
@@ -807,7 +794,7 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
     correctionCount:corrections.length,confirmedChecked:confirmed,
   }));
   const closeNow=()=>guardedClose(onClose);
-  return createPortal(<div className="chat-intake-page">{aiPaused&&stage<4&&<div className="admin-alert"><span>AI is unavailable or its usage limit was reached. Your answers are preserved.</span><button type="button" className="secondary compact" onClick={()=>{setTurns(current=>[...(current.at(-1)?.actor==="system"?current.slice(0,-1):current),{actor:"system",purpose:"review transition",source:"fallback",text:"Review and complete your preserved answers without AI."}]);prepareReview(answers,"provider_failure");}}>Finish without AI</button></div>}<header className="chat-intake-header"><button type="button" className="secondary compact" onClick={closeNow}>← Sessions</button><div><span>{saved?"Session history":"Your progress check-in"}</span><h2>S{session.sessionNumber} · {session.focus}</h2></div>{debugEvents.length>0&&<button type="button" className="secondary compact" onClick={()=>setHarnessOpen(true)}>Visual debug · {debugEvents.length}</button>}<button type="button" className={`evidence-drawer-trigger ${evidenceUpdates&&!evidenceOpen?"has-updates":""}`} onClick={()=>evidenceOpen?setEvidenceOpen(false):openEvidence([])}>Evidence chain {evidenceUpdates&&!evidenceOpen?<b>{evidenceUpdates} new</b>:null}</button></header>
+  return createPortal(<div className="chat-intake-page"><header className="chat-intake-header"><button type="button" className="secondary compact" onClick={closeNow}>← Sessions</button><div><span>{saved?"Session history":"Your progress check-in"}</span><h2>S{session.sessionNumber} · {session.focus}</h2></div>{debugEvents.length>0&&<button type="button" className="secondary compact" onClick={()=>setHarnessOpen(true)}>Visual debug · {debugEvents.length}</button>}<button type="button" className={`evidence-drawer-trigger ${evidenceUpdates&&!evidenceOpen?"has-updates":""}`} onClick={()=>evidenceOpen?setEvidenceOpen(false):openEvidence([])}>Evidence chain {evidenceUpdates&&!evidenceOpen?<b>{evidenceUpdates} new</b>:null}</button></header>
     <main className="chat-intake-shell"><section className="chat-thread" aria-label="Session Intake conversation">
       {loading?<p className="empty-state">Loading Session Intake…</p>:saved?<><div className="chat-message assistant"><span>Intake</span><p>This Session was confirmed on {new Date(saved.confirmedAt).toLocaleString()}. The conversation and evidence are now read-only.</p></div><div className="chat-message student"><span>Your confirmed claim</span><p>{saved.studentRecord.claims.map(item=>item.statement).join(" · ")}</p></div><div className="chat-message assistant"><span>Next action</span><p>{saved.studentRecord.next_action.action} · {saved.studentRecord.next_action.due_session}</p></div></>:!context?.isOpen?<div className="chat-message assistant"><p>This Session Intake is closed. Your Teacher controls when it is available.</p></div>:<>
         <div className="chat-round-guide" style={{marginBottom:"1.25rem",padding:"1rem 1.2rem",borderRadius:16,background:"#edf3ff",color:"#273c67",lineHeight:1.5}}><strong>A quick check-in, at your pace</strong><p style={{margin:".3rem 0 0"}}>This usually takes 3–5 rounds, with up to {MAX_INTAKE_QUESTIONS} if we need a little more detail. Each round is one question and your reply. You’ll review a summary before saving.</p></div>
@@ -2672,8 +2659,8 @@ function StudioSessionControl({
       <label className="session-default-method">Default collection method<select aria-label="Default collection method" value={effectiveMode} disabled={modeBusy||!blockId} onChange={event=>void setBlockMode(event.target.value as CollectionMode)}><option value="disabled">Existing classroom workflow</option><option value="deterministic">Guided Form</option><option value="ai">AI Conversation</option></select></label></div>
       <p className="session-default-note">{effectiveMode==="disabled"?"S1–S9 use Work Track: students can update progress while submissions are open.":effectiveMode==="deterministic"?"S1–S9 use Guided Form without AI calls. Confirmed records are read-only.":"S1–S9 use AI Conversation, with a completion path without AI. Confirmed records are read-only."} S10 uses Feedback.</p>
       {modeBusy&&<p role="status">Saving default…</p>}{modeError&&<p className="admin-alert error" role="alert">{modeError}</p>}{!modeError&&modeMessage&&<p role="status">{modeMessage}</p>}
-      {usageData?.reconciliationRequired&&<p className="admin-alert error" role="alert">AI calls are paused. Review unconfirmed costs in AI trial settings.</p>}
-      <details className="ai-trial-controls"><summary>AI trial settings · usage and limits (USD)</summary>{usageData?<><p>{usageData.attempts} attempts · token-based estimate ${Number(usageData.reportedUsd).toFixed(4)} · budget provision ${Number(usageData.chargedUsd).toFixed(4)} / ${Number(usageData.budgetUsd).toFixed(2)}. {usageData.unresolvedAttempts} attempts have unconfirmed cost.</p>{usageData.reconciliationRequired&&<p role="alert">AI calls are paused until usage is reconciled.</p>}<form key={blockId+":"+usageData.budgetUsd+":"+usageData.attemptLimit} onSubmit={saveUsageBudget}><label>Block AI budget (USD)<input name="budget" type="number" min="0" max="1000" step="0.01" defaultValue={usageData.budgetUsd} required/></label><label>Max provider attempts per student per Session<input name="attempts" type="number" min="0" max="50" step="1" defaultValue={usageData.attemptLimit} required/></label><button type="submit" disabled={busy}>Save trial limits</button></form><small>Zero keeps paid calls off. Retries count as attempts. A configured provider price and separately approved live trial are also required.</small></>:<p>AI usage controls are not available yet. No AI calls are enabled by this view.</p>}</details>
+      {usageData?.reconciliationRequired&&<p className="admin-alert error" role="alert">Some AI costs need review. This does not pause student conversations.</p>}
+      <details className="ai-trial-controls"><summary>AI usage · estimates and reference limits (USD)</summary>{usageData?<><p>{usageData.attempts} attempts · token-based estimate ${Number(usageData.reportedUsd).toFixed(4)} · budget provision ${Number(usageData.chargedUsd).toFixed(4)} / ${Number(usageData.budgetUsd).toFixed(2)}. {usageData.unresolvedAttempts} attempts have unconfirmed cost.</p>{usageData.reconciliationRequired&&<p role="alert">Some costs are unconfirmed. Conversations can continue.</p>}<form key={blockId+":"+usageData.budgetUsd+":"+usageData.attemptLimit} onSubmit={saveUsageBudget}><label>Block reference budget (USD)<input name="budget" type="number" min="0" max="1000" step="0.01" defaultValue={usageData.budgetUsd} required/></label><label>Reference attempts per student per Session<input name="attempts" type="number" min="0" max="50" step="1" defaultValue={usageData.attemptLimit} required/></label><button type="submit" disabled={busy}>Save reference limits</button></form><small>These values are for monitoring only and do not stop conversations, including when set to zero. Conversation length is controlled by rounds. Retries are included in usage statistics.</small></>:<p>AI usage statistics are unavailable. This panel does not control conversation availability.</p>}</details>
       <details className="session-plan-tools"><summary>Session plan setup</summary><p>Prepare the standard curriculum, then edit each Session's dates and guidance.</p><button className="secondary compact" disabled={busy||!blockId||sessions.length>=10} onClick={()=>void prepareTen()}><CalendarPlus size={17}/> {sessions.length>=10?"10-session plan prepared":`Prepare ${10-sessions.length} sessions`}</button></details>
     </section>
     {sessions.length>0&&<section className="session-navigation" aria-label="Session navigation">

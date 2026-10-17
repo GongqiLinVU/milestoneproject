@@ -173,7 +173,7 @@ test('handler: a valid local-isolated success mock completes the turn with ZERO 
       let value = {};
       if (path.includes('/auth/')) value = { id: 'mock-user' };
       else if (path.includes('student_accounts')) value = { student_id: 'mock-student' };
-      else if (path.includes('teaching_blocks')) value = { block_code: '2B2', academic_year: 2026, intake_mode: 'ai' };
+      else if (path.includes('teaching_blocks')) value = { block_code: '2B2', academic_year: 2026, status: 'active', intake_mode: 'ai' };
       else if ((path.includes('student_session_intakes')||path.includes('student_session_work_tracks'))) value = null;
       else if (path.includes('student_roster')) value = { id: 'mock-roster' };
       else if (path.includes('studio_sessions')) value = path.includes('session_number=lt.') ? [] : { id: 'session', block_id: 'block', session_number: 3, curriculum_focus: 'Progress', intake_access: 'open' };
@@ -192,7 +192,7 @@ test('handler: a valid local-isolated success mock completes the turn with ZERO 
   });
 });
 
-test('handler: a fail mock exercises the deterministic fallback with ZERO openai calls', async () => {
+test('handler: a fail mock returns a retryable error with ZERO openai calls', async () => {
   await withEnv({
     INTAKE_MOCK_PROVIDER: 'fail', INTAKE_MOCK_ALLOW: 'local-isolated', VERCEL_ENV: 'development',
     SUPABASE_URL: LOCAL, SUPABASE_SERVICE_ROLE_KEY: 'mock', OPENAI_API_KEY: 'mock',
@@ -204,7 +204,7 @@ test('handler: a fail mock exercises the deterministic fallback with ZERO openai
       let value = {};
       if (path.includes('/auth/')) value = { id: 'mock-user' };
       else if (path.includes('student_accounts')) value = { student_id: 'mock-student' };
-      else if (path.includes('teaching_blocks')) value = { block_code: '2B2', academic_year: 2026, intake_mode: 'ai' };
+      else if (path.includes('teaching_blocks')) value = { block_code: '2B2', academic_year: 2026, status: 'active', intake_mode: 'ai' };
       else if ((path.includes('student_session_intakes')||path.includes('student_session_work_tracks'))) value = null;
       else if (path.includes('student_roster')) value = { id: 'mock-roster' };
       else if (path.includes('studio_sessions')) value = path.includes('session_number=lt.') ? [] : { id: 'session', block_id: 'block', session_number: 3, curriculum_focus: 'Progress', intake_access: 'open' };
@@ -214,10 +214,10 @@ test('handler: a fail mock exercises the deterministic fallback with ZERO openai
     try {
       await handler({ method: 'POST', headers: { authorization: 'Bearer mock' }, body: { mode: 'turn', sessionId: '00000000-0000-0000-0000-000000000000', answers: {}, conversation: turns } }, res);
     } finally { globalThis.fetch = original; }
-    assert.equal(res.code, 200);
-    assert.equal(res.body.result.route, 'provider_fallback_continue');
-    assert.equal(res.body.providerFailure, 'provider_http_503');
-    assert.equal(res.body.extractionPending, true);
+    assert.equal(res.code, 502);
+    assert.equal(res.body.result, undefined);
+    assert.equal(res.body.code, 'provider_http_503');
+    assert.equal(res.body.stage, 'provider_response');
     assert.equal(providerCalls, 0, 'the fail mock must not touch a real provider either');
   });
 });

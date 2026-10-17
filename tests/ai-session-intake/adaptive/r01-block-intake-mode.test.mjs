@@ -49,7 +49,7 @@ async function runEndpoint(intakeMode) {
     if (path.includes('openai.com')) { providerCalls++; return new Response(JSON.stringify({ status: 'completed', model: 'm', usage: { input_tokens: 1, output_tokens: 1 }, output_text: JSON.stringify(modelResult) }), { status: 200, headers: { 'content-type': 'application/json' } }); }
     if (path.includes('/auth/')) value = { id: 'mock-user' };
     else if (path.includes('student_accounts')) value = { student_id: 'mock-student' };
-    else if (path.includes('teaching_blocks')) value = { block_code: '2B2', academic_year: 2026, intake_mode: intakeMode };
+    else if (path.includes('teaching_blocks')) value = { block_code: '2B2', academic_year: 2026, status: 'active', intake_mode: intakeMode };
     else if ((path.includes('student_session_intakes')||path.includes('student_session_work_tracks'))) value = null;
     else if (path.includes('student_roster')) value = { id: 'mock-roster' };
     else if (path.includes('studio_sessions')) value = path.includes('session_number=lt.') ? [] : { id: 'session', block_id: 'block', session_number: 3, curriculum_focus: 'Progress', intake_access: 'open' };

@@ -126,8 +126,8 @@ async function resolvePreviousRecord(admin: any, authUserId: string, sessionId: 
   if (!account) throw new Error("student_account_not_activated");
   if (sessionError || !session) throw new Error("session_record_not_found");
   const { data: block, error: blockError } = await admin.from("teaching_blocks")
-    .select("block_code,academic_year,intake_mode").eq("id", session.block_id).maybeSingle();
-  if (blockError || !block || effectiveCollectionMode(block.intake_mode,session.intake_mode_override) !== "ai" || session.session_number < 1 || session.session_number > 9) {
+    .select("block_code,academic_year,intake_mode,status").eq("id", session.block_id).maybeSingle();
+  if (blockError || !block || block.status !== "active" || effectiveCollectionMode(block.intake_mode,session.intake_mode_override) !== "ai" || session.session_number < 1 || session.session_number > 9) {
     throw new Error("session_not_eligible_for_ai_intake");
   }
   const now = Date.now();
@@ -149,9 +149,9 @@ async function resolvePreviousRecord(admin: any, authUserId: string, sessionId: 
   for (const previousSession of previousSessions || []) {
     const { data: intake } = await admin.from("student_session_intakes").select("student_record")
       .eq("session_id", previousSession.id).eq("student_id", account.student_id).maybeSingle();
-    if (intake?.student_record) return { previousRecord: intake.student_record, sessionContext: { sessionNumber: session.session_number, focus: session.curriculum_focus,scope:{academicYear:block.academic_year,blockId:session.block_id,teamNumber:roster.team_number,projectName:roster.project_name,student:'authenticated_student'} } };
+    if (intake?.student_record) return { usageContext:{blockId:session.block_id,studentId:account.student_id}, previousRecord: intake.student_record, sessionContext: { sessionNumber: session.session_number, focus: session.curriculum_focus,scope:{academicYear:block.academic_year,blockId:session.block_id,teamNumber:roster.team_number,projectName:roster.project_name,student:'authenticated_student'} } };
   }
-  return { previousRecord: null, sessionContext: { sessionNumber: session.session_number, focus: session.curriculum_focus,scope:{academicYear:block.academic_year,blockId:session.block_id,teamNumber:roster.team_number,projectName:roster.project_name,student:'authenticated_student'} } };
+  return { usageContext:{blockId:session.block_id,studentId:account.student_id}, previousRecord: null, sessionContext: { sessionNumber: session.session_number, focus: session.curriculum_focus,scope:{academicYear:block.academic_year,blockId:session.block_id,teamNumber:roster.team_number,projectName:roster.project_name,student:'authenticated_student'} } };
 }
 
 function outputText(response: any) {
@@ -441,9 +441,10 @@ export default async function handler(req: any, res: any) {
   const requestId=requestIdentity(req.body?.requestId);
   const configuredModel=provider_id==='deepseek'?deepseekModel:MODEL;
   const localMock=mockProviderEnabled||mockProviderFail;
+  const usageWarnings:string[]=[];
   let pricing:any;
   try {if(!localMock)pricing=usagePricing(provider_id,configuredModel);}
-  catch{return res.status(503).json({error:'AI Conversation is unavailable. Continue without AI.',code:'pricing_not_configured',stage:'usage_control',fallback:true});}
+  catch{usageWarnings.push('pricing_not_configured');}
   // Conservative token provision: complete input/schema UTF-8 bytes plus protocol overhead.
   // Actual usage is reconciled; unexpected model/token ceilings pause further Block calls.
   const inputCeiling=Buffer.byteLength(sharedInstructions+sharedInput+JSON.stringify(activeSchema),'utf8')+8192;
@@ -455,9 +456,11 @@ export default async function handler(req: any, res: any) {
   for (let attempt=0;attempt<2;attempt++) {
     let reservation:any;
     try {
-      if(!localMock)reservation=await reserveUsage(auth.admin,auth.user.id,sessionId,requestId,attempt,provider_id,configuredModel,pricing,inputCeiling,maxOut);
-    }catch{
-      return res.status(429).json({error:'AI usage is unavailable or its limit has been reached. Continue without AI.',code:'usage_limit',stage:'usage_control',fallback:true,usageAttempts});
+      if(!localMock&&pricing)reservation=await reserveUsage(auth.admin,auth.user.id,sessionId,requestId,attempt,provider_id,configuredModel,pricing,inputCeiling,maxOut,resolved.usageContext);
+      if(reservation?.warning)usageWarnings.push(reservation.warning);
+    }catch(error){
+      if(error instanceof Error&&error.message==='usage_reservation_refused')return res.status(403).json({error:'Session eligibility could not be confirmed. Please retry.',code:'eligibility_check_failed',stage:'student_session_context',usageWarnings});
+      usageWarnings.push('usage_accounting_unavailable');
     }
     try {
       response = await providerRequest();
@@ -466,18 +469,25 @@ export default async function handler(req: any, res: any) {
         try{
           const settled=await finishUsage(auth.admin,reservation.attemptId,body,provider_id);
           usageAttempts.push(settled);
-          if(settled.reconciliationRequired)return res.status(503).json({error:'AI usage requires review. Your answer is preserved; continue without AI.',code:'usage_reconciliation',stage:'usage_control',fallback:true,usageAttempts});
+          if(settled.reconciliationRequired)usageWarnings.push('usage_reconciliation_required');
         }
-        catch{return res.status(503).json({error:'AI usage could not be confirmed. Your answer is preserved.',code:'usage_settlement',stage:'usage_control',fallback:true});}
+        catch{usageWarnings.push('usage_settlement_unavailable');}
+      }
+      if(!reservation&&!localMock){
+        const body=await response.clone().json().catch(()=>null);
+        const input=provider_id==='deepseek'?body?.usage?.prompt_tokens:body?.usage?.input_tokens;
+        const output=provider_id==='deepseek'?body?.usage?.completion_tokens:body?.usage?.output_tokens;
+        const valid=Number.isSafeInteger(input)&&input>=0&&Number.isSafeInteger(output)&&output>=0;
+        usageAttempts.push({status:'unrecorded',persisted:false,inputTokens:valid?input:null,outputTokens:valid?output:null,costUsd:valid&&pricing?Math.ceil((input*pricing.inputUsdPerMillion+output*pricing.outputUsdPerMillion)/1000000*100000000)/100000000:null});
       }
       if (captureTrace) traceAttempts.push({ attempt, ok: response.ok, httpStatus: response.status });
       if (response.ok) break;
       failureReason=`provider_http_${response.status}`;
     }
-    catch { if(reservation){try{usageAttempts.push(await finishUsage(auth.admin,reservation.attemptId,null,provider_id));}catch{return res.status(503).json({error:'AI usage is unavailable.',code:'usage_settlement',stage:'usage_control',fallback:true});}} failureReason='provider_network'; if (captureTrace) traceAttempts.push({ attempt, ok: false, httpStatus: null, error: failureReason }); }
+    catch { if(reservation){try{usageAttempts.push(await finishUsage(auth.admin,reservation.attemptId,null,provider_id));}catch{usageWarnings.push('usage_settlement_unavailable');}} failureReason='provider_network'; if (captureTrace) traceAttempts.push({ attempt, ok: false, httpStatus: null, error: failureReason }); }
   }
   if (!response || !response.ok) {
-    if (mode === 'turn') return res.status(200).json({mode,parserVersion:INTAKE_PARSER_VERSION,result:{assistantMessage:fallbackQuestion(req.body.answers,req.body.conversation),route:'provider_fallback_continue',readyForReview:questionCount(req.body.conversation)>=MAX_INTAKE_QUESTIONS,evidenceUpdates:[],assessment:{},uncertainties:[],suggestedTeacherQuestions:[]},extractionPending:true,fieldDecisions:[],retryCount:1,providerFailure:failureReason,budget});
+    if (mode === 'turn') return res.status(502).json({mode,code:failureReason,stage:'provider_response',retryCount:1,usageAttempts,usageWarnings,budget});
     return res.status(502).json({error:'Provider unavailable',code:failureReason,stage:'provider_response',fallback:true});
   }
   if (!response.ok) {
@@ -525,12 +535,12 @@ export default async function handler(req: any, res: any) {
       if (decision.level === 'L3') throw new Error('turn_schema');
       const safeResult = {...result,assistantMessage:decision.assistantMessage,route:decision.route,readyForReview:decision.readyForReview,evidenceUpdates:decision.accepted};
       const latencyMs=Date.now()-startedAt;
-      const manifest={model:normModel,reportedModel,costBasis:"configured_model_rates",promptVersion:PROMPT_VERSION,policyVersion:INTAKE_POLICY_VERSION,parserVersion:INTAKE_PARSER_VERSION,evidenceSchemaVersion:'session-intake.v1.1.0',knowledgeVersion:'teacher-approved-kb.none',cost:usageAttempts.length&&usageAttempts.every((a:any)=>a.costUsd!=null)?usageAttempts.reduce((sum:number,a:any)=>sum+a.costUsd,0):null,costComplete:usageAttempts.length>0&&usageAttempts.every((a:any)=>a.costUsd!=null),usageAttempts,latencyMs,stopReason:decision.readyForReview?'review':'continue'};
-      return res.status(200).json({mode,provider:provider_id,promptVersion:PROMPT_VERSION,policyVersion:INTAKE_POLICY_VERSION,parserVersion:INTAKE_PARSER_VERSION,model:normModel,reportedModel,configuredModel:provider_id==="deepseek"?deepseekModel:MODEL,usage:normUsage,latencyMs,budget,providerRequestId:response.headers.get('x-request-id'),manifest,usageAttempts,result:safeResult,rawCandidate:result,routeDecision:decision.routeDecision,fieldDecisions:decision.decisions,extractionPending:decision.extractionPending,acceptanceLevel:decision.level,...(trace?{debugTrace:{...trace,recordBefore,recordAfter:decision.answers}}:{})});
+      const manifest={model:normModel,reportedModel,costBasis:"configured_model_rates",promptVersion:PROMPT_VERSION,policyVersion:INTAKE_POLICY_VERSION,parserVersion:INTAKE_PARSER_VERSION,evidenceSchemaVersion:'session-intake.v1.1.0',knowledgeVersion:'teacher-approved-kb.none',cost:usageAttempts.length&&usageAttempts.every((a:any)=>a.costUsd!=null)?usageAttempts.reduce((sum:number,a:any)=>sum+a.costUsd,0):null,costComplete:usageAttempts.length>0&&usageAttempts.every((a:any)=>a.costUsd!=null),usageAttempts,usageWarnings,latencyMs,stopReason:decision.readyForReview?'review':'continue'};
+      return res.status(200).json({mode,provider:provider_id,promptVersion:PROMPT_VERSION,policyVersion:INTAKE_POLICY_VERSION,parserVersion:INTAKE_PARSER_VERSION,model:normModel,reportedModel,configuredModel:provider_id==="deepseek"?deepseekModel:MODEL,usage:normUsage,latencyMs,budget,providerRequestId:response.headers.get('x-request-id'),manifest,usageAttempts,usageWarnings,result:safeResult,rawCandidate:result,routeDecision:decision.routeDecision,fieldDecisions:decision.decisions,extractionPending:decision.extractionPending,acceptanceLevel:decision.level,...(trace?{debugTrace:{...trace,recordBefore,recordAfter:decision.answers}}:{})});
     }
-    return res.status(200).json({ mode, provider:provider_id, promptVersion: "session-intake-ai.v1.1.0", policyVersion: INTAKE_POLICY_VERSION, model: normModel, reportedModel, configuredModel: provider_id==="deepseek"?deepseekModel:MODEL, usage: normUsage, latencyMs: Date.now()-startedAt, usageAttempts,budget, providerRequestId: response.headers.get("x-request-id"), result, ...(trace?{debugTrace:trace}:{}) });
+    return res.status(200).json({ mode, provider:provider_id, promptVersion: "session-intake-ai.v1.1.0", policyVersion: INTAKE_POLICY_VERSION, model: normModel, reportedModel, configuredModel: provider_id==="deepseek"?deepseekModel:MODEL, usage: normUsage, latencyMs: Date.now()-startedAt, usageAttempts,usageWarnings,budget, providerRequestId: response.headers.get("x-request-id"), result, ...(trace?{debugTrace:trace}:{}) });
   } catch (error) {
-    if (mode === 'turn') return res.status(200).json({mode,parserVersion:INTAKE_PARSER_VERSION,result:{assistantMessage:fallbackQuestion(req.body.answers,req.body.conversation),route:'provider_fallback_continue',readyForReview:questionCount(req.body.conversation)>=MAX_INTAKE_QUESTIONS,evidenceUpdates:[],assessment:{},uncertainties:[],suggestedTeacherQuestions:[]},extractionPending:true,fieldDecisions:[],providerFailure:error instanceof Error?error.message:'invalid_provider_response',budget});
+    if (mode === 'turn') return res.status(502).json({mode,code:'invalid_provider_response',stage:'provider_response',usageAttempts,usageWarnings,budget});
     const reason = error instanceof Error && ["provider_incomplete","output_parse","turn_schema","evidence_source","assessment_source"].includes(error.message) ? error.message : "unknown_validation";
     return res.status(502).json({ error: "AI Intake returned an invalid response.", code: "invalid_provider_response", stage: "schema_parsing", reason, providerRequestId: response.headers.get("x-request-id"), fallback: true });
   }
