@@ -4,21 +4,21 @@ import {decideTurn} from '../../../.test-build/intakeHarness.js';
 import {buildHarnessObservations} from '../../../.test-build/intakeObservations.js';
 const conversation=[{actor:'system',purpose:'opening',text:'What changed?'},{actor:'student',purpose:'answer',text:'I checked the dashboard at 375px and 768px and fixed cramped spacing. I can show screenshots.'}];
 const update=(field,value,extra={})=>({field,value,state:'student_claim',sourceTurn:1,evidenceType:null,progressKind:null,method:null,observedResult:null,expectedEvidence:null,...extra});
-test('records rewrites and intermediate replacements without changing accepted content',()=>{
+test('records current accumulated values and semantic uncertainty without old interventions',()=>{
  const raw={assistantMessage:'Thanks, review your progress.',route:'review',readyForReview:true,evidenceUpdates:[update('claim','Checked dashboard at 375px and 768px'),update('claim','Fixed cramped spacing'),update('testing','Checked dashboard',{state:'executed',method:'manual viewport inspection',observedResult:'Checked dashboard'}),update('next_action','Show screenshots')]};
  const current={progress:'',progressKind:'advanced',testingStatus:'unknown'};
  const before=JSON.stringify({raw,current,conversation});
  const result=decideTurn(raw,conversation,current);
  assert.equal(JSON.stringify({raw,current,conversation}),before);
- assert.equal(result.answers.progress,'Fixed cramped spacing');
- assert.equal(result.answers.testingMethod,'manual');
- assert.equal(result.decisions.at(-1).reason,'future_action_not_student_accepted');
+ assert.equal(result.answers.progress,'Checked dashboard at 375px and 768px\nFixed cramped spacing');
+ assert.equal(result.answers.testingMethod,'manual viewport inspection');
+ assert.ok(result.decisions.at(-1).observations.includes('future_action_commitment_uncertain'));
  const out=buildHarnessObservations([{at:'now',mode:'turn',request:{conversation},response:{rawCandidate:raw,result,routeDecision:result.routeDecision,fieldDecisions:result.decisions}}]);
  const items=out.runtimeInterventions.items;
- assert.ok(items.some(i=>i.kind==='field_rewrite'&&i.after.method==='manual'));
+ assert.ok(!items.some(i=>i.kind==='field_rewrite'));
  assert.ok(items.some(i=>i.kind==='record_value_replacement'&&i.before.progress==='Checked dashboard at 375px and 768px'));
- assert.ok(items.some(i=>i.kind==='field_rejection'));
- assert.ok(items.some(i=>i.kind==='message_replacement'));
+ assert.ok(!items.some(i=>i.kind==='field_rejection'));
+ assert.ok(!items.some(i=>i.kind==='message_replacement'));
  assert.equal(out.summary.observerActionsExecuted,0);
  assert.equal(out.summary.observedRuntimeInterventions,items.length);
 });

@@ -1,5 +1,7 @@
 # Intake harness review and intervention visibility
 
+Historical first-step audit. For the final batch behavior, see S10-HARNESS-NATURAL-RECORD.md.
+
 Baseline: PR #82, main d72253979425a6dad97d8c555fd7fe13d0b278bd.
 
 ## Goal and scope

@@ -28,6 +28,8 @@ export function sourceConversation(turns: ChatSource[]): FallbackTurn[] {
   return turns.map(({actor, purpose, text}) => ({actor, purpose, text}));
 }
 export type EvidenceUpdate = {
+  operation?: 'add'|'replace';
+  contextTurn?: number|null;
   field: 'responsibility'|'claim'|'scope'|'evidence'|'verification_method'|'testing'|'blocker'|'next_action';
   value: string;
   state: 'student_claim'|'available'|'missing'|'unknown'|'planned'|'executed'|'needs_teacher'|'not_applicable'|'none';
@@ -44,19 +46,9 @@ export function shouldReviewAcceptedAction(assessment: Record<string, unknown>, 
     && assessment.actionability === 'clear'
     && updates.some(u => u.field === 'next_action' && u.state === 'planned' && u.sourceTurn === lastStudent && Boolean(u.value.trim()));
 }
-// Single authoritative review decision for the UI (Phase C, Failure 3).
-//
-// The backend decideTurn() is the ONE authority on whether a turn moves to
-// review: it already folds in the question-budget limit, an explicit
-// teacher-help request, and the "accepted next action AND evidence established"
-// rule, using the VALIDATED evidence (not the model's self-reported assessment).
-// The UI previously recomputed its own verdict from the model's assessment via
-// shouldReviewAcceptedAction() and could override continue -> review
-// (accepted_action_ui_override), so backend and UI disagreed on the same turn.
-//
-// The UI now DEFERS to the backend decision. We still surface the budget limit
-// explicitly for the transition message, but the limit is already part of the
-// backend's review verdict, so this never diverges from it.
+// The backend is the single review authority: the model decides when enough
+// has been collected, bounded by the agreed round limit. The UI must not add
+// field-completeness or teacher-keyword stop rules.
 export type IntakeReviewDecision = {
   readonly review: boolean;
   readonly reason: string;
@@ -83,18 +75,32 @@ export function changedEvidenceFields(current: DeterministicIntakeAnswers, next:
 }
 export function applyEvidenceUpdates(current: DeterministicIntakeAnswers, updates: EvidenceUpdate[], turns: ChatSource[]) {
   const next = {...current};
+  const merge=(before:string|undefined,value:string,replace=false,max=1000)=>{
+    if(value.length>max)throw new Error('record_capacity_exceeded');
+    if(replace||!before?.trim())return value;
+    if(!value.trim()||before.split('\n').includes(value))return before;
+    const combined=`${before}\n${value}`;
+    if(combined.length>max)throw new Error('record_capacity_exceeded');
+    return combined;
+  };
   for (const u of updates) {
     if (!Number.isInteger(u.sourceTurn) || turns[u.sourceTurn]?.actor !== 'student') throw new Error('Evidence source must identify a student answer');
     const value = u.value.trim();
     if (u.field === 'responsibility' && value) next.responsibility = value;
-    if (u.field === 'claim' && value) { next.progress = value; if(u.progressKind) next.progressKind=u.progressKind; }
+    if (u.field === 'claim' && value) {
+      const previous=next.progress;
+      next.progress=merge(previous,value,u.operation==='replace');
+      if(u.progressKind&&(u.operation==='replace'||next.progress!==previous))next.progressKind=previous&&previous!==value&&u.operation!=='replace'&&next.progressKind!==u.progressKind?'advanced':u.progressKind;
+    }
     if (u.field === 'scope' && value) next.scope=value;
     if (u.field === 'evidence') {
-      next.evidenceType=u.evidenceType || 'other';
-      next.evidenceAvailability=u.state==='available'?'available_now':u.state==='planned'?'expected_later':u.state==='missing'?'not_produced':'unknown';
-      next.evidenceReference=value;
+      const hasOther=Boolean(next.evidenceReference && next.evidenceReference!==value && u.operation!=='replace');
+      const availability=u.state==='available'?'available_now':u.state==='planned'?'expected_later':u.state==='missing'?'not_produced':'unknown';
+      next.evidenceType=hasOther&&next.evidenceType!==u.evidenceType?'other':u.evidenceType || 'other';
+      next.evidenceAvailability=hasOther&&next.evidenceAvailability!==availability?'unknown':availability;
+      next.evidenceReference=merge(next.evidenceReference,value,u.operation==='replace');
     }
-    if (u.field === 'verification_method') next.verificationMethod=value;
+    if (u.field === 'verification_method') next.verificationMethod=merge(next.verificationMethod,value,u.operation==='replace');
     if (u.field === 'testing') {
       // Phase C, Failure 1: a student-disclosed UNTESTED path (state 'missing',
       // e.g. "I still have not tested what happens when the API returns an error")
@@ -106,26 +112,32 @@ export function applyEvidenceUpdates(current: DeterministicIntakeAnswers, update
       // 'unknown' (we never fabricate an executed/not_applicable claim).
       if (u.state === 'missing') {
         const note = `Not tested by student: ${value || 'disclosed untested path'}`;
-        if (next.testingStatus === 'executed') {
-          next.testingBaseline = next.testingBaseline ? `${next.testingBaseline}; ${note}` : note;
+        if(u.operation==='replace'){next.testingStatus='unknown';next.testingMethod='';next.testingResult='';next.testingBaseline=note;}
+        else if (next.testingStatus === 'executed') {
+          next.testingBaseline = merge(next.testingBaseline,note); 
         } else {
           next.testingStatus = 'unknown';
-          next.testingBaseline = next.testingBaseline ? `${next.testingBaseline}; ${note}` : note;
+          next.testingBaseline = merge(next.testingBaseline,note); 
         }
         continue;
       }
       // A future test is a next action; it cannot erase a test already performed this Session.
-      if (next.testingStatus === 'executed' && u.state !== 'executed') continue;
+      if (next.testingStatus === 'executed' && u.state !== 'executed' && u.operation!=='replace') {
+        if(u.state==='planned')next.testingBaseline=merge(next.testingBaseline,`Planned, not executed: ${value}`);
+        continue;
+      }
+      if(u.operation==='replace')next.testingBaseline='';
+      const keep=next.testingStatus==='executed' && u.state==='executed' && u.operation!=='replace';
       next.testingStatus=u.state==='executed'?'executed':u.state==='planned'?'planned_not_executed':u.state==='not_applicable'?'not_applicable':'unknown';
-      next.testingMethod=u.method || '';
-      next.testingResult=u.state==='executed' ? u.observedResult || '' : '';
+      next.testingMethod=merge(keep?next.testingMethod:'',u.method || '');
+      next.testingResult=u.state==='executed' ? merge(keep?next.testingResult:'',u.observedResult || '') : ''; 
     }
     if (u.field === 'blocker') {
       next.blockerStatus=u.state==='none'?'none':u.state==='unknown'?'unknown':'active';
-      next.blockerDescription=value;
-      next.supportRequested=u.state==='needs_teacher'?value:next.supportRequested;
+      next.blockerDescription=merge(next.blockerDescription,value,u.operation==='replace'||u.state==='none');
+      next.supportRequested=u.state==='needs_teacher'?merge(next.supportRequested,value,u.operation==='replace',500):u.state==='none'||u.operation==='replace'?'':next.supportRequested;
     }
-    if (u.field === 'next_action') {next.nextAction=value;next.expectedEvidence=u.expectedEvidence || '';}
+    if (u.field === 'next_action') {next.nextAction=merge(next.nextAction,value,u.operation==='replace');next.expectedEvidence=merge(next.expectedEvidence,u.expectedEvidence || '',u.operation==='replace');}
   }
   return next;
 }

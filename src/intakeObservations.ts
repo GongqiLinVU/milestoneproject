@@ -33,6 +33,7 @@ export function buildHarnessObservations(events:DebugEvent[]) {
     const decisions=Array.isArray(response.fieldDecisions)?response.fieldDecisions:[];
     decisions.forEach((decision:Obj)=>{
       add(event,index,'field_decision',{decision});
+      if(decision.observations?.length)add(event,index,'semantic_uncertainty',{field:decision.field,reasons:decision.observations,displayed:false,affectsAcceptance:false});
       if(decision.outcome==='rejected')record(index,'field_rejection',{field:decision.field,reason:decision.reason,before:decision.candidate,after:null});
       if(decision.outcome==='repaired')record(index,'source_relocation',{field:decision.field,before:decision.originalSourceTurn,after:decision.sourceTurn,reason:decision.reason});
       if(decision.transformations?.length)record(index,'field_rewrite',{field:decision.field,changedProperties:decision.transformations,before:decision.candidate,after:decision.appliedCandidate});
