@@ -15,6 +15,7 @@ const ROUTE_CONDITIONS: { reason: string; label: string }[] = [
   { reason: 'question_limit_reached', label: 'Question budget exhausted' },
   { reason: 'accepted_next_action_and_evidence_ready', label: 'Next action accepted and evidence established' },
   { reason: 'model_small_step_proposal', label: 'Model proposed a small step' },
+  { reason: 'model_ready_for_review', label: 'Model recommends reviewing the summary' },
   { reason: 'continue_collecting', label: 'Continue collecting' },
 ];
 

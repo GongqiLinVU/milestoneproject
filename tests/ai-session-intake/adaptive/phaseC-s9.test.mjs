@@ -125,13 +125,13 @@ test('Phase C F3: UI review decision agrees with the backend (no accepted_action
   const { conversation, answers, candidate } = turn(1);
   const d = decideTurn(candidate, conversation, answers);
 
-  // Backend authority: continue, not review (verification is not established).
-  assert.equal(d.route, 'continue');
-  assert.equal(d.readyForReview, false);
+  // A model-ready recommendation is sufficient even without verification fields.
+  assert.equal(d.route, 'review');
+  assert.equal(d.readyForReview, true);
 
   // UI defers: same verdict, same single authority.
   const ui = uiReviewDecision({ readyForReview: d.readyForReview, route: d.route, routeDecision: d.routeDecision }, conversation);
-  assert.equal(ui.review, false, 'UI must not force review when the backend says continue');
+  assert.equal(ui.review, true, 'UI follows the model-backed review decision');
   assert.equal(ui.source, 'backend');
   assert.notEqual(ui.reason, 'accepted_action_ui_override');
   // Divergence is gone: backend review verdict === UI review verdict.
@@ -233,13 +233,13 @@ test('Phase C follow-up: a supported equivalent paraphrase is not incorrectly re
   assert.equal(d2.answers.evidenceReference, 'Manual load over a slow connection showed the spinner until cards loaded');
 });
 
-test('Phase C follow-up: the authoritative backend/UI review decision is preserved (still continue, no divergence)', () => {
+test('Phase C follow-up: the authoritative backend/UI review decision is preserved (model-ready review, no divergence)', () => {
   const t2 = turn(1);
   const d = decideTurn(t2.candidate, t2.conversation, t2.answers);
-  assert.equal(d.route, 'continue');
-  assert.equal(d.readyForReview, false);
+  assert.equal(d.route, 'review');
+  assert.equal(d.readyForReview, true);
   const ui = uiReviewDecision({ readyForReview: d.readyForReview, route: d.route, routeDecision: d.routeDecision }, t2.conversation);
-  assert.equal(ui.review, false);
+  assert.equal(ui.review, true);
   assert.notEqual(ui.reason, 'accepted_action_ui_override');
   assert.equal(d.readyForReview || d.route === 'review', ui.review);
 });
