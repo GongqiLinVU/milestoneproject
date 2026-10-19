@@ -30,6 +30,8 @@ export function sourceConversation(turns: ChatSource[]): FallbackTurn[] {
 export type EvidenceUpdate = {
   operation?: 'add'|'replace';
   contextTurn?: number|null;
+  supportRequested?: string|null;
+  nextActionStatus?: 'planned'|'tentative'|'unknown'|'none';
   field: 'responsibility'|'claim'|'scope'|'evidence'|'verification_method'|'testing'|'blocker'|'next_action';
   value: string;
   state: 'student_claim'|'available'|'missing'|'unknown'|'planned'|'executed'|'needs_teacher'|'not_applicable'|'none';
@@ -90,7 +92,7 @@ export function applyEvidenceUpdates(current: DeterministicIntakeAnswers, update
     if (u.field === 'claim' && value) {
       const previous=next.progress;
       next.progress=merge(previous,value,u.operation==='replace');
-      if(u.progressKind&&(u.operation==='replace'||next.progress!==previous))next.progressKind=previous&&previous!==value&&u.operation!=='replace'&&next.progressKind!==u.progressKind?'advanced':u.progressKind;
+      if(u.progressKind&&(u.operation==='replace'||next.progress!==previous))next.progressKind=previous&&previous!==value&&u.operation!=='replace'&&next.progressKind!==u.progressKind?(next.progressKind==='unknown'||u.progressKind==='unknown'?'unknown':'advanced'):u.progressKind;
     }
     if (u.field === 'scope' && value) next.scope=value;
     if (u.field === 'evidence') {
@@ -127,6 +129,7 @@ export function applyEvidenceUpdates(current: DeterministicIntakeAnswers, update
         continue;
       }
       if(u.operation==='replace')next.testingBaseline='';
+      if(u.state==='unknown'&&value)next.testingBaseline=merge(next.testingBaseline,value,u.operation==='replace');
       const keep=next.testingStatus==='executed' && u.state==='executed' && u.operation!=='replace';
       next.testingStatus=u.state==='executed'?'executed':u.state==='planned'?'planned_not_executed':u.state==='not_applicable'?'not_applicable':'unknown';
       next.testingMethod=merge(keep?next.testingMethod:'',u.method || '');
@@ -135,9 +138,9 @@ export function applyEvidenceUpdates(current: DeterministicIntakeAnswers, update
     if (u.field === 'blocker') {
       next.blockerStatus=u.state==='none'?'none':u.state==='unknown'?'unknown':'active';
       next.blockerDescription=merge(next.blockerDescription,value,u.operation==='replace'||u.state==='none');
-      next.supportRequested=u.state==='needs_teacher'?merge(next.supportRequested,value,u.operation==='replace',500):u.state==='none'||u.operation==='replace'?'':next.supportRequested;
+      next.supportRequested=u.supportRequested!=null?u.supportRequested:u.state==='needs_teacher'?merge(next.supportRequested,value,u.operation==='replace',500):u.state==='none'||u.operation==='replace'?'':next.supportRequested;
     }
-    if (u.field === 'next_action') {next.nextAction=merge(next.nextAction,value,u.operation==='replace');next.expectedEvidence=merge(next.expectedEvidence,u.expectedEvidence || '',u.operation==='replace');}
+    if (u.field === 'next_action') {next.nextActionStatus=u.nextActionStatus||'planned';next.nextAction=merge(next.nextAction,value,u.operation==='replace');next.expectedEvidence=merge(next.expectedEvidence,u.expectedEvidence || '',u.operation==='replace');}
   }
   return next;
 }

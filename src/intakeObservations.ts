@@ -47,6 +47,7 @@ export function buildHarnessObservations(events:DebugEvent[]) {
     });
     const coverage=decisions.some((d:Obj)=>d.appliedCandidate)?'detailed':'legacy_partial';
     if(event.mode==='turn')add(event,index,'intervention_coverage',{coverage,limitations:coverage==='legacy_partial'?['Field rewrites and intermediate record replacements were not recorded in this historical trace.']:[]});
+    if(response.result?.consistencyObservations?.length)add(event,index,'record_consistency',{reasons:response.result.consistencyObservations,displayed:false,affectsConversation:false});
     if(Array.isArray(response.result?.uncertainties)&&response.result.uncertainties.length)add(event,index,'model_uncertainty',{uncertainties:response.result.uncertainties,source:'model_self_report_not_verified'});
   });
   return {schemaVersion:OBSERVATION_VERSION,mode:'observation_only',

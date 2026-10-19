@@ -7,7 +7,8 @@ export function buildFocusedStudentRecord(answers:DeterministicIntakeAnswers,has
 const completeness=new Set(['available evidence needs a reference and verification method','expected evidence needs a verification method','not-required evidence needs a reason','executed testing needs method and observed result','active or resolved blocker needs a description','next action, due Session and expected evidence are required']);
 // Keep structural/source rules. Missing optional facts are not a submission gate.
 export function validateFocusedIntakeRecord(value:IntakeStudentRecord):IntakeValidationResult {
- const strict=validateIntakeStudentRecord(value),errors:string[]='errors' in strict?strict.errors.filter(e=>!completeness.has(e)):[];
+ const validationCopy=Array.isArray(value?.claims)?{...value,claims:value.claims.map(c=>c.progress_kind==='unknown'?{...c,progress_kind:'advanced' as const}:c)}:value;
+ const strict=validateIntakeStudentRecord(validationCopy),errors:string[]='errors' in strict?strict.errors.filter(e=>!completeness.has(e)):[];
  const optional=(v:unknown,max:number)=>v==null||typeof v==='string'&&v.length<=max;
  if(!value?.next_action||typeof value.next_action.action!=='string'||value.next_action.action.length>1000||typeof value.next_action.expected_evidence!=='string'||value.next_action.expected_evidence.length>1000||!/^S([1-9]|10)$/.test(value.next_action.due_session))errors.push('Next-step structure is invalid');
  for(const e of Array.isArray(value?.evidence)?value.evidence:[])if(!optional(e.reference,1000)||!optional(e.verification_method,1000)||!optional(e.not_required_reason,500))errors.push('Evidence text is invalid');
