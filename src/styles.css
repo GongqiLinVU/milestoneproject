@@ -2210,3 +2210,12 @@ button.danger:hover {
 .intake-debug-dialog small,.intake-debug-dialog p{color:#526176}
 .intake-debug-dialog pre{max-height:58dvh;overflow:auto;padding:1rem;border-radius:10px;background:#f4f6fa;font-size:.8rem;line-height:1.5;white-space:pre}
 @media(max-width:700px){.chat-intake-header .chat-header-actions{grid-column:1/-1;justify-content:flex-start}.intake-debug-dialog{padding:1rem}}
+
+/* A single conversation viewport; the composer has its own layout space. */
+.chat-intake-page{height:100dvh;width:100%;overflow:hidden;grid-template-rows:auto minmax(0,1fr);overscroll-behavior:none}
+.chat-intake-header{background:#fff;backdrop-filter:none;min-width:0}
+.chat-intake-shell{min-width:0}
+.chat-thread{display:flex;flex-direction:column;min-height:0;min-width:0;height:100%;overflow:hidden;padding:0;box-sizing:border-box}
+.chat-messages{flex:1;min-height:0;min-width:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding:clamp(1.25rem,4vw,3rem) max(1rem,calc((100vw - 820px)/2)) 1.5rem}
+.chat-thread .chat-composer{position:static;left:auto;bottom:auto;transform:none;flex-shrink:0;margin:0 auto;width:min(780px,calc(100% - 24px));background:#f7f8f7;padding-bottom:max(1rem,env(safe-area-inset-bottom));max-height:45dvh;overflow-y:auto}
+@media(max-width:700px){.chat-thread{padding:0}.chat-messages{padding:1.25rem 1rem}.chat-thread .chat-composer{width:calc(100% - 16px)}}

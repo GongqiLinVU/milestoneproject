@@ -1,7 +1,7 @@
 import { applyEvidenceUpdates, questionCount, MAX_INTAKE_QUESTIONS, type ChatSource, type EvidenceUpdate } from './intakePolicy.js';
 import type { DeterministicIntakeAnswers } from './aiSessionIntake.js';
 
-export const INTAKE_PARSER_VERSION = 'intake-parser.v1.0.0';
+export const INTAKE_PARSER_VERSION = 'intake-parser.v1.1.0';
 export type CandidateManifest = { model: string; promptVersion: string; policyVersion: string; parserVersion: string; evidenceSchemaVersion: string; knowledgeVersion: string; cost: number | null; latencyMs: number; stopReason: string };
 export type IntakeCase = { id: string; provenance: string; conversation: ChatSource[]; candidate?: unknown; expected?: Record<string, unknown> };
 export type FieldDecision = { index: number; field: string; outcome: 'accepted'|'repaired'|'rejected'; reason: string; originalSourceTurn: unknown; sourceTurn?: number; candidate: unknown };
@@ -228,9 +228,10 @@ export function decideTurn(candidate: any, conversation: ChatSource[], current: 
   const established = Boolean(extracted.answers.progress && extracted.answers.evidenceReference && extracted.answers.verificationMethod && extracted.answers.nextAction);
   const teacher = extracted.accepted.some(u => u.field === 'blocker' && u.state === 'needs_teacher') || /\bteacher\b.{0,30}\bhelp\b/i.test(conversation.at(-1)?.text || '');
   const limit = questionCount(conversation) >= MAX_INTAKE_QUESTIONS;
-  const review = limit || teacher || (action && established);
+  const modelReview = candidate?.readyForReview === true || candidate?.route === "review";
+  const review = limit || teacher || modelReview || (action && established);
   const route = review ? 'review' : candidate?.route === 'small_step' ? 'small_step' : 'continue';
-  const routeReason = teacher ? 'student_requested_teacher_help' : limit ? 'question_limit_reached' : action && established ? 'accepted_next_action_and_evidence_ready' : candidate?.route === 'small_step' ? 'model_small_step_proposal' : 'continue_collecting';
+  const routeReason = teacher ? 'student_requested_teacher_help' : limit ? 'question_limit_reached' : action && established ? 'accepted_next_action_and_evidence_ready' : modelReview ? 'model_ready_for_review' : candidate?.route === 'small_step' ? 'model_small_step_proposal' : 'continue_collecting';
   // safeMessage() already rejects the actually dangerous content (the model
   // claiming to grade/verify/accuse the student), so a punctuation shape
   // check on top of that (must contain "?") is redundant and too strict: a
