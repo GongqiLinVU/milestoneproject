@@ -1,3 +1,5 @@
+import { IntakeReview, IntakeRecordSummary } from "./IntakeReview";
+import { FOCUSED_REVIEW_VERSION, buildFocusedStudentRecord, validateFocusedIntakeRecord, packReviewDebug, restoreReviewDebug } from "./intakeReview";
 import { IntakeDebugViewer } from "./IntakeDebugViewer";
 import { buildHarnessObservations } from "./intakeObservations";
 import { effectiveCollectionMode, collectionLabels, type CollectionMode } from "./sessionCollection";
@@ -409,6 +411,8 @@ type AiExtraction = {
   suggestedTeacherQuestions: string[];
 };
 
+const intakeDebugEnabled=import.meta.env.VITE_INTAKE_DEBUG_ENABLED!=="false";
+
 type SessionIntakeContext = {
   schemaVersion: string;
   testSuiteVersion: string;
@@ -418,7 +422,7 @@ type SessionIntakeContext = {
   effectiveMode?: CollectionMode;
   workTrackUpdatedAt?: string|null;
   isOpen: boolean;
-  confirmedRecord: { intakeId:string; sourceMode:string; studentRecord:IntakeStudentRecord; studentConfirmation:Record<string,unknown>; confirmedAt:string } | null;
+  confirmedRecord: { intakeId:string; sourceMode:string; studentRecord:IntakeStudentRecord; studentConfirmation:Record<string,unknown>; confirmedAt:string; sourceConversation?:FallbackTurn[]; aiAssistance?:Record<string,unknown> } | null;
   previousConfirmed: { intakeId:string; studentRecord:IntakeStudentRecord; confirmedAt:string } | null;
 };
 
@@ -585,6 +589,7 @@ function FormSessionIntakePrototype({session,onClose,onSaved,aiEnabled=true}:{se
     confirmedChecked:confirmed,
   }));
   const closeNow=()=>guardedClose(onClose);
+  if(Boolean(saved))return <SessionIntakeModal session={session} onClose={onClose} onSaved={onSaved}/>;
   return createPortal(<div className="intake-workspace-backdrop"><section className="intake-workspace" aria-labelledby="session-intake-title"><header className="intake-workspace-header"><button type="button" className="secondary compact" onClick={closeNow} aria-label="Back to Current Session">← Back to Sessions</button><div><div className="eyebrow">Guided evidence workspace</div><h3 id="session-intake-title">S{session.sessionNumber} · {session.focus}</h3><span>{saved?"Confirmed history · read-only":"Session Intake"}</span></div></header><div className="intake-workspace-grid"><main className="intake-conversation">
     {loading?<p className="empty-state">Loading Session Intake…</p>:saved?<div className="intake-confirmed"><CheckCircle2 size={30}/><h4>Intake confirmed</h4><p>Your submission is a claim and has not been Teacher verified.</p><dl><div><dt>Responsibility</dt><dd>{saved.studentRecord.responsibility.current}</dd></div><div><dt>Progress</dt><dd>{saved.studentRecord.claims.map(item=>item.statement).join(" · ")}</dd></div><div><dt>Next action</dt><dd>{saved.studentRecord.next_action.action} · {saved.studentRecord.next_action.due_session}</dd></div></dl><small>Confirmed {new Date(saved.confirmedAt).toLocaleString()} · deterministic fallback</small></div>:!context?.isOpen?<p className="track-readonly-note">Session Intake is closed. Your teacher controls when this pilot is available.</p>:<>
       <div className="intake-progress" aria-label={`Step ${step} of 5`}><span style={{width:`${step*20}%`}}/></div>
@@ -662,6 +667,14 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
       }));
       if(!active)return;
       setHistoryRecords(previous.filter((item):item is IntakeHistoryRecord=>Boolean(item)).sort((a,b)=>b.sessionNumber-a.sessionNumber));
+      const confirmedRecord=nextContext.confirmedRecord;
+      if(confirmedRecord){
+        const source=confirmedRecord.sourceConversation||[];
+        const recovered=restoreReviewDebug(confirmedRecord.aiAssistance?.debug_events,source);
+        setTurns(source as IntakeChatTurn[]);
+        setDebugEvents(recovered.length?recovered:[{at:confirmedRecord.confirmedAt,mode:"saved_snapshot",request:{},response:{sourceMode:confirmedRecord.sourceMode,studentRecord:confirmedRecord.studentRecord,aiAssistance:confirmedRecord.aiAssistance??null,traceAvailability:"Full runtime trace was not stored for this historical submission."}}]);
+        setRecord(confirmedRecord.studentRecord);setInitialRecord(confirmedRecord.studentRecord);setStopReason(String(confirmedRecord.aiAssistance?.stop_reason||"confirmed_history"));if(Array.isArray(confirmedRecord.studentConfirmation.corrections))setCorrections(confirmedRecord.studentConfirmation.corrections as typeof corrections);setStage(4);setLoading(false);return;
+      }
       const prior=nextContext.previousConfirmed?.studentRecord;
       if(prior)setAnswers(current=>({...current,responsibility:prior.responsibility.current,scope:prior.responsibility.current}));
       const first=session.sessionNumber===1
@@ -675,7 +688,7 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
     void load();
     return()=>{active=false};
   },[session.sessionId,session.sessionNumber,session.focus]);
-  useEffect(()=>{const viewport=endRef.current?.parentElement;if(viewport)viewport.scrollTo({top:viewport.scrollHeight,behavior:"smooth"});},[turns,stage]);
+  useEffect(()=>{const viewport=endRef.current?.parentElement;if(viewport)viewport.scrollTo({top:stage===4?0:viewport.scrollHeight,behavior:"smooth"});},[turns,stage]);
   const addTurn=(turn:IntakeChatTurn)=>setTurns(current=>[...current,turn]);
   const openEvidence=(fields:string[],tab:"current"|"previous"="current")=>{setHighlightFields(fields);setEvidenceTab(tab);setEvidenceOpen(true);setEvidenceUpdates(0)};
   async function callAi(mode:"turn"|"questions"|"extract",nextAnswers:DeterministicIntakeAnswers,nextFollowUps=followUpAnswers,conversation: IntakeChatTurn[]=turns){
@@ -693,13 +706,13 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
     return payload;
   }
   function prepareReview(nextAnswers:DeterministicIntakeAnswers, reason:string) {
-    const finalRecord=buildFallbackStudentRecord(nextAnswers,{},Boolean(context?.previousConfirmed));
+    const finalRecord=buildFocusedStudentRecord(nextAnswers,Boolean(context?.previousConfirmed));
     setRecord(finalRecord);setInitialRecord(finalRecord);setStopReason(reason);setConfirmed(false);setStage(4);setBusy(false);
   }
   function correct(field:keyof DeterministicIntakeAnswers,value:string) {
     setCorrections(current=>[...current.filter(item=>item.field!==field),{field,before:current.find(item=>item.field===field)?.before??answers[field],after:value}]);
     const next={...answers,[field]:value} as DeterministicIntakeAnswers;
-    setAnswers(next);setRecord(buildFallbackStudentRecord(next,{},Boolean(context?.previousConfirmed)));setConfirmed(false);
+    setAnswers(next);setRecord(buildFocusedStudentRecord(next,Boolean(context?.previousConfirmed)));setConfirmed(false);
   }
   async function send(){
     const text=draft.trim();if(!text||busy||stage===4)return;
@@ -773,7 +786,7 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
     }
   }
   function debugPayload(){
-    return {exportedAt:new Date().toISOString(),session:{number:session.sessionNumber,focus:session.focus},policyVersion:INTAKE_POLICY_VERSION,stopReason,conversation:turns,record,corrections,events:debugEvents,harness:buildHarnessObservations(debugEvents)};
+    return {exportedAt:new Date().toISOString(),session:{number:session.sessionNumber,focus:session.focus},policyVersion:context?.confirmedRecord?.aiAssistance?.policy_version||INTAKE_POLICY_VERSION,stopReason,conversation:turns,record,corrections,events:debugEvents,harness:buildHarnessObservations(debugEvents)};
   }
   function downloadDebug(){
     const payload=debugPayload();
@@ -783,15 +796,15 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
 
   async function submit(){
     if(!context?.isOpen||!record||!confirmed)return;
-    const validation=validateIntakeStudentRecord(record);if(!validation.valid){setMessage(validation.errors.join(" · "));return}
+    const validation=validateFocusedIntakeRecord(record);if(!validation.valid){setMessage(validation.errors.join(" · "));return}
     setBusy(true);setMessage("");
     let source:FallbackTurn[];
     try { source=sourceConversation(turns); } catch(error) {setMessage(String(error));setBusy(false);return;}
     const confirmation={status:"confirmed",attestation:STUDENT_CONFIRMATION_ATTESTATION,corrections,summary:buildDeterministicSummary(record)};
-    const metadata={used:aiMeta.used,model:aiMeta.model,policy_version:INTAKE_POLICY_VERSION,follow_up_count:Math.max(0,questionCount(turns)-3),question_purposes:turns.filter(t=>t.actor==="system"&&t.purpose!=="review transition").slice(3).map(t=>t.purpose),extraction_status:aiMeta.extractionStatus,stop_reason:stopReason,extracted_record:initialRecord,turn_results:debugEvents.filter(e=>e.mode==="turn"&&e.response).map(e=>e.response?.result),turn_decisions:debugEvents.filter(e=>e.mode==="turn"&&e.response).map(e=>({manifest:e.response?.manifest,fieldDecisions:e.response?.fieldDecisions,acceptanceLevel:e.response?.acceptanceLevel,extractionPending:e.response?.extractionPending,providerFailure:e.response?.providerFailure}))};
+    const metadata={review_version:FOCUSED_REVIEW_VERSION,debug_events:packReviewDebug(debugEvents),used:aiMeta.used,model:aiMeta.model,policy_version:INTAKE_POLICY_VERSION,follow_up_count:Math.max(0,questionCount(turns)-3),question_purposes:turns.filter(t=>t.actor==="system"&&t.purpose!=="review transition").slice(3).map(t=>t.purpose),extraction_status:aiMeta.extractionStatus,stop_reason:stopReason,extracted_record:initialRecord,turn_results:debugEvents.filter(e=>e.mode==="turn"&&e.response).map(e=>e.response?.result),turn_decisions:debugEvents.filter(e=>e.mode==="turn"&&e.response).map(e=>({manifest:e.response?.manifest,fieldDecisions:e.response?.fieldDecisions,acceptanceLevel:e.response?.acceptanceLevel,extractionPending:e.response?.extractionPending,providerFailure:e.response?.providerFailure}))};
     const {error:saveError}=await supabase.rpc("save_my_session_intake_chat",{p_session_id:session.sessionId,p_source_conversation:source,p_student_record:record,p_student_confirmation:confirmation,p_prompt_version:INTAKE_PROMPT_VERSION,p_ai_assistance:metadata});
     setDebugEvents(current=>[...current,{at:new Date().toISOString(),mode:"save",request:{turnCount:source.length,questionCount:questionCount(turns),policyVersion:INTAKE_POLICY_VERSION},...(saveError?{error:saveError.message}:{response:{saved:true}})}]);
-    if(saveError)setMessage(`Session Intake could not be submitted for this Session right now. Your answers are preserved here — you can retry, or ask your Teacher whether Intake is open for this Session.`);else{const {data}=await supabase.rpc("get_my_session_intake",{p_session_id:session.sessionId});setContext(data as SessionIntakeContext);setMessage("Session Intake confirmed. This Session is now read-only.");onSaved()}
+    if(saveError)setMessage(`Your check-in has not been saved. Your answers are still here. ${saveError.message?.includes("metadata")?"The focused-review database update may not be installed yet.":"Please retry or ask your Teacher whether this Session is open."}`);else{const {data}=await supabase.rpc("get_my_session_intake",{p_session_id:session.sessionId});setContext(data as SessionIntakeContext);setMessage("Session Intake confirmed. This Session is now read-only.");onSaved()}
     setBusy(false);
   }
   const saved=context?.confirmedRecord;
@@ -807,13 +820,13 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
     correctionCount:corrections.length,confirmedChecked:confirmed,
   }));
   const closeNow=()=>guardedClose(onClose);
-  return createPortal(<div className="chat-intake-page"><header className="chat-intake-header"><button type="button" className="secondary compact" onClick={closeNow}>← Sessions</button><div><span>{saved?"Session history":"Your progress check-in"}</span><h2>S{session.sessionNumber} · {session.focus}</h2></div><div className="chat-header-actions">{debugEvents.length>0&&<><button type="button" className="secondary compact" onClick={()=>setHarnessOpen(true)}>Visual debug · {debugEvents.length}</button><button type="button" className="secondary compact" onClick={()=>setDebugOpen(true)}>Intake debug · {debugEvents.length}</button></>}<button type="button" className={`evidence-drawer-trigger ${evidenceUpdates&&!evidenceOpen?"has-updates":""}`} onClick={()=>evidenceOpen?setEvidenceOpen(false):openEvidence([])}>Evidence chain {evidenceUpdates&&!evidenceOpen?<b>{evidenceUpdates} new</b>:null}</button></div></header>
+  return createPortal(<div className="chat-intake-page"><header className="chat-intake-header"><button type="button" className="secondary compact" onClick={closeNow}>← Sessions</button><div><span>{saved?"Session history":"Your progress check-in"}</span><h2>S{session.sessionNumber} · {session.focus}</h2></div><div className="chat-header-actions">{intakeDebugEnabled&&debugEvents.length>0&&<><button type="button" className="secondary compact" onClick={()=>setHarnessOpen(true)}>Visual debug · {debugEvents.length}</button><button type="button" className="secondary compact" onClick={()=>setDebugOpen(true)}>Intake debug · {debugEvents.length}</button></>}<button type="button" className={`evidence-drawer-trigger ${evidenceUpdates&&!evidenceOpen?"has-updates":""}`} onClick={()=>evidenceOpen?setEvidenceOpen(false):openEvidence([])}>Evidence chain {evidenceUpdates&&!evidenceOpen?<b>{evidenceUpdates} new</b>:null}</button></div></header>
     <main className="chat-intake-shell"><section className="chat-thread" aria-label="Session Intake conversation"><div className="chat-messages">
-      {loading?<p className="empty-state">Loading Session Intake…</p>:saved?<><div className="chat-message assistant"><span>Intake</span><p>This Session was confirmed on {new Date(saved.confirmedAt).toLocaleString()}. The conversation and evidence are now read-only.</p></div><div className="chat-message student"><span>Your confirmed claim</span><p>{saved.studentRecord.claims.map(item=>item.statement).join(" · ")}</p></div><div className="chat-message assistant"><span>Next action</span><p>{saved.studentRecord.next_action.action} · {saved.studentRecord.next_action.due_session}</p></div></>:!context?.isOpen?<div className="chat-message assistant"><p>This Session Intake is closed. Your Teacher controls when it is available.</p></div>:<>
-        <div className="chat-round-guide" style={{marginBottom:"1.25rem",padding:"1rem 1.2rem",borderRadius:16,background:"#edf3ff",color:"#273c67",lineHeight:1.5}}><strong>A quick check-in, at your pace</strong><p style={{margin:".3rem 0 0"}}>This usually takes 3–5 rounds, with up to {MAX_INTAKE_QUESTIONS} if we need a little more detail. Each round is one question and your reply. You’ll review a summary before saving.</p></div>
-        {turns.map((turn,index)=><div key={index} className={`chat-message ${turn.actor==="student"?"student":"assistant"}`}><span>{turn.actor==="student"?"You":"Intake assistant"}{turn.source==="llm"?<b className="llm-message-badge">LLM</b>:turn.source==="fallback"?<b className="llm-message-badge">Fallback</b>:null}</span><p>{turn.text}</p>{turn.actor==="student"&&turn.evidenceChanges?.length?<button type="button" className="message-evidence-update" onClick={()=>openEvidence(turn.evidenceChanges||[])}><b>{turn.evidenceChanges.length} evidence field{turn.evidenceChanges.length===1?"":"s"} updated</b><span>{turn.evidenceChanges.map(value=>value.replace("_"," ")).join(" · ")} · View changes</span></button>:null}</div>)}
-        {busy&&<div className="chat-message assistant thinking"><span>Intake assistant</span><p>Organising your answer…</p></div>}
-        {stage===4&&record&&<div className="chat-review-card"><span>Ready for your review</span><h3>Confirm this Session record</h3><p>Your statements remain claims until your Teacher verifies them. Open Evidence to review the complete record.</p><details open={stopReason==="provider_failure"}><summary>Review and correct captured details</summary><p>Corrections are saved separately from the original extraction. Unknown means not established.</p>{([['responsibility','Responsibility'],['progress','Progress claim'],['scope','Exact scope'],['evidenceReference','Evidence reference or demonstration'],['verificationMethod','How to verify'],['testingMethod','Test method'],['testingResult','Observed test result'],['testingBaseline','Expected result / untested limitation'],['blockerDescription','Blocker or help needed'],['supportRequested','Support requested'],['nextAction','Your accepted next action'],['expectedEvidence','Expected evidence']] as const).map(([field,label])=><label key={field} style={{display:'block'}}>{label}<textarea value={answers[field]} maxLength={field==='responsibility'||field==='scope'?500:1000} onChange={e=>correct(field,e.target.value)}/></label>)}<label>Evidence type<select value={answers.evidenceType} onChange={e=>correct('evidenceType',e.target.value)}>{evidenceTypeOptions.map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label><label>Evidence availability<select value={answers.evidenceAvailability} onChange={e=>correct('evidenceAvailability',e.target.value)}>{['unknown','available_now','expected_later','not_produced'].map(v=><option key={v} value={v}>{v.replaceAll('_',' ')}</option>)}</select></label><label>Testing<select value={answers.testingStatus} onChange={e=>correct('testingStatus',e.target.value)}>{['unknown','executed','planned_not_executed','not_applicable'].map(v=><option key={v} value={v}>{v.replaceAll('_',' ')}</option>)}</select></label><label>Progress state<select value={answers.progressKind} onChange={e=>correct('progressKind',e.target.value)}>{['completed','advanced','investigated','attempted_failed','no_progress'].map(v=><option key={v} value={v}>{v.replaceAll('_',' ')}</option>)}</select></label><label>Blocker state<select value={answers.blockerStatus} onChange={e=>correct('blockerStatus',e.target.value)}>{['unknown','none','active','resolved'].map(v=><option key={v} value={v}>{v}</option>)}</select></label><label>Due Session<select value={answers.dueSession} onChange={e=>correct('dueSession',e.target.value)}>{Array.from({length:10},(_,i)=>`S${i+1}`).map(v=><option key={v}>{v}</option>)}</select></label></details><label><input type="checkbox" checked={confirmed} onChange={event=>setConfirmed(event.target.checked)}/><span>{STUDENT_CONFIRMATION_ATTESTATION}</span></label><button type="button" onClick={()=>void submit()} disabled={!confirmed||busy}>{busy?"Confirming…":"Confirm Session Intake"}</button></div>}
+      {loading?<p className="empty-state">Loading Session Intake…</p>:saved?<IntakeRecordSummary record={saved.studentRecord} confirmedAt={saved.confirmedAt}/>:!context?.isOpen?<div className="chat-message assistant"><p>This Session Intake is closed. Your Teacher controls when it is available.</p></div>:<>
+        {stage<4&&<div className="chat-round-guide" style={{marginBottom:"1.25rem",padding:"1rem 1.2rem",borderRadius:16,background:"#edf3ff",color:"#273c67",lineHeight:1.5}}><strong>A quick check-in, at your pace</strong><p style={{margin:".3rem 0 0"}}>This usually takes 3–5 rounds, with up to {MAX_INTAKE_QUESTIONS} if we need a little more detail. Each round is one question and your reply. You’ll review a summary before saving.</p></div>}
+        <details className={`chat-transcript ${stage===4?"archived":"live"}`} open={stage!==4}><summary>View conversation</summary>{turns.map((turn,index)=><div key={index} className={`chat-message ${turn.actor==="student"?"student":"assistant"}`}><span>{turn.actor==="student"?"You":"Intake assistant"}{turn.source==="llm"?<b className="llm-message-badge">LLM</b>:turn.source==="fallback"?<b className="llm-message-badge">Fallback</b>:null}</span><p>{turn.text}</p>{turn.actor==="student"&&turn.evidenceChanges?.length?<button type="button" className="message-evidence-update" onClick={()=>openEvidence(turn.evidenceChanges||[])}><b>{turn.evidenceChanges.length} evidence field{turn.evidenceChanges.length===1?"":"s"} updated</b><span>{turn.evidenceChanges.map(value=>value.replace("_"," ")).join(" · ")} · View changes</span></button>:null}</div>)}
+        {busy&&<div className="chat-message assistant thinking"><span>Intake assistant</span><p>Organising your answer…</p></div>}</details>
+        {stage===4&&record&&<IntakeReview answers={answers} onChange={correct} confirmed={confirmed} onConfirm={setConfirmed} onSave={()=>void submit()} busy={busy}/>}
 
         <div ref={endRef}/>
       </>}

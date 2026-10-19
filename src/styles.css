@@ -2219,3 +2219,20 @@ button.danger:hover {
 .chat-messages{flex:1;min-height:0;min-width:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding:clamp(1.25rem,4vw,3rem) max(1rem,calc((100vw - 820px)/2)) 1.5rem}
 .chat-thread .chat-composer{position:static;left:auto;bottom:auto;transform:none;flex-shrink:0;margin:0 auto;width:min(780px,calc(100% - 24px));background:#f7f8f7;padding-bottom:max(1rem,env(safe-area-inset-bottom));max-height:45dvh;overflow-y:auto}
 @media(max-width:700px){.chat-thread{padding:0}.chat-messages{padding:1.25rem 1rem}.chat-thread .chat-composer{width:calc(100% - 16px)}}
+
+/* Focused review and confirmed history share readable, compact summaries. */
+.focused-review{max-width:760px;margin:1rem auto;padding:clamp(1.2rem,3vw,2rem);border:1px solid #dfe5ed;border-radius:22px;background:#fff;box-shadow:0 8px 30px #16253608}
+.review-step-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.5rem;color:#65738a;font-size:.8rem}
+.focused-review progress{width:100%;height:5px;margin:1rem 0;accent-color:#245cff}
+.focused-review h3{font-size:1.5rem;margin:.4rem 0}.review-hint{color:#66738a;font-size:.9rem;line-height:1.6}
+.review-fact{padding:.9rem 0;border-bottom:1px solid #edf0f5}.review-fact>span{color:#69758a;font-size:.78rem}.review-fact p{margin:.35rem 0;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
+.focused-review .review-edit-field{display:grid;gap:.45rem;margin:1rem 0}.review-edit-field>span{font-size:.85rem;color:#526176}.focused-review .review-edit-field textarea{width:100%;min-height:112px;box-sizing:border-box;resize:vertical;padding:.85rem;border:1px solid #ccd5e3;border-radius:12px;line-height:1.6;background:#fafbfe}
+.review-edit-field select{width:100%;padding:.7rem;border:1px solid #ccd5e3;border-radius:10px;background:#fff}
+.focused-review .review-attestation{display:flex;align-items:flex-start;gap:.6rem;margin:1rem 0;line-height:1.5}.review-attestation input{flex-shrink:0;margin-top:.25rem}
+.review-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:.6rem;margin-top:1.5rem}.review-final-summary{padding:.3rem 1rem;background:#f6f8fc;border-radius:14px}
+.intake-record-summary{max-width:760px;margin:0 auto}.saved-check-in{margin-bottom:1.5rem}.saved-check-in>span{color:#167659;font-weight:700}.saved-check-in h3{font-size:1.65rem;margin:.5rem 0}.saved-check-in p{color:#6b7789;font-size:.85rem}
+.intake-record-summary article,.intake-record-summary details{padding:1.25rem;margin:1rem 0;border:1px solid #e0e5ed;background:#fff;border-radius:16px}.intake-record-summary h4{margin:0;color:#58677e;font-size:.85rem}.intake-record-summary p{line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}.intake-record-summary small{color:#69758a;line-height:1.6}.intake-record-summary summary{cursor:pointer;color:#445570;font-weight:650}
+
+.chat-transcript>summary{padding:.75rem 0;color:#65738a;cursor:pointer;font-size:.85rem}.chat-transcript.live>summary{display:none}
+.evidence-drawer[aria-hidden="true"]{display:none}
+.review-actions>button:last-child{background:#245cff;color:#fff;border-color:#245cff}.review-extra{margin-top:1rem;color:#65738a;font-size:.85rem}.review-extra summary{cursor:pointer}.review-extra button{margin:.6rem .5rem 0 0}
