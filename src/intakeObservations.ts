@@ -1,9 +1,12 @@
 // Debug-only sidecar. Never feeds a routing, extraction, or save decision.
-export const OBSERVATION_VERSION = 'intake-observation.v1';
+export const OBSERVATION_VERSION = 'intake-observation.v1.1';
 type Obj = Record<string, any>;
 type DebugEvent = {at:string;mode:string;request:Obj;response?:Obj;error?:string};
 export function buildHarnessObservations(events:DebugEvent[]) {
   const observations:Obj[]=[];
+  // These are observed runtime interventions, not actions performed by this sidecar.
+  const interventions:Obj[]=[];
+  const record=(index:number,kind:string,detail:Obj)=>interventions.push({eventIndex:index,kind,...detail});
   const add=(event:DebugEvent,index:number,kind:string,detail:Obj)=>{
     const conversation=Array.isArray(event.request.conversation)?event.request.conversation:[];
     observations.push({id:`event-${index+1}:${kind}:${observations.length+1}`,level:'O',kind,
@@ -23,12 +26,34 @@ export function buildHarnessObservations(events:DebugEvent[]) {
     if(response.routeDecision)add(event,index,'routing_comparison',{routeDecision:response.routeDecision,
       legacyIntervention:response.routeDecision.proposed!==response.routeDecision.final||response.rawCandidate?.assistantMessage!==response.result?.assistantMessage,
       proposedMessage:response.rawCandidate?.assistantMessage??null,deliveredMessage:response.result?.assistantMessage??null});
-    if(Array.isArray(response.fieldDecisions))response.fieldDecisions.forEach((decision:Obj)=>add(event,index,'field_decision',{decision}));
+    if(response.routeDecision?.proposed && response.routeDecision?.final && response.routeDecision.proposed!==response.routeDecision.final)
+      record(index,'route_override',{before:response.routeDecision.proposed,after:response.routeDecision.final,reason:response.routeDecision.reason});
+    if(typeof response.rawCandidate?.assistantMessage==='string' && typeof response.result?.assistantMessage==='string' && response.rawCandidate.assistantMessage!==response.result.assistantMessage)
+      record(index,'message_replacement',{before:response.rawCandidate.assistantMessage,after:response.result.assistantMessage,reason:response.routeDecision?.reason??'not_recorded'});
+    const decisions=Array.isArray(response.fieldDecisions)?response.fieldDecisions:[];
+    decisions.forEach((decision:Obj)=>{
+      add(event,index,'field_decision',{decision});
+      if(decision.outcome==='rejected')record(index,'field_rejection',{field:decision.field,reason:decision.reason,before:decision.candidate,after:null});
+      if(decision.outcome==='repaired')record(index,'source_relocation',{field:decision.field,before:decision.originalSourceTurn,after:decision.sourceTurn,reason:decision.reason});
+      if(decision.transformations?.length)record(index,'field_rewrite',{field:decision.field,changedProperties:decision.transformations,before:decision.candidate,after:decision.appliedCandidate});
+      if(decision.recordBefore && decision.recordAfter){
+        const replaced=Object.keys(decision.recordBefore).filter(k=>{
+          const before=decision.recordBefore[k],after=decision.recordAfter[k];
+          return typeof before==='string' && Boolean(before.trim()) && before!==after;
+        });
+        if(replaced.length)record(index,'record_value_replacement',{field:decision.field,keys:replaced,before:decision.recordBefore,after:decision.recordAfter,interpretation:'Replacement observed; may be a valid correction or information loss. Not automatically an error.'});
+      }
+    });
+    const coverage=decisions.some((d:Obj)=>d.appliedCandidate)?'detailed':'legacy_partial';
+    if(event.mode==='turn')add(event,index,'intervention_coverage',{coverage,limitations:coverage==='legacy_partial'?['Field rewrites and intermediate record replacements were not recorded in this historical trace.']:[]});
     if(Array.isArray(response.result?.uncertainties)&&response.result.uncertainties.length)add(event,index,'model_uncertainty',{uncertainties:response.result.uncertainties,source:'model_self_report_not_verified'});
   });
   return {schemaVersion:OBSERVATION_VERSION,mode:'observation_only',
     scope:'This sidecar does not intervene. Existing runtime controls are reported separately and are not disabled by this export.',
     levels:{O:'Record evidence without intervention',W:'Display a non-blocking warning',A:'Execute an explicitly enabled intervention'},
     enabledLevels:['O'],indexing:'eventIndex and turnIndex are zero-based; round counts student messages in that request.',
-    summary:{events:events.length,observations:observations.length,warningsDisplayed:0,actionsExecuted:0},observations};
+    summary:{events:events.length,observations:observations.length,warningsDisplayed:0,actionsExecuted:0,
+      observerActionsExecuted:0,observedRuntimeInterventions:interventions.length},
+    runtimeInterventions:{scope:'Observed existing controls across extraction, record projection, messages and routing. Separate from sidecar O/W/A counts.',
+      items:interventions,coverage:'Only recorded decisions are counted; missing historical details are not treated as zero interventions.'},observations};
 }

@@ -4,7 +4,7 @@ import type { DeterministicIntakeAnswers } from './aiSessionIntake.js';
 export const INTAKE_PARSER_VERSION = 'intake-parser.v1.1.0';
 export type CandidateManifest = { model: string; promptVersion: string; policyVersion: string; parserVersion: string; evidenceSchemaVersion: string; knowledgeVersion: string; cost: number | null; latencyMs: number; stopReason: string };
 export type IntakeCase = { id: string; provenance: string; conversation: ChatSource[]; candidate?: unknown; expected?: Record<string, unknown> };
-export type FieldDecision = { index: number; field: string; outcome: 'accepted'|'repaired'|'rejected'; reason: string; originalSourceTurn: unknown; sourceTurn?: number; candidate: unknown };
+export type FieldDecision = { index: number; field: string; outcome: 'accepted'|'repaired'|'rejected'; reason: string; originalSourceTurn: unknown; sourceTurn?: number; candidate: unknown; appliedCandidate?: EvidenceUpdate; transformations?: string[]; recordBefore?: Record<string,unknown>; recordAfter?: Record<string,unknown> };
 export type TrialTrace = { caseId: string; manifest: CandidateManifest; conversation: ChatSource[]; rawCandidate: unknown; decisions: FieldDecision[]; route: string; extractionPending: boolean };
 export type GradeResult = { caseId: string; gate: string; passed: boolean; detail: string };
 
@@ -185,10 +185,19 @@ export function validateCandidates(raw: unknown, conversation: ChatSource[], cur
     // Strip unsupported specificity (illustrative numbers, model method
     // paraphrase) from the record-bound text while preserving supported content.
     const candidate = sanitiseAgainstSource({...u,sourceTurn:source}, conversation[source].text);
+    const keys: Record<string,string[]> = {
+      responsibility:['responsibility'],claim:['progress','progressKind'],scope:['scope'],
+      evidence:['evidenceType','evidenceAvailability','evidenceReference'],verification_method:['verificationMethod'],
+      testing:['testingStatus','testingMethod','testingResult','testingBaseline'],
+      blocker:['blockerStatus','blockerDescription','supportRequested'],next_action:['nextAction','expectedEvidence']
+    };
+    const snapshot = (a: DeterministicIntakeAnswers) => Object.fromEntries(keys[u.field].map(k=>[k,(a as any)[k]]));
+    const recordBefore=snapshot(next);
+    const transformations=['value','method','observedResult','expectedEvidence'].filter(k=>(u as any)[k] !== (candidate as any)[k]);
     try { next = applyEvidenceUpdates(next,[candidate],conversation); }
     catch { return reject('evidence_application_failed'); }
     accepted.push(candidate);
-    decisions.push({...base,outcome,reason:outcome === 'repaired'?'source_relocated_to_unique_student_turn':'student_source_valid',sourceTurn:source});
+    decisions.push({...base,outcome,reason:outcome === 'repaired'?'source_relocated_to_unique_student_turn':'student_source_valid',sourceTurn:source,appliedCandidate:candidate,transformations,recordBefore,recordAfter:snapshot(next)});
   });
   return {answers:next,accepted,decisions,extractionPending:!accepted.length};
 }
