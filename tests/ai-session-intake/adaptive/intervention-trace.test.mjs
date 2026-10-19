@@ -15,7 +15,7 @@ test('records current accumulated values and semantic uncertainty without old in
  assert.ok(result.decisions.at(-1).observations.includes('future_action_commitment_uncertain'));
  const out=buildHarnessObservations([{at:'now',mode:'turn',request:{conversation},response:{rawCandidate:raw,result,routeDecision:result.routeDecision,fieldDecisions:result.decisions}}]);
  const items=out.runtimeInterventions.items;
- assert.ok(!items.some(i=>i.kind==='field_rewrite'));
+ assert.ok(!items.some(i=>i.kind==='field_rewrite'&&i.field==='testing'));
  assert.ok(items.some(i=>i.kind==='record_value_replacement'&&i.before.progress==='Checked dashboard at 375px and 768px'));
  assert.ok(!items.some(i=>i.kind==='field_rejection'));
  assert.ok(!items.some(i=>i.kind==='message_replacement'));

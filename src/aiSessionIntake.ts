@@ -4,6 +4,7 @@ export const STUDENT_CONFIRMATION_ATTESTATION =
   "This summary reflects what I am claiming and the evidence I have identified. Teacher verification is separate." as const;
 
 export type ProgressKind =
+  | "unknown"
   | "completed"
   | "advanced"
   | "investigated"
@@ -96,6 +97,7 @@ export type DeterministicIntakeAnswers = {
   responsibility: string;
   progress: string;
   progressKind: ProgressKind;
+  nextActionStatus?: "planned"|"tentative"|"unknown"|"none";
   scope: string;
   completionPercent: number | null;
   evidenceType: EvidenceType;

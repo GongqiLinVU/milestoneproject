@@ -1,0 +1,1131 @@
+{
+  "version": "s7-real-output.v1",
+  "cases": [
+    {
+      "id": "S7-1",
+      "sourceFile": "session-intake-debug-S7.json",
+      "sourceSha256": "ae21c4a3755d8affda1a79c2aea0eaf28ace5f91ee844330b77a529bb61b44a1",
+      "provenance": "Simulated student inputs; actual exported provider candidates, unchanged.",
+      "conversation": [
+        {
+          "actor": "system",
+          "purpose": "session starting point",
+          "text": "In your last confirmed Intake, your responsibility was “UI design and frontend implementation” and your next action was “”. Start there: what did you actually complete, change, test or discover since then? If the plan changed or nothing progressed, say that directly."
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I finished the remaining mobile dashboard layout work. After discussing it with the team, we chose horizontal scrolling for the table because users need to compare columns. I added a visible scroll hint and fixed the card overflow at 375px and 768px.\n\nI tested the loading, empty and API error states in Chrome’s mobile viewport and on my phone. The content stayed readable, and Retry worked after a simulated API failure. I saved screenshots and showed the teacher a short demo. I haven’t received the teacher’s feedback yet.\n\nNext, I’ll check keyboard navigation and focus visibility before S8, and record any issues with screenshots. I’m not blocked at the moment.",
+          "evidenceChanges": [
+            "claim",
+            "blocker",
+            "testing",
+            "evidence"
+          ]
+        },
+        {
+          "actor": "system",
+          "purpose": "review transition",
+          "source": "llm",
+          "text": "Thanks — noted progress and next step. I will review the mobile layout fixes, horizontal-scrolling decision, overflow fixes at 375px and 768px, the saved screenshots and the short demo you showed, and your planned keyboard-navigation/focus checks before S8."
+        }
+      ],
+      "record": {
+        "responsibility": {
+          "current": "UI design and frontend implementation",
+          "change_from_previous": "unknown"
+        },
+        "claims": [
+          {
+            "claim_id": "C1",
+            "statement": "Finished the remaining mobile dashboard layout work.\nTeam chose horizontal scrolling for the table to allow users to compare columns.\nAdded a visible scroll hint and fixed card overflow at 375px and 768px.",
+            "progress_kind": "completed",
+            "scope": "UI design and frontend implementation",
+            "completion_percent": null
+          }
+        ],
+        "evidence": [
+          {
+            "evidence_id": "E1",
+            "claim_ids": [
+              "C1"
+            ],
+            "type": "other",
+            "availability": "available_now",
+            "reference": "Saved screenshots of loading, empty, and API error states.\nShowed the teacher a short demo (teacher feedback pending).",
+            "verification_method": null,
+            "not_required_reason": null
+          }
+        ],
+        "testing": [
+          {
+            "test_id": "T1",
+            "claim_ids": [
+              "C1"
+            ],
+            "execution_status": "executed",
+            "method": "manual (Chrome mobile viewport and on-device)",
+            "observed_result": "Content stayed readable; Retry worked after a simulated API failure.",
+            "baseline_or_expected": null
+          }
+        ],
+        "dependencies": [],
+        "blocker": {
+          "status": "none",
+          "description": null,
+          "support_requested": null
+        },
+        "next_action": {
+          "action": "",
+          "due_session": "S8",
+          "expected_evidence": ""
+        }
+      },
+      "events": [
+        {
+          "request": {
+            "sessionNumber": 7,
+            "sessionFocus": "Application Progress + Technical Implementation Report",
+            "conversation": [
+              {
+                "actor": "system",
+                "text": "In your last confirmed Intake, your responsibility was “UI design and frontend implementation” and your next action was “”. Start there: what did you actually complete, change, test or discover since then? If the plan changed or nothing progressed, say that directly."
+              },
+              {
+                "actor": "student",
+                "text": "I finished the remaining mobile dashboard layout work. After discussing it with the team, we chose horizontal scrolling for the table because users need to compare columns. I added a visible scroll hint and fixed the card overflow at 375px and 768px.\n\nI tested the loading, empty and API error states in Chrome’s mobile viewport and on my phone. The content stayed readable, and Retry worked after a simulated API failure. I saved screenshots and showed the teacher a short demo. I haven’t received the teacher’s feedback yet.\n\nNext, I’ll check keyboard navigation and focus visibility before S8, and record any issues with screenshots. I’m not blocked at the moment."
+              }
+            ],
+            "answersSnapshot": {
+              "responsibility": "UI design and frontend implementation",
+              "progress": "",
+              "progressKind": "advanced",
+              "scope": "UI design and frontend implementation",
+              "completionPercent": null,
+              "evidenceType": "other",
+              "evidenceAvailability": "unknown",
+              "evidenceReference": "",
+              "verificationMethod": "",
+              "testingStatus": "unknown",
+              "testingMethod": "",
+              "testingResult": "",
+              "testingBaseline": "",
+              "blockerStatus": "unknown",
+              "blockerDescription": "",
+              "supportRequested": "",
+              "nextAction": "",
+              "dueSession": "S8",
+              "expectedEvidence": ""
+            },
+            "capturedFields": [],
+            "currentEvidence": {}
+          },
+          "rawCandidate": {
+            "assistantMessage": "Thanks — noted progress and next step. I will review the mobile layout fixes, horizontal-scrolling decision, overflow fixes at 375px and 768px, the saved screenshots and the short demo you showed, and your planned keyboard-navigation/focus checks before S8.",
+            "route": "review",
+            "readyForReview": true,
+            "assessment": {
+              "information": "focused",
+              "evidenceReadiness": "identified",
+              "verificationReadiness": "unclear",
+              "testingMaturity": "executed",
+              "actionability": "clear",
+              "gap": "Keyboard navigation and focus-visibility checks not yet performed; teacher feedback on the demo is still pending.",
+              "reason": "Student completed layout and responsive fixes, executed manual tests for loading/empty/error states, saved screenshots and demo, and proposed accessibility checks next.",
+              "sourceTurns": [
+                1
+              ]
+            },
+            "evidenceUpdates": [
+              {
+                "contextTurn": null,
+                "operation": "add",
+                "field": "claim",
+                "value": "Finished the remaining mobile dashboard layout work.",
+                "state": "student_claim",
+                "sourceTurn": 1,
+                "evidenceType": null,
+                "progressKind": "completed",
+                "method": null,
+                "observedResult": null,
+                "expectedEvidence": null
+              },
+              {
+                "contextTurn": null,
+                "operation": "add",
+                "field": "claim",
+                "value": "Team chose horizontal scrolling for the table to allow users to compare columns.",
+                "state": "student_claim",
+                "sourceTurn": 1,
+                "evidenceType": null,
+                "progressKind": "completed",
+                "method": null,
+                "observedResult": null,
+                "expectedEvidence": null
+              },
+              {
+                "contextTurn": null,
+                "operation": "add",
+                "field": "claim",
+                "value": "Added a visible scroll hint and fixed card overflow at 375px and 768px.",
+                "state": "student_claim",
+                "sourceTurn": 1,
+                "evidenceType": null,
+                "progressKind": "completed",
+                "method": null,
+                "observedResult": null,
+                "expectedEvidence": null
+              },
+              {
+                "contextTurn": null,
+                "operation": "replace",
+                "field": "blocker",
+                "value": "No active blocker: team chose horizontal scrolling and the overflow was fixed at 375px and 768px.",
+                "state": "none",
+                "sourceTurn": 1,
+                "evidenceType": null,
+                "progressKind": "completed",
+                "method": null,
+                "observedResult": null,
+                "expectedEvidence": null
+              },
+              {
+                "contextTurn": null,
+                "operation": "add",
+                "field": "testing",
+                "value": "Manual testing in Chrome’s mobile viewport and on my phone of loading, empty and API error states.",
+                "state": "executed",
+                "sourceTurn": 1,
+                "evidenceType": "test_result",
+                "progressKind": "completed",
+                "method": "manual (Chrome mobile viewport and on-device)",
+                "observedResult": "Content stayed readable; Retry worked after a simulated API failure.",
+                "expectedEvidence": null
+              },
+              {
+                "contextTurn": null,
+                "operation": "add",
+                "field": "evidence",
+                "value": "Saved screenshots of loading, empty, and API error states.",
+                "state": "available",
+                "sourceTurn": 1,
+                "evidenceType": "design_artifact",
+                "progressKind": null,
+                "method": null,
+                "observedResult": null,
+                "expectedEvidence": null
+              },
+              {
+                "contextTurn": null,
+                "operation": "add",
+                "field": "evidence",
+                "value": "Showed the teacher a short demo (teacher feedback pending).",
+                "state": "available",
+                "sourceTurn": 1,
+                "evidenceType": "live_demonstration",
+                "progressKind": null,
+                "method": null,
+                "observedResult": null,
+                "expectedEvidence": null
+              },
+              {
+                "contextTurn": null,
+                "operation": "add",
+                "field": "verification_method",
+                "value": "Teacher feedback pending after short demo.",
+                "state": "needs_teacher",
+                "sourceTurn": 1,
+                "evidenceType": null,
+                "progressKind": null,
+                "method": null,
+                "observedResult": null,
+                "expectedEvidence": null
+              }
+            ],
+            "uncertainties": [
+              "Teacher feedback on the demo is pending",
+              "Keyboard navigation and focus visibility have not yet been checked"
+            ],
+            "suggestedTeacherQuestions": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "S7-2",
+      "sourceFile": "session-intake-debug-S7-2.json",
+      "sourceSha256": "d1329dda5ddb250bd76d3c008c03746be8d5a706129d3e4c849dd43292ac41cc",
+      "provenance": "Simulated student inputs; actual exported provider candidates, unchanged.",
+      "conversation": [
+        {
+          "actor": "system",
+          "purpose": "session starting point",
+          "text": "In your last confirmed Intake, your responsibility was “UI design and frontend implementation” and your next action was “”. Start there: what did you actually complete, change, test or discover since then? If the plan changed or nothing progressed, say that directly."
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I started checking keyboard navigation on the dashboard. I fixed the tab order around the filter controls and added a visible focus outline to the Retry button. I tested those changes using only the keyboard in Chrome, and both worked.\nI’m still stuck on the table. Keyboard users can reach it, but I haven’t found a clear way for them to scroll horizontally and keep track of their position. I’m discussing two options with the team: making the scroll area focusable or adding keyboard-accessible scroll controls. We haven’t decided yet, and neither option is implemented.\nBefore S8, I plan to build a small prototype of each option so the team can compare them. I may need the teacher’s advice on which approach would be more usable.",
+          "evidenceChanges": [
+            "claim",
+            "testing",
+            "blocker",
+            "next_action"
+          ]
+        },
+        {
+          "actor": "system",
+          "purpose": "review transition",
+          "source": "llm",
+          "text": "Thanks — noted your keyboard fixes and the table blocker, and your plan to prototype both approaches before S8 so the team can compare them. I will review the keyboard navigation fixes and your planned prototypes (focusable scroll area vs keyboard-accessible scroll controls) and your request for possible teacher advice."
+        }
+      ],
+      "record": {
+        "responsibility": {
+          "current": "UI design and frontend implementation",
+          "change_from_previous": "unknown"
+        },
+        "claims": [
+          {
+            "claim_id": "C1",
+            "statement": "Fixed tab order around the filter controls on the dashboard.\nAdded a visible focus outline to the Retry button.",
+            "progress_kind": "advanced",
+            "scope": "UI design and frontend implementation",
+            "completion_percent": null
+          }
+        ],
+        "evidence": [
+          {
+            "evidence_id": "E1",
+            "claim_ids": [
+              "C1"
+            ],
+            "type": "other",
+            "availability": "unknown",
+            "reference": null,
+            "verification_method": null,
+            "not_required_reason": null
+          }
+        ],
+        "testing": [
+          {
+            "test_id": "T1",
+            "claim_ids": [
+              "C1"
+            ],
+            "execution_status": "executed",
+            "method": "using only the keyboard in Chrome",
+            "observed_result": "Both tab order and Retry focus outline worked.",
+            "baseline_or_expected": null
+          }
+        ],
+        "dependencies": [],
+        "blocker": {
+          "status": "active",
+          "description": "Dashboard table still lacks a clear keyboard-friendly horizontal scrolling solution; team undecided between making the scroll area focusable or adding keyboard-accessible scroll controls; neither option implemented yet.",
+          "support_requested": null
+        },
+        "next_action": {
+          "action": "Before S8, build a small prototype of each option focusable scroll area, and keyboard-accessible scroll controls, so the team can compare them; may request teacher advice on which is more usable.",
+          "due_session": "S8",
+          "expected_evidence": "Small prototypes of both options for team comparison (e.g., demo or notes describing keyboard interactions)."
+        }
+      },
+      "events": [
+        {
+          "request": {
+            "sessionNumber": 7,
+            "sessionFocus": "Application Progress + Technical Implementation Report",
+            "conversation": [
+              {
+                "actor": "system",
+                "text": "In your last confirmed Intake, your responsibility was “UI design and frontend implementation” and your next action was “”. Start there: what did you actually complete, change, test or discover since then? If the plan changed or nothing progressed, say that directly."
+              },
+              {
+                "actor": "student",
+                "text": "I started checking keyboard navigation on the dashboard. I fixed the tab order around the filter controls and added a visible focus outline to the Retry button. I tested those changes using only the keyboard in Chrome, and both worked.\nI’m still stuck on the table. Keyboard users can reach it, but I haven’t found a clear way for them to scroll horizontally and keep track of their position. I’m discussing two options with the team: making the scroll area focusable or adding keyboard-accessible scroll controls. We haven’t decided yet, and neither option is implemented.\nBefore S8, I plan to build a small prototype of each option so the team can compare them. I may need the teacher’s advice on which approach would be more usable."
+              }
+            ],
+            "answersSnapshot": {
+              "responsibility": "UI design and frontend implementation",
+              "progress": "",
+              "progressKind": "advanced",
+              "scope": "UI design and frontend implementation",
+              "completionPercent": null,
+              "evidenceType": "other",
+              "evidenceAvailability": "unknown",
+              "evidenceReference": "",
+              "verificationMethod": "",
+              "testingStatus": "unknown",
+              "testingMethod": "",
+              "testingResult": "",
+              "testingBaseline": "",
+              "blockerStatus": "unknown",
+              "blockerDescription": "",
+              "supportRequested": "",
+              "nextAction": "",
+              "dueSession": "S8",
+              "expectedEvidence": ""
+            },
+            "capturedFields": [],
+            "currentEvidence": {}
+          },
+          "rawCandidate": {
+            "assistantMessage": "Thanks — noted your keyboard fixes and the table blocker, and your plan to prototype both approaches before S8 so the team can compare them. I will review the keyboard navigation fixes and your planned prototypes (focusable scroll area vs keyboard-accessible scroll controls) and your request for possible teacher advice.",
+            "route": "evidence",
+            "readyForReview": true,
+            "assessment": {
+              "information": "focused",
+              "evidenceReadiness": "identified",
+              "verificationReadiness": "clear",
+              "testingMaturity": "executed",
+              "actionability": "needs_teacher",
+              "gap": "No implementation or prototype yet for keyboard-friendly horizontal scrolling; team undecided between two approaches.",
+              "reason": "Student completed and tested keyboard fixes (tab order and Retry focus outline) in Chrome; the dashboard table horizontal-scroll solution is undecided and unimplemented; student plans prototypes and可能",
+              "sourceTurns": [
+                1
+              ]
+            },
+            "evidenceUpdates": [
+              {
+                "contextTurn": null,
+                "operation": "add",
+                "field": "claim",
+                "value": "Fixed tab order around the filter controls on the dashboard.",
+                "state": "student_claim",
+                "sourceTurn": 1,
+                "evidenceType": "test_result",
+                "progressKind": null,
+                "method": null,
+                "observedResult": null,
+                "expectedEvidence": null
+              },
+              {
+                "contextTurn": null,
+                "operation": "add",
+                "field": "claim",
+                "value": "Added a visible focus outline to the Retry button.",
+                "state": "student_claim",
+                "sourceTurn": 1,
+                "evidenceType": "test_result",
+                "progressKind": null,
+                "method": null,
+                "observedResult": null,
+                "expectedEvidence": null
+              },
+              {
+                "contextTurn": null,
+                "operation": "add",
+                "field": "testing",
+                "value": "Manual keyboard-only test in Chrome: exercised tab order around filter controls and focus outline on Retry button.",
+                "state": "executed",
+                "sourceTurn": 1,
+                "evidenceType": "test_result",
+                "progressKind": "completed",
+                "method": "using only the keyboard in Chrome",
+                "observedResult": "Both tab order and Retry focus outline worked.",
+                "expectedEvidence": null
+              },
+              {
+                "contextTurn": null,
+                "operation": "add",
+                "field": "blocker",
+                "value": "Dashboard table still lacks a clear keyboard-friendly horizontal scrolling solution; team undecided between making the scroll area focusable or adding keyboard-accessible scroll controls; neither option implemented yet.",
+                "state": "student_claim",
+                "sourceTurn": 1,
+                "evidenceType": "other",
+                "progressKind": null,
+                "method": null,
+                "observedResult": null,
+                "expectedEvidence": null
+              },
+              {
+                "contextTurn": null,
+                "operation": "add",
+                "field": "next_action",
+                "value": "Before S8, build a small prototype of each option (1) focusable scroll area, and (2) keyboard-accessible scroll controls, so the team can compare them; may request teacher advice on which is more usable.",
+                "state": "planned",
+                "sourceTurn": 1,
+                "evidenceType": null,
+                "progressKind": null,
+                "method": null,
+                "observedResult": null,
+                "expectedEvidence": "Small prototypes of both options for team comparison (e.g., demo or notes describing keyboard interactions)."
+              }
+            ],
+            "uncertainties": [
+              "Which approach will prove more usable for keyboard users: focusable scroll area or keyboard-accessible scroll controls.",
+              "No prototypes or artifacts exist yet to compare the two options."
+            ],
+            "suggestedTeacherQuestions": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "S7-3",
+      "sourceFile": "session-intake-debug-S7-3.json",
+      "sourceSha256": "c3b006568db62856bd1d592988a4d647a415abc685b0bda56624586eb31cc34d",
+      "provenance": "Simulated student inputs; actual exported provider candidates, unchanged.",
+      "conversation": [
+        {
+          "actor": "system",
+          "purpose": "session starting point",
+          "text": "In your last confirmed Intake, your responsibility was “UI design and frontend implementation” and your next action was “”. Start there: what did you actually complete, change, test or discover since then? If the plan changed or nothing progressed, say that directly."
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I haven’t made any progress on the dashboard since the last session. I spent most of the week on another assignment and haven’t reopened the frontend code.\nI haven’t run any new tests or produced any screenshots. The keyboard scrolling issue is still unresolved, and I haven’t discussed the options with the team again.\nI’m not sure what I can realistically finish before S8 yet.",
+          "evidenceChanges": [
+            "claim",
+            "blocker",
+            "next_action"
+          ]
+        },
+        {
+          "actor": "system",
+          "purpose": "small_step",
+          "source": "llm",
+          "text": "Thanks — noted. You reported: no progress on the dashboard since the last session (did not reopen the frontend), no new tests or screenshots, the keyboard-scrolling issue remains unresolved and hasn’t been re-discussed with the team, and you’re unsure what you can finish before S8. Which one small, specific action can you commit to before S8: (A) reopen the frontend and capture one screenshot reproducing the keyboard-scrolling bug, or (B) draft a one-paragraph decision note outlining constraints"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I’ll go with option A. Before S8, I’ll reopen the frontend, try navigating the table using only the keyboard, and capture a screenshot with a short note explaining where scrolling gets stuck.",
+          "evidenceChanges": [
+            "next_action"
+          ]
+        },
+        {
+          "actor": "system",
+          "purpose": "review transition",
+          "source": "llm",
+          "text": "Got it — you chose option A. I’ve recorded your next action and planned evidence: before S8 you will reopen the frontend, navigate the dashboard table using only the keyboard, and capture a screenshot plus a short note explaining where scrolling gets stuck. The reviewer will check the screenshot and note showing the reproduced keyboard-scrolling bug."
+        }
+      ],
+      "record": {
+        "responsibility": {
+          "current": "UI design and frontend implementation",
+          "change_from_previous": "unknown"
+        },
+        "claims": [
+          {
+            "claim_id": "C1",
+            "statement": "No progress on the dashboard since the last session; did not reopen the frontend code this week; spent most of the week on another assignment.",
+            "progress_kind": "advanced",
+            "scope": "UI design and frontend implementation",
+            "completion_percent": null
+          }
+        ],
+        "evidence": [
+          {
+            "evidence_id": "E1",
+            "claim_ids": [
+              "C1"
+            ],
+            "type": "other",
+            "availability": "unknown",
+            "reference": null,
+            "verification_method": null,
+            "not_required_reason": null
+          }
+        ],
+        "testing": [
+          {
+            "test_id": "T1",
+            "claim_ids": [
+              "C1"
+            ],
+            "execution_status": "unknown",
+            "method": null,
+            "observed_result": null,
+            "baseline_or_expected": null
+          }
+        ],
+        "dependencies": [],
+        "blocker": {
+          "status": "active",
+          "description": "Keyboard scrolling issue still unresolved; have not re-discussed options with the team.",
+          "support_requested": null
+        },
+        "next_action": {
+          "action": "Unsure what can be realistically finished before S8.\nReopen frontend, navigate the dashboard table using only the keyboard, capture a screenshot and short note explaining where scrolling gets stuck.",
+          "due_session": "S8",
+          "expected_evidence": "Screenshot and explanatory note to be submitted before S8."
+        }
+      },
+      "events": [
+        {
+          "request": {
+            "sessionNumber": 7,
+            "sessionFocus": "Application Progress + Technical Implementation Report",
+            "conversation": [
+              {
+                "actor": "system",
+                "text": "In your last confirmed Intake, your responsibility was “UI design and frontend implementation” and your next action was “”. Start there: what did you actually complete, change, test or discover since then? If the plan changed or nothing progressed, say that directly."
+              },
+              {
+                "actor": "student",
+                "text": "I haven’t made any progress on the dashboard since the last session. I spent most of the week on another assignment and haven’t reopened the frontend code.\nI haven’t run any new tests or produced any screenshots. The keyboard scrolling issue is still unresolved, and I haven’t discussed the options with the team again.\nI’m not sure what I can realistically finish before S8 yet."
+              }
+            ],
+            "answersSnapshot": {
+              "responsibility": "UI design and frontend implementation",
+              "progress": "",
+              "progressKind": "advanced",
+              "scope": "UI design and frontend implementation",
+              "completionPercent": null,
+              "evidenceType": "other",
+              "evidenceAvailability": "unknown",
+              "evidenceReference": "",
+              "verificationMethod": "",
+              "testingStatus": "unknown",
+              "testingMethod": "",
+              "testingResult": "",
+              "testingBaseline": "",
+              "blockerStatus": "unknown",
+              "blockerDescription": "",
+              "supportRequested": "",
+              "nextAction": "",
+              "dueSession": "S8",
+              "expectedEvidence": ""
+            },
+            "capturedFields": [],
+            "currentEvidence": {}
+          },
+          "rawCandidate": {
+            "assistantMessage": "Thanks — noted. You reported: no progress on the dashboard since the last session (did not reopen the frontend), no new tests or screenshots, the keyboard-scrolling issue remains unresolved and hasn’t been re-discussed with the team, and you’re unsure what you can finish before S8. Which one small, specific action can you commit to before S8: (A) reopen the frontend and capture one screenshot reproducing the keyboard-scrolling bug, or (B) draft a one-paragraph decision note outlining constraints",
+            "route": "small_step",
+            "readyForReview": false,
+            "assessment": {
+              "information": "sparse",
+              "evidenceReadiness": "missing",
+              "verificationReadiness": "unclear",
+              "testingMaturity": "unknown",
+              "actionability": "needs_small_step",
+              "gap": "No recent frontend work, no new tests/screenshots, unresolved keyboard-scrolling blocker, no next-action defined for S8.",
+              "reason": "Student reported no progress and uncertainty about next step; needs a single small actionable commitment.",
+              "sourceTurns": [
+                1
+              ]
+            },
+            "evidenceUpdates": [
+              {
+                "contextTurn": null,
+                "operation": "add",
+                "field": "claim",
+                "value": "No progress on the dashboard since the last session; did not reopen the frontend code this week; spent most of the week on another assignment.",
+                "state": "student_claim",
+                "sourceTurn": 1,
+                "evidenceType": "other",
+                "progressKind": null,
+                "method": null,
+                "observedResult": null,
+                "expectedEvidence": null
+              },
+              {
+                "contextTurn": null,
+                "operation": "add",
+                "field": "testing",
+                "value": "No new tests run; no new screenshots produced.",
+                "state": "student_claim",
+                "sourceTurn": 1,
+                "evidenceType": "other",
+                "progressKind": "no_progress",
+                "method": null,
+                "observedResult": null,
+                "expectedEvidence": null
+              },
+              {
+                "contextTurn": null,
+                "operation": "add",
+                "field": "blocker",
+                "value": "Keyboard scrolling issue still unresolved; have not re-discussed options with the team.",
+                "state": "student_claim",
+                "sourceTurn": 1,
+                "evidenceType": "other",
+                "progressKind": null,
+                "method": null,
+                "observedResult": null,
+                "expectedEvidence": null
+              },
+              {
+                "contextTurn": null,
+                "operation": "add",
+                "field": "next_action",
+                "value": "Unsure what can be realistically finished before S8.",
+                "state": "student_claim",
+                "sourceTurn": 1,
+                "evidenceType": "other",
+                "progressKind": null,
+                "method": null,
+                "observedResult": null,
+                "expectedEvidence": null
+              }
+            ],
+            "uncertainties": [
+              "Unsure what can be realistically finished before S8",
+              "Unresolved keyboard-scrolling issue and no recent team discussion"
+            ],
+            "suggestedTeacherQuestions": []
+          }
+        },
+        {
+          "request": {
+            "sessionNumber": 7,
+            "sessionFocus": "Application Progress + Technical Implementation Report",
+            "conversation": [
+              {
+                "actor": "system",
+                "text": "In your last confirmed Intake, your responsibility was “UI design and frontend implementation” and your next action was “”. Start there: what did you actually complete, change, test or discover since then? If the plan changed or nothing progressed, say that directly."
+              },
+              {
+                "actor": "student",
+                "text": "I haven’t made any progress on the dashboard since the last session. I spent most of the week on another assignment and haven’t reopened the frontend code.\nI haven’t run any new tests or produced any screenshots. The keyboard scrolling issue is still unresolved, and I haven’t discussed the options with the team again.\nI’m not sure what I can realistically finish before S8 yet."
+              },
+              {
+                "actor": "system",
+                "text": "Thanks — noted. You reported: no progress on the dashboard since the last session (did not reopen the frontend), no new tests or screenshots, the keyboard-scrolling issue remains unresolved and hasn’t been re-discussed with the team, and you’re unsure what you can finish before S8. Which one small, specific action can you commit to before S8: (A) reopen the frontend and capture one screenshot reproducing the keyboard-scrolling bug, or (B) draft a one-paragraph decision note outlining constraints"
+              },
+              {
+                "actor": "student",
+                "text": "I’ll go with option A. Before S8, I’ll reopen the frontend, try navigating the table using only the keyboard, and capture a screenshot with a short note explaining where scrolling gets stuck."
+              }
+            ],
+            "answersSnapshot": {
+              "responsibility": "UI design and frontend implementation",
+              "progress": "No progress on the dashboard since the last session; did not reopen the frontend code this week; spent most of the week on another assignment.",
+              "progressKind": "advanced",
+              "scope": "UI design and frontend implementation",
+              "completionPercent": null,
+              "evidenceType": "other",
+              "evidenceAvailability": "unknown",
+              "evidenceReference": "",
+              "verificationMethod": "",
+              "testingStatus": "unknown",
+              "testingMethod": "",
+              "testingResult": "",
+              "testingBaseline": "",
+              "blockerStatus": "active",
+              "blockerDescription": "Keyboard scrolling issue still unresolved; have not re-discussed options with the team.",
+              "supportRequested": "",
+              "nextAction": "Unsure what can be realistically finished before S8.",
+              "dueSession": "S8",
+              "expectedEvidence": ""
+            },
+            "capturedFields": [
+              "claim",
+              "blocker",
+              "next_action"
+            ],
+            "currentEvidence": {
+              "progress": "No progress on the dashboard since the last session; did not reopen the frontend code this week; spent most of the week on another assignment.",
+              "progressKind": "advanced",
+              "completionPercent": null,
+              "blockerStatus": "active",
+              "blockerDescription": "Keyboard scrolling issue still unresolved; have not re-discussed options with the team.",
+              "supportRequested": "",
+              "nextAction": "Unsure what can be realistically finished before S8.",
+              "dueSession": "S8",
+              "expectedEvidence": ""
+            }
+          },
+          "rawCandidate": {
+            "assistantMessage": "Got it — you chose option A. I’ve recorded your next action and planned evidence: before S8 you will reopen the frontend, navigate the dashboard table using only the keyboard, and capture a screenshot plus a short note explaining where scrolling gets stuck. The reviewer will check the screenshot and note showing the reproduced keyboard-scrolling bug.",
+            "route": "review",
+            "readyForReview": true,
+            "assessment": {
+              "information": "focused",
+              "evidenceReadiness": "identified",
+              "verificationReadiness": "unknown",
+              "testingMaturity": "planned",
+              "actionability": "clear",
+              "gap": "No screenshot or test result exists yet; frontend is currently closed.",
+              "reason": "Student committed to reopen frontend and capture a screenshot + note before S8.",
+              "sourceTurns": [
+                3
+              ]
+            },
+            "evidenceUpdates": [
+              {
+                "contextTurn": 2,
+                "operation": "add",
+                "field": "evidence",
+                "value": "Will capture a screenshot reproducing the keyboard-scrolling bug and include a short explanatory note describing where scrolling gets stuck (after reopening the frontend and navigating the table with keyboard).",
+                "state": "planned",
+                "sourceTurn": 3,
+                "evidenceType": "design_artifact",
+                "progressKind": "no_progress",
+                "method": null,
+                "observedResult": null,
+                "expectedEvidence": "Image file (screenshot) and a short text note with reproduction steps and where scrolling stops."
+              },
+              {
+                "contextTurn": 2,
+                "operation": "add",
+                "field": "testing",
+                "value": "Manual keyboard navigation test: reopen frontend, navigate the dashboard table using only keyboard (tab/arrow), observe scrolling behavior, and capture a screenshot where scrolling gets stuck.",
+                "state": "planned",
+                "sourceTurn": 3,
+                "evidenceType": "test_result",
+                "progressKind": "no_progress",
+                "method": "manual keyboard navigation and screenshot capture",
+                "observedResult": null,
+                "expectedEvidence": "Test observation notes and screenshot showing the stuck scrolling location."
+              },
+              {
+                "contextTurn": 2,
+                "operation": "add",
+                "field": "next_action",
+                "value": "Reopen frontend, navigate the dashboard table using only the keyboard, capture a screenshot and short note explaining where scrolling gets stuck.",
+                "state": "planned",
+                "sourceTurn": 3,
+                "evidenceType": "design_artifact",
+                "progressKind": "no_progress",
+                "method": null,
+                "observedResult": null,
+                "expectedEvidence": "Screenshot and explanatory note to be submitted before S8."
+              }
+            ],
+            "uncertainties": [],
+            "suggestedTeacherQuestions": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "S7-4",
+      "sourceFile": "session-intake-debug-S7-4.json",
+      "sourceSha256": "1a141d46307eefdaa85c08fc3a2e438bd4e392ecb059facf558aa478d8e197ed",
+      "provenance": "Simulated student inputs; actual exported provider candidates, unchanged.",
+      "conversation": [
+        {
+          "actor": "system",
+          "purpose": "session starting point",
+          "text": "In your last confirmed Intake, your responsibility was “UI design and frontend implementation” and your next action was “”. Start there: what did you actually complete, change, test or discover since then? If the plan changed or nothing progressed, say that directly."
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I fixed the dashboard filter spacing and checked it in Chrome. It looks okay now, but I haven’t tested keyboard navigation yet.",
+          "evidenceChanges": [
+            "evidence",
+            "testing"
+          ]
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "source": "llm",
+          "text": "Thanks — good progress on the visual fix. Quick question: how could a reviewer confirm this fix — a screenshot, a commit/PR link, or something else?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I can show the fix in a short demo.",
+          "evidenceChanges": [
+            "claim"
+          ]
+        },
+        {
+          "actor": "system",
+          "purpose": "review transition",
+          "source": "llm",
+          "text": "Noted: you fixed the dashboard filter spacing, checked it visually in Chrome, and haven’t tested keyboard navigation yet. You offered a short demo to show the fix; I’ve marked this intake ready for teacher review. The teacher will review the demo showing corrected filter spacing in Chrome and the student’s manual visual check."
+        }
+      ],
+      "record": {
+        "responsibility": {
+          "current": "UI design and frontend implementation",
+          "change_from_previous": "unknown"
+        },
+        "claims": [
+          {
+            "claim_id": "C1",
+            "statement": "Fixed dashboard filter spacing and checked it visually in Chrome",
+            "progress_kind": "completed",
+            "scope": "UI design and frontend implementation",
+            "completion_percent": null
+          }
+        ],
+        "evidence": [
+          {
+            "evidence_id": "E1",
+            "claim_ids": [
+              "C1"
+            ],
+            "type": "test_result",
+            "availability": "available_now",
+            "reference": "Manual visual check in Chrome of dashboard filter spacing (no artifact provided in this message)",
+            "verification_method": null,
+            "not_required_reason": null
+          }
+        ],
+        "testing": [
+          {
+            "test_id": "T1",
+            "claim_ids": [
+              "C1"
+            ],
+            "execution_status": "unknown",
+            "method": null,
+            "observed_result": null,
+            "baseline_or_expected": "Not tested by student: Keyboard navigation for dashboard filters not yet tested"
+          }
+        ],
+        "dependencies": [],
+        "blocker": {
+          "status": "unknown",
+          "description": "",
+          "support_requested": null
+        },
+        "next_action": {
+          "action": "",
+          "due_session": "S8",
+          "expected_evidence": ""
+        }
+      },
+      "events": [
+        {
+          "request": {
+            "sessionNumber": 7,
+            "sessionFocus": "Application Progress + Technical Implementation Report",
+            "conversation": [
+              {
+                "actor": "system",
+                "text": "In your last confirmed Intake, your responsibility was “UI design and frontend implementation” and your next action was “”. Start there: what did you actually complete, change, test or discover since then? If the plan changed or nothing progressed, say that directly."
+              },
+              {
+                "actor": "student",
+                "text": "I fixed the dashboard filter spacing and checked it in Chrome. It looks okay now, but I haven’t tested keyboard navigation yet."
+              }
+            ],
+            "answersSnapshot": {
+              "responsibility": "UI design and frontend implementation",
+              "progress": "",
+              "progressKind": "advanced",
+              "scope": "UI design and frontend implementation",
+              "completionPercent": null,
+              "evidenceType": "other",
+              "evidenceAvailability": "unknown",
+              "evidenceReference": "",
+              "verificationMethod": "",
+              "testingStatus": "unknown",
+              "testingMethod": "",
+              "testingResult": "",
+              "testingBaseline": "",
+              "blockerStatus": "unknown",
+              "blockerDescription": "",
+              "supportRequested": "",
+              "nextAction": "",
+              "dueSession": "S8",
+              "expectedEvidence": ""
+            },
+            "capturedFields": [],
+            "currentEvidence": {}
+          },
+          "rawCandidate": {
+            "assistantMessage": "Thanks — good progress on the visual fix. Quick question: how could a reviewer confirm this fix — a screenshot, a commit/PR link, or something else?",
+            "route": "evidence",
+            "readyForReview": false,
+            "assessment": {
+              "information": "focused",
+              "evidenceReadiness": "identified",
+              "verificationReadiness": "unclear",
+              "testingMaturity": "executed",
+              "actionability": "needs_small_step",
+              "gap": "Keyboard navigation for the dashboard filters has not been tested.",
+              "reason": "You performed a manual visual check in Chrome and reported the spacing looks okay, but did not test keyboard navigation or provide an artifact to verify the change.",
+              "sourceTurns": [
+                1
+              ]
+            },
+            "evidenceUpdates": [
+              {
+                "contextTurn": null,
+                "operation": "add",
+                "field": "claim",
+                "value": "Fixed the dashboard filter spacing",
+                "state": "available",
+                "sourceTurn": 1,
+                "evidenceType": null,
+                "progressKind": "completed",
+                "method": null,
+                "observedResult": null,
+                "expectedEvidence": null
+              },
+              {
+                "contextTurn": null,
+                "operation": "add",
+                "field": "evidence",
+                "value": "Manual visual check in Chrome of dashboard filter spacing (no artifact provided in this message)",
+                "state": "available",
+                "sourceTurn": 1,
+                "evidenceType": "test_result",
+                "progressKind": null,
+                "method": "manual check in Chrome",
+                "observedResult": "Filter spacing looks okay in Chrome",
+                "expectedEvidence": null
+              },
+              {
+                "contextTurn": null,
+                "operation": "add",
+                "field": "testing",
+                "value": "Keyboard navigation for dashboard filters not yet tested",
+                "state": "missing",
+                "sourceTurn": 1,
+                "evidenceType": null,
+                "progressKind": null,
+                "method": null,
+                "observedResult": null,
+                "expectedEvidence": null
+              }
+            ],
+            "uncertainties": [
+              "Whether the spacing fix was committed to the repository or only verified locally",
+              "No screenshot or commit/PR link was provided to confirm the change",
+              "Keyboard navigation and accessibility for the filters remain untested"
+            ],
+            "suggestedTeacherQuestions": []
+          }
+        },
+        {
+          "request": {
+            "sessionNumber": 7,
+            "sessionFocus": "Application Progress + Technical Implementation Report",
+            "conversation": [
+              {
+                "actor": "system",
+                "text": "In your last confirmed Intake, your responsibility was “UI design and frontend implementation” and your next action was “”. Start there: what did you actually complete, change, test or discover since then? If the plan changed or nothing progressed, say that directly."
+              },
+              {
+                "actor": "student",
+                "text": "I fixed the dashboard filter spacing and checked it in Chrome. It looks okay now, but I haven’t tested keyboard navigation yet."
+              },
+              {
+                "actor": "system",
+                "text": "Thanks — good progress on the visual fix. Quick question: how could a reviewer confirm this fix — a screenshot, a commit/PR link, or something else?"
+              },
+              {
+                "actor": "student",
+                "text": "I can show the fix in a short demo."
+              }
+            ],
+            "answersSnapshot": {
+              "responsibility": "UI design and frontend implementation",
+              "progress": "",
+              "progressKind": "advanced",
+              "scope": "UI design and frontend implementation",
+              "completionPercent": null,
+              "evidenceType": "test_result",
+              "evidenceAvailability": "available_now",
+              "evidenceReference": "Manual visual check in Chrome of dashboard filter spacing (no artifact provided in this message)",
+              "verificationMethod": "",
+              "testingStatus": "unknown",
+              "testingMethod": "",
+              "testingResult": "",
+              "testingBaseline": "Not tested by student: Keyboard navigation for dashboard filters not yet tested",
+              "blockerStatus": "unknown",
+              "blockerDescription": "",
+              "supportRequested": "",
+              "nextAction": "",
+              "dueSession": "S8",
+              "expectedEvidence": ""
+            },
+            "capturedFields": [
+              "evidence",
+              "testing"
+            ],
+            "currentEvidence": {
+              "evidenceType": "test_result",
+              "evidenceAvailability": "available_now",
+              "evidenceReference": "Manual visual check in Chrome of dashboard filter spacing (no artifact provided in this message)",
+              "testingStatus": "unknown",
+              "testingMethod": "",
+              "testingResult": "",
+              "testingBaseline": "Not tested by student: Keyboard navigation for dashboard filters not yet tested"
+            }
+          },
+          "rawCandidate": {
+            "assistantMessage": "Noted: you fixed the dashboard filter spacing, checked it visually in Chrome, and haven’t tested keyboard navigation yet. You offered a short demo to show the fix; I’ve marked this intake ready for teacher review. The teacher will review the demo showing corrected filter spacing in Chrome and the student’s manual visual check.",
+            "route": "review",
+            "readyForReview": true,
+            "assessment": {
+              "information": "focused",
+              "evidenceReadiness": "identified",
+              "verificationReadiness": "clear",
+              "testingMaturity": "executed",
+              "actionability": "clear",
+              "gap": "Keyboard navigation for dashboard filters not tested; evidence currently is a live demo (no artifact provided).",
+              "reason": "Student reports fixing spacing and performing a manual visual check in Chrome, and offered a short demo for verification.",
+              "sourceTurns": [
+                0,
+                1
+              ]
+            },
+            "evidenceUpdates": [
+              {
+                "contextTurn": null,
+                "operation": "add",
+                "field": "claim",
+                "value": "Fixed dashboard filter spacing and checked it visually in Chrome",
+                "state": "student_claim",
+                "sourceTurn": 0,
+                "evidenceType": null,
+                "progressKind": "completed",
+                "method": null,
+                "observedResult": "Looks okay now",
+                "expectedEvidence": null
+              },
+              {
+                "contextTurn": null,
+                "operation": "add",
+                "field": "evidence",
+                "value": "Manual visual check in Chrome of dashboard filter spacing (no artifact provided in this message)",
+                "state": "available",
+                "sourceTurn": 0,
+                "evidenceType": "test_result",
+                "progressKind": "completed",
+                "method": "manual visual check in Chrome",
+                "observedResult": "Filter spacing appears corrected",
+                "expectedEvidence": null
+              },
+              {
+                "contextTurn": null,
+                "operation": "add",
+                "field": "testing",
+                "value": "Keyboard navigation for dashboard filters not yet tested",
+                "state": "missing",
+                "sourceTurn": 0,
+                "evidenceType": null,
+                "progressKind": "no_progress",
+                "method": null,
+                "observedResult": null,
+                "expectedEvidence": null
+              },
+              {
+                "contextTurn": 2,
+                "operation": "add",
+                "field": "verification_method",
+                "value": "Short demo showing the dashboard filter spacing in Chrome",
+                "state": "available",
+                "sourceTurn": 1,
+                "evidenceType": "live_demonstration",
+                "progressKind": null,
+                "method": null,
+                "observedResult": null,
+                "expectedEvidence": "Short demo showing corrected filter spacing in Chrome"
+              }
+            ],
+            "uncertainties": [
+              "Keyboard navigation for dashboard filters not tested",
+              "Visual check was not recorded as a screenshot or commit in this message (evidence is a demo offer)"
+            ],
+            "suggestedTeacherQuestions": []
+          }
+        }
+      ]
+    }
+  ]
+}
