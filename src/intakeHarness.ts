@@ -1,10 +1,10 @@
 import { applyEvidenceUpdates, questionCount, MAX_INTAKE_QUESTIONS, type ChatSource, type EvidenceUpdate } from './intakePolicy.js';
 import type { DeterministicIntakeAnswers } from './aiSessionIntake.js';
 
-export const INTAKE_PARSER_VERSION = 'intake-parser.v1.1.0';
+export const INTAKE_PARSER_VERSION = 'intake-parser.v1.2.0';
 export type CandidateManifest = { model: string; promptVersion: string; policyVersion: string; parserVersion: string; evidenceSchemaVersion: string; knowledgeVersion: string; cost: number | null; latencyMs: number; stopReason: string };
 export type IntakeCase = { id: string; provenance: string; conversation: ChatSource[]; candidate?: unknown; expected?: Record<string, unknown> };
-export type FieldDecision = { index: number; field: string; outcome: 'accepted'|'repaired'|'rejected'; reason: string; originalSourceTurn: unknown; sourceTurn?: number; candidate: unknown };
+export type FieldDecision = { index: number; field: string; outcome: 'accepted'|'repaired'|'rejected'; reason: string; originalSourceTurn: unknown; sourceTurn?: number; candidate: unknown; observations?: string[]; appliedCandidate?: EvidenceUpdate; transformations?: string[]; recordBefore?: Record<string,unknown>; recordAfter?: Record<string,unknown> };
 export type TrialTrace = { caseId: string; manifest: CandidateManifest; conversation: ChatSource[]; rawCandidate: unknown; decisions: FieldDecision[]; route: string; extractionPending: boolean };
 export type GradeResult = { caseId: string; gate: string; passed: boolean; detail: string };
 
@@ -37,19 +37,8 @@ function unsupportedArtifact(candidate: EvidenceUpdate, source: string): string 
   return null;
 }
 
-// Phase C follow-up, Failure 2 (specificity): a candidate can be correctly
-// grounded in a student turn yet still DECORATE the recorded text with
-// specificity the student never stated — an illustrative HTTP status
-// ("API error (e.g., 500) not tested") or a model paraphrase of the method
-// ("throttled network" for the student's "slow connection"). We must record
-// only student-supported detail WITHOUT dropping the supported content. These
-// helpers are general (token/number driven against the sourced student turn),
-// not an S9 phrase replacement.
-const SANITISE_STOP = new Set(['that','this','with','from','have','will','next','session','about','done','added','test','tested','completed']);
-// Generic method/verification scaffolding is kept even if the student did not say
-// it verbatim: it asserts no undisclosed fact (e.g. "manual functional test").
-const METHOD_SCAFFOLD = new Set(['manual','functional','test','testing','check','checked','verify','verified','verification','method','procedure','ran','run','observed','observation']);
-const sanitiseTokens = (s: string) => (s.toLowerCase().match(/[a-z0-9]+/g) || []).filter(t => t.length >= 4 && !SANITISE_STOP.has(t));
+// Retained legacy numeric-decoration guard. Other semantic wording is observed,
+// not stripped token by token; student confirmation remains the review boundary.
 const tidy = (s: string) => s.replace(/\s+/g, ' ').replace(/\(\s*\)/g, '').replace(/\s+([.,;:)])/g, '$1').replace(/\(\s+/g, '(').trim();
 // Remove an unsupported BARE, free-standing number the student did not state,
 // plus any now-empty "(e.g., N)" / "(N)" wrapper or dangling "e.g." fragment.
@@ -70,43 +59,8 @@ function stripUnsupportedNumbers(text: string, source: string): string {
   out = out.replace(new RegExp(SENT, 'g'), '');
   return tidy(out);
 }
-// Remove significant (>=4 char, non-stop, non-scaffold) tokens that the sourced
-// student turn does not support; keep short words, stopwords and scaffolding.
-function stripUnsupportedSignificant(text: string, source: string): string {
-  const supported = new Set(sanitiseTokens(source));
-  return tidy(text.split(/(\s+)/).map(tok => {
-    const w = tok.toLowerCase().replace(/[^a-z0-9]/g, '');
-    if (w.length >= 4 && !SANITISE_STOP.has(w) && !METHOD_SCAFFOLD.has(w) && !supported.has(w)) return '';
-    return tok;
-  }).join(''));
-}
-// The student's own grounded descriptive clause (condition under which they
-// observed), used to keep an executed test's method student-faithful instead of
-// a model paraphrase. Returns null when no suitable clause exists.
-function studentGroundedClause(source: string): string | null {
-  const clauses = source.split(/[.,]/).map(c => c.trim()).filter(Boolean);
-  let best: string | null = null, bestScore = 0;
-  for (const c of clauses) {
-    if (!/\b(over|under|when|while|on a|on the|using|via|through)\b/i.test(c)) continue;
-    const score = sanitiseTokens(c).length;
-    if (score > bestScore) { best = c; bestScore = score; }
-  }
-  if (!best) return null;
-  // Drop a leading connector so it reads as a condition, keep the student's words.
-  const clause = tidy(best).replace(/^\s*(?:when|while|after|before)\s+i\s+/i, '').replace(/^\s*(?:when|while)\s+/i, '').trim();
-  return clause || null;
-}
-// Sanitise the record-bound free-text of ONE accepted candidate against its
-// sourced student turn. Scope is deliberately narrow to avoid discarding
-// legitimate student paraphrase (e.g. morphological variants "loaded"/"load",
-// or "appeared"/"showed"):
-//   • Unsupported standalone NUMBERS (e.g. an illustrative HTTP status "500" the
-//     student never stated) are stripped from every record-bound field.
-//   • Significant-token stripping is applied ONLY to the testing `method`,
-//     because that field asserts HOW the test was performed; an undisclosed
-//     procedure paraphrase ("throttled network" for "slow connection") must not
-//     be recorded as the student's method. Other free text keeps the model's
-//     wording (a known, reported general limitation — see S8-C_REPORT.md).
+// Numeric decoration is still removed as an explicitly traced legacy action.
+// Method wording is retained; semantic paraphrase is not judged by token deletion.
 function sanitiseAgainstSource(candidate: EvidenceUpdate, source: string): EvidenceUpdate {
   const numClean = (v: string | null | undefined) =>
     typeof v === 'string' && v.trim() ? stripUnsupportedNumbers(v, source) : v ?? null;
@@ -117,16 +71,7 @@ function sanitiseAgainstSource(candidate: EvidenceUpdate, source: string): Evide
     expectedEvidence: numClean(candidate.expectedEvidence),
     method: numClean(candidate.method),
   };
-  if (candidate.field === 'testing' && candidate.state === 'executed') {
-    // Executed tests require a method; never leave it empty or an undisclosed
-    // paraphrase. Strip unsupported significant tokens from the method, keep
-    // generic scaffolding, and append the student's own condition clause so the
-    // recorded method reflects the student's words, not a model synonym.
-    const strippedMethod = out.method ? stripUnsupportedSignificant(out.method, source) : '';
-    const condition = studentGroundedClause(source);
-    const base = strippedMethod.trim() || 'manual test';
-    out.method = condition ? `${base} (${condition})` : base;
-  }
+
   return out;
 }
 function grounded(candidate: EvidenceUpdate, source: string) {
@@ -151,6 +96,7 @@ function grounded(candidate: EvidenceUpdate, source: string) {
 }
 function validShape(u: any): u is EvidenceUpdate {
   return u && fields.has(u.field) && states.has(u.state) && allowedStates[u.field].includes(u.state) && typeof u.value === 'string' && u.value.length <= 1000
+    && (u.operation == null || ['add','replace'].includes(u.operation))
     && (u.value.trim() || ['unknown','missing','none','not_applicable'].includes(u.state))
     && ['evidenceType','progressKind','method','observedResult','expectedEvidence'].every(k => u[k] == null || typeof u[k] === 'string');
 }
@@ -172,23 +118,41 @@ export function validateCandidates(raw: unknown, conversation: ChatSource[], cur
     if (u.field === 'testing' && u.state !== 'executed' && u.observedResult?.trim()) return reject('unexecuted_test_has_observation');
     if (u.field === 'evidence' && u.state === 'available' && !u.evidenceType) return reject('evidence_type_missing');
     let source = u.sourceTurn;
+    const contextual=u.contextTurn!=null;
+    if(contextual && (!['next_action','verification_method'].includes(u.field) || !Number.isInteger(u.contextTurn) || u.contextTurn!==source-1 || conversation[u.contextTurn!]?.actor!=='system' || conversation[source]?.actor!=='student' || !grounded(u,conversation[u.contextTurn!].text)))return reject('invalid_acceptance_context');
+    const sourceText=(i:number)=>conversation[i].text+(contextual?' '+conversation[u.contextTurn!].text:'');
     let outcome: 'accepted'|'repaired' = 'accepted';
-    if (!Number.isInteger(source) || conversation[source]?.actor !== 'student' || !grounded(u,conversation[source].text)) {
+    if (!Number.isInteger(source) || conversation[source]?.actor !== 'student' || !grounded(u,sourceText(source))) {
       if (options.sourcePolicy === 'strict_pointer') return reject('source_pointer_invalid_strict_policy');
       const matches = conversation.flatMap((turn,i) => turn.actor === 'student' && grounded(u,turn.text) ? [i] : []);
       if (matches.length !== 1) return reject('student_source_not_uniquely_grounded');
       source = matches[0]; outcome = 'repaired';
     }
-    if ((u.field === 'next_action' || (u.field === 'testing' && u.state === 'planned')) && !/\b(will|plan|planning|intend|going to|next session|before (?:the )?next)\b/i.test(conversation[source].text)) return reject('future_action_not_student_accepted');
-    const unsupported = unsupportedArtifact(u, conversation[source].text);
+    const observations:string[]=[];
+    if(contextual)observations.push('contextual_acceptance_model_inferred');
+    if(u.field==='testing' && u.method){
+      const sourceTokens=significant(conversation[source].text);
+      if([...significant(u.method)].some(t=>!sourceTokens.has(t)))observations.push('method_wording_differs_from_source');
+    }
+    if ((u.field === 'next_action' || (u.field === 'testing' && u.state === 'planned')) && !/\b(will|plan|planning|intend|going to|next session|before (?:the )?next)\b/i.test(conversation[source].text)) observations.push('future_action_commitment_uncertain');
+    const unsupported = unsupportedArtifact(u, sourceText(source));
     if (unsupported) return reject('student_source_not_semantically_supported');
     // Strip unsupported specificity (illustrative numbers, model method
     // paraphrase) from the record-bound text while preserving supported content.
-    const candidate = sanitiseAgainstSource({...u,sourceTurn:source}, conversation[source].text);
+    const candidate = sanitiseAgainstSource({...u,sourceTurn:source}, sourceText(source));
+    const keys: Record<string,string[]> = {
+      responsibility:['responsibility'],claim:['progress','progressKind'],scope:['scope'],
+      evidence:['evidenceType','evidenceAvailability','evidenceReference'],verification_method:['verificationMethod'],
+      testing:['testingStatus','testingMethod','testingResult','testingBaseline'],
+      blocker:['blockerStatus','blockerDescription','supportRequested'],next_action:['nextAction','expectedEvidence']
+    };
+    const snapshot = (a: DeterministicIntakeAnswers) => Object.fromEntries(keys[u.field].map(k=>[k,(a as any)[k]]));
+    const recordBefore=snapshot(next);
+    const transformations=['value','method','observedResult','expectedEvidence'].filter(k=>(u as any)[k] !== (candidate as any)[k]);
     try { next = applyEvidenceUpdates(next,[candidate],conversation); }
-    catch { return reject('evidence_application_failed'); }
+    catch(error) { return reject(error instanceof Error&&error.message==='record_capacity_exceeded'?'record_capacity_exceeded':'evidence_application_failed'); }
     accepted.push(candidate);
-    decisions.push({...base,outcome,reason:outcome === 'repaired'?'source_relocated_to_unique_student_turn':'student_source_valid',sourceTurn:source});
+    decisions.push({...base,outcome,reason:outcome === 'repaired'?'source_relocated_to_unique_student_turn':'student_source_valid',sourceTurn:source,observations,appliedCandidate:candidate,transformations,recordBefore,recordAfter:snapshot(next)});
   });
   return {answers:next,accepted,decisions,extractionPending:!accepted.length};
 }
@@ -222,16 +186,11 @@ function messageAccepted(raw: unknown, policy: MessagePolicy): string | null {
 export function decideTurn(candidate: any, conversation: ChatSource[], current: DeterministicIntakeAnswers, options: ReplayOptions = {}) {
   const extracted = validateCandidates(candidate?.evidenceUpdates,conversation,current,options);
   const message = messageAccepted(candidate?.assistantMessage, options.messagePolicy ?? 'current');
-  const currentReply=conversation.at(-1)?.text || '';
-  const action = extracted.accepted.some(u => u.field === 'next_action' && u.state === 'planned' && u.sourceTurn === conversation.length-1)
-    || Boolean(current.nextAction && /\b(?:i\s+)?will do (?:it|that) next session\b/i.test(currentReply));
-  const established = Boolean(extracted.answers.progress && extracted.answers.evidenceReference && extracted.answers.verificationMethod && extracted.answers.nextAction);
-  const teacher = extracted.accepted.some(u => u.field === 'blocker' && u.state === 'needs_teacher') || /\bteacher\b.{0,30}\bhelp\b/i.test(conversation.at(-1)?.text || '');
   const limit = questionCount(conversation) >= MAX_INTAKE_QUESTIONS;
   const modelReview = candidate?.readyForReview === true || candidate?.route === "review";
-  const review = limit || teacher || modelReview || (action && established);
-  const route = review ? 'review' : candidate?.route === 'small_step' ? 'small_step' : 'continue';
-  const routeReason = teacher ? 'student_requested_teacher_help' : limit ? 'question_limit_reached' : action && established ? 'accepted_next_action_and_evidence_ready' : modelReview ? 'model_ready_for_review' : candidate?.route === 'small_step' ? 'model_small_step_proposal' : 'continue_collecting';
+  const review = limit || modelReview;
+  const route = review ? 'review' : candidate?.route === 'small_step' ? 'small_step' : candidate?.route === 'teacher_help' ? 'teacher_help' : 'continue';
+  const routeReason = limit ? 'question_limit_reached' : modelReview ? 'model_ready_for_review' : candidate?.route === 'teacher_help' ? 'model_teacher_help' : candidate?.route === 'small_step' ? 'model_small_step_proposal' : 'continue_collecting';
   // safeMessage() already rejects the actually dangerous content (the model
   // claiming to grade/verify/accuse the student), so a punctuation shape
   // check on top of that (must contain "?") is redundant and too strict: a
@@ -239,9 +198,9 @@ export function decideTurn(candidate: any, conversation: ChatSource[], current: 
   // abc123 and the follow-up fix." has no "?" at all and was still being
   // discarded for the same static fallback question. Any safe, non-empty
   // message from the model is used as-is.
-  const assistantMessage = review
-    ? teacher ? 'Review your request for Teacher help and the evidence captured so far before confirming.' : 'Review what you completed, what you observed, and what is planned for the next Session before confirming.'
-    : message || fallbackQuestion(extracted.answers,conversation);
+  const assistantMessage = limit
+    ? 'We have reached the check-in round limit. Review what you shared; you can correct or leave optional details blank before saving.'
+    : message || (review ? 'Review what you shared before confirming.' : fallbackQuestion(extracted.answers,conversation));
   return {...extracted,route,routeDecision:{proposed:String(candidate?.route ?? 'unspecified'),final:route,reason:routeReason},readyForReview:review,assistantMessage,level:extracted.accepted.length ? extracted.decisions.some(d=>d.outcome==='rejected')?'L1':'L0' : message?'L2':'L3'};
 }
 export function fallbackQuestion(answers: DeterministicIntakeAnswers, conversation: ChatSource[]) {

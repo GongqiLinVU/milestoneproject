@@ -171,14 +171,15 @@ test('Phase C follow-up: unsupported "500" is absent from the accumulated and fi
   assert.doesNotMatch(conversation[1].text, /\b500\b/);
 });
 
-test('Phase C follow-up: "slow connection" does not become an asserted throttling procedure', () => {
+test('Phase C follow-up: method paraphrase is retained with an observation instead of destructive word stripping', () => {
   const { conversation, answers, candidate } = turn(0);
   const d = decideTurn(candidate, conversation, answers);
   const record = buildFallbackStudentRecord(d.answers, {}, false);
-  // The recorded method must not assert the model paraphrase "throttled network".
-  assert.doesNotMatch(record.testing[0].method, /throttl/i);
-  // It must reflect the student's own disclosed condition.
-  assert.match(record.testing[0].method, /slow connection/i);
+  // The model paraphrase remains visible for student review; uncertainty is observed.
+  assert.match(record.testing[0].method, /throttl/i);
+  assert.ok(d.decisions.some(x=>x.observations?.includes('method_wording_differs_from_source')));
+  // No token-based method rewrite occurs. The original student text remains in the trace.
+  assert.equal(record.testing[0].method,candidate.evidenceUpdates.find(u=>u.field==='testing'&&u.state==='executed').method);
   // The student used "slow connection", never "throttl*".
   assert.match(conversation[1].text, /slow\s+connection/i);
   assert.doesNotMatch(conversation[1].text, /throttl/i);

@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "test:build": "tsc --outDir .test-build --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck src/intakePolicy.ts src/intakeHarness.ts src/aiSessionIntake.ts src/intakeExitGuard.ts && tsc --outDir .test-api --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck api/session-intake-ai.ts",
+    "test:build": "tsc --outDir .test-build --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck src/intakeObservations.ts src/intakePolicy.ts src/intakeHarness.ts src/aiSessionIntake.ts src/intakeExitGuard.ts && tsc --outDir .test-api --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck api/session-intake-ai.ts",
     "test:intake": "npm run test:build && node --test tests/ai-session-intake/adaptive/*.test.mjs",
     "test": "npm run test:intake",
     "seed:local": "node scripts/seed-local-testdata.mjs",

@@ -38,24 +38,24 @@ test('continuing chat that ends in a provider failure preserves prior evidence a
   assert.equal(final.answers.blockerStatus, 'active');
 });
 
-test('quick accepted-close reaches review via accepted_next_action_and_evidence_ready well under budget', () => {
+test('quick accepted-close reaches review via the model decision well under budget', () => {
   const c = byId('quick-accepted-close');
   const results = replay(c);
   assert.equal(results[0].route, c.expected.turn1Route);
   const final = results.at(-1);
   assert.equal(final.route, c.expected.finalRoute);
-  assert.equal(final.routeDecision.reason, c.expected.finalReason);
+  assert.equal(final.routeDecision.reason, 'model_ready_for_review');
   assert.equal(final.answers.evidenceReference, 'commit def456');
   assert.equal(final.answers.nextAction, 'Add a regression test for the pagination fix');
 });
 
-test('a mid-conversation Teacher-help request closes to review even with evidence still missing', () => {
+test('a mid-conversation model-ready Teacher-help request closes to review even with evidence still missing', () => {
   const c = byId('teacher-help-escalation-mid-conversation');
   const results = replay(c);
   assert.equal(results[0].route, c.expected.turn1Route);
   const final = results.at(-1);
   assert.equal(final.route, c.expected.finalRoute);
-  assert.equal(final.routeDecision.reason, c.expected.finalReason);
+  assert.equal(final.routeDecision.reason, 'model_ready_for_review');
   // Evidence/verification/next-action were never established, yet Teacher-help
   // still forces review on its own.
   assert.equal(final.answers.evidenceReference, '');
@@ -67,7 +67,7 @@ test('eight ungrounded question/answer pairs exhaust the budget and force review
   const results = replay(c);
   const final = results.at(-1);
   assert.equal(final.route, c.expected.finalRoute);
-  assert.equal(final.routeDecision.reason, c.expected.finalReason);
+  assert.equal(final.routeDecision.reason, 'question_limit_reached');
   // review=true uses decideTurn's own review copy, not the deterministic fallbackQuestion.
-  assert.match(final.assistantMessage, /Review what you completed/);
+  assert.match(final.assistantMessage, /round limit/);
 });
