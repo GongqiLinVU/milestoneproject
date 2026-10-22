@@ -58,13 +58,13 @@ export function IntakeHarnessViewer({ events, onClose, onDownload }: { events: E
   const candidate = response?.rawCandidate as {assistantMessage?: string; route?: string} | undefined;
   const conversation = request?.conversation as ChatSource[] | undefined;
   const snapshot = request?.answersSnapshot as DeterministicIntakeAnswers | undefined;
-  const replayable = Boolean(candidate && Array.isArray(conversation) && snapshot);
+  const replayable = Boolean(event?.mode!=='chat' && candidate && Array.isArray(conversation) && snapshot);
   const varied = sourcePolicy !== 'repair_unique' || messagePolicy !== 'current';
   const counterfactual = varied && replayable ? decideTurn(candidate, conversation!, snapshot!, { sourcePolicy, messagePolicy }) : null;
   const altLabel = [sourcePolicy !== 'repair_unique' ? sourcePolicy : null, messagePolicy !== 'current' ? messagePolicy : null].filter(Boolean).join(' + ') || 'alternative policy';
   const productionRoute = (response?.routeDecision as RouteDecision | undefined) || {};
   const productionMessage = String((response?.result as {assistantMessage?: string} | undefined)?.assistantMessage || '');
-  const productionFallback = conversation && snapshot ? fallbackQuestion(snapshot, conversation) : '';
+  const productionFallback = event?.mode!=='chat' && conversation && snapshot ? fallbackQuestion(snapshot, conversation) : '';
   // A provider failure (see api/session-intake-ai.ts's two fallback branches) never reaches decideTurn:
   // there is no rawCandidate and routeDecision carries only uiFinal/uiReason, not proposed/final/reason.
   // Without calling this out explicitly the diagram looks like normal control flow ran and nothing fired.
@@ -92,7 +92,7 @@ export function IntakeHarnessViewer({ events, onClose, onDownload }: { events: E
       <div className="harness-policy-bar">
         <label>Source-pointer policy <select value={sourcePolicy} onChange={e => setSourcePolicy(e.target.value as SourcePolicy)} disabled={!replayable}><option value="repair_unique">repair_unique (deployed)</option><option value="strict_pointer">strict_pointer</option></select></label>
         <label>Message-safety policy <select value={messagePolicy} onChange={e => setMessagePolicy(e.target.value as MessagePolicy)} disabled={!replayable}><option value="current">current (deployed)</option><option value="legacy_v1">legacy_v1 (pre-fix guardrail)</option><option value="none">none (no guardrail)</option></select></label>
-        {!replayable && <p>This event lacks the model candidate or input snapshot needed for deterministic replay.</p>}
+        {event?.mode==='chat'?<p>Conversation task: no evidence extraction is requested here. Final record extraction runs separately at review.</p>:!replayable&&<p>This event lacks the model candidate or input snapshot needed for deterministic replay.</p>}
       </div>
       {event && <div className="harness-flow">
         <FlowNode tone="neutral" title="1 · Student input" detail={<div className="flow-conversation">{conversation?.map((t, i) => <p key={i} className={t.actor}><b>{t.actor}</b> {t.text}</p>) || 'No conversation recorded.'}</div>}>
@@ -100,9 +100,9 @@ export function IntakeHarnessViewer({ events, onClose, onDownload }: { events: E
         </FlowNode>
         <FlowArrow/>
 
-        <FlowNode tone={providerFailed ? 'rejected' : 'info'} title="2 · Model candidate" badge={providerFailed ? 'provider failed' : String(response?.model || 'not captured')} detail={<pre>{JSON.stringify(candidate ?? {providerFailure}, null, 2)}</pre>}>
+        <FlowNode tone={providerFailed ? 'rejected' : 'info'} title="2 · Model candidate" badge={providerFailed ? 'provider failed' : String(response?.model || 'not captured')} detail={<pre>{JSON.stringify(candidate ?? {providerFailure,diagnostics:response?.diagnostics,reason:response?.reason}, null, 2)}</pre>}>
           {providerFailed
-            ? <p>Provider failed: {providerFailure}. No candidate was returned — this turn never reached the evidence/route decision below; it went straight to the deterministic fallback question.</p>
+            ? <p>Provider failed: {providerFailure}. No candidate was returned — this turn never reached the evidence/route decision below; the answer is preserved and the failed task can be retried.</p>
             : <><p>{candidate?.assistantMessage || 'No candidate retained'}</p><small>Proposed route: {candidate?.route || 'not captured'}</small></>}
         </FlowNode>
         <FlowArrow/>
@@ -125,7 +125,7 @@ export function IntakeHarnessViewer({ events, onClose, onDownload }: { events: E
 
         <FlowNode tone={providerFailed ? 'rejected' : 'active'} title="4 · Route decision" detail={<div><p>Production: {JSON.stringify(productionRoute)}</p>{counterfactual && <p>{altLabel}: {JSON.stringify(counterfactual.routeDecision)}</p>}</div>}>
           {providerFailed
-            ? <p>No route condition was evaluated — the provider call failed before <code>decideTurn</code> ran, so this turn was routed directly to <b>{String((response?.result as {route?: string} | undefined)?.route || productionRoute.uiFinal || 'provider_fallback_continue')}</b> without checking Teacher-help, budget, or acceptance conditions.</p>
+            ? <p>The request failed before a usable result was delivered. No new question or completed round is created; the draft or accepted transcript is preserved for retry.</p>
             : <ul className="flow-condition-list">
                 {ROUTE_CONDITIONS.map(c => <li key={c.reason} className={productionRoute.reason === c.reason ? 'fired' : ''}>{c.label}</li>)}
               </ul>}

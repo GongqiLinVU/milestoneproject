@@ -7,7 +7,7 @@ process.env.SUPABASE_URL='https://mock.invalid';process.env.SUPABASE_SERVICE_ROL
 const turns=Array.from({length:8},(_,i)=>[{actor:'system',purpose:'clarification',text:`Question ${i}`},{actor:'student',purpose:'student response',text:`Answer ${i}`}]).flat();
 const result={assistantMessage:'What else?',route:'clarification',readyForReview:false,evidenceUpdates:[],assessment:{sourceTurns:[15]},uncertainties:[],suggestedTeacherQuestions:[]};
 const recorded=JSON.parse(readFileSync(new URL('./recorded-cases.json',import.meta.url),'utf8')).cases;
-async function run(conversation,modelResult=result,failed=false,blockCode='2B2',intakeMode='ai',override=null,usageState=null,reportedLabel='actual-model'){
+async function run(conversation,modelResult=result,failed=false,blockCode='2B2',intakeMode='ai',override=null,usageState=null,reportedLabel='actual-model',mode='turn',providerStatus='completed'){
  let sent;let settlementRequest;let providerCalls=0;const original=globalThis.fetch;
  globalThis.fetch=async(url,options)=>{
   const path=String(url);
@@ -15,7 +15,7 @@ async function run(conversation,modelResult=result,failed=false,blockCode='2B2',
   if(path.includes('reserve_session_intake_ai_attempt')){if(usageState&&usageState.calls>=usageState.limit)return new Response(JSON.stringify({message:usageState.reason||'Session AI attempt limit reached',code:'P0001'}),{status:400});if(usageState)usageState.calls++;value={attemptId:'mock-attempt',reservedUsd:0.1};}
   else if(path.includes('/session_intake_ai_usage')){if(usageState?.insertFailed)return new Response(JSON.stringify({message:'offline'}),{status:503});if(usageState)usageState.inserts=(usageState.inserts||0)+1;value={id:'advisory-attempt'};}
   else if(path.includes('finish_session_intake_ai_attempt')){if(usageState?.settlementFailed)return new Response(JSON.stringify({message:'offline'}),{status:503});settlementRequest=JSON.parse(options.body);value=usageState?.reconciliationRequired?{costUsd:null,chargedUsd:0.1,status:'uncertain',reconciliationRequired:true}:{costUsd:0.001,chargedUsd:0.001,status:'settled'};}
-  else if(path.includes('openai.com')){providerCalls++;sent=JSON.parse(options.body);if(failed)throw Error('offline');return new Response(JSON.stringify({status:'completed',model:reportedLabel,usage:{input_tokens:100,output_tokens:50},output_text:JSON.stringify(modelResult)}),{status:200,headers:{'content-type':'application/json'}})}
+  else if(path.includes('openai.com')){providerCalls++;sent=JSON.parse(options.body);if(failed)throw Error('offline');return new Response(JSON.stringify({status:providerStatus,incomplete_details:providerStatus==='incomplete'?{reason:'max_output_tokens'}:null,model:reportedLabel,usage:{input_tokens:100,output_tokens:50},output_text:JSON.stringify(modelResult)}),{status:200,headers:{'content-type':'application/json'}})}
   if(path.includes('/auth/'))value={id:'mock-user'};
   else if(path.includes('student_accounts'))value={student_id:'mock-student'};
   else if(path.includes('teaching_blocks'))value={block_code:blockCode,academic_year:2026,status:'active',intake_mode:intakeMode};
@@ -25,7 +25,7 @@ async function run(conversation,modelResult=result,failed=false,blockCode='2B2',
   return new Response(JSON.stringify(value),{status:200,headers:{'content-type':'application/json'}});
  };
  const res={setHeader(){},status(code){this.code=code;return this},json(value){this.body=value;return this}};
- try{await handler({method:'POST',headers:{authorization:'Bearer mock'},body:{mode:'turn',sessionId:'00000000-0000-0000-0000-000000000000',answers:{},conversation}},res);return {res,sent,providerCalls,settlementRequest}}finally{globalThis.fetch=original}
+ try{await handler({method:'POST',headers:{authorization:'Bearer mock'},body:{mode,sessionId:'00000000-0000-0000-0000-000000000000',answers:{},conversation}},res);return {res,sent,providerCalls,settlementRequest}}finally{globalThis.fetch=original}
 }
 test('endpoint sends scoped complete 16-message context and forces review at budget',async()=>{const {res,sent}=await run(turns);assert.equal(res.code,200);const context=JSON.parse(sent.input);assert.equal(context.conversation.length,16);assert.equal(context.conversation[0].text,'Question 0');assert.equal(context.conversation.at(-1).text,'Answer 7');assert.equal(context.sessionContext.scope.academicYear,2026);assert.deepEqual(context.retrievedKnowledge,[]);assert.equal(res.body.result.readyForReview,true);assert.equal(res.body.model,'gpt-5-mini');assert.equal(res.body.reportedModel,'actual-model');assert.equal(res.body.manifest.costBasis,'configured_model_rates');assert.equal(res.body.usage.input_tokens,100)});
 test('recorded first-answer source error is repaired without losing valid fields or dialogue',async()=>{const c=recorded[0];const {res}=await run(c.conversation,c.candidate);assert.equal(res.code,200);assert.equal(res.body.result.assistantMessage,c.candidate.assistantMessage);assert.equal(res.body.result.evidenceUpdates.length,3);assert.equal(res.body.fieldDecisions[1].outcome,'repaired');assert.equal(res.body.fieldDecisions[1].sourceTurn,1)});
@@ -84,3 +84,24 @@ test('primary model is fixed by the request; opaque, missing and non-string retu
 test('provider receives the shared review contract and exports its version',async()=>{const {res,sent}=await run(turns.slice(0,2));assert.equal(res.code,200);assert.equal(res.body.manifest.reviewContractVersion,'intake-review.v2');assert.equal(res.body.manifest.dialogueRevision,'intake-dialogue.v1.5');for(const label of ['Work and progress','Checks and evidence','Difficulties and support','Next step'])assert.ok(sent.instructions.includes(label));assert.ok(sent.instructions.includes('An initial sparse answer should lead to clarification'));});
 
 test('malformed model output retains bounded diagnostic reason and settled usage',async()=>{const {res}=await run(turns.slice(0,2),null);assert.equal(res.code,502);assert.equal(res.body.reason,'turn_schema');assert.equal(res.body.diagnostics.failureStage,'turn_validation');assert.equal(res.body.diagnostics.providerStatus,'completed');assert.ok(res.body.diagnostics.outputCharacters>0);assert.equal(res.body.result,undefined);assert.ok(!JSON.stringify(res.body).includes('OPENAI_API_KEY'));});
+
+const runSplit=(mode,candidate,status='completed')=>run(turns.slice(0,2),candidate,false,'2B2','ai',null,null,'actual-model',mode,status);
+test('lightweight conversation sends only dialogue context and a three-field output schema',async()=>{
+ const {res,sent}=await runSplit('chat',{assistantMessage:'Which feature still needs work?',readyForReview:false,reason:'Concrete work is missing'});
+ assert.equal(res.code,200);assert.equal(res.body.manifest.task,'conversation');assert.deepEqual(sent.text.format.schema.required,['assistantMessage','readyForReview','reason']);assert.ok(sent.instructions.length<3000);assert.equal(sent.reasoning.effort,'low');assert.equal(JSON.parse(sent.input).answers,undefined);assert.equal(JSON.parse(sent.input).conversation[1].turnIndex,1);assert.deepEqual(res.body.result.evidenceUpdates,[]);assert.equal(res.body.extractionPending,false);assert.equal(res.body.result.readyForReview,false);
+});
+test('specific conversation answer may close without extracting or filling fields',async()=>{
+ const {res}=await runSplit('chat',{assistantMessage:'You can now check and confirm your summary.',readyForReview:true,reason:'Work and next direction are clear'});assert.equal(res.code,200);assert.equal(res.body.result.readyForReview,true);assert.equal(res.body.result.route,'review');assert.deepEqual(res.body.result.evidenceUpdates,[]);
+});
+test('final record request uses a separate task and does not require prefilled form answers',async()=>{
+ const c={assistantMessage:'Check your summary.',readyForReview:true,route:'review',evidenceUpdates:[{field:'claim',state:'student_claim',value:'Answer 0',progressKind:'unknown',sourceTurn:1,operation:'add',contextTurn:null}],nextStep:{status:'unknown',action:null,expectedEvidence:null,sourceTurn:1,contextTurn:null,additionalActions:[]}};
+ const {res,sent}=await runSplit('record',c);assert.equal(res.code,200);assert.equal(res.body.manifest.task,'record');assert.equal(res.body.result.evidenceUpdates[0].value,'Answer 0');assert.equal(JSON.parse(sent.input).conversation[1].turnIndex,1);assert.ok(sent.instructions.includes('not the interviewer'));assert.equal(sent.text.format.name,'intake_record');
+});
+test('incomplete split-task response exposes the actual limit cause without partial record or extra model retry',async()=>{
+ const {res,providerCalls}=await runSplit('record',null,'incomplete');assert.equal(res.code,502);assert.equal(providerCalls,1);assert.equal(res.body.reason,'provider_incomplete');assert.equal(res.body.diagnostics.incompleteReason,'max_output_tokens');assert.equal(res.body.diagnostics.task,'record');assert.equal(res.body.diagnostics.maxOutputTokens,6000);assert.equal(res.body.result,undefined);
+});
+test('malformed conversation is a retryable chat error, not a forced review',async()=>{
+ const {res}=await runSplit('chat',{assistantMessage:'Hello',reason:'missing ready flag'});assert.equal(res.code,502);assert.equal(res.body.reason,'conversation_schema');assert.equal(res.body.result,undefined);
+});
+
+test('split conversation still respects the existing maximum round ceiling',async()=>{const {res}=await run(turns,{assistantMessage:'One more detail?',readyForReview:false,reason:'Another gap'},false,'2B2','ai',null,null,'actual-model','chat');assert.equal(res.code,200);assert.equal(res.body.result.readyForReview,true);assert.equal(res.body.routeDecision.reason,'question_limit_reached');});
