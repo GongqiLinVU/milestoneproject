@@ -38,7 +38,7 @@ npm run test:build
 node scripts/evaluate-intake-conversation.mjs --historical
 ```
 
-The new conversation must pass these same cases via actual provider output before production merge. The evaluator caps calls at seven, has no model retries, uses the real small conversation prompt/schema and reports close decisions, word counts, latency and usage. Brevity acceptance allows at most 45 English words (the prompt normally aims below 35); the meaningful close point is the main criterion. It does not claim that a word-count check detects every repetitive or low-value question.
+The new conversation must pass these same cases via actual provider output before production merge. The evaluator caps calls at eight (seven conversation cases plus one final extraction), has no model retries, uses the real small conversation prompt/schema and reports close decisions, word counts, latency and usage. Brevity acceptance allows at most 45 English words (the prompt normally aims below 35); the meaningful close point is the main criterion. It does not claim that a word-count check detects every repetitive or low-value question.
 
 An authorized environment with its own API key can run:
 
@@ -47,7 +47,7 @@ npm run test:build
 INTAKE_CONVERSATION_EVAL_APPROVED=1 node scripts/evaluate-intake-conversation.mjs --live
 ```
 
-Set OPENAI_API_KEY securely in that environment; never paste it into chat or commit it. This execution environment has no API key, so no live calls or quality pass are claimed. The seven-case evaluator is repeatable developer-side validation, not a request for another manual student-chat loop.
+Set OPENAI_API_KEY securely in that environment; never paste it into chat or commit it. This execution environment has no API key, so no live calls or quality pass are claimed. The batch evaluator also checks final extraction of the known booking issue, report/demo/invite plans and absence of invented tests/percentages. These checks do not replace human assessment of all semantic accuracy. It is repeatable developer-side validation, not a request for another manual student-chat loop.
 
 ## Local verification result
 
