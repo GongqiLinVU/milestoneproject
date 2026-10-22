@@ -1,0 +1,2071 @@
+{
+  "conversation": [
+    {
+      "actor": "system",
+      "purpose": "session starting point",
+      "text": "In your last confirmed Intake, your responsibility was “UI design and frontend implementation”. What did you actually complete, change, test or discover since then? If your responsibility changed or nothing progressed, say that directly."
+    },
+    {
+      "actor": "student",
+      "purpose": "student response",
+      "text": "I almost completely code part, and will start final report soon",
+      "evidenceChanges": [
+        "claim",
+        "next_action"
+      ]
+    },
+    {
+      "actor": "system",
+      "purpose": "continue",
+      "source": "llm",
+      "text": "Noted. I recorded that you “almost completely coded” the UI/frontend part and that you will start the final report soon. Quick clarification: which specific UI/frontend parts remain incomplete, and where can the teacher see the current code or screenshots?"
+    },
+    {
+      "actor": "student",
+      "purpose": "student response",
+      "text": "the last part is one API error that for booking confirmation. I can show demo next week",
+      "evidenceChanges": [
+        "claim"
+      ]
+    },
+    {
+      "actor": "system",
+      "purpose": "small_step",
+      "source": "llm",
+      "text": "Thanks — I captured that you almost finished the frontend, the remaining issue is one booking-confirmation API error, and you can show a demo next week. Quick question: which day next week can you show the demo?"
+    },
+    {
+      "actor": "student",
+      "purpose": "student response",
+      "text": "I will show it next Wednesday session",
+      "evidenceChanges": [
+        "claim",
+        "evidence"
+      ]
+    },
+    {
+      "actor": "system",
+      "purpose": "small_step",
+      "source": "llm",
+      "text": "Got it — I recorded: you almost finished the UI/frontend, the remaining issue is one booking-confirmation API error, you can demo it next Wednesday, and you plan to start the final report soon. Quick question: for the Wednesday demo, can you show the booking attempt plus any error messages or logs?"
+    },
+    {
+      "actor": "student",
+      "purpose": "student response",
+      "text": "yes, I will",
+      "evidenceChanges": [
+        "claim",
+        "verification_method"
+      ]
+    },
+    {
+      "actor": "system",
+      "purpose": "review transition",
+      "source": "llm",
+      "text": "Thanks — I captured your update: UI/frontend almost complete, remaining booking-confirmation API error, demo scheduled next Wednesday (you'll show the booking attempt and any error messages/logs), and you'll start the final report soon. Please check the summary below and confirm or correct anything important."
+    }
+  ],
+  "record": {
+    "responsibility": {
+      "current": "UI design and frontend implementation",
+      "change_from_previous": "unknown"
+    },
+    "claims": [
+      {
+        "claim_id": "C1",
+        "statement": "Almost completely coded the UI/frontend part.\nRemaining issue: one API error for booking confirmation.\nAlmost completely coded the UI/frontend part\nRemaining issue: one booking-confirmation API error\nRemaining issue: one booking-confirmation API error.",
+        "progress_kind": "unknown",
+        "scope": "UI design and frontend implementation",
+        "completion_percent": null
+      }
+    ],
+    "evidence": [
+      {
+        "evidence_id": "E1",
+        "claim_ids": [
+          "C1"
+        ],
+        "type": "live_demonstration",
+        "availability": "expected_later",
+        "reference": "Demo scheduled for next Wednesday session",
+        "verification_method": "Show the booking attempt plus any error messages or logs in the Wednesday demo",
+        "not_required_reason": null
+      }
+    ],
+    "testing": [
+      {
+        "test_id": "T1",
+        "claim_ids": [
+          "C1"
+        ],
+        "execution_status": "unknown",
+        "method": null,
+        "observed_result": null,
+        "baseline_or_expected": null
+      }
+    ],
+    "dependencies": [],
+    "blocker": {
+      "status": "unknown",
+      "description": "",
+      "support_requested": null
+    },
+    "next_action": {
+      "action": "Start final report soon",
+      "due_session": "S8",
+      "expected_evidence": ""
+    }
+  },
+  "events": [
+    {
+      "at": "2026-10-22T10:13:32.541Z",
+      "mode": "turn",
+      "request": {
+        "sessionNumber": 7,
+        "sessionFocus": "Application Progress + Technical Implementation Report",
+        "conversation": [
+          {
+            "actor": "system",
+            "text": "In your last confirmed Intake, your responsibility was “UI design and frontend implementation”. What did you actually complete, change, test or discover since then? If your responsibility changed or nothing progressed, say that directly."
+          },
+          {
+            "actor": "student",
+            "text": "I almost completely code part, and will start final report soon"
+          }
+        ],
+        "answersSnapshot": {
+          "responsibility": "UI design and frontend implementation",
+          "progress": "",
+          "progressKind": "advanced",
+          "scope": "UI design and frontend implementation",
+          "completionPercent": null,
+          "evidenceType": "other",
+          "evidenceAvailability": "unknown",
+          "evidenceReference": "",
+          "verificationMethod": "",
+          "testingStatus": "unknown",
+          "testingMethod": "",
+          "testingResult": "",
+          "testingBaseline": "",
+          "blockerStatus": "unknown",
+          "blockerDescription": "",
+          "supportRequested": "",
+          "nextAction": "",
+          "dueSession": "S8",
+          "expectedEvidence": ""
+        },
+        "capturedFields": [],
+        "currentEvidence": {}
+      },
+      "response": {
+        "model": "gpt-5-mini",
+        "reportedModel": "gpt-5-mini-2025-08-07",
+        "configuredModel": "gpt-5-mini",
+        "promptVersion": "session-intake-ai.v1.3.1",
+        "policyVersion": "adaptive-intake.v1.1.0",
+        "parserVersion": "intake-parser.v1.3.0",
+        "manifest": {
+          "model": "gpt-5-mini",
+          "reportedModel": "gpt-5-mini-2025-08-07",
+          "costBasis": "configured_model_rates",
+          "dialogueRevision": "intake-dialogue.v1.4",
+          "reviewContractVersion": "intake-review.v2",
+          "promptVersion": "session-intake-ai.v1.3.1",
+          "policyVersion": "adaptive-intake.v1.1.0",
+          "parserVersion": "intake-parser.v1.3.0",
+          "evidenceSchemaVersion": "session-intake.v1.2.0",
+          "knowledgeVersion": "teacher-approved-kb.none",
+          "cost": 0.0053625,
+          "costComplete": true,
+          "usageAttempts": [
+            {
+              "status": "settled",
+              "costUsd": 0.0053625,
+              "costBasis": "configured_model_rates",
+              "chargedUsd": 0.0053625,
+              "reconciliationRequired": false
+            }
+          ],
+          "usageWarnings": [
+            "financial_limit_observed_not_enforced"
+          ],
+          "latencyMs": 24967,
+          "stopReason": "continue"
+        },
+        "usageWarnings": [
+          "financial_limit_observed_not_enforced"
+        ],
+        "usageAttempts": [
+          {
+            "status": "settled",
+            "costUsd": 0.0053625,
+            "costBasis": "configured_model_rates",
+            "chargedUsd": 0.0053625,
+            "reconciliationRequired": false
+          }
+        ],
+        "usage": {
+          "input_tokens": 3282,
+          "input_tokens_details": {
+            "cache_write_tokens": 0,
+            "cached_tokens": 0
+          },
+          "output_tokens": 2271,
+          "output_tokens_details": {
+            "reasoning_tokens": 1728
+          },
+          "total_tokens": 5553
+        },
+        "latencyMs": 24967,
+        "budget": {
+          "questionsAsked": 1,
+          "maxQuestions": 8,
+          "maxFollowUps": 5
+        },
+        "providerRequestId": "req_ff871279e4704e02a952f281f954350e",
+        "acceptanceLevel": "L1",
+        "extractionPending": false,
+        "rawCandidate": {
+          "assistantMessage": "Noted. I recorded that you “almost completely coded” the UI/frontend part and that you will start the final report soon. Quick clarification: which specific UI/frontend parts remain incomplete, and where can the teacher see the current code or screenshots?",
+          "route": "clarification",
+          "readyForReview": false,
+          "assessment": {
+            "information": "sparse",
+            "evidenceReadiness": "missing",
+            "verificationReadiness": "unclear",
+            "testingMaturity": "unknown",
+            "actionability": "needs_small_step",
+            "gap": "Missing details about which files/features remain, whether code is committed or viewable, and any test results or screenshots.",
+            "reason": "Student statement is vague about what \"almost completely coded\" covers and provided no evidence location.",
+            "sourceTurns": [
+              1
+            ]
+          },
+          "evidenceUpdates": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "value": "Almost completely coded the UI/frontend part.",
+              "operation": "add",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "progressKind": "unknown"
+            },
+            {
+              "field": "evidence",
+              "state": "missing",
+              "value": "Student did not mention any evidence (no repository link, screenshots, or deployed preview provided).",
+              "operation": "add",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "evidenceType": "other"
+            },
+            {
+              "field": "testing",
+              "state": "unknown",
+              "value": "",
+              "operation": "add",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "method": null,
+              "observedResult": null
+            }
+          ],
+          "nextStep": {
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "status": "tentative",
+            "action": "Start final report soon",
+            "expectedEvidence": null
+          },
+          "uncertainties": [
+            "What exactly remains to be coded in the UI/frontend?",
+            "Has the code been committed to a repository or otherwise made viewable?",
+            "Have any tests or manual checks been run on the recently coded parts?"
+          ],
+          "suggestedTeacherQuestions": []
+        },
+        "routeDecision": {
+          "proposed": "clarification",
+          "final": "continue",
+          "reason": "continue_collecting",
+          "uiFinal": "continue",
+          "uiReason": "continue_collecting",
+          "uiAuthority": "backend"
+        },
+        "fieldDecisions": [
+          {
+            "index": 0,
+            "field": "claim",
+            "originalSourceTurn": 1,
+            "candidate": {
+              "field": "claim",
+              "state": "student_claim",
+              "value": "Almost completely coded the UI/frontend part.",
+              "operation": "add",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "progressKind": "unknown"
+            },
+            "outcome": "accepted",
+            "reason": "student_source_valid",
+            "sourceTurn": 1,
+            "observations": [],
+            "appliedCandidate": {
+              "field": "claim",
+              "state": "student_claim",
+              "value": "Almost completely coded the UI/frontend part.",
+              "operation": "add",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "progressKind": "unknown",
+              "observedResult": null,
+              "expectedEvidence": null,
+              "method": null
+            },
+            "transformations": [
+              "method",
+              "observedResult",
+              "expectedEvidence"
+            ],
+            "recordBefore": {
+              "progress": "",
+              "progressKind": "advanced"
+            },
+            "recordAfter": {
+              "progress": "Almost completely coded the UI/frontend part.",
+              "progressKind": "unknown"
+            }
+          },
+          {
+            "index": 1,
+            "field": "evidence",
+            "originalSourceTurn": 1,
+            "candidate": {
+              "field": "evidence",
+              "state": "missing",
+              "value": "Student did not mention any evidence (no repository link, screenshots, or deployed preview provided).",
+              "operation": "add",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "evidenceType": "other"
+            },
+            "outcome": "rejected",
+            "reason": "student_source_not_uniquely_grounded"
+          },
+          {
+            "index": 2,
+            "field": "testing",
+            "originalSourceTurn": 1,
+            "candidate": {
+              "field": "testing",
+              "state": "unknown",
+              "value": "",
+              "operation": "add",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "method": null,
+              "observedResult": null
+            },
+            "outcome": "rejected",
+            "reason": "student_source_not_uniquely_grounded"
+          },
+          {
+            "index": 3,
+            "field": "next_action",
+            "originalSourceTurn": 1,
+            "candidate": {
+              "field": "next_action",
+              "value": "Start final report soon",
+              "state": "planned",
+              "operation": "replace",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "nextActionStatus": "tentative",
+              "expectedEvidence": null,
+              "evidenceType": null,
+              "progressKind": null,
+              "method": null,
+              "observedResult": null
+            },
+            "outcome": "accepted",
+            "reason": "student_source_valid",
+            "sourceTurn": 1,
+            "observations": [],
+            "appliedCandidate": {
+              "field": "next_action",
+              "value": "Start final report soon",
+              "state": "planned",
+              "operation": "replace",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "nextActionStatus": "tentative",
+              "expectedEvidence": null,
+              "evidenceType": null,
+              "progressKind": null,
+              "method": null,
+              "observedResult": null
+            },
+            "transformations": [],
+            "recordBefore": {
+              "nextAction": "",
+              "expectedEvidence": ""
+            },
+            "recordAfter": {
+              "nextAction": "Start final report soon",
+              "expectedEvidence": "",
+              "nextActionStatus": "tentative"
+            }
+          }
+        ],
+        "result": {
+          "assistantMessage": "Noted. I recorded that you “almost completely coded” the UI/frontend part and that you will start the final report soon. Quick clarification: which specific UI/frontend parts remain incomplete, and where can the teacher see the current code or screenshots?",
+          "route": "continue",
+          "readyForReview": false,
+          "assessment": {
+            "information": "sparse",
+            "evidenceReadiness": "missing",
+            "verificationReadiness": "unclear",
+            "testingMaturity": "unknown",
+            "actionability": "needs_small_step",
+            "gap": "Missing details about which files/features remain, whether code is committed or viewable, and any test results or screenshots.",
+            "reason": "Student statement is vague about what \"almost completely coded\" covers and provided no evidence location.",
+            "sourceTurns": [
+              1
+            ]
+          },
+          "evidenceUpdates": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "value": "Almost completely coded the UI/frontend part.",
+              "operation": "add",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "progressKind": "unknown",
+              "observedResult": null,
+              "expectedEvidence": null,
+              "method": null
+            },
+            {
+              "field": "next_action",
+              "value": "Start final report soon",
+              "state": "planned",
+              "operation": "replace",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "nextActionStatus": "tentative",
+              "expectedEvidence": null,
+              "evidenceType": null,
+              "progressKind": null,
+              "method": null,
+              "observedResult": null
+            }
+          ],
+          "nextStep": {
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "status": "tentative",
+            "action": "Start final report soon",
+            "expectedEvidence": null
+          },
+          "uncertainties": [
+            "What exactly remains to be coded in the UI/frontend?",
+            "Has the code been committed to a repository or otherwise made viewable?",
+            "Have any tests or manual checks been run on the recently coded parts?"
+          ],
+          "suggestedTeacherQuestions": [],
+          "consistencyObservations": []
+        }
+      }
+    },
+    {
+      "at": "2026-10-22T10:17:29.062Z",
+      "mode": "turn",
+      "request": {
+        "sessionNumber": 7,
+        "sessionFocus": "Application Progress + Technical Implementation Report",
+        "conversation": [
+          {
+            "actor": "system",
+            "text": "In your last confirmed Intake, your responsibility was “UI design and frontend implementation”. What did you actually complete, change, test or discover since then? If your responsibility changed or nothing progressed, say that directly."
+          },
+          {
+            "actor": "student",
+            "text": "I almost completely code part, and will start final report soon"
+          },
+          {
+            "actor": "system",
+            "text": "Noted. I recorded that you “almost completely coded” the UI/frontend part and that you will start the final report soon. Quick clarification: which specific UI/frontend parts remain incomplete, and where can the teacher see the current code or screenshots?"
+          },
+          {
+            "actor": "student",
+            "text": "the last part is one API error that for booking confirmation. I can show demo next week"
+          }
+        ],
+        "answersSnapshot": {
+          "responsibility": "UI design and frontend implementation",
+          "progress": "Almost completely coded the UI/frontend part.",
+          "progressKind": "unknown",
+          "scope": "UI design and frontend implementation",
+          "completionPercent": null,
+          "evidenceType": "other",
+          "evidenceAvailability": "unknown",
+          "evidenceReference": "",
+          "verificationMethod": "",
+          "testingStatus": "unknown",
+          "testingMethod": "",
+          "testingResult": "",
+          "testingBaseline": "",
+          "blockerStatus": "unknown",
+          "blockerDescription": "",
+          "supportRequested": "",
+          "nextAction": "Start final report soon",
+          "dueSession": "S8",
+          "expectedEvidence": "",
+          "nextActionStatus": "tentative"
+        },
+        "capturedFields": [
+          "claim",
+          "next_action"
+        ],
+        "currentEvidence": {
+          "progress": "Almost completely coded the UI/frontend part.",
+          "progressKind": "unknown",
+          "completionPercent": null,
+          "nextAction": "Start final report soon",
+          "dueSession": "S8",
+          "expectedEvidence": ""
+        }
+      },
+      "response": {
+        "model": "gpt-5-mini",
+        "reportedModel": "gpt-5-mini-2025-08-07",
+        "configuredModel": "gpt-5-mini",
+        "promptVersion": "session-intake-ai.v1.3.1",
+        "policyVersion": "adaptive-intake.v1.1.0",
+        "parserVersion": "intake-parser.v1.3.0",
+        "manifest": {
+          "model": "gpt-5-mini",
+          "reportedModel": "gpt-5-mini-2025-08-07",
+          "costBasis": "configured_model_rates",
+          "dialogueRevision": "intake-dialogue.v1.4",
+          "reviewContractVersion": "intake-review.v2",
+          "promptVersion": "session-intake-ai.v1.3.1",
+          "policyVersion": "adaptive-intake.v1.1.0",
+          "parserVersion": "intake-parser.v1.3.0",
+          "evidenceSchemaVersion": "session-intake.v1.2.0",
+          "knowledgeVersion": "teacher-approved-kb.none",
+          "cost": 0.00722925,
+          "costComplete": true,
+          "usageAttempts": [
+            {
+              "status": "settled",
+              "costUsd": 0.00722925,
+              "costBasis": "configured_model_rates",
+              "chargedUsd": 0.00722925,
+              "reconciliationRequired": false
+            }
+          ],
+          "usageWarnings": [
+            "financial_limit_observed_not_enforced"
+          ],
+          "latencyMs": 27889,
+          "stopReason": "continue"
+        },
+        "usageWarnings": [
+          "financial_limit_observed_not_enforced"
+        ],
+        "usageAttempts": [
+          {
+            "status": "settled",
+            "costUsd": 0.00722925,
+            "costBasis": "configured_model_rates",
+            "chargedUsd": 0.00722925,
+            "reconciliationRequired": false
+          }
+        ],
+        "usage": {
+          "input_tokens": 3381,
+          "input_tokens_details": {
+            "cache_write_tokens": 0,
+            "cached_tokens": 1792
+          },
+          "output_tokens": 3192,
+          "output_tokens_details": {
+            "reasoning_tokens": 2752
+          },
+          "total_tokens": 6573
+        },
+        "latencyMs": 27889,
+        "budget": {
+          "questionsAsked": 2,
+          "maxQuestions": 8,
+          "maxFollowUps": 5
+        },
+        "providerRequestId": "req_4e0ee806e80140c894677c6505e3ce61",
+        "acceptanceLevel": "L1",
+        "extractionPending": false,
+        "rawCandidate": {
+          "assistantMessage": "Thanks — I captured that you almost finished the frontend, the remaining issue is one booking-confirmation API error, and you can show a demo next week. Quick question: which day next week can you show the demo?",
+          "route": "small_step",
+          "readyForReview": false,
+          "assessment": {
+            "information": "focused",
+            "evidenceReadiness": "identified",
+            "verificationReadiness": "unclear",
+            "testingMaturity": "unknown",
+            "actionability": "clear",
+            "gap": "No repository/screenshot location given; unclear whether the booking API error has been diagnosed or fixed; timing for the demo not yet specified.",
+            "reason": "Student mostly completed UI work; one API booking-confirmation error remains and the student offered a live demo next week as evidence; teacher can inspect the demo.",
+            "sourceTurns": [
+              1,
+              5
+            ]
+          },
+          "evidenceUpdates": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "value": "Almost completely coded the UI/frontend part.",
+              "operation": "add",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "progressKind": "unknown"
+            },
+            {
+              "field": "scope",
+              "state": "student_claim",
+              "value": "UI design and frontend implementation",
+              "operation": "add",
+              "sourceTurn": 1,
+              "contextTurn": null
+            },
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "value": "Remaining issue: one API error for booking confirmation.",
+              "operation": "add",
+              "sourceTurn": 5,
+              "contextTurn": null,
+              "progressKind": "unknown"
+            },
+            {
+              "field": "evidence",
+              "state": "planned",
+              "value": "Student can show a demo next week.",
+              "operation": "add",
+              "sourceTurn": 5,
+              "contextTurn": 4,
+              "evidenceType": "live_demonstration"
+            }
+          ],
+          "nextStep": {
+            "sourceTurn": 5,
+            "contextTurn": 4,
+            "status": "tentative",
+            "action": "Show demo next week",
+            "expectedEvidence": "live_demonstration"
+          },
+          "uncertainties": [
+            "Has the booking-confirmation API error been diagnosed (root cause) or only observed?",
+            "Where can the teacher access the current code or screenshots?",
+            "Exact day/time for the planned demo next week?"
+          ],
+          "suggestedTeacherQuestions": []
+        },
+        "routeDecision": {
+          "proposed": "small_step",
+          "final": "small_step",
+          "reason": "model_small_step_proposal",
+          "uiFinal": "small_step",
+          "uiReason": "model_small_step_proposal",
+          "uiAuthority": "backend"
+        },
+        "fieldDecisions": [
+          {
+            "index": 0,
+            "field": "claim",
+            "originalSourceTurn": 1,
+            "candidate": {
+              "field": "claim",
+              "state": "student_claim",
+              "value": "Almost completely coded the UI/frontend part.",
+              "operation": "add",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "progressKind": "unknown"
+            },
+            "outcome": "accepted",
+            "reason": "student_source_valid",
+            "sourceTurn": 1,
+            "observations": [],
+            "appliedCandidate": {
+              "field": "claim",
+              "state": "student_claim",
+              "value": "Almost completely coded the UI/frontend part.",
+              "operation": "add",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "progressKind": "unknown",
+              "observedResult": null,
+              "expectedEvidence": null,
+              "method": null
+            },
+            "transformations": [
+              "method",
+              "observedResult",
+              "expectedEvidence"
+            ],
+            "recordBefore": {
+              "progress": "Almost completely coded the UI/frontend part.",
+              "progressKind": "unknown"
+            },
+            "recordAfter": {
+              "progress": "Almost completely coded the UI/frontend part.",
+              "progressKind": "unknown"
+            }
+          },
+          {
+            "index": 1,
+            "field": "scope",
+            "originalSourceTurn": 1,
+            "candidate": {
+              "field": "scope",
+              "state": "student_claim",
+              "value": "UI design and frontend implementation",
+              "operation": "add",
+              "sourceTurn": 1,
+              "contextTurn": null
+            },
+            "outcome": "rejected",
+            "reason": "student_source_not_uniquely_grounded"
+          },
+          {
+            "index": 2,
+            "field": "claim",
+            "originalSourceTurn": 5,
+            "candidate": {
+              "field": "claim",
+              "state": "student_claim",
+              "value": "Remaining issue: one API error for booking confirmation.",
+              "operation": "add",
+              "sourceTurn": 5,
+              "contextTurn": null,
+              "progressKind": "unknown"
+            },
+            "outcome": "repaired",
+            "reason": "source_relocated_to_unique_student_turn",
+            "sourceTurn": 3,
+            "observations": [],
+            "appliedCandidate": {
+              "field": "claim",
+              "state": "student_claim",
+              "value": "Remaining issue: one API error for booking confirmation.",
+              "operation": "add",
+              "sourceTurn": 3,
+              "contextTurn": null,
+              "progressKind": "unknown",
+              "observedResult": null,
+              "expectedEvidence": null,
+              "method": null
+            },
+            "transformations": [
+              "method",
+              "observedResult",
+              "expectedEvidence"
+            ],
+            "recordBefore": {
+              "progress": "Almost completely coded the UI/frontend part.",
+              "progressKind": "unknown"
+            },
+            "recordAfter": {
+              "progress": "Almost completely coded the UI/frontend part.\nRemaining issue: one API error for booking confirmation.",
+              "progressKind": "unknown"
+            }
+          },
+          {
+            "index": 3,
+            "field": "evidence",
+            "originalSourceTurn": 5,
+            "candidate": {
+              "field": "evidence",
+              "state": "planned",
+              "value": "Student can show a demo next week.",
+              "operation": "add",
+              "sourceTurn": 5,
+              "contextTurn": 4,
+              "evidenceType": "live_demonstration"
+            },
+            "outcome": "rejected",
+            "reason": "invalid_acceptance_context"
+          },
+          {
+            "index": 4,
+            "field": "next_action",
+            "originalSourceTurn": 5,
+            "candidate": {
+              "field": "next_action",
+              "value": "Show demo next week",
+              "state": "planned",
+              "operation": "replace",
+              "sourceTurn": 5,
+              "contextTurn": 4,
+              "nextActionStatus": "tentative",
+              "expectedEvidence": "live_demonstration",
+              "evidenceType": null,
+              "progressKind": null,
+              "method": null,
+              "observedResult": null
+            },
+            "outcome": "rejected",
+            "reason": "invalid_acceptance_context"
+          }
+        ],
+        "result": {
+          "assistantMessage": "Thanks — I captured that you almost finished the frontend, the remaining issue is one booking-confirmation API error, and you can show a demo next week. Quick question: which day next week can you show the demo?",
+          "route": "small_step",
+          "readyForReview": false,
+          "assessment": {
+            "information": "focused",
+            "evidenceReadiness": "identified",
+            "verificationReadiness": "unclear",
+            "testingMaturity": "unknown",
+            "actionability": "clear",
+            "gap": "No repository/screenshot location given; unclear whether the booking API error has been diagnosed or fixed; timing for the demo not yet specified.",
+            "reason": "Student mostly completed UI work; one API booking-confirmation error remains and the student offered a live demo next week as evidence; teacher can inspect the demo.",
+            "sourceTurns": [
+              1,
+              5
+            ]
+          },
+          "evidenceUpdates": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "value": "Almost completely coded the UI/frontend part.",
+              "operation": "add",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "progressKind": "unknown",
+              "observedResult": null,
+              "expectedEvidence": null,
+              "method": null
+            },
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "value": "Remaining issue: one API error for booking confirmation.",
+              "operation": "add",
+              "sourceTurn": 3,
+              "contextTurn": null,
+              "progressKind": "unknown",
+              "observedResult": null,
+              "expectedEvidence": null,
+              "method": null
+            }
+          ],
+          "nextStep": {
+            "sourceTurn": 5,
+            "contextTurn": 4,
+            "status": "tentative",
+            "action": "Show demo next week",
+            "expectedEvidence": "live_demonstration"
+          },
+          "uncertainties": [
+            "Has the booking-confirmation API error been diagnosed (root cause) or only observed?",
+            "Where can the teacher access the current code or screenshots?",
+            "Exact day/time for the planned demo next week?"
+          ],
+          "suggestedTeacherQuestions": [],
+          "consistencyObservations": [
+            "structured_next_step_not_applied"
+          ]
+        }
+      }
+    },
+    {
+      "at": "2026-10-22T10:18:34.442Z",
+      "mode": "turn",
+      "request": {
+        "sessionNumber": 7,
+        "sessionFocus": "Application Progress + Technical Implementation Report",
+        "conversation": [
+          {
+            "actor": "system",
+            "text": "In your last confirmed Intake, your responsibility was “UI design and frontend implementation”. What did you actually complete, change, test or discover since then? If your responsibility changed or nothing progressed, say that directly."
+          },
+          {
+            "actor": "student",
+            "text": "I almost completely code part, and will start final report soon"
+          },
+          {
+            "actor": "system",
+            "text": "Noted. I recorded that you “almost completely coded” the UI/frontend part and that you will start the final report soon. Quick clarification: which specific UI/frontend parts remain incomplete, and where can the teacher see the current code or screenshots?"
+          },
+          {
+            "actor": "student",
+            "text": "the last part is one API error that for booking confirmation. I can show demo next week"
+          },
+          {
+            "actor": "system",
+            "text": "Thanks — I captured that you almost finished the frontend, the remaining issue is one booking-confirmation API error, and you can show a demo next week. Quick question: which day next week can you show the demo?"
+          },
+          {
+            "actor": "student",
+            "text": "I will show it next Wednesday session"
+          }
+        ],
+        "answersSnapshot": {
+          "responsibility": "UI design and frontend implementation",
+          "progress": "Almost completely coded the UI/frontend part.\nRemaining issue: one API error for booking confirmation.",
+          "progressKind": "unknown",
+          "scope": "UI design and frontend implementation",
+          "completionPercent": null,
+          "evidenceType": "other",
+          "evidenceAvailability": "unknown",
+          "evidenceReference": "",
+          "verificationMethod": "",
+          "testingStatus": "unknown",
+          "testingMethod": "",
+          "testingResult": "",
+          "testingBaseline": "",
+          "blockerStatus": "unknown",
+          "blockerDescription": "",
+          "supportRequested": "",
+          "nextAction": "Start final report soon",
+          "dueSession": "S8",
+          "expectedEvidence": "",
+          "nextActionStatus": "tentative"
+        },
+        "capturedFields": [
+          "claim",
+          "next_action"
+        ],
+        "currentEvidence": {
+          "progress": "Almost completely coded the UI/frontend part.\nRemaining issue: one API error for booking confirmation.",
+          "progressKind": "unknown",
+          "completionPercent": null,
+          "nextAction": "Start final report soon",
+          "dueSession": "S8",
+          "expectedEvidence": ""
+        }
+      },
+      "response": {
+        "model": "gpt-5-mini",
+        "reportedModel": "gpt-5-mini-2025-08-07",
+        "configuredModel": "gpt-5-mini",
+        "promptVersion": "session-intake-ai.v1.3.1",
+        "policyVersion": "adaptive-intake.v1.1.0",
+        "parserVersion": "intake-parser.v1.3.0",
+        "manifest": {
+          "model": "gpt-5-mini",
+          "reportedModel": "gpt-5-mini-2025-08-07",
+          "costBasis": "configured_model_rates",
+          "dialogueRevision": "intake-dialogue.v1.4",
+          "reviewContractVersion": "intake-review.v2",
+          "promptVersion": "session-intake-ai.v1.3.1",
+          "policyVersion": "adaptive-intake.v1.1.0",
+          "parserVersion": "intake-parser.v1.3.0",
+          "evidenceSchemaVersion": "session-intake.v1.2.0",
+          "knowledgeVersion": "teacher-approved-kb.none",
+          "cost": 0.00722825,
+          "costComplete": true,
+          "usageAttempts": [
+            {
+              "status": "settled",
+              "costUsd": 0.00722825,
+              "costBasis": "configured_model_rates",
+              "chargedUsd": 0.00722825,
+              "reconciliationRequired": false
+            }
+          ],
+          "usageWarnings": [
+            "financial_limit_observed_not_enforced"
+          ],
+          "latencyMs": 31558,
+          "stopReason": "continue"
+        },
+        "usageWarnings": [
+          "financial_limit_observed_not_enforced"
+        ],
+        "usageAttempts": [
+          {
+            "status": "settled",
+            "costUsd": 0.00722825,
+            "costBasis": "configured_model_rates",
+            "chargedUsd": 0.00722825,
+            "reconciliationRequired": false
+          }
+        ],
+        "usage": {
+          "input_tokens": 3457,
+          "input_tokens_details": {
+            "cache_write_tokens": 0,
+            "cached_tokens": 1792
+          },
+          "output_tokens": 3182,
+          "output_tokens_details": {
+            "reasoning_tokens": 2560
+          },
+          "total_tokens": 6639
+        },
+        "latencyMs": 31558,
+        "budget": {
+          "questionsAsked": 3,
+          "maxQuestions": 8,
+          "maxFollowUps": 5
+        },
+        "providerRequestId": "req_dfb0366097ad49c78d587b4c3ae29090",
+        "acceptanceLevel": "L0",
+        "extractionPending": false,
+        "rawCandidate": {
+          "assistantMessage": "Got it — I recorded: you almost finished the UI/frontend, the remaining issue is one booking-confirmation API error, you can demo it next Wednesday, and you plan to start the final report soon. Quick question: for the Wednesday demo, can you show the booking attempt plus any error messages or logs?",
+          "route": "small_step",
+          "readyForReview": false,
+          "assessment": {
+            "information": "focused",
+            "evidenceReadiness": "identified",
+            "verificationReadiness": "unclear",
+            "testingMaturity": "unknown",
+            "actionability": "needs_small_step",
+            "gap": "No technical details about the booking-confirmation API error (error message, HTTP status, logs) and no code/screenshot artifact provided for the current issue.",
+            "reason": "Student reports near-complete frontend, a single API error, and a scheduled demo, but provided few debugging details.",
+            "sourceTurns": [
+              1,
+              3,
+              5
+            ]
+          },
+          "evidenceUpdates": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "value": "Almost completely coded the UI/frontend part",
+              "operation": "add",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "progressKind": "unknown"
+            },
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "value": "Remaining issue: one booking-confirmation API error",
+              "operation": "add",
+              "sourceTurn": 3,
+              "contextTurn": null,
+              "progressKind": "unknown"
+            },
+            {
+              "field": "evidence",
+              "state": "planned",
+              "value": "Student can show a demo next week",
+              "operation": "add",
+              "sourceTurn": 3,
+              "contextTurn": null,
+              "evidenceType": "live_demonstration"
+            },
+            {
+              "field": "evidence",
+              "state": "planned",
+              "value": "Demo scheduled for next Wednesday session",
+              "operation": "replace",
+              "sourceTurn": 5,
+              "contextTurn": 4,
+              "evidenceType": "live_demonstration"
+            }
+          ],
+          "nextStep": {
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "status": "tentative",
+            "action": "Start final report soon",
+            "expectedEvidence": null
+          },
+          "uncertainties": [
+            "What is the booking-confirmation API error message, HTTP status, or logs?",
+            "Is the booking API error blocking the final report or just the demo?",
+            "No code, link or screenshots provided for the current error"
+          ],
+          "suggestedTeacherQuestions": []
+        },
+        "routeDecision": {
+          "proposed": "small_step",
+          "final": "small_step",
+          "reason": "model_small_step_proposal",
+          "uiFinal": "small_step",
+          "uiReason": "model_small_step_proposal",
+          "uiAuthority": "backend"
+        },
+        "fieldDecisions": [
+          {
+            "index": 0,
+            "field": "claim",
+            "originalSourceTurn": 1,
+            "candidate": {
+              "field": "claim",
+              "state": "student_claim",
+              "value": "Almost completely coded the UI/frontend part",
+              "operation": "add",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "progressKind": "unknown"
+            },
+            "outcome": "accepted",
+            "reason": "student_source_valid",
+            "sourceTurn": 1,
+            "observations": [],
+            "appliedCandidate": {
+              "field": "claim",
+              "state": "student_claim",
+              "value": "Almost completely coded the UI/frontend part",
+              "operation": "add",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "progressKind": "unknown",
+              "observedResult": null,
+              "expectedEvidence": null,
+              "method": null
+            },
+            "transformations": [
+              "method",
+              "observedResult",
+              "expectedEvidence"
+            ],
+            "recordBefore": {
+              "progress": "Almost completely coded the UI/frontend part.\nRemaining issue: one API error for booking confirmation.",
+              "progressKind": "unknown"
+            },
+            "recordAfter": {
+              "progress": "Almost completely coded the UI/frontend part.\nRemaining issue: one API error for booking confirmation.\nAlmost completely coded the UI/frontend part",
+              "progressKind": "unknown"
+            }
+          },
+          {
+            "index": 1,
+            "field": "claim",
+            "originalSourceTurn": 3,
+            "candidate": {
+              "field": "claim",
+              "state": "student_claim",
+              "value": "Remaining issue: one booking-confirmation API error",
+              "operation": "add",
+              "sourceTurn": 3,
+              "contextTurn": null,
+              "progressKind": "unknown"
+            },
+            "outcome": "accepted",
+            "reason": "student_source_valid",
+            "sourceTurn": 3,
+            "observations": [],
+            "appliedCandidate": {
+              "field": "claim",
+              "state": "student_claim",
+              "value": "Remaining issue: one booking-confirmation API error",
+              "operation": "add",
+              "sourceTurn": 3,
+              "contextTurn": null,
+              "progressKind": "unknown",
+              "observedResult": null,
+              "expectedEvidence": null,
+              "method": null
+            },
+            "transformations": [
+              "method",
+              "observedResult",
+              "expectedEvidence"
+            ],
+            "recordBefore": {
+              "progress": "Almost completely coded the UI/frontend part.\nRemaining issue: one API error for booking confirmation.\nAlmost completely coded the UI/frontend part",
+              "progressKind": "unknown"
+            },
+            "recordAfter": {
+              "progress": "Almost completely coded the UI/frontend part.\nRemaining issue: one API error for booking confirmation.\nAlmost completely coded the UI/frontend part\nRemaining issue: one booking-confirmation API error",
+              "progressKind": "unknown"
+            }
+          },
+          {
+            "index": 2,
+            "field": "evidence",
+            "originalSourceTurn": 3,
+            "candidate": {
+              "field": "evidence",
+              "state": "planned",
+              "value": "Student can show a demo next week",
+              "operation": "add",
+              "sourceTurn": 3,
+              "contextTurn": null,
+              "evidenceType": "live_demonstration"
+            },
+            "outcome": "accepted",
+            "reason": "student_source_valid",
+            "sourceTurn": 3,
+            "observations": [],
+            "appliedCandidate": {
+              "field": "evidence",
+              "state": "planned",
+              "value": "Student can show a demo next week",
+              "operation": "add",
+              "sourceTurn": 3,
+              "contextTurn": null,
+              "evidenceType": "live_demonstration",
+              "observedResult": null,
+              "expectedEvidence": null,
+              "method": null
+            },
+            "transformations": [
+              "method",
+              "observedResult",
+              "expectedEvidence"
+            ],
+            "recordBefore": {
+              "evidenceType": "other",
+              "evidenceAvailability": "unknown",
+              "evidenceReference": ""
+            },
+            "recordAfter": {
+              "evidenceType": "live_demonstration",
+              "evidenceAvailability": "expected_later",
+              "evidenceReference": "Student can show a demo next week"
+            }
+          },
+          {
+            "index": 3,
+            "field": "evidence",
+            "originalSourceTurn": 5,
+            "candidate": {
+              "field": "evidence",
+              "state": "planned",
+              "value": "Demo scheduled for next Wednesday session",
+              "operation": "replace",
+              "sourceTurn": 5,
+              "contextTurn": 4,
+              "evidenceType": "live_demonstration"
+            },
+            "outcome": "accepted",
+            "reason": "student_source_valid",
+            "sourceTurn": 5,
+            "observations": [
+              "contextual_acceptance_model_inferred"
+            ],
+            "appliedCandidate": {
+              "field": "evidence",
+              "state": "planned",
+              "value": "Demo scheduled for next Wednesday session",
+              "operation": "replace",
+              "sourceTurn": 5,
+              "contextTurn": 4,
+              "evidenceType": "live_demonstration",
+              "observedResult": null,
+              "expectedEvidence": null,
+              "method": null
+            },
+            "transformations": [
+              "method",
+              "observedResult",
+              "expectedEvidence"
+            ],
+            "recordBefore": {
+              "evidenceType": "live_demonstration",
+              "evidenceAvailability": "expected_later",
+              "evidenceReference": "Student can show a demo next week"
+            },
+            "recordAfter": {
+              "evidenceType": "live_demonstration",
+              "evidenceAvailability": "expected_later",
+              "evidenceReference": "Demo scheduled for next Wednesday session"
+            }
+          },
+          {
+            "index": 4,
+            "field": "next_action",
+            "originalSourceTurn": 1,
+            "candidate": {
+              "field": "next_action",
+              "value": "Start final report soon",
+              "state": "planned",
+              "operation": "replace",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "nextActionStatus": "tentative",
+              "expectedEvidence": null,
+              "evidenceType": null,
+              "progressKind": null,
+              "method": null,
+              "observedResult": null
+            },
+            "outcome": "accepted",
+            "reason": "student_source_valid",
+            "sourceTurn": 1,
+            "observations": [],
+            "appliedCandidate": {
+              "field": "next_action",
+              "value": "Start final report soon",
+              "state": "planned",
+              "operation": "replace",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "nextActionStatus": "tentative",
+              "expectedEvidence": null,
+              "evidenceType": null,
+              "progressKind": null,
+              "method": null,
+              "observedResult": null
+            },
+            "transformations": [],
+            "recordBefore": {
+              "nextAction": "Start final report soon",
+              "expectedEvidence": "",
+              "nextActionStatus": "tentative"
+            },
+            "recordAfter": {
+              "nextAction": "Start final report soon",
+              "expectedEvidence": "",
+              "nextActionStatus": "tentative"
+            }
+          }
+        ],
+        "result": {
+          "assistantMessage": "Got it — I recorded: you almost finished the UI/frontend, the remaining issue is one booking-confirmation API error, you can demo it next Wednesday, and you plan to start the final report soon. Quick question: for the Wednesday demo, can you show the booking attempt plus any error messages or logs?",
+          "route": "small_step",
+          "readyForReview": false,
+          "assessment": {
+            "information": "focused",
+            "evidenceReadiness": "identified",
+            "verificationReadiness": "unclear",
+            "testingMaturity": "unknown",
+            "actionability": "needs_small_step",
+            "gap": "No technical details about the booking-confirmation API error (error message, HTTP status, logs) and no code/screenshot artifact provided for the current issue.",
+            "reason": "Student reports near-complete frontend, a single API error, and a scheduled demo, but provided few debugging details.",
+            "sourceTurns": [
+              1,
+              3,
+              5
+            ]
+          },
+          "evidenceUpdates": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "value": "Almost completely coded the UI/frontend part",
+              "operation": "add",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "progressKind": "unknown",
+              "observedResult": null,
+              "expectedEvidence": null,
+              "method": null
+            },
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "value": "Remaining issue: one booking-confirmation API error",
+              "operation": "add",
+              "sourceTurn": 3,
+              "contextTurn": null,
+              "progressKind": "unknown",
+              "observedResult": null,
+              "expectedEvidence": null,
+              "method": null
+            },
+            {
+              "field": "evidence",
+              "state": "planned",
+              "value": "Student can show a demo next week",
+              "operation": "add",
+              "sourceTurn": 3,
+              "contextTurn": null,
+              "evidenceType": "live_demonstration",
+              "observedResult": null,
+              "expectedEvidence": null,
+              "method": null
+            },
+            {
+              "field": "evidence",
+              "state": "planned",
+              "value": "Demo scheduled for next Wednesday session",
+              "operation": "replace",
+              "sourceTurn": 5,
+              "contextTurn": 4,
+              "evidenceType": "live_demonstration",
+              "observedResult": null,
+              "expectedEvidence": null,
+              "method": null
+            },
+            {
+              "field": "next_action",
+              "value": "Start final report soon",
+              "state": "planned",
+              "operation": "replace",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "nextActionStatus": "tentative",
+              "expectedEvidence": null,
+              "evidenceType": null,
+              "progressKind": null,
+              "method": null,
+              "observedResult": null
+            }
+          ],
+          "nextStep": {
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "status": "tentative",
+            "action": "Start final report soon",
+            "expectedEvidence": null
+          },
+          "uncertainties": [
+            "What is the booking-confirmation API error message, HTTP status, or logs?",
+            "Is the booking API error blocking the final report or just the demo?",
+            "No code, link or screenshots provided for the current error"
+          ],
+          "suggestedTeacherQuestions": [],
+          "consistencyObservations": []
+        }
+      }
+    },
+    {
+      "at": "2026-10-22T10:19:29.947Z",
+      "mode": "turn",
+      "request": {
+        "sessionNumber": 7,
+        "sessionFocus": "Application Progress + Technical Implementation Report",
+        "conversation": [
+          {
+            "actor": "system",
+            "text": "In your last confirmed Intake, your responsibility was “UI design and frontend implementation”. What did you actually complete, change, test or discover since then? If your responsibility changed or nothing progressed, say that directly."
+          },
+          {
+            "actor": "student",
+            "text": "I almost completely code part, and will start final report soon"
+          },
+          {
+            "actor": "system",
+            "text": "Noted. I recorded that you “almost completely coded” the UI/frontend part and that you will start the final report soon. Quick clarification: which specific UI/frontend parts remain incomplete, and where can the teacher see the current code or screenshots?"
+          },
+          {
+            "actor": "student",
+            "text": "the last part is one API error that for booking confirmation. I can show demo next week"
+          },
+          {
+            "actor": "system",
+            "text": "Thanks — I captured that you almost finished the frontend, the remaining issue is one booking-confirmation API error, and you can show a demo next week. Quick question: which day next week can you show the demo?"
+          },
+          {
+            "actor": "student",
+            "text": "I will show it next Wednesday session"
+          },
+          {
+            "actor": "system",
+            "text": "Got it — I recorded: you almost finished the UI/frontend, the remaining issue is one booking-confirmation API error, you can demo it next Wednesday, and you plan to start the final report soon. Quick question: for the Wednesday demo, can you show the booking attempt plus any error messages or logs?"
+          },
+          {
+            "actor": "student",
+            "text": "yes, I will"
+          }
+        ],
+        "answersSnapshot": {
+          "responsibility": "UI design and frontend implementation",
+          "progress": "Almost completely coded the UI/frontend part.\nRemaining issue: one API error for booking confirmation.\nAlmost completely coded the UI/frontend part\nRemaining issue: one booking-confirmation API error",
+          "progressKind": "unknown",
+          "scope": "UI design and frontend implementation",
+          "completionPercent": null,
+          "evidenceType": "live_demonstration",
+          "evidenceAvailability": "expected_later",
+          "evidenceReference": "Demo scheduled for next Wednesday session",
+          "verificationMethod": "",
+          "testingStatus": "unknown",
+          "testingMethod": "",
+          "testingResult": "",
+          "testingBaseline": "",
+          "blockerStatus": "unknown",
+          "blockerDescription": "",
+          "supportRequested": "",
+          "nextAction": "Start final report soon",
+          "dueSession": "S8",
+          "expectedEvidence": "",
+          "nextActionStatus": "tentative"
+        },
+        "capturedFields": [
+          "claim",
+          "next_action",
+          "evidence"
+        ],
+        "currentEvidence": {
+          "progress": "Almost completely coded the UI/frontend part.\nRemaining issue: one API error for booking confirmation.\nAlmost completely coded the UI/frontend part\nRemaining issue: one booking-confirmation API error",
+          "progressKind": "unknown",
+          "completionPercent": null,
+          "evidenceType": "live_demonstration",
+          "evidenceAvailability": "expected_later",
+          "evidenceReference": "Demo scheduled for next Wednesday session",
+          "nextAction": "Start final report soon",
+          "dueSession": "S8",
+          "expectedEvidence": ""
+        }
+      },
+      "response": {
+        "usageWarnings": [
+          "financial_limit_observed_not_enforced"
+        ],
+        "usageAttempts": [
+          {
+            "status": "settled",
+            "costUsd": 0.008829,
+            "costBasis": "configured_model_rates",
+            "chargedUsd": 0.008829,
+            "reconciliationRequired": false
+          }
+        ]
+      },
+      "error": "502:provider_response:invalid_provider_response"
+    },
+    {
+      "at": "2026-10-22T10:20:27.929Z",
+      "mode": "turn",
+      "request": {
+        "sessionNumber": 7,
+        "sessionFocus": "Application Progress + Technical Implementation Report",
+        "conversation": [
+          {
+            "actor": "system",
+            "text": "In your last confirmed Intake, your responsibility was “UI design and frontend implementation”. What did you actually complete, change, test or discover since then? If your responsibility changed or nothing progressed, say that directly."
+          },
+          {
+            "actor": "student",
+            "text": "I almost completely code part, and will start final report soon"
+          },
+          {
+            "actor": "system",
+            "text": "Noted. I recorded that you “almost completely coded” the UI/frontend part and that you will start the final report soon. Quick clarification: which specific UI/frontend parts remain incomplete, and where can the teacher see the current code or screenshots?"
+          },
+          {
+            "actor": "student",
+            "text": "the last part is one API error that for booking confirmation. I can show demo next week"
+          },
+          {
+            "actor": "system",
+            "text": "Thanks — I captured that you almost finished the frontend, the remaining issue is one booking-confirmation API error, and you can show a demo next week. Quick question: which day next week can you show the demo?"
+          },
+          {
+            "actor": "student",
+            "text": "I will show it next Wednesday session"
+          },
+          {
+            "actor": "system",
+            "text": "Got it — I recorded: you almost finished the UI/frontend, the remaining issue is one booking-confirmation API error, you can demo it next Wednesday, and you plan to start the final report soon. Quick question: for the Wednesday demo, can you show the booking attempt plus any error messages or logs?"
+          },
+          {
+            "actor": "student",
+            "text": "yes, I will"
+          }
+        ],
+        "answersSnapshot": {
+          "responsibility": "UI design and frontend implementation",
+          "progress": "Almost completely coded the UI/frontend part.\nRemaining issue: one API error for booking confirmation.\nAlmost completely coded the UI/frontend part\nRemaining issue: one booking-confirmation API error",
+          "progressKind": "unknown",
+          "scope": "UI design and frontend implementation",
+          "completionPercent": null,
+          "evidenceType": "live_demonstration",
+          "evidenceAvailability": "expected_later",
+          "evidenceReference": "Demo scheduled for next Wednesday session",
+          "verificationMethod": "",
+          "testingStatus": "unknown",
+          "testingMethod": "",
+          "testingResult": "",
+          "testingBaseline": "",
+          "blockerStatus": "unknown",
+          "blockerDescription": "",
+          "supportRequested": "",
+          "nextAction": "Start final report soon",
+          "dueSession": "S8",
+          "expectedEvidence": "",
+          "nextActionStatus": "tentative"
+        },
+        "capturedFields": [
+          "claim",
+          "next_action",
+          "evidence"
+        ],
+        "currentEvidence": {
+          "progress": "Almost completely coded the UI/frontend part.\nRemaining issue: one API error for booking confirmation.\nAlmost completely coded the UI/frontend part\nRemaining issue: one booking-confirmation API error",
+          "progressKind": "unknown",
+          "completionPercent": null,
+          "evidenceType": "live_demonstration",
+          "evidenceAvailability": "expected_later",
+          "evidenceReference": "Demo scheduled for next Wednesday session",
+          "nextAction": "Start final report soon",
+          "dueSession": "S8",
+          "expectedEvidence": ""
+        }
+      },
+      "response": {
+        "model": "gpt-5-mini",
+        "reportedModel": "gpt-5-mini-2025-08-07",
+        "configuredModel": "gpt-5-mini",
+        "promptVersion": "session-intake-ai.v1.3.1",
+        "policyVersion": "adaptive-intake.v1.1.0",
+        "parserVersion": "intake-parser.v1.3.0",
+        "manifest": {
+          "model": "gpt-5-mini",
+          "reportedModel": "gpt-5-mini-2025-08-07",
+          "costBasis": "configured_model_rates",
+          "dialogueRevision": "intake-dialogue.v1.4",
+          "reviewContractVersion": "intake-review.v2",
+          "promptVersion": "session-intake-ai.v1.3.1",
+          "policyVersion": "adaptive-intake.v1.1.0",
+          "parserVersion": "intake-parser.v1.3.0",
+          "evidenceSchemaVersion": "session-intake.v1.2.0",
+          "knowledgeVersion": "teacher-approved-kb.none",
+          "cost": 0.005941,
+          "costComplete": true,
+          "usageAttempts": [
+            {
+              "status": "settled",
+              "costUsd": 0.005941,
+              "costBasis": "configured_model_rates",
+              "chargedUsd": 0.005941,
+              "reconciliationRequired": false
+            }
+          ],
+          "usageWarnings": [
+            "financial_limit_observed_not_enforced"
+          ],
+          "latencyMs": 19948,
+          "stopReason": "review"
+        },
+        "usageWarnings": [
+          "financial_limit_observed_not_enforced"
+        ],
+        "usageAttempts": [
+          {
+            "status": "settled",
+            "costUsd": 0.005941,
+            "costBasis": "configured_model_rates",
+            "chargedUsd": 0.005941,
+            "reconciliationRequired": false
+          }
+        ],
+        "usage": {
+          "input_tokens": 3572,
+          "input_tokens_details": {
+            "cache_write_tokens": 0,
+            "cached_tokens": 3456
+          },
+          "output_tokens": 2524,
+          "output_tokens_details": {
+            "reasoning_tokens": 2048
+          },
+          "total_tokens": 6096
+        },
+        "latencyMs": 19948,
+        "budget": {
+          "questionsAsked": 4,
+          "maxQuestions": 8,
+          "maxFollowUps": 5
+        },
+        "providerRequestId": "req_3021e63f7e234ee8bc02c6f43caf63a1",
+        "acceptanceLevel": "L0",
+        "extractionPending": false,
+        "rawCandidate": {
+          "assistantMessage": "Thanks — I captured your update: UI/frontend almost complete, remaining booking-confirmation API error, demo scheduled next Wednesday (you'll show the booking attempt and any error messages/logs), and you'll start the final report soon. Please check the summary below and confirm or correct anything important.",
+          "route": "review",
+          "readyForReview": true,
+          "assessment": {
+            "information": "focused",
+            "evidenceReadiness": "identified",
+            "verificationReadiness": "clear",
+            "testingMaturity": "planned",
+            "actionability": "clear",
+            "gap": "No repository or screenshot location was provided; exact time for the Wednesday session not specified; it is unknown whether you have already debugged the booking-confirmation API error.",
+            "reason": "Student scheduled a live demo and agreed to show the booking attempt and logs, so the teacher can verify then.",
+            "sourceTurns": [
+              1,
+              3,
+              5,
+              7
+            ]
+          },
+          "evidenceUpdates": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "value": "Almost completely coded the UI/frontend part.",
+              "operation": "add",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "progressKind": "unknown"
+            },
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "value": "Remaining issue: one booking-confirmation API error.",
+              "operation": "add",
+              "sourceTurn": 3,
+              "contextTurn": null,
+              "progressKind": "unknown"
+            },
+            {
+              "field": "evidence",
+              "state": "planned",
+              "value": "Demo scheduled for next Wednesday session",
+              "operation": "add",
+              "sourceTurn": 5,
+              "contextTurn": null,
+              "evidenceType": "live_demonstration"
+            },
+            {
+              "field": "verification_method",
+              "state": "student_claim",
+              "value": "Show the booking attempt plus any error messages or logs in the Wednesday demo",
+              "operation": "add",
+              "sourceTurn": 7,
+              "contextTurn": 6
+            }
+          ],
+          "nextStep": {
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "status": "tentative",
+            "action": "Start final report soon",
+            "expectedEvidence": null
+          },
+          "uncertainties": [
+            "Exact time for the Wednesday demo session",
+            "Whether the booking-confirmation API error has been investigated or partially fixed",
+            "Where the current code or screenshots are stored for teacher review"
+          ],
+          "suggestedTeacherQuestions": []
+        },
+        "routeDecision": {
+          "proposed": "review",
+          "final": "review",
+          "reason": "model_ready_for_review",
+          "uiFinal": "review",
+          "uiReason": "model_ready_for_review",
+          "uiAuthority": "backend"
+        },
+        "fieldDecisions": [
+          {
+            "index": 0,
+            "field": "claim",
+            "originalSourceTurn": 1,
+            "candidate": {
+              "field": "claim",
+              "state": "student_claim",
+              "value": "Almost completely coded the UI/frontend part.",
+              "operation": "add",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "progressKind": "unknown"
+            },
+            "outcome": "accepted",
+            "reason": "student_source_valid",
+            "sourceTurn": 1,
+            "observations": [],
+            "appliedCandidate": {
+              "field": "claim",
+              "state": "student_claim",
+              "value": "Almost completely coded the UI/frontend part.",
+              "operation": "add",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "progressKind": "unknown",
+              "observedResult": null,
+              "expectedEvidence": null,
+              "method": null
+            },
+            "transformations": [
+              "method",
+              "observedResult",
+              "expectedEvidence"
+            ],
+            "recordBefore": {
+              "progress": "Almost completely coded the UI/frontend part.\nRemaining issue: one API error for booking confirmation.\nAlmost completely coded the UI/frontend part\nRemaining issue: one booking-confirmation API error",
+              "progressKind": "unknown"
+            },
+            "recordAfter": {
+              "progress": "Almost completely coded the UI/frontend part.\nRemaining issue: one API error for booking confirmation.\nAlmost completely coded the UI/frontend part\nRemaining issue: one booking-confirmation API error",
+              "progressKind": "unknown"
+            }
+          },
+          {
+            "index": 1,
+            "field": "claim",
+            "originalSourceTurn": 3,
+            "candidate": {
+              "field": "claim",
+              "state": "student_claim",
+              "value": "Remaining issue: one booking-confirmation API error.",
+              "operation": "add",
+              "sourceTurn": 3,
+              "contextTurn": null,
+              "progressKind": "unknown"
+            },
+            "outcome": "accepted",
+            "reason": "student_source_valid",
+            "sourceTurn": 3,
+            "observations": [],
+            "appliedCandidate": {
+              "field": "claim",
+              "state": "student_claim",
+              "value": "Remaining issue: one booking-confirmation API error.",
+              "operation": "add",
+              "sourceTurn": 3,
+              "contextTurn": null,
+              "progressKind": "unknown",
+              "observedResult": null,
+              "expectedEvidence": null,
+              "method": null
+            },
+            "transformations": [
+              "method",
+              "observedResult",
+              "expectedEvidence"
+            ],
+            "recordBefore": {
+              "progress": "Almost completely coded the UI/frontend part.\nRemaining issue: one API error for booking confirmation.\nAlmost completely coded the UI/frontend part\nRemaining issue: one booking-confirmation API error",
+              "progressKind": "unknown"
+            },
+            "recordAfter": {
+              "progress": "Almost completely coded the UI/frontend part.\nRemaining issue: one API error for booking confirmation.\nAlmost completely coded the UI/frontend part\nRemaining issue: one booking-confirmation API error\nRemaining issue: one booking-confirmation API error.",
+              "progressKind": "unknown"
+            }
+          },
+          {
+            "index": 2,
+            "field": "evidence",
+            "originalSourceTurn": 5,
+            "candidate": {
+              "field": "evidence",
+              "state": "planned",
+              "value": "Demo scheduled for next Wednesday session",
+              "operation": "add",
+              "sourceTurn": 5,
+              "contextTurn": null,
+              "evidenceType": "live_demonstration"
+            },
+            "outcome": "accepted",
+            "reason": "student_source_valid",
+            "sourceTurn": 5,
+            "observations": [],
+            "appliedCandidate": {
+              "field": "evidence",
+              "state": "planned",
+              "value": "Demo scheduled for next Wednesday session",
+              "operation": "add",
+              "sourceTurn": 5,
+              "contextTurn": null,
+              "evidenceType": "live_demonstration",
+              "observedResult": null,
+              "expectedEvidence": null,
+              "method": null
+            },
+            "transformations": [
+              "method",
+              "observedResult",
+              "expectedEvidence"
+            ],
+            "recordBefore": {
+              "evidenceType": "live_demonstration",
+              "evidenceAvailability": "expected_later",
+              "evidenceReference": "Demo scheduled for next Wednesday session"
+            },
+            "recordAfter": {
+              "evidenceType": "live_demonstration",
+              "evidenceAvailability": "expected_later",
+              "evidenceReference": "Demo scheduled for next Wednesday session"
+            }
+          },
+          {
+            "index": 3,
+            "field": "verification_method",
+            "originalSourceTurn": 7,
+            "candidate": {
+              "field": "verification_method",
+              "state": "student_claim",
+              "value": "Show the booking attempt plus any error messages or logs in the Wednesday demo",
+              "operation": "add",
+              "sourceTurn": 7,
+              "contextTurn": 6
+            },
+            "outcome": "accepted",
+            "reason": "student_source_valid",
+            "sourceTurn": 7,
+            "observations": [
+              "contextual_acceptance_model_inferred"
+            ],
+            "appliedCandidate": {
+              "field": "verification_method",
+              "state": "student_claim",
+              "value": "Show the booking attempt plus any error messages or logs in the Wednesday demo",
+              "operation": "add",
+              "sourceTurn": 7,
+              "contextTurn": 6,
+              "observedResult": null,
+              "expectedEvidence": null,
+              "method": null
+            },
+            "transformations": [
+              "method",
+              "observedResult",
+              "expectedEvidence"
+            ],
+            "recordBefore": {
+              "verificationMethod": ""
+            },
+            "recordAfter": {
+              "verificationMethod": "Show the booking attempt plus any error messages or logs in the Wednesday demo"
+            }
+          },
+          {
+            "index": 4,
+            "field": "next_action",
+            "originalSourceTurn": 1,
+            "candidate": {
+              "field": "next_action",
+              "value": "Start final report soon",
+              "state": "planned",
+              "operation": "replace",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "nextActionStatus": "tentative",
+              "expectedEvidence": null,
+              "evidenceType": null,
+              "progressKind": null,
+              "method": null,
+              "observedResult": null
+            },
+            "outcome": "accepted",
+            "reason": "student_source_valid",
+            "sourceTurn": 1,
+            "observations": [],
+            "appliedCandidate": {
+              "field": "next_action",
+              "value": "Start final report soon",
+              "state": "planned",
+              "operation": "replace",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "nextActionStatus": "tentative",
+              "expectedEvidence": null,
+              "evidenceType": null,
+              "progressKind": null,
+              "method": null,
+              "observedResult": null
+            },
+            "transformations": [],
+            "recordBefore": {
+              "nextAction": "Start final report soon",
+              "expectedEvidence": "",
+              "nextActionStatus": "tentative"
+            },
+            "recordAfter": {
+              "nextAction": "Start final report soon",
+              "expectedEvidence": "",
+              "nextActionStatus": "tentative"
+            }
+          }
+        ],
+        "result": {
+          "assistantMessage": "Thanks — I captured your update: UI/frontend almost complete, remaining booking-confirmation API error, demo scheduled next Wednesday (you'll show the booking attempt and any error messages/logs), and you'll start the final report soon. Please check the summary below and confirm or correct anything important.",
+          "route": "review",
+          "readyForReview": true,
+          "assessment": {
+            "information": "focused",
+            "evidenceReadiness": "identified",
+            "verificationReadiness": "clear",
+            "testingMaturity": "planned",
+            "actionability": "clear",
+            "gap": "No repository or screenshot location was provided; exact time for the Wednesday session not specified; it is unknown whether you have already debugged the booking-confirmation API error.",
+            "reason": "Student scheduled a live demo and agreed to show the booking attempt and logs, so the teacher can verify then.",
+            "sourceTurns": [
+              1,
+              3,
+              5,
+              7
+            ]
+          },
+          "evidenceUpdates": [
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "value": "Almost completely coded the UI/frontend part.",
+              "operation": "add",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "progressKind": "unknown",
+              "observedResult": null,
+              "expectedEvidence": null,
+              "method": null
+            },
+            {
+              "field": "claim",
+              "state": "student_claim",
+              "value": "Remaining issue: one booking-confirmation API error.",
+              "operation": "add",
+              "sourceTurn": 3,
+              "contextTurn": null,
+              "progressKind": "unknown",
+              "observedResult": null,
+              "expectedEvidence": null,
+              "method": null
+            },
+            {
+              "field": "evidence",
+              "state": "planned",
+              "value": "Demo scheduled for next Wednesday session",
+              "operation": "add",
+              "sourceTurn": 5,
+              "contextTurn": null,
+              "evidenceType": "live_demonstration",
+              "observedResult": null,
+              "expectedEvidence": null,
+              "method": null
+            },
+            {
+              "field": "verification_method",
+              "state": "student_claim",
+              "value": "Show the booking attempt plus any error messages or logs in the Wednesday demo",
+              "operation": "add",
+              "sourceTurn": 7,
+              "contextTurn": 6,
+              "observedResult": null,
+              "expectedEvidence": null,
+              "method": null
+            },
+            {
+              "field": "next_action",
+              "value": "Start final report soon",
+              "state": "planned",
+              "operation": "replace",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "nextActionStatus": "tentative",
+              "expectedEvidence": null,
+              "evidenceType": null,
+              "progressKind": null,
+              "method": null,
+              "observedResult": null
+            }
+          ],
+          "nextStep": {
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "status": "tentative",
+            "action": "Start final report soon",
+            "expectedEvidence": null
+          },
+          "uncertainties": [
+            "Exact time for the Wednesday demo session",
+            "Whether the booking-confirmation API error has been investigated or partially fixed",
+            "Where the current code or screenshots are stored for teacher review"
+          ],
+          "suggestedTeacherQuestions": [],
+          "consistencyObservations": []
+        }
+      }
+    }
+  ],
+  "sourceSha256": "a9a4f0be6b235422aa4d952e6f14dd27736a96f5039154204eebfaa45aa0b243",
+  "description": "Real S7 four-round trace, includes failed attempt and successful manual retry. Frozen historical candidates, not new-model quality evidence."
+}

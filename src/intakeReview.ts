@@ -19,7 +19,7 @@ export function validateFocusedIntakeRecord(value:IntakeStudentRecord):IntakeVal
 export type ReviewDebugEvent={at:string;mode:string;request:Record<string,unknown>;response?:Record<string,unknown>;error?:string};
 export function packReviewDebug(events:ReviewDebugEvent[]) {
  let packed:ReviewDebugEvent[]=events.slice(-32).map(e=>({...e,request:{...e.request,conversation:undefined,currentEvidence:undefined,conversationLength:Array.isArray(e.request.conversation)?e.request.conversation.length:undefined}}));
- if(JSON.stringify(packed).length>160000)packed=packed.map(e=>({...e,response:e.response?{model:e.response.model,reportedModel:e.response.reportedModel,manifest:e.response.manifest,usage:e.response.usage,usageWarnings:e.response.usageWarnings,result:e.response.result,traceDetailOmitted:true}:undefined,request:{conversationLength:e.request.conversationLength}}));
+ if(JSON.stringify(packed).length>160000)packed=packed.map(e=>({...e,response:e.response?{model:e.response.model,reportedModel:e.response.reportedModel,manifest:e.response.manifest,usage:e.response.usage,usageWarnings:e.response.usageWarnings,result:e.response.result,diagnostics:e.response.diagnostics,reason:e.response.reason,providerRequestId:e.response.providerRequestId,traceDetailOmitted:true}:undefined,request:{conversationLength:e.request.conversationLength}}));
  // A diagnostic must never make the underlying check-in unsaveable.
  while(JSON.stringify(packed).length>160000&&packed.length)packed.shift();
  if(packed.length)packed[0].request={...packed[0].request,capturedEventCount:events.length,savedEventCount:packed.length};
