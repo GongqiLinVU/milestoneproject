@@ -1,3 +1,4 @@
+import {REVIEW_CONTRACT_VERSION} from './intakeReviewContract.js';
 // Debug-only sidecar. Never feeds a routing, extraction, or save decision.
 export const OBSERVATION_VERSION = 'intake-observation.v1.1';
 type Obj = Record<string, any>;
@@ -47,6 +48,15 @@ export function buildHarnessObservations(events:DebugEvent[]) {
     });
     const coverage=decisions.some((d:Obj)=>d.appliedCandidate)?'detailed':'legacy_partial';
     if(event.mode==='turn')add(event,index,'intervention_coverage',{coverage,limitations:coverage==='legacy_partial'?['Field rewrites and intermediate record replacements were not recorded in this historical trace.']:[]});
+    const result=response.result??response.rawCandidate;
+    if(event.mode==='turn' && result && (result.readyForReview===true || result.route==='review')){
+      add(event,index,'review_readiness',{reviewContractVersion:response.manifest?.reviewContractVersion??'legacy_unversioned',currentReviewContractVersion:REVIEW_CONTRACT_VERSION,
+        information:result.assessment?.information??null,gap:result.assessment?.gap??null,uncertainties:result.uncertainties??[],
+        routeReason:response.routeDecision?.reason??null,legacyStopReasonMeaning:'sufficient_information is a legacy save category for model review; not an independently verified completeness verdict',source:'model_self_report_not_verified',affectsConversation:false});
+      if(result.assessment?.information==='sparse')add(event,index,'sparse_review_exit',{
+        information:'sparse',gap:result.assessment?.gap??null,uncertainties:result.uncertainties??[],
+        routeReason:response.routeDecision?.reason??null,interpretation:'Sparse information at review exit; may be a premature close or a valid bounded/support/refusal exit. Requires human review.',affectsConversation:false});
+    }
     if(response.result?.consistencyObservations?.length)add(event,index,'record_consistency',{reasons:response.result.consistencyObservations,displayed:false,affectsConversation:false});
     if(Array.isArray(response.result?.uncertainties)&&response.result.uncertainties.length)add(event,index,'model_uncertainty',{uncertainties:response.result.uncertainties,source:'model_self_report_not_verified'});
   });

@@ -1,4 +1,4 @@
-import { IntakeReview, IntakeRecordSummary } from "./IntakeReview";
+import { IntakeReview, IntakeRecordSummary, IntakeReviewDetails } from "./IntakeReview";
 import { FOCUSED_REVIEW_VERSION, buildFocusedStudentRecord, validateFocusedIntakeRecord, packReviewDebug, restoreReviewDebug } from "./intakeReview";
 import { IntakeDebugViewer } from "./IntakeDebugViewer";
 import { buildHarnessObservations } from "./intakeObservations";
@@ -2752,15 +2752,8 @@ function StudioSessionControl({
       {intakeLoading?<p className="empty-state">Loading Session Intake records…</p>:intakeError?<p className="admin-alert" role="alert">{intakeError}</p>:!intakeData||!intakeData.intakes.length?<p className="empty-state">No roster or Session Intake records for this Session.</p>:<>
         <div className="teacher-track-summary"><strong>{intakeData.rosterSubmittedCount??intakeData.submittedCount} / {intakeData.rosterSize??((intakeData.rosterSubmittedCount??intakeData.submittedCount)+intakeData.missingCount)} roster submitted</strong><span>{intakeData.missingCount} missing</span>{(intakeData.offRosterCount??0)>0&&<span>{intakeData.offRosterCount} off-roster (history, not counted in roster completion)</span>}</div>
         <p className="form-note">These are student claims, not Teacher verification. Teacher academic judgement is recorded separately.</p>
-        <div className="teacher-track-list">{intakeData.intakes.map(row=>{const record=row.studentRecord;const testing=record?.testing?.[0];return <details key={row.studentId+(row.intakeId||"")} className={row.submitted?"":"needs-attention"}><summary><span><b>{row.studentName}</b><small>{row.studentId}{row.teamName?` · ${row.teamName}`:""}{row.onRoster?"":" · off-roster (history preserved)"}</small></span><span className={"track-evidence-state "+(row.submitted?"":"attention")}>{row.submitted?`Submitted${row.confirmedAt?" · "+new Date(row.confirmedAt).toLocaleString():""}`:"Missing"}</span></summary>
-          <div className="teacher-track-detail">{row.submitted&&record?<><dl className="teacher-track-evidence-grid">
-            <div><dt>Responsibility</dt><dd>{record.responsibility.current}</dd></div>
-            <div><dt>Progress claim</dt><dd>{record.claims.map(claim=>`${claim.statement} (${claim.progress_kind.replaceAll("_"," ")}${claim.completion_percent!=null?` · ${claim.completion_percent}%`:""})`).join(" · ")}</dd></div>
-            <div><dt>Evidence</dt><dd>{record.evidence.map(item=>`${item.availability.replaceAll("_"," ")}${item.reference?` · ${item.reference}`:""}${item.verification_method?` · verify: ${item.verification_method}`:""}`).join(" · ")}</dd></div>
-            <div><dt>Executed testing</dt><dd>{testing?`${testing.execution_status.replaceAll("_"," ")}${testing.method?` · ${testing.method}`:""}${testing.observed_result?` · observed: ${testing.observed_result}`:""}`:"Not discussed"}</dd></div>
-            <div><dt>Untested limitation</dt><dd>{testing?.baseline_or_expected||"None recorded"}</dd></div>
-            <div><dt>Blocker</dt><dd>{record.blocker.status}{record.blocker.description?` · ${record.blocker.description}`:""}{record.blocker.support_requested?` · support: ${record.blocker.support_requested}`:""}</dd></div>
-            <div><dt>Next action</dt><dd>{record.next_action.action} · due {record.next_action.due_session} · expects {record.next_action.expected_evidence}</dd></div>
+        <div className="teacher-track-list">{intakeData.intakes.map(row=>{const record=row.studentRecord;return <details key={row.studentId+(row.intakeId||"")} className={row.submitted?"":"needs-attention"}><summary><span><b>{row.studentName}</b><small>{row.studentId}{row.teamName?` · ${row.teamName}`:""}{row.onRoster?"":" · off-roster (history preserved)"}</small></span><span className={"track-evidence-state "+(row.submitted?"":"attention")}>{row.submitted?`Submitted${row.confirmedAt?" · "+new Date(row.confirmedAt).toLocaleString():""}`:"Missing"}</span></summary>
+          <div className="teacher-track-detail">{row.submitted&&record?<><IntakeReviewDetails record={record}/><dl className="teacher-track-evidence-grid">
             <div><dt>Source mode</dt><dd>{row.sourceMode?.replaceAll("_"," ")||"—"}</dd></div>
             <div><dt>Teacher verification</dt><dd>{row.teacherVerification.recorded?row.teacherVerification.status:"Not recorded in Intake (teacher judgement is separate)"}</dd></div>
           </dl>
