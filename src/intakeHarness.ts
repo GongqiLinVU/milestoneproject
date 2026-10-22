@@ -2,7 +2,7 @@ import { applyEvidenceUpdates, questionCount, MAX_INTAKE_QUESTIONS, type ChatSou
 import {MAX_EVIDENCE_UPDATES} from './intakeContract.js';
 import type { DeterministicIntakeAnswers } from './aiSessionIntake.js';
 
-export const INTAKE_PARSER_VERSION = 'intake-parser.v1.4.1';
+export const INTAKE_PARSER_VERSION = 'intake-parser.v1.4.2';
 export type CandidateManifest = { model: string; promptVersion: string; policyVersion: string; parserVersion: string; evidenceSchemaVersion: string; knowledgeVersion: string; cost: number | null; latencyMs: number; stopReason: string };
 export type IntakeCase = { id: string; provenance: string; conversation: ChatSource[]; candidate?: unknown; expected?: Record<string, unknown> };
 export type FieldDecision = { index: number; field: string; outcome: 'accepted'|'repaired'|'rejected'; reason: string; originalSourceTurn: unknown; sourceTurn?: number; candidate: unknown; observations?: string[]; appliedCandidate?: EvidenceUpdate; transformations?: string[]; recordBefore?: Record<string,unknown>; recordAfter?: Record<string,unknown> };
@@ -95,6 +95,18 @@ function grounded(candidate: EvidenceUpdate, source: string) {
   if (candidate.field === 'testing' && candidate.state === 'executed' && (!candidate.observedResult || ![...significant(candidate.observedResult)].some(t=>sourceTokens.has(t)))) return false;
   return [...tokens].some(t => sourceTokens.has(t));
 }
+// Resolve only competing lexical matches with at least two action anchors
+// exclusive to one student turn. Shared words such as "code" cannot decide.
+// This locates a source; it does not verify the meaning or truth of a claim.
+function uniqueActionSource(u: EvidenceUpdate, matches: number[], conversation: ChatSource[]): number | null {
+  if(u.field!=='next_action'||matches.length<2)return null;
+  const actionTokens=significant(u.value);
+  const anchors=matches.map(i=>({i,tokens:[...significant(conversation[i].text)].filter(t=>actionTokens.has(t))}));
+  const owners=new Map<string,number>();
+  for(const a of anchors)for(const t of a.tokens)owners.set(t,(owners.get(t)||0)+1);
+  const distinctive=anchors.filter(a=>a.tokens.filter(t=>owners.get(t)===1).length>=2);
+  return distinctive.length===1?distinctive[0].i:null;
+}
 function validShape(u: any): u is EvidenceUpdate {
   return u && fields.has(u.field) && states.has(u.state) && allowedStates[u.field].includes(u.state) && typeof u.value === 'string' && u.value.length <= 1000
     && (u.operation == null || ['add','replace'].includes(u.operation))
@@ -150,8 +162,10 @@ export function validateCandidates(raw: unknown, conversation: ChatSource[], cur
     if (!Number.isInteger(source) || conversation[source]?.actor !== 'student' || !(u.field==='next_action'&&u.state==='unknown')&&!grounded(u,sourceText(source))) {
       if (options.sourcePolicy === 'strict_pointer') return reject('source_pointer_invalid_strict_policy');
       const matches = conversation.flatMap((turn,i) => turn.actor === 'student' && grounded(u,turn.text) ? [i] : []);
-      if (matches.length !== 1) return reject('student_source_not_uniquely_grounded');
-      source = matches[0]; outcome = 'repaired';
+      const anchored=uniqueActionSource(u,matches,conversation);
+      if (matches.length !== 1 && anchored==null) return reject('student_source_not_uniquely_grounded');
+      source = anchored??matches[0]; outcome = 'repaired';
+      if(anchored!=null)repairs.push('source_relocated_using_distinct_action_anchors');
     }
     const observations:string[]=[...repairs];
     if(u.field==='claim' && source<conversation.length-1)observations.push('claim_reemitted_from_earlier_turn');

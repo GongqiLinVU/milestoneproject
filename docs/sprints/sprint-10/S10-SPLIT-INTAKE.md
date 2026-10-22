@@ -61,3 +61,21 @@ The reviewer ran exactly eight calls at 361e78f; the script passed 6/8. This is 
 The follow-up renames the helper to intakeReviewSupport.ts to remove extensionless case collisions with IntakeReview.tsx. A portable source-stem regression check detects the original collision even on Linux. Action provenance now excludes auxiliary expectedEvidence; explicitly unsupported artifact metadata is omitted with an observable decision transformation, while unsupported artifacts in the action itself remain rejected. Synthetic regressions cover these paths, but do not establish the cause of the two live rejected actions without their original candidate/decision data. The chat prompt also says tentative bug hypotheses should not reopen an otherwise sufficient check-in. Future evaluator reports retain raw candidates and source conversations for offline replay.
 
 Follow-up local verification: 189 adaptive/API tests and Linux production build pass. macOS build and the original failed extraction still require verification. No additional provider calls were made; no database or production changes. Keep this PR draft until the actual failures are verified, starting with offline replay of the original JSON rather than another paid batch.
+
+
+## Original JSON replay and second follow-up
+
+The uploaded `pr88_eval_out.json` is frozen byte-for-byte at `tests/ai-session-intake/fixtures/pr88-live-eval-361e78f.json` (SHA256 `8d57b8125ad25035686976a0326e55878992fd9106c84e9ec6efb245c143cd6c`). It confirms prefix-2 passed: the only failures were prefix-5 and final-record. Contrary to the prose report, the final report action was never emitted as an action; it appears only as a progress claim. The rejected actions were invitation and debugging, not report and invitation.
+
+The invitation cited student turn 7 (`yes`) without contextTurn 6. Broad token matching saw both the generic code statement at turn 1 and the substantive invitation at turn 5. Action source repair now resolves competing matches only when one student turn has at least two action tokens exclusive to that turn among matches. Shared words cannot select a turn; competing distinctive sources remain rejected. The decision records `source_relocated_using_distinct_action_anchors`. This is lexical source location, not semantic verification, and has no effect on close decisions. Proper extraction can instead cite turn 5 directly or turn 7 with contextTurn 6. Artifact and identifier guards remain active.
+
+Record instructions now explicitly separate mixed unfinished-work/next-direction clauses, retain current directions even without `will`, preserve all actions, and require acceptance context for brief confirmations. Planned demos are not testing unless the student describes a test. These are extraction instructions, not deterministic rules to synthesize missing facts.
+
+Offline validation: 194 adaptive/API tests and Linux production build pass. Exact original candidate replay now preserves invite and demo; reportPlan remains false, deliberately, because the model omitted it. A separately labelled gold-input test proves three correctly sourced actions survive the full review contract. Neither is a revised-model pass. No paid calls or database changes. PR stays draft pending actual revised extraction and prefix-5 validation, plus macOS build verification.
+
+```sh
+npm run test:build
+node scripts/replay-intake-evaluation.mjs tests/ai-session-intake/fixtures/pr88-live-eval-361e78f.json
+```
+
+This makes zero provider calls and exits 1 while the original report action is absent. It does not rerun the model. Future reports use their embedded conversation; only the exact known original report may use the frozen fallback transcript.
