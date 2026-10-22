@@ -24,6 +24,9 @@ export function buildHarnessObservations(events:DebugEvent[]) {
     if(!response)return;
     if(Array.isArray(response.usageWarnings)&&response.usageWarnings.length)add(event,index,'usage_warning',{warnings:response.usageWarnings,audience:'developer',displayed:false});
     if(response.extractionPending||response.providerFailure)add(event,index,'extraction_pending',{extractionPending:response.extractionPending??null,providerFailure:response.providerFailure??null});
+    if(event.mode==='chat' && typeof response.result?.assistantMessage==='string')add(event,index,'dialogue_reply_metrics',{
+      words:response.result.assistantMessage.trim().split(/\s+/).length,characters:response.result.assistantMessage.length,
+      readyForReview:response.result.readyForReview,reason:response.result.reason??null,source:'model_decision_not_verified',affectsConversation:false});
     if(response.routeDecision)add(event,index,'routing_comparison',{routeDecision:response.routeDecision,
       legacyIntervention:response.routeDecision.proposed!==response.routeDecision.final||response.rawCandidate?.assistantMessage!==response.result?.assistantMessage,
       proposedMessage:response.rawCandidate?.assistantMessage??null,deliveredMessage:response.result?.assistantMessage??null});
@@ -47,9 +50,9 @@ export function buildHarnessObservations(events:DebugEvent[]) {
       }
     });
     const coverage=decisions.some((d:Obj)=>d.appliedCandidate)?'detailed':'legacy_partial';
-    if(event.mode==='turn')add(event,index,'intervention_coverage',{coverage,limitations:coverage==='legacy_partial'?['Field rewrites and intermediate record replacements were not recorded in this historical trace.']:[]});
+    if(['turn','record'].includes(event.mode))add(event,index,'intervention_coverage',{coverage,limitations:coverage==='legacy_partial'?['Field rewrites and intermediate record replacements were not recorded in this historical trace.']:[]});
     const result=response.result??response.rawCandidate;
-    if(event.mode==='turn' && result && (result.readyForReview===true || result.route==='review')){
+    if(['turn','record'].includes(event.mode) && result && (result.readyForReview===true || result.route==='review')){
       add(event,index,'review_readiness',{reviewContractVersion:response.manifest?.reviewContractVersion??'legacy_unversioned',currentReviewContractVersion:REVIEW_CONTRACT_VERSION,
         information:result.assessment?.information??null,gap:result.assessment?.gap??null,uncertainties:result.uncertainties??[],
         routeReason:response.routeDecision?.reason??null,legacyStopReasonMeaning:'sufficient_information is a legacy save category for model review; not an independently verified completeness verdict',source:'model_self_report_not_verified',affectsConversation:false});

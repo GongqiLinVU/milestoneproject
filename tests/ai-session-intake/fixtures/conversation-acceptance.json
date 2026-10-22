@@ -1,0 +1,361 @@
+{
+  "version": "conversation-acceptance.v1",
+  "sourceSha256": "7c624265e189481dc591bf7e00965507f043b6f84d40fdf9378948ac5957dc3f",
+  "maxWords": 45,
+  "cases": [
+    {
+      "id": "S7-6-prefix-1",
+      "provenance": "Actual student test conversation and original provider reply",
+      "conversation": [
+        {
+          "actor": "system",
+          "purpose": "session starting point",
+          "text": "In your last confirmed Intake, your responsibility was “UI design and frontend implementation”. What did you actually complete, change, test or discover since then? If your responsibility changed or nothing progressed, say that directly."
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I completed almost code part, now focus on final report",
+          "evidenceChanges": [
+            "claim",
+            "next_action"
+          ]
+        }
+      ],
+      "expectedReadyForReview": false,
+      "rationale": "Initial progress is generic; clarify the concrete work once.",
+      "historicalReply": {
+        "assistantMessage": "Got it — you said you \"completed almost code part\" and will now focus on the final report. What exactly remains in the code (which features or files), and how can the teacher view the current code/work?",
+        "readyForReview": false
+      }
+    },
+    {
+      "id": "S7-6-prefix-2",
+      "provenance": "Actual student test conversation and original provider reply",
+      "conversation": [
+        {
+          "actor": "system",
+          "purpose": "session starting point",
+          "text": "In your last confirmed Intake, your responsibility was “UI design and frontend implementation”. What did you actually complete, change, test or discover since then? If your responsibility changed or nothing progressed, say that directly."
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I completed almost code part, now focus on final report",
+          "evidenceChanges": [
+            "claim",
+            "next_action"
+          ]
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "source": "llm",
+          "text": "Got it — you said you \"completed almost code part\" and will now focus on the final report. What exactly remains in the code (which features or files), and how can the teacher view the current code/work?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "Just last debug for API error for booking confirmation, and I will show live demo next Wednesday",
+          "evidenceChanges": [
+            "claim",
+            "evidence",
+            "next_action"
+          ]
+        }
+      ],
+      "expectedReadyForReview": true,
+      "rationale": "Concrete remaining booking API issue and next direction/demo already stated.",
+      "historicalReply": {
+        "assistantMessage": "Thanks — noted: you’re almost finished the code, you have a last debug for a booking-confirmation API error, you’ll focus on the final report, and you will show a live demo next Wednesday. How can the teacher view the current code/work now?",
+        "readyForReview": false
+      }
+    },
+    {
+      "id": "S7-6-prefix-3",
+      "provenance": "Actual student test conversation and original provider reply",
+      "conversation": [
+        {
+          "actor": "system",
+          "purpose": "session starting point",
+          "text": "In your last confirmed Intake, your responsibility was “UI design and frontend implementation”. What did you actually complete, change, test or discover since then? If your responsibility changed or nothing progressed, say that directly."
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I completed almost code part, now focus on final report",
+          "evidenceChanges": [
+            "claim",
+            "next_action"
+          ]
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "source": "llm",
+          "text": "Got it — you said you \"completed almost code part\" and will now focus on the final report. What exactly remains in the code (which features or files), and how can the teacher view the current code/work?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "Just last debug for API error for booking confirmation, and I will show live demo next Wednesday",
+          "evidenceChanges": [
+            "claim",
+            "evidence",
+            "next_action"
+          ]
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "source": "llm",
+          "text": "Thanks — noted: you’re almost finished the code, you have a last debug for a booking-confirmation API error, you’ll focus on the final report, and you will show a live demo next Wednesday. How can the teacher view the current code/work now?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "All code in my GitHub, and I can invite teacher to team github",
+          "evidenceChanges": [
+            "evidence",
+            "next_action"
+          ]
+        }
+      ],
+      "expectedReadyForReview": true,
+      "rationale": "Work state, GitHub evidence route and next direction are available; do not negotiate access.",
+      "historicalReply": {
+        "assistantMessage": "Thanks — I recorded: you’re almost finished the code, you have a last debug for a booking-confirmation API error, the code is in your GitHub (you can invite the teacher), and you’ll focus on the final report and show a live demo next Wednesday. Will you invite the teacher to the team GitHub so they can view the code?",
+        "readyForReview": false
+      }
+    },
+    {
+      "id": "S7-6-prefix-4",
+      "provenance": "Actual student test conversation and original provider reply",
+      "conversation": [
+        {
+          "actor": "system",
+          "purpose": "session starting point",
+          "text": "In your last confirmed Intake, your responsibility was “UI design and frontend implementation”. What did you actually complete, change, test or discover since then? If your responsibility changed or nothing progressed, say that directly."
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I completed almost code part, now focus on final report",
+          "evidenceChanges": [
+            "claim",
+            "next_action"
+          ]
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "source": "llm",
+          "text": "Got it — you said you \"completed almost code part\" and will now focus on the final report. What exactly remains in the code (which features or files), and how can the teacher view the current code/work?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "Just last debug for API error for booking confirmation, and I will show live demo next Wednesday",
+          "evidenceChanges": [
+            "claim",
+            "evidence",
+            "next_action"
+          ]
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "source": "llm",
+          "text": "Thanks — noted: you’re almost finished the code, you have a last debug for a booking-confirmation API error, you’ll focus on the final report, and you will show a live demo next Wednesday. How can the teacher view the current code/work now?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "All code in my GitHub, and I can invite teacher to team github",
+          "evidenceChanges": [
+            "evidence",
+            "next_action"
+          ]
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "source": "llm",
+          "text": "Thanks — I recorded: you’re almost finished the code, you have a last debug for a booking-confirmation API error, the code is in your GitHub (you can invite the teacher), and you’ll focus on the final report and show a live demo next Wednesday. Will you invite the teacher to the team GitHub so they can view the code?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "yes",
+          "evidenceChanges": [
+            "next_action"
+          ]
+        }
+      ],
+      "expectedReadyForReview": true,
+      "rationale": "Student accepted invite; no additional debugging interview is needed.",
+      "historicalReply": {
+        "assistantMessage": "Thanks — I recorded your updates (almost finished code, last debug for booking-confirmation API, code on GitHub and you'll invite the teacher, focusing on the final report, and a live demo next Wednesday). Quick question: what exactly happens now when the booking-confirmation API error occurs (error message or observed failure)?",
+        "readyForReview": false
+      }
+    },
+    {
+      "id": "S7-6-prefix-5",
+      "provenance": "Actual student test conversation and original provider reply",
+      "conversation": [
+        {
+          "actor": "system",
+          "purpose": "session starting point",
+          "text": "In your last confirmed Intake, your responsibility was “UI design and frontend implementation”. What did you actually complete, change, test or discover since then? If your responsibility changed or nothing progressed, say that directly."
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I completed almost code part, now focus on final report",
+          "evidenceChanges": [
+            "claim",
+            "next_action"
+          ]
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "source": "llm",
+          "text": "Got it — you said you \"completed almost code part\" and will now focus on the final report. What exactly remains in the code (which features or files), and how can the teacher view the current code/work?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "Just last debug for API error for booking confirmation, and I will show live demo next Wednesday",
+          "evidenceChanges": [
+            "claim",
+            "evidence",
+            "next_action"
+          ]
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "source": "llm",
+          "text": "Thanks — noted: you’re almost finished the code, you have a last debug for a booking-confirmation API error, you’ll focus on the final report, and you will show a live demo next Wednesday. How can the teacher view the current code/work now?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "All code in my GitHub, and I can invite teacher to team github",
+          "evidenceChanges": [
+            "evidence",
+            "next_action"
+          ]
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "source": "llm",
+          "text": "Thanks — I recorded: you’re almost finished the code, you have a last debug for a booking-confirmation API error, the code is in your GitHub (you can invite the teacher), and you’ll focus on the final report and show a live demo next Wednesday. Will you invite the teacher to the team GitHub so they can view the code?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "yes",
+          "evidenceChanges": [
+            "next_action"
+          ]
+        },
+        {
+          "actor": "system",
+          "purpose": "continue",
+          "source": "llm",
+          "text": "Thanks — I recorded your updates (almost finished code, last debug for booking-confirmation API, code on GitHub and you'll invite the teacher, focusing on the final report, and a live demo next Wednesday). Quick question: what exactly happens now when the booking-confirmation API error occurs (error message or observed failure)?"
+        },
+        {
+          "actor": "student",
+          "purpose": "student response",
+          "text": "I think it could parameter issue",
+          "evidenceChanges": [
+            "claim",
+            "evidence"
+          ]
+        }
+      ],
+      "expectedReadyForReview": true,
+      "rationale": "Tentative cause is sufficient; do not ask parameter names.",
+      "historicalReply": {
+        "assistantMessage": "Thanks — recorded your updates. Quick question: which specific parameter do you suspect is incorrect (or which request field seems to trigger the booking-confirmation API error)?",
+        "readyForReview": false
+      }
+    },
+    {
+      "id": "S7-6-unknown-cause",
+      "provenance": "Actual final attempted student answer; provider failed twice, so no original reply exists",
+      "conversation": [
+        {
+          "actor": "system",
+          "text": "In your last confirmed Intake, your responsibility was “UI design and frontend implementation”. What did you actually complete, change, test or discover since then? If your responsibility changed or nothing progressed, say that directly."
+        },
+        {
+          "actor": "student",
+          "text": "I completed almost code part, now focus on final report"
+        },
+        {
+          "actor": "system",
+          "text": "Got it — you said you \"completed almost code part\" and will now focus on the final report. What exactly remains in the code (which features or files), and how can the teacher view the current code/work?"
+        },
+        {
+          "actor": "student",
+          "text": "Just last debug for API error for booking confirmation, and I will show live demo next Wednesday"
+        },
+        {
+          "actor": "system",
+          "text": "Thanks — noted: you’re almost finished the code, you have a last debug for a booking-confirmation API error, you’ll focus on the final report, and you will show a live demo next Wednesday. How can the teacher view the current code/work now?"
+        },
+        {
+          "actor": "student",
+          "text": "All code in my GitHub, and I can invite teacher to team github"
+        },
+        {
+          "actor": "system",
+          "text": "Thanks — I recorded: you’re almost finished the code, you have a last debug for a booking-confirmation API error, the code is in your GitHub (you can invite the teacher), and you’ll focus on the final report and show a live demo next Wednesday. Will you invite the teacher to the team GitHub so they can view the code?"
+        },
+        {
+          "actor": "student",
+          "text": "yes"
+        },
+        {
+          "actor": "system",
+          "text": "Thanks — I recorded your updates (almost finished code, last debug for booking-confirmation API, code on GitHub and you'll invite the teacher, focusing on the final report, and a live demo next Wednesday). Quick question: what exactly happens now when the booking-confirmation API error occurs (error message or observed failure)?"
+        },
+        {
+          "actor": "student",
+          "text": "I think it could parameter issue"
+        },
+        {
+          "actor": "system",
+          "text": "Thanks — recorded your updates. Quick question: which specific parameter do you suspect is incorrect (or which request field seems to trigger the booking-confirmation API error)?"
+        },
+        {
+          "actor": "student",
+          "text": "I don't know, that's why I am still doing debug"
+        }
+      ],
+      "expectedReadyForReview": true,
+      "rationale": "Student explicitly does not know; retain uncertainty and finish."
+    },
+    {
+      "id": "S7-detailed-first",
+      "provenance": "Existing frozen real-provider test conversation",
+      "conversation": [
+        {
+          "actor": "system",
+          "text": "In your last confirmed Intake, your responsibility was “UI design and frontend implementation” and your next action was “”. Start there: what did you actually complete, change, test or discover since then? If the plan changed or nothing progressed, say that directly."
+        },
+        {
+          "actor": "student",
+          "text": "I finished the remaining mobile dashboard layout work. After discussing it with the team, we chose horizontal scrolling for the table because users need to compare columns. I added a visible scroll hint and fixed the card overflow at 375px and 768px.\n\nI tested the loading, empty and API error states in Chrome’s mobile viewport and on my phone. The content stayed readable, and Retry worked after a simulated API failure. I saved screenshots and showed the teacher a short demo. I haven’t received the teacher’s feedback yet.\n\nNext, I’ll check keyboard navigation and focus visibility before S8, and record any issues with screenshots. I’m not blocked at the moment."
+        }
+      ],
+      "expectedReadyForReview": true,
+      "rationale": "Specific first answer does not need a minimum number of rounds."
+    }
+  ]
+}

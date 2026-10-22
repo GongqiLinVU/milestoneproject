@@ -1,7 +1,7 @@
 import {test,after} from 'node:test';import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';
 import {db,sid,identity,owner} from './fixture.mjs';
 import {buildFallbackStudentRecord,validateIntakeStudentRecord,STUDENT_CONFIRMATION_ATTESTATION} from '../../.test-build/aiSessionIntake.js';
-import {validateFocusedIntakeRecord} from '../../.test-focused/intakeReview.js';
+import {validateFocusedIntakeRecord} from '../../.test-focused/intakeReviewSupport.js';
 after(()=>db.close());
 test('unknown progress persists unchanged only through focused validation; migration is idempotent and private',async()=>{
  await owner();
