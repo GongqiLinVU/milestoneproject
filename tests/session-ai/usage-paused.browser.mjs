@@ -62,11 +62,11 @@ try{
   }
 
  }
- denial=null;await page.getByRole('button',{name:'Send',exact:true}).click();await page.getByRole('heading',{name:'Your progress',exact:true}).waitFor();
+ denial=null;await page.getByRole('button',{name:'Send',exact:true}).click();await page.getByRole('heading',{name:'Work and progress',exact:true}).waitFor();
 
  const review=page.getByRole('region',{name:'Review your check-in'});
  assert.equal(await review.locator('textarea').count(),0);assert.match(await review.innerText(),/Added loading state/);assert.match(await review.innerText(),/Checked spacing at 375px/);await review.getByRole('button',{name:'Edit',exact:true}).click();assert.equal(await review.getByLabel('Progress state',{exact:true}).inputValue(),'unknown');await review.getByRole('button',{name:'Done editing',exact:true}).click();await page.screenshot({path:'/tmp/intake-focused-progress.png'});
- await review.getByRole('button',{name:'Looks right · Continue',exact:true}).click();await review.getByRole('heading',{name:'What supports it',exact:true}).waitFor();
+ await review.getByRole('button',{name:'Looks right · Continue',exact:true}).click();await review.getByRole('heading',{name:'Checks and evidence',exact:true}).waitFor();
  assert.equal(await review.locator('textarea').count(),0);await page.setViewportSize({width:390,height:700});await page.screenshot({path:'/tmp/intake-focused-evidence-mobile.png'});
  await review.getByRole('button',{name:'Looks right · Continue',exact:true}).click();await review.getByRole('button',{name:'Skip for now',exact:true}).click();
  await review.getByRole('heading',{name:'Ready to save',exact:true}).waitFor();await review.getByRole('checkbox').check();await review.getByRole('button',{name:'Save check-in',exact:true}).click();

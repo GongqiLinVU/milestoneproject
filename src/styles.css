@@ -2199,6 +2199,7 @@ button.danger:hover {
 .journey-track-action{flex-direction:column;align-items:flex-end;gap:8px}
 .journey-track-action .journey-action-note{display:block;max-width:38ch;text-align:right;font-size:.78rem;line-height:1.5;color:#667169}
 @media(max-width:600px){.journey-track-action{align-items:stretch}.journey-track-action button{width:100%;white-space:normal}.journey-track-action .journey-action-note{max-width:none;text-align:left}}
+
 /* Header access keeps raw debug out of the fixed composer area. */
 .chat-intake-header{height:auto;min-height:72px;box-sizing:border-box}
 .chat-intake-header .chat-header-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:.5rem}
@@ -2236,3 +2237,6 @@ button.danger:hover {
 .chat-transcript>summary{padding:.75rem 0;color:#65738a;cursor:pointer;font-size:.85rem}.chat-transcript.live>summary{display:none}
 .evidence-drawer[aria-hidden="true"]{display:none}
 .review-actions>button:last-child{background:#245cff;color:#fff;border-color:#245cff}.review-extra{margin-top:1rem;color:#65738a;font-size:.85rem}.review-extra summary{cursor:pointer}.review-extra button{margin:.6rem .5rem 0 0}
+
+/* Shared confirmed record layout for student history and teacher review. */
+.intake-review-details{display:grid;gap:1rem;min-width:0}.intake-review-details article{padding:1.1rem;margin:0;border:1px solid #e0e5ed;background:#fff;border-radius:14px;min-width:0}.intake-review-details h4{margin:0 0 .6rem;color:#445570;font-size:.95rem}.intake-review-details p{line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere;margin:.45rem 0}.intake-review-details small{color:#69758a;line-height:1.6}

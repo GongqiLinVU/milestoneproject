@@ -1,0 +1,448 @@
+{
+  "description": "Real S7 provider output: generic progress and plan closed after one reply. Frozen replay is observation/extraction evidence, not a new-model quality test.",
+  "sourceSha256": "72da8f3a5501c5a191b66be4d3df693ad57eb696ea7e4c0d6e33336ef286bd73",
+  "conversation": [
+    {
+      "actor": "system",
+      "purpose": "session starting point",
+      "text": "In your last confirmed Intake, your responsibility was “UI design and frontend implementation”. What did you actually complete, change, test or discover since then? If your responsibility changed or nothing progressed, say that directly."
+    },
+    {
+      "actor": "student",
+      "purpose": "student response",
+      "text": "I almost done the code part, and will start my word document for final report",
+      "evidenceChanges": [
+        "claim",
+        "next_action"
+      ]
+    },
+    {
+      "actor": "system",
+      "purpose": "review transition",
+      "source": "llm",
+      "text": "Noted — you said you’re “almost done the code part” and that you “will start [a] Word document for final report.” For review I’ll check the actual code completion status (what remains) and the draft of your final report or any document you produce when you indicate artifacts are available."
+    }
+  ],
+  "record": {
+    "responsibility": {
+      "current": "UI design and frontend implementation",
+      "change_from_previous": "unknown"
+    },
+    "claims": [
+      {
+        "claim_id": "C1",
+        "statement": "I almost done the code part\nI will start my word document for final report",
+        "progress_kind": "unknown",
+        "scope": "UI design and frontend implementation",
+        "completion_percent": null
+      }
+    ],
+    "evidence": [
+      {
+        "evidence_id": "E1",
+        "claim_ids": [
+          "C1"
+        ],
+        "type": "other",
+        "availability": "unknown",
+        "reference": null,
+        "verification_method": null,
+        "not_required_reason": null
+      }
+    ],
+    "testing": [
+      {
+        "test_id": "T1",
+        "claim_ids": [
+          "C1"
+        ],
+        "execution_status": "unknown",
+        "method": null,
+        "observed_result": null,
+        "baseline_or_expected": null
+      }
+    ],
+    "dependencies": [],
+    "blocker": {
+      "status": "unknown",
+      "description": "",
+      "support_requested": null
+    },
+    "next_action": {
+      "action": "start my word document for final report",
+      "due_session": "S8",
+      "expected_evidence": ""
+    }
+  },
+  "event": {
+    "at": "2026-10-22T03:50:31.929Z",
+    "mode": "turn",
+    "request": {
+      "sessionNumber": 7,
+      "sessionFocus": "Application Progress + Technical Implementation Report",
+      "conversation": [
+        {
+          "actor": "system",
+          "text": "In your last confirmed Intake, your responsibility was “UI design and frontend implementation”. What did you actually complete, change, test or discover since then? If your responsibility changed or nothing progressed, say that directly."
+        },
+        {
+          "actor": "student",
+          "text": "I almost done the code part, and will start my word document for final report"
+        }
+      ],
+      "answersSnapshot": {
+        "responsibility": "UI design and frontend implementation",
+        "progress": "",
+        "progressKind": "advanced",
+        "scope": "UI design and frontend implementation",
+        "completionPercent": null,
+        "evidenceType": "other",
+        "evidenceAvailability": "unknown",
+        "evidenceReference": "",
+        "verificationMethod": "",
+        "testingStatus": "unknown",
+        "testingMethod": "",
+        "testingResult": "",
+        "testingBaseline": "",
+        "blockerStatus": "unknown",
+        "blockerDescription": "",
+        "supportRequested": "",
+        "nextAction": "",
+        "dueSession": "S8",
+        "expectedEvidence": ""
+      },
+      "capturedFields": [],
+      "currentEvidence": {}
+    },
+    "response": {
+      "model": "gpt-5-mini",
+      "reportedModel": "gpt-5-mini-2025-08-07",
+      "configuredModel": "gpt-5-mini",
+      "promptVersion": "session-intake-ai.v1.3.1",
+      "policyVersion": "adaptive-intake.v1.1.0",
+      "parserVersion": "intake-parser.v1.3.0",
+      "manifest": {
+        "model": "gpt-5-mini",
+        "reportedModel": "gpt-5-mini-2025-08-07",
+        "costBasis": "configured_model_rates",
+        "dialogueRevision": "intake-dialogue.v1.3",
+        "promptVersion": "session-intake-ai.v1.3.1",
+        "policyVersion": "adaptive-intake.v1.1.0",
+        "parserVersion": "intake-parser.v1.3.0",
+        "evidenceSchemaVersion": "session-intake.v1.2.0",
+        "knowledgeVersion": "teacher-approved-kb.none",
+        "cost": 0.0045525,
+        "costComplete": true,
+        "usageAttempts": [
+          {
+            "status": "settled",
+            "costUsd": 0.0045525,
+            "costBasis": "configured_model_rates",
+            "chargedUsd": 0.0045525,
+            "reconciliationRequired": false
+          }
+        ],
+        "usageWarnings": [
+          "financial_limit_observed_not_enforced"
+        ],
+        "latencyMs": 32263,
+        "stopReason": "review"
+      },
+      "usageWarnings": [
+        "financial_limit_observed_not_enforced"
+      ],
+      "usageAttempts": [
+        {
+          "status": "settled",
+          "costUsd": 0.0045525,
+          "costBasis": "configured_model_rates",
+          "chargedUsd": 0.0045525,
+          "reconciliationRequired": false
+        }
+      ],
+      "usage": {
+        "input_tokens": 2722,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 1936,
+        "output_tokens_details": {
+          "reasoning_tokens": 1600
+        },
+        "total_tokens": 4658
+      },
+      "latencyMs": 32263,
+      "budget": {
+        "questionsAsked": 1,
+        "maxQuestions": 8,
+        "maxFollowUps": 5
+      },
+      "providerRequestId": "req_5a87c7f091cc4030b2246f0066d127d0",
+      "acceptanceLevel": "L0",
+      "extractionPending": false,
+      "rawCandidate": {
+        "assistantMessage": "Noted — you said you’re “almost done the code part” and that you “will start [a] Word document for final report.” For review I’ll check the actual code completion status (what remains) and the draft of your final report or any document you produce when you indicate artifacts are available.",
+        "route": "review",
+        "readyForReview": true,
+        "assessment": {
+          "information": "sparse",
+          "evidenceReadiness": "missing",
+          "verificationReadiness": "unclear",
+          "testingMaturity": "unknown",
+          "actionability": "clear",
+          "gap": "No evidence or test results supplied for the reported code work; unclear which files or features remain.",
+          "reason": "Student reported partial code progress and a planned report but gave no artifacts or verification details.",
+          "sourceTurns": [
+            1
+          ]
+        },
+        "evidenceUpdates": [
+          {
+            "field": "claim",
+            "state": "student_claim",
+            "value": "I almost done the code part",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "progressKind": "unknown"
+          },
+          {
+            "field": "claim",
+            "state": "student_claim",
+            "value": "I will start my word document for final report",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "progressKind": "unknown"
+          }
+        ],
+        "nextStep": {
+          "sourceTurn": 1,
+          "contextTurn": null,
+          "status": "planned",
+          "action": "start my word document for final report",
+          "expectedEvidence": null
+        },
+        "uncertainties": [
+          "Which specific code files or features remain unfinished?",
+          "Is there any existing artifact (branch, screenshot, draft) that shows current code state?"
+        ],
+        "suggestedTeacherQuestions": []
+      },
+      "routeDecision": {
+        "proposed": "review",
+        "final": "review",
+        "reason": "model_ready_for_review",
+        "uiFinal": "review",
+        "uiReason": "model_ready_for_review",
+        "uiAuthority": "backend"
+      },
+      "fieldDecisions": [
+        {
+          "index": 0,
+          "field": "claim",
+          "originalSourceTurn": 1,
+          "candidate": {
+            "field": "claim",
+            "state": "student_claim",
+            "value": "I almost done the code part",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "progressKind": "unknown"
+          },
+          "outcome": "accepted",
+          "reason": "student_source_valid",
+          "sourceTurn": 1,
+          "observations": [],
+          "appliedCandidate": {
+            "field": "claim",
+            "state": "student_claim",
+            "value": "I almost done the code part",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "progressKind": "unknown",
+            "observedResult": null,
+            "expectedEvidence": null,
+            "method": null
+          },
+          "transformations": [
+            "method",
+            "observedResult",
+            "expectedEvidence"
+          ],
+          "recordBefore": {
+            "progress": "",
+            "progressKind": "advanced"
+          },
+          "recordAfter": {
+            "progress": "I almost done the code part",
+            "progressKind": "unknown"
+          }
+        },
+        {
+          "index": 1,
+          "field": "claim",
+          "originalSourceTurn": 1,
+          "candidate": {
+            "field": "claim",
+            "state": "student_claim",
+            "value": "I will start my word document for final report",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "progressKind": "unknown"
+          },
+          "outcome": "accepted",
+          "reason": "student_source_valid",
+          "sourceTurn": 1,
+          "observations": [],
+          "appliedCandidate": {
+            "field": "claim",
+            "state": "student_claim",
+            "value": "I will start my word document for final report",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "progressKind": "unknown",
+            "observedResult": null,
+            "expectedEvidence": null,
+            "method": null
+          },
+          "transformations": [
+            "method",
+            "observedResult",
+            "expectedEvidence"
+          ],
+          "recordBefore": {
+            "progress": "I almost done the code part",
+            "progressKind": "unknown"
+          },
+          "recordAfter": {
+            "progress": "I almost done the code part\nI will start my word document for final report",
+            "progressKind": "unknown"
+          }
+        },
+        {
+          "index": 2,
+          "field": "next_action",
+          "originalSourceTurn": 1,
+          "candidate": {
+            "field": "next_action",
+            "value": "start my word document for final report",
+            "state": "planned",
+            "operation": "replace",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "nextActionStatus": "planned",
+            "expectedEvidence": null,
+            "evidenceType": null,
+            "progressKind": null,
+            "method": null,
+            "observedResult": null
+          },
+          "outcome": "accepted",
+          "reason": "student_source_valid",
+          "sourceTurn": 1,
+          "observations": [],
+          "appliedCandidate": {
+            "field": "next_action",
+            "value": "start my word document for final report",
+            "state": "planned",
+            "operation": "replace",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "nextActionStatus": "planned",
+            "expectedEvidence": null,
+            "evidenceType": null,
+            "progressKind": null,
+            "method": null,
+            "observedResult": null
+          },
+          "transformations": [],
+          "recordBefore": {
+            "nextAction": "",
+            "expectedEvidence": ""
+          },
+          "recordAfter": {
+            "nextAction": "start my word document for final report",
+            "expectedEvidence": "",
+            "nextActionStatus": "planned"
+          }
+        }
+      ],
+      "result": {
+        "assistantMessage": "Noted — you said you’re “almost done the code part” and that you “will start [a] Word document for final report.” For review I’ll check the actual code completion status (what remains) and the draft of your final report or any document you produce when you indicate artifacts are available.",
+        "route": "review",
+        "readyForReview": true,
+        "assessment": {
+          "information": "sparse",
+          "evidenceReadiness": "missing",
+          "verificationReadiness": "unclear",
+          "testingMaturity": "unknown",
+          "actionability": "clear",
+          "gap": "No evidence or test results supplied for the reported code work; unclear which files or features remain.",
+          "reason": "Student reported partial code progress and a planned report but gave no artifacts or verification details.",
+          "sourceTurns": [
+            1
+          ]
+        },
+        "evidenceUpdates": [
+          {
+            "field": "claim",
+            "state": "student_claim",
+            "value": "I almost done the code part",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "progressKind": "unknown",
+            "observedResult": null,
+            "expectedEvidence": null,
+            "method": null
+          },
+          {
+            "field": "claim",
+            "state": "student_claim",
+            "value": "I will start my word document for final report",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "progressKind": "unknown",
+            "observedResult": null,
+            "expectedEvidence": null,
+            "method": null
+          },
+          {
+            "field": "next_action",
+            "value": "start my word document for final report",
+            "state": "planned",
+            "operation": "replace",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "nextActionStatus": "planned",
+            "expectedEvidence": null,
+            "evidenceType": null,
+            "progressKind": null,
+            "method": null,
+            "observedResult": null
+          }
+        ],
+        "nextStep": {
+          "sourceTurn": 1,
+          "contextTurn": null,
+          "status": "planned",
+          "action": "start my word document for final report",
+          "expectedEvidence": null
+        },
+        "uncertainties": [
+          "Which specific code files or features remain unfinished?",
+          "Is there any existing artifact (branch, screenshot, draft) that shows current code state?"
+        ],
+        "suggestedTeacherQuestions": [],
+        "consistencyObservations": []
+      }
+    }
+  }
+}
