@@ -1,7 +1,7 @@
 import {test,after} from 'node:test';import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';
 import {db,A,B,sid,identity,owner} from './fixture.mjs';
 import {buildFallbackStudentRecord,STUDENT_CONFIRMATION_ATTESTATION,validateIntakeStudentRecord} from '../../.test-build/aiSessionIntake.js';
-import {buildFocusedStudentRecord,validateFocusedIntakeRecord,packReviewDebug,restoreReviewDebug} from '../../.test-focused/intakeReview.js';
+import {buildFocusedStudentRecord,validateFocusedIntakeRecord,packReviewDebug,restoreReviewDebug} from '../../.test-focused/intakeReviewSupport.js';
 after(()=>db.close());
 const answers={responsibility:'Dashboard frontend',progress:'Completed loading, empty and API-error states',progressKind:'completed',scope:'Dashboard',completionPercent:null,evidenceType:'live_demonstration',evidenceAvailability:'available_now',evidenceReference:'Live demo of the three states',verificationMethod:'',testingStatus:'executed',testingMethod:'Slow connection and API response simulation',testingResult:'All three states displayed correctly',testingBaseline:'',blockerStatus:'unknown',blockerDescription:'',supportRequested:'',nextAction:'',dueSession:'S2',expectedEvidence:''};
 const record=buildFallbackStudentRecord(answers,{},false);

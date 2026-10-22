@@ -52,3 +52,12 @@ Set OPENAI_API_KEY securely in that environment; never paste it into chat or com
 ## Local verification result
 
 185 adaptive/API tests pass and the production build passes. Isolated React + SQL browser runs cover both model-requested and student-requested finalization; record failure then record-only retry; unsent draft inclusion; saved history/debug reload; desktop/mobile layout. Actual provider calls: zero. The historical comparison is 1/5 under the new brevity/close criteria: the initial clarification passes, all four annotated late-close points fail. This is the old-model baseline, not a new-model pass.
+
+
+## Review of the first live evaluation (22 Oct 2026)
+
+The reviewer ran exactly eight calls at 361e78f; the script passed 6/8. This is a failing result: tentative parameter speculation still caused another question, and final extraction lost report/invite actions. Responses were brief and did not invent executed tests or percentages. The prose report contradicts itself on prefix-2; use its original JSON before changing that expectation.
+
+The follow-up renames the helper to intakeReviewSupport.ts to remove extensionless case collisions with IntakeReview.tsx. A portable source-stem regression check detects the original collision even on Linux. Action provenance now excludes auxiliary expectedEvidence; explicitly unsupported artifact metadata is omitted with an observable decision transformation, while unsupported artifacts in the action itself remain rejected. Synthetic regressions cover these paths, but do not establish the cause of the two live rejected actions without their original candidate/decision data. The chat prompt also says tentative bug hypotheses should not reopen an otherwise sufficient check-in. Future evaluator reports retain raw candidates and source conversations for offline replay.
+
+Follow-up local verification: 189 adaptive/API tests and Linux production build pass. macOS build and the original failed extraction still require verification. No additional provider calls were made; no database or production changes. Keep this PR draft until the actual failures are verified, starting with offline replay of the original JSON rather than another paid batch.

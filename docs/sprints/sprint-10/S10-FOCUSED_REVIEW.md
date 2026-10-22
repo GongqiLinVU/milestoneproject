@@ -35,7 +35,7 @@ Debug remains available after save and when reopening history, including correct
 Reproduce after `npm test`:
 
 ```sh
-npx tsc src/intakeReview.ts --outDir .test-focused --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck
+npx tsc src/intakeReviewSupport.ts --outDir .test-focused --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck
 S10_PGLITE_MODULE=/tmp/intake-close-validation/node_modules/@electric-sql/pglite/dist/index.js node --test tests/session-ai/focused-review.test.mjs
 S10_PGLITE_MODULE=/tmp/intake-close-validation/node_modules/@electric-sql/pglite/dist/index.js S10_PLAYWRIGHT_MODULE=/tmp/intake-close-validation/node_modules/playwright/index.mjs S10_CHROMIUM_EXECUTABLE=/tmp/intake-close-chrome/chromium node tests/session-ai/usage-paused.browser.mjs
 ```

@@ -1,5 +1,5 @@
 import { IntakeReview, IntakeRecordSummary, IntakeReviewDetails } from "./IntakeReview";
-import { FOCUSED_REVIEW_VERSION, buildFocusedStudentRecord, validateFocusedIntakeRecord, packReviewDebug, restoreReviewDebug } from "./intakeReview";
+import { FOCUSED_REVIEW_VERSION, buildFocusedStudentRecord, validateFocusedIntakeRecord, packReviewDebug, restoreReviewDebug } from "./intakeReviewSupport";
 import { IntakeDebugViewer } from "./IntakeDebugViewer";
 import { buildHarnessObservations } from "./intakeObservations";
 import { effectiveCollectionMode, collectionLabels, type CollectionMode } from "./sessionCollection";

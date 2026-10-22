@@ -2,7 +2,7 @@ import { applyEvidenceUpdates, questionCount, MAX_INTAKE_QUESTIONS, type ChatSou
 import {MAX_EVIDENCE_UPDATES} from './intakeContract.js';
 import type { DeterministicIntakeAnswers } from './aiSessionIntake.js';
 
-export const INTAKE_PARSER_VERSION = 'intake-parser.v1.4.0';
+export const INTAKE_PARSER_VERSION = 'intake-parser.v1.4.1';
 export type CandidateManifest = { model: string; promptVersion: string; policyVersion: string; parserVersion: string; evidenceSchemaVersion: string; knowledgeVersion: string; cost: number | null; latencyMs: number; stopReason: string };
 export type IntakeCase = { id: string; provenance: string; conversation: ChatSource[]; candidate?: unknown; expected?: Record<string, unknown> };
 export type FieldDecision = { index: number; field: string; outcome: 'accepted'|'repaired'|'rejected'; reason: string; originalSourceTurn: unknown; sourceTurn?: number; candidate: unknown; observations?: string[]; appliedCandidate?: EvidenceUpdate; transformations?: string[]; recordBefore?: Record<string,unknown>; recordAfter?: Record<string,unknown> };
@@ -76,7 +76,7 @@ function sanitiseAgainstSource(candidate: EvidenceUpdate, source: string): Evide
   return out;
 }
 function grounded(candidate: EvidenceUpdate, source: string) {
-  const parts = [candidate.value,candidate.method,candidate.observedResult,candidate.expectedEvidence].filter((s):s is string=>Boolean(s));
+  const parts = (candidate.field==='next_action'?[candidate.value]:[candidate.value,candidate.method,candidate.observedResult,candidate.expectedEvidence]).filter((s):s is string=>Boolean(s));
   const tokens = significant(parts.join(' '));
   const sourceTokens = significant(source);
   if (!tokens.size) return false;
@@ -162,6 +162,11 @@ export function validateCandidates(raw: unknown, conversation: ChatSource[], cur
     }
     if ((u.field === 'next_action' || (u.field === 'testing' && u.state === 'planned')) && !/\b(will|plan|planning|intend|going to|next session|before (?:the )?next)\b/i.test(conversation[source].text)) observations.push('future_action_commitment_uncertain');
     if(u.expectedEvidence){const sourceTokens=significant(sourceText(source));if([...significant(u.expectedEvidence)].some(t=>!sourceTokens.has(t)))observations.push('expected_evidence_wording_uncertain');}
+    // Auxiliary evidence must not change which student turn grounds an action,
+    // nor erase that action because the model decorated its expected artifact.
+    if(u.field==='next_action' && u.expectedEvidence && unsupportedArtifact({...u,value:u.expectedEvidence,expectedEvidence:null},sourceText(source))){
+      u={...u,expectedEvidence:null};observations.push('unsupported_expected_evidence_omitted');
+    }
     const unsupported = unsupportedArtifact(u, sourceText(source));
     if (unsupported) return reject('student_source_not_semantically_supported');
     // Strip unsupported specificity (illustrative numbers, model method
