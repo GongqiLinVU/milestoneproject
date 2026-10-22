@@ -79,3 +79,10 @@ node scripts/replay-intake-evaluation.mjs tests/ai-session-intake/fixtures/pr88-
 ```
 
 This makes zero provider calls and exits 1 while the original report action is absent. It does not rerun the model. Future reports use their embedded conversation; only the exact known original report may use the frozen fallback transcript.
+
+
+## Conversation role revision after targeted evaluation
+
+The targeted run at 2e7eda8 passed macOS build and all seven final-record checks; prefix-5 still failed. Its returned reason explicitly justified clarifying teacher support before the demo, despite no student request for help. The compact chat instructions have been rewritten around status collection rather than tutoring, debugging or project management. Existing concrete work and next direction are sufficient; difficulties are not implicit help requests. Historical assistant questions do not require continued interviewing. Explicit unclear student help requests can still receive one useful clarification. No hard close gate, new request, schema or record-extraction change.
+
+The actual failed prefix is frozen in pr88-support-drift.json. Offline tests preserve it as a failure and verify unchanged model-controlled parsing, not behavioral success. Local validation: 194 existing tests plus two new tests pass; Linux build passes. No new provider calls. Revised prompt quality remains unverified: keep draft. Only prefix-5 needs targeted provider revalidation; do not rerun the already passing record case without a new reason.
