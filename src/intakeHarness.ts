@@ -2,7 +2,7 @@ import { applyEvidenceUpdates, questionCount, MAX_INTAKE_QUESTIONS, type ChatSou
 import {MAX_EVIDENCE_UPDATES} from './intakeContract.js';
 import type { DeterministicIntakeAnswers } from './aiSessionIntake.js';
 
-export const INTAKE_PARSER_VERSION = 'intake-parser.v1.3.0';
+export const INTAKE_PARSER_VERSION = 'intake-parser.v1.4.0';
 export type CandidateManifest = { model: string; promptVersion: string; policyVersion: string; parserVersion: string; evidenceSchemaVersion: string; knowledgeVersion: string; cost: number | null; latencyMs: number; stopReason: string };
 export type IntakeCase = { id: string; provenance: string; conversation: ChatSource[]; candidate?: unknown; expected?: Record<string, unknown> };
 export type FieldDecision = { index: number; field: string; outcome: 'accepted'|'repaired'|'rejected'; reason: string; originalSourceTurn: unknown; sourceTurn?: number; candidate: unknown; observations?: string[]; appliedCandidate?: EvidenceUpdate; transformations?: string[]; recordBefore?: Record<string,unknown>; recordAfter?: Record<string,unknown> };
@@ -108,7 +108,7 @@ export function validateCandidates(raw: unknown, conversation: ChatSource[], cur
   const decisions: FieldDecision[] = [];
   const accepted: EvidenceUpdate[] = [];
   let next = { ...current };
-  const items = Array.isArray(raw) ? raw.slice(0, MAX_EVIDENCE_UPDATES+1) : [];
+  const items = Array.isArray(raw) ? raw.slice(0, MAX_EVIDENCE_UPDATES+4) : [];
   items.forEach((item, index) => {
     let u = item as EvidenceUpdate;
     const repairs:string[]=[];
@@ -139,10 +139,14 @@ export function validateCandidates(raw: unknown, conversation: ChatSource[], cur
         }
       }else if(Number.isInteger(source)&&conversation[source]?.actor==='student'&&grounded(u,conversation[source].text)){
         contextual=false;repairs.push('unneeded_context_ignored');
-      }else return reject('invalid_acceptance_context');
+      }else {
+        const matches=conversation.flatMap((turn,i)=>turn.actor==='student'&&grounded(u,turn.text)?[i]:[]);
+        if(options.sourcePolicy==='strict_pointer'||Number.isInteger(source)&&conversation[source]?.actor==='student'||matches.length!==1)return reject('invalid_acceptance_context');
+        source=matches[0];contextual=false;repairs.push('invalid_context_recovered_from_unique_student_source');
+      }
     }
     const sourceText=(i:number)=>conversation[i].text+(contextual?' '+conversation[u.contextTurn!].text:'');
-    let outcome: 'accepted'|'repaired' = 'accepted';
+    let outcome: 'accepted'|'repaired' = repairs.some(r=>r==='invalid_context_recovered_from_unique_student_source'||r==='source_relocated_using_context')?'repaired':'accepted';
     if (!Number.isInteger(source) || conversation[source]?.actor !== 'student' || !(u.field==='next_action'&&u.state==='unknown')&&!grounded(u,sourceText(source))) {
       if (options.sourcePolicy === 'strict_pointer') return reject('source_pointer_invalid_strict_policy');
       const matches = conversation.flatMap((turn,i) => turn.actor === 'student' && grounded(u,turn.text) ? [i] : []);
@@ -150,6 +154,7 @@ export function validateCandidates(raw: unknown, conversation: ChatSource[], cur
       source = matches[0]; outcome = 'repaired';
     }
     const observations:string[]=[...repairs];
+    if(u.field==='claim' && source<conversation.length-1)observations.push('claim_reemitted_from_earlier_turn');
     if(contextual)observations.push('contextual_acceptance_model_inferred');
     if(u.field==='testing' && u.method){
       const sourceTokens=significant(conversation[source].text);
@@ -218,8 +223,12 @@ export function decideTurn(candidate: any, conversation: ChatSource[], current: 
     if(!updates.some((u:any)=>u.field==='next_action')&&candidate?.assessment?.actionability==='clear')consistencyObservations.push('actionable_assessment_without_structured_next_step');
     if(current?.nextActionStatus==='unknown'){let replaced=false;updates=updates.map((u:any)=>{if(u.field!=='next_action'||u.state!=='planned')return u;const operation=replaced?'add':'replace';replaced=true;return {...u,operation};});}
   }
+  if(candidate?.nextStep && ['planned','tentative'].includes(candidate.nextStep.status) && Array.isArray(candidate.nextStep.additionalActions)){
+    for(const step of candidate.nextStep.additionalActions.slice(0,3))if(step && ['planned','tentative'].includes(step.status) && typeof step.action==='string' && step.action.trim())updates.push({field:'next_action',value:step.action,state:'planned',operation:'add',sourceTurn:step.sourceTurn,contextTurn:step.contextTurn,nextActionStatus:step.status,expectedEvidence:step.expectedEvidence,evidenceType:null,progressKind:null,method:null,observedResult:null});
+  }
   const extracted = validateCandidates(updates,conversation,current,options);
   if(candidate?.nextStep&&['planned','tentative'].includes(candidate.nextStep.status)&&!extracted.accepted.some(u=>u.field==='next_action'))consistencyObservations.push('structured_next_step_not_applied');
+  if(candidate?.nextStep?.additionalActions?.length && extracted.decisions.some(d=>d.field==='next_action'&&d.outcome==='rejected'))consistencyObservations.push('some_structured_steps_not_applied');
   const message = messageAccepted(candidate?.assistantMessage, options.messagePolicy ?? 'current');
   const limit = questionCount(conversation) >= MAX_INTAKE_QUESTIONS;
   const modelReview = candidate?.readyForReview === true || candidate?.route === "review";

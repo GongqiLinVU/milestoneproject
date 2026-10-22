@@ -80,7 +80,12 @@ export function applyEvidenceUpdates(current: DeterministicIntakeAnswers, update
   const merge=(before:string|undefined,value:string,replace=false,max=1000)=>{
     if(value.length>max)throw new Error('record_capacity_exceeded');
     if(replace||!before?.trim())return value;
-    if(!value.trim()||before.split('\n').includes(value))return before;
+    // Mechanical whitespace/sentence-period equality only; no synonym/fuzzy matching.
+    const key=(text:string)=>text.trim().replace(/\s+/g,' ').replace(/([a-zA-Z])\.$/,'$1');
+    const lines=before.split('\n'),incoming=value.split('\n').filter(line=>line.trim());
+    const unique=incoming.filter((line,i)=>!lines.some(prior=>key(prior)===key(line))&&!incoming.slice(0,i).some(prior=>key(prior)===key(line)));
+    if(!unique.length)return before;
+    value=unique.join('\n');
     const combined=`${before}\n${value}`;
     if(combined.length>max)throw new Error('record_capacity_exceeded');
     return combined;

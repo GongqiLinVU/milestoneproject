@@ -704,7 +704,7 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
 
       const code=typeof payload.code==="string"?payload.code:"http_error";
       const detail=[`${response.status}`,typeof payload.stage==="string"?payload.stage:"unknown_stage",code,typeof payload.reason==="string"?payload.reason:"",typeof payload.providerStatus==="number"?`provider_${payload.providerStatus}`:"",typeof payload.providerErrorCode==="string"?payload.providerErrorCode:"",typeof payload.providerErrorType==="string"?payload.providerErrorType:"",typeof payload.providerRequestId==="string"?`request_${payload.providerRequestId}`:""].filter(Boolean).join(":");
-      throw Object.assign(new Error(detail),{usageWarnings:payload.usageWarnings,usageAttempts:payload.usageAttempts});
+      throw Object.assign(new Error(detail),{usageWarnings:payload.usageWarnings,usageAttempts:payload.usageAttempts,diagnostics:payload.diagnostics,providerRequestId:payload.providerRequestId,reason:payload.reason});
     }
     return payload;
   }
@@ -753,7 +753,7 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
         setStage(current=>Math.min(3,current+1) as 0|1|2|3);setBusy(false);
       }
     }catch(error){
-      setDebugEvents(current=>[...current,{at:new Date().toISOString(),mode:"turn",request:debugRequest,response:{usageWarnings:(error as any)?.usageWarnings,usageAttempts:(error as any)?.usageAttempts},error:error instanceof Error?error.message:"provider failure"}]);
+      setDebugEvents(current=>[...current,{at:new Date().toISOString(),mode:"turn",request:debugRequest,response:{usageWarnings:(error as any)?.usageWarnings,usageAttempts:(error as any)?.usageAttempts,diagnostics:(error as any)?.diagnostics,providerRequestId:(error as any)?.providerRequestId,reason:(error as any)?.reason},error:error instanceof Error?error.message:"provider failure"}]);
       if(isIntakeAuthError(error)){
         // Authentication failure (missing/expired student session), not a provider
         // outage. Preserve the student's answer verbatim (restore it to the composer
