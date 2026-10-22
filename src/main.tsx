@@ -677,10 +677,13 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
       }
       const prior=nextContext.previousConfirmed?.studentRecord;
       if(prior)setAnswers(current=>({...current,responsibility:prior.responsibility.current,scope:prior.responsibility.current}));
+      const priorAction=prior?.next_action?.action?.trim();
       const first=session.sessionNumber===1
         ?"Start with one part of the project that you will personally own before S2. Choose something observable, such as one screen, API endpoint, sensor task, analysis step or report section. What is that specific part, and what first result will you produce?"
         :prior
-          ?`In your last confirmed Intake, your responsibility was “${prior.responsibility.current}” and your next action was “${prior.next_action.action}”. Start there: what did you actually complete, change, test or discover since then? If the plan changed or nothing progressed, say that directly.`
+          ?priorAction
+            ?`In your last confirmed Intake, your responsibility was “${prior.responsibility.current}” and your next action was “${priorAction}”. Start there: what did you actually complete, change, test or discover since then? If the plan changed or nothing progressed, say that directly.`
+            :`In your last confirmed Intake, your responsibility was “${prior.responsibility.current}”. What did you actually complete, change, test or discover since then? If your responsibility changed or nothing progressed, say that directly.`
           :`This is S${session.sessionNumber}: ${session.focus}. Start with one specific part you personally worked on since the previous class. What changed, and what observable result exists now?`;
       setTurns([{actor:"system",purpose:"session starting point",text:first}]);
       setLoading(false);
