@@ -1,0 +1,11 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';
+import {selectCurrentSession,intakePlanningEstimate,DEFAULT_CLASS_AI_BUDGET_USD,DEFAULT_CLASS_AI_CEILING_USD} from '../../../.test-build/sessionPlanning.js';
+const plan=()=>Array.from({length:10},(_,i)=>({session_number:i+1,session_date:'2020-01-01',status:'scheduled'}));const status=s=>s.status;
+test('new ten-session plan starts at S1 even when dates are past',()=>assert.equal(selectCurrentSession(plan(),status).session_number,1));
+test('an open session takes priority over earlier scheduled sessions',()=>{const p=plan();p[4].status='open';assert.equal(selectCurrentSession(p,status).session_number,5);});
+test('closed sessions advance focus to first unfinished session',()=>{const p=plan();p[0].status=p[1].status='closed';assert.equal(selectCurrentSession(p,status).session_number,3);});
+test('fully closed plan shows the final session',()=>assert.equal(selectCurrentSession(plan().map(s=>({...s,status:'closed'})),status).session_number,10));
+test('selection is deterministic without mutating input order',()=>{const p=plan().reverse();assert.equal(selectCurrentSession(p,status).session_number,1);assert.equal(p[0].session_number,10);});
+test('empty plan has no current session',()=>assert.equal(selectCurrentSession([],status),undefined));
+test('class estimate explicitly assumes nine intakes and one to three cents each',()=>{const e=intakePlanningEstimate(22);assert.equal(e.intakes,198);assert.equal(e.lowUsd.toFixed(2),'1.98');assert.equal(e.highUsd.toFixed(2),'5.94');assert.equal(DEFAULT_CLASS_AI_BUDGET_USD,10);assert.equal(DEFAULT_CLASS_AI_CEILING_USD,25);});
+test('missing or negative enrolment never produces a negative estimate',()=>{assert.equal(intakePlanningEstimate(NaN).intakes,0);assert.equal(intakePlanningEstimate(-1).highUsd,0);});

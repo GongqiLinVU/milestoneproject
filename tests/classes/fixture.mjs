@@ -5,7 +5,7 @@ for(const file of fs.readdirSync('supabase/migrations').filter(f=>f.endsWith('.s
 
 const admin='10000000-0000-0000-0000-000000000001',teacher1='10000000-0000-0000-0000-000000000002',teacher2='10000000-0000-0000-0000-000000000003',student1='10000000-0000-0000-0000-000000000004',student2='10000000-0000-0000-0000-000000000005';
 await db.query("insert into auth.users(id,email,raw_app_meta_data) values($1,'owner@example.invalid','{\"role\":\"teacher\"}')",[admin]);
-const migration=fs.readFileSync('supabase/migrations/20261023_sprint10_teaching_classes.sql','utf8');await db.exec(migration);await db.exec(fs.readFileSync('supabase/migrations/20261023_sprint10_unassigned_roster.sql','utf8'));await db.exec(fs.readFileSync('supabase/migrations/20261023_sprint10_v2_password_activation.sql','utf8'));
+const migration=fs.readFileSync('supabase/migrations/20261023_sprint10_teaching_classes.sql','utf8');await db.exec(migration);await db.exec(fs.readFileSync('supabase/migrations/20261023_sprint10_unassigned_roster.sql','utf8'));await db.exec(fs.readFileSync('supabase/migrations/20261023_sprint10_v2_password_activation.sql','utf8'));await db.exec(fs.readFileSync('supabase/migrations/20261023_sprint10_w_budget_defaults.sql','utf8'));
 export async function identity(id=admin,role='teacher'){await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false),set_config('request.jwt.claims',$2,false)",[id,JSON.stringify({app_metadata:{role}})]);await db.exec('set role authenticated');}
 export async function owner(){await db.exec('reset role');}
 export {db,admin,teacher1,teacher2,student1,student2,migration};
