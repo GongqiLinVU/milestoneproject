@@ -11,6 +11,11 @@ type SourcePolicy = 'repair_unique' | 'strict_pointer';
 type MessagePolicy = 'current' | 'legacy_v1' | 'none';
 
 const ROUTE_CONDITIONS: { reason: string; label: string }[] = [
+  { reason: 'clarification_budget_exhausted', label: 'Chat clarification allowance exhausted' },
+  { reason: 'target_exhausted', label: 'Chat target already asked' },
+  { reason: 'invalid_or_no_target', label: 'No allowed clarification target' },
+  { reason: 'invalid_chat_format', label: 'Completed chat output has invalid format' },
+  { reason: 'model_ready', label: 'Model ends the check-in' },
   { reason: 'student_requested_teacher_help', label: 'Student asked for Teacher help' },
   { reason: 'question_limit_reached', label: 'Question budget exhausted' },
   { reason: 'accepted_next_action_and_evidence_ready', label: 'Next action accepted and evidence established' },
@@ -53,6 +58,8 @@ export function IntakeHarnessViewer({ events, onClose, onDownload }: { events: E
   const [messagePolicy, setMessagePolicy] = useState<MessagePolicy>('current');
   const event = events[Math.min(selected, events.length - 1)];
   const response = event?.response;
+  const chatControl=response?.chatControl as Record<string,any>|undefined;
+  const modelSkipped=chatControl?.providerCalled===false;
   const decisions = (response?.fieldDecisions || []) as Decision[];
   const request = event?.request;
   const candidate = response?.rawCandidate as {assistantMessage?: string; route?: string} | undefined;
@@ -72,7 +79,7 @@ export function IntakeHarnessViewer({ events, onClose, onDownload }: { events: E
   const providerFailed = Boolean(providerFailure);
 
   function downloadComparison() {
-    const comparison = {format:'intake-harness-comparison.v1',exportedAt:new Date().toISOString(),selectedEvent:selected,manifest:response?.manifest,request,rawCandidate:candidate,production:{fieldDecisions:decisions,routeDecision:response?.routeDecision,assistantMessage:productionMessage,result:response?.result},alternative:counterfactual ? {policy:{sourcePolicy,messagePolicy},fieldDecisions:counterfactual.decisions,routeDecision:counterfactual.routeDecision,accepted:counterfactual.accepted,extractionPending:counterfactual.extractionPending,assistantMessage:counterfactual.assistantMessage} : null};
+    const comparison = {format:'intake-harness-comparison.v1',exportedAt:new Date().toISOString(),selectedEvent:selected,manifest:response?.manifest,chatControl,request,rawCandidate:candidate,production:{fieldDecisions:decisions,routeDecision:response?.routeDecision,assistantMessage:productionMessage,result:response?.result},alternative:counterfactual ? {policy:{sourcePolicy,messagePolicy},fieldDecisions:counterfactual.decisions,routeDecision:counterfactual.routeDecision,accepted:counterfactual.accepted,extractionPending:counterfactual.extractionPending,assistantMessage:counterfactual.assistantMessage} : null};
     const url=URL.createObjectURL(new Blob([JSON.stringify(comparison,null,2)],{type:'application/json'}));
     const anchor=document.createElement('a');anchor.href=url;anchor.download=`intake-harness-comparison-turn-${selected+1}.json`;anchor.click();URL.revokeObjectURL(url);
   }
@@ -100,8 +107,8 @@ export function IntakeHarnessViewer({ events, onClose, onDownload }: { events: E
         </FlowNode>
         <FlowArrow/>
 
-        <FlowNode tone={providerFailed ? 'rejected' : 'info'} title="2 · Model candidate" badge={providerFailed ? 'provider failed' : String(response?.model || 'not captured')} detail={<pre>{JSON.stringify(candidate ?? {providerFailure,diagnostics:response?.diagnostics,reason:response?.reason}, null, 2)}</pre>}>
-          {providerFailed
+        <FlowNode tone={providerFailed ? 'rejected' : 'info'} title="2 · Model candidate" badge={modelSkipped?'not called':providerFailed ? 'provider failed' : String(response?.model || 'not captured')} detail={<pre>{JSON.stringify(candidate ?? {providerFailure,diagnostics:response?.diagnostics,reason:response?.reason}, null, 2)}</pre>}>
+          {modelSkipped?<p>Clarification allowance exhausted. No model request was made; the latest student answer proceeds to review.</p>:providerFailed
             ? <p>Provider failed: {providerFailure}. No candidate was returned — this turn never reached the evidence/route decision below; the answer is preserved and the failed task can be retried.</p>
             : <><p>{candidate?.assistantMessage || 'No candidate retained'}</p><small>Proposed route: {candidate?.route || 'not captured'}</small></>}
         </FlowNode>
@@ -123,7 +130,7 @@ export function IntakeHarnessViewer({ events, onClose, onDownload }: { events: E
         </FlowNode>
         <FlowArrow/>
 
-        <FlowNode tone={providerFailed ? 'rejected' : 'active'} title="4 · Route decision" detail={<div><p>Production: {JSON.stringify(productionRoute)}</p>{counterfactual && <p>{altLabel}: {JSON.stringify(counterfactual.routeDecision)}</p>}</div>}>
+        <FlowNode tone={providerFailed ? 'rejected' : 'active'} title="4 · Route decision" detail={<div><p>Production: {JSON.stringify(productionRoute)}</p>{chatControl&&<pre>{JSON.stringify(chatControl,null,2)}</pre>}{counterfactual && <p>{altLabel}: {JSON.stringify(counterfactual.routeDecision)}</p>}</div>}>
           {providerFailed
             ? <p>The request failed before a usable result was delivered. No new question or completed round is created; the draft or accepted transcript is preserved for retry.</p>
             : <ul className="flow-condition-list">

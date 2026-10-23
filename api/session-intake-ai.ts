@@ -1,4 +1,6 @@
-import {conversationSchema,CONVERSATION_INSTRUCTIONS,RECORD_INSTRUCTIONS,CONVERSATION_VERSION,parseConversationReply} from '../src/intakeConversation.js';
+import {questionBudget,signQuestion} from './intakeQuestionMeta.js';
+import {chatStopDecision,CHAT_STOP_VERSION,MAX_CHAT_CLARIFICATIONS} from '../src/intakeChatStop.js';
+import {conversationSchema,CONVERSATION_INSTRUCTIONS,RECORD_INSTRUCTIONS,CONVERSATION_VERSION} from '../src/intakeConversation.js';
 import {REVIEW_COLLECTION_INSTRUCTIONS, REVIEW_EFFICIENCY_INSTRUCTIONS, REVIEW_CONTRACT_VERSION} from '../src/intakeReviewContract.js';
 import {intakeRecordSchema} from '../src/intakeRecordSchema.js';
 import { usagePricing, requestIdentity, reserveUsage, finishUsage, reportedModelLabel } from "./intakeUsage.js";
@@ -277,14 +279,28 @@ export default async function handler(req: any, res: any) {
     if (errors.length) return res.status(400).json({error: errors.join("; "), stage: "conversation_validation", fallback: true});
   }
   const context = sanitise(req.body, resolved?.previousRecord, resolved?.sessionContext);
-  const budget = { questionsAsked: ["turn","chat","record"].includes(mode) ? questionCount(req.body.conversation) : 0, maxQuestions: MAX_INTAKE_QUESTIONS, maxFollowUps: 5 };
+  const budget = { questionsAsked: ["turn","chat","record"].includes(mode) ? questionCount(req.body.conversation) : 0, maxQuestions: mode==="chat"?MAX_CHAT_CLARIFICATIONS+1:MAX_INTAKE_QUESTIONS, maxFollowUps: mode==="chat"?MAX_CHAT_CLARIFICATIONS:5 };
   const startedAt = Date.now();
+  const signingSecret=process.env.SUPABASE_SERVICE_ROLE_KEY||'';
+  const questionBinding=JSON.stringify([auth.user.id,sessionId]);
+  const chatBudget=mode==='chat'?questionBudget(signingSecret,questionBinding,req.body.conversation):null;
+  const chatResponse=(proposal:any,extra:any={})=>{
+    const decision=chatStopDecision(chatBudget!,proposal);
+    const nextConversation=[...req.body.conversation,{actor:'system',text:decision.assistantMessage}];
+    const questionMeta=!decision.readyForReview?signQuestion(signingSecret,questionBinding,nextConversation,nextConversation.length-1,decision.target as any):undefined;
+    const result={assistantMessage:decision.assistantMessage,readyForReview:decision.readyForReview,route:decision.readyForReview?'review':'continue',reason:decision.reason,target:decision.target,effect:typeof proposal?.effect==='string'?proposal.effect.slice(0,160):'',evidenceUpdates:[],uncertainties:[],suggestedTeacherQuestions:[]};
+    const control={version:CHAT_STOP_VERSION,reason:decision.reason,intervened:decision.intervened,budget:chatBudget,maxClarifications:MAX_CHAT_CLARIFICATIONS,proposal:proposal??null,final:{readyForReview:decision.readyForReview,route:result.route},providerCalled:extra.providerCalled!==false};
+    return {mode:'chat',model:MODEL,configuredModel:MODEL,usage:null,usageAttempts:[],usageWarnings:[],...extra,budget:{...budget,maxClarifications:MAX_CHAT_CLARIFICATIONS,clarificationsUsed:chatBudget!.clarificationsUsed},result,questionMeta,rawCandidate:proposal??null,chatControl:control,routeDecision:{proposed:proposal?proposal.readyForReview?'review':'clarification':'not_requested',final:result.route,reason:decision.reason},extractionPending:false,manifest:{dialogueRevision:CONVERSATION_VERSION,task:'conversation',stopReason:decision.readyForReview?decision.reason:'continue',chatStopVersion:CHAT_STOP_VERSION}};
+  };
+
   if (!["turn","chat","record"].includes(mode) && (!context.answers.responsibility || !context.answers.progress || !context.answers.nextAction)) {
     return res.status(400).json({ error: "Core Intake answers are incomplete." });
   }
   if (["turn","chat","record"].includes(mode) && (!context.conversation.length || context.conversation.at(-1)?.actor !== "student")) {
     return res.status(400).json({ error: "A current student answer is required." });
   }
+
+  if(mode==='chat'&&chatBudget!.clarificationsUsed>=MAX_CHAT_CLARIFICATIONS)return res.status(200).json(chatResponse(null,{providerCalled:false}));
 
   const turnSchema=intakeRecordSchema;
 
@@ -381,8 +397,8 @@ export default async function handler(req: any, res: any) {
     : 1;
   const mockTurnBody = () => {
     const result = provider_id === "deepseek"
-      ? { choices: [{ finish_reason: "stop", message: { content: JSON.stringify(mode==='chat'?{assistantMessage:"You can now check and confirm your summary.",readyForReview:true,reason:"Concrete work and next direction captured"}:mockTurnResult(lastStudentTurn)) } }] }
-      : { status: "completed", model: `mock-${MODEL}`, usage: { input_tokens: 1, output_tokens: 1 }, output_text: JSON.stringify(mode==='chat'?{assistantMessage:"You can now check and confirm your summary.",readyForReview:true,reason:"Concrete work and next direction captured"}:mockTurnResult(lastStudentTurn)) };
+      ? { choices: [{ finish_reason: "stop", message: { content: JSON.stringify(mode==='chat'?{assistantMessage:"You can now check and confirm your summary.",readyForReview:true,reason:"Concrete work and next direction captured",target:"none",effect:""}:mockTurnResult(lastStudentTurn)) } }] }
+      : { status: "completed", model: `mock-${MODEL}`, usage: { input_tokens: 1, output_tokens: 1 }, output_text: JSON.stringify(mode==='chat'?{assistantMessage:"You can now check and confirm your summary.",readyForReview:true,reason:"Concrete work and next direction captured",target:"none",effect:""}:mockTurnResult(lastStudentTurn)) };
     return new Response(JSON.stringify(result), { status: 200, headers: { "content-type": "application/json" } });
   };
   // "fail" mode returns a non-ok transport response (no network) so the endpoint's
@@ -499,13 +515,9 @@ export default async function handler(req: any, res: any) {
       originalOutputText: norm.outputText,
     } : undefined;
     if (mode === "chat") {
-      failureStage='conversation_validation';
-      const reply=parseConversationReply(result);
-      const decision=decideTurn({...reply,route:reply.readyForReview?'review':'clarification',evidenceUpdates:[]},req.body.conversation,req.body.answers);
-      if(decision.level==='L3')throw new Error('conversation_schema');
-      const resultOut={assistantMessage:decision.assistantMessage,readyForReview:decision.readyForReview,route:decision.route,reason:reply.reason,evidenceUpdates:[],uncertainties:[],suggestedTeacherQuestions:[]};
-      return res.status(200).json({mode,model:normModel,configuredModel:normModel,reportedModel,usage:normUsage,latencyMs:Date.now()-startedAt,usageAttempts,usageWarnings,budget,result:resultOut,rawCandidate:result,routeDecision:decision.routeDecision,extractionPending:false,manifest:{dialogueRevision:CONVERSATION_VERSION,task:'conversation',stopReason:decision.readyForReview?'review':'continue'},providerRequestId:response.headers.get('x-request-id')});
+      return res.status(200).json(chatResponse(result,{model:normModel,configuredModel:normModel,reportedModel,usage:normUsage,latencyMs:Date.now()-startedAt,usageAttempts,usageWarnings,providerRequestId:response.headers.get('x-request-id'),...(trace?{debugTrace:trace}:{})}));
     }
+
     if (mode === "turn" || mode === "record") {
       failureStage='turn_validation';
       const recordBefore = req.body.answers || {};
@@ -519,6 +531,7 @@ export default async function handler(req: any, res: any) {
     return res.status(200).json({ mode, provider:provider_id, promptVersion: "session-intake-ai.v1.1.0", policyVersion: INTAKE_POLICY_VERSION, model: normModel, reportedModel, configuredModel: provider_id==="deepseek"?deepseekModel:MODEL, usage: normUsage, latencyMs: Date.now()-startedAt, usageAttempts,usageWarnings,budget, providerRequestId: response.headers.get("x-request-id"), result, ...(trace?{debugTrace:trace}:{}) });
   } catch (error) {
     const reason = error instanceof Error && ["provider_incomplete","output_parse","turn_schema","evidence_source","assessment_source","conversation_schema"].includes(error.message) ? error.message : "unknown_validation";
+    if(mode==='chat'&&reason==='output_parse')return res.status(200).json(chatResponse(null,{usageAttempts,usageWarnings,diagnostics:{...diagnostics,failureStage},providerRequestId:response.headers.get('x-request-id')}));
     if (['turn','chat','record'].includes(mode)) return res.status(502).json({mode,code:'invalid_provider_response',stage:'provider_response',reason,providerRequestId:response.headers.get('x-request-id'),diagnostics:{...diagnostics,failureStage},usageAttempts,usageWarnings,budget});
     return res.status(502).json({ error: "AI Intake returned an invalid response.", code: "invalid_provider_response", stage: "schema_parsing", reason, providerRequestId: response.headers.get("x-request-id"), fallback: true });
   }

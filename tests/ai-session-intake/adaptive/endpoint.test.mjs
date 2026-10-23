@@ -15,7 +15,7 @@ async function run(conversation,modelResult=result,failed=false,blockCode='2B2',
   if(path.includes('reserve_session_intake_ai_attempt')){if(usageState&&usageState.calls>=usageState.limit)return new Response(JSON.stringify({message:usageState.reason||'Session AI attempt limit reached',code:'P0001'}),{status:400});if(usageState)usageState.calls++;value={attemptId:'mock-attempt',reservedUsd:0.1};}
   else if(path.includes('/session_intake_ai_usage')){if(usageState?.insertFailed)return new Response(JSON.stringify({message:'offline'}),{status:503});if(usageState)usageState.inserts=(usageState.inserts||0)+1;value={id:'advisory-attempt'};}
   else if(path.includes('finish_session_intake_ai_attempt')){if(usageState?.settlementFailed)return new Response(JSON.stringify({message:'offline'}),{status:503});settlementRequest=JSON.parse(options.body);value=usageState?.reconciliationRequired?{costUsd:null,chargedUsd:0.1,status:'uncertain',reconciliationRequired:true}:{costUsd:0.001,chargedUsd:0.001,status:'settled'};}
-  else if(path.includes('openai.com')){providerCalls++;sent=JSON.parse(options.body);if(failed)throw Error('offline');return new Response(JSON.stringify({status:providerStatus,incomplete_details:providerStatus==='incomplete'?{reason:'max_output_tokens'}:null,model:reportedLabel,usage:{input_tokens:100,output_tokens:50},output_text:JSON.stringify(modelResult)}),{status:200,headers:{'content-type':'application/json'}})}
+  else if(path.includes('openai.com')){providerCalls++;sent=JSON.parse(options.body);if(failed)throw Error('offline');return new Response(JSON.stringify({status:providerStatus,incomplete_details:providerStatus==='incomplete'?{reason:'max_output_tokens'}:null,model:reportedLabel,usage:{input_tokens:100,output_tokens:50},output_text:modelResult?.__rawOutput??JSON.stringify(modelResult)}),{status:200,headers:{'content-type':'application/json'}})}
   if(path.includes('/auth/'))value={id:'mock-user'};
   else if(path.includes('student_accounts'))value={student_id:'mock-student'};
   else if(path.includes('teaching_blocks'))value={block_code:blockCode,academic_year:2026,status:'active',intake_mode:intakeMode};
@@ -86,12 +86,12 @@ test('provider receives the shared review contract and exports its version',asyn
 test('malformed model output retains bounded diagnostic reason and settled usage',async()=>{const {res}=await run(turns.slice(0,2),null);assert.equal(res.code,502);assert.equal(res.body.reason,'turn_schema');assert.equal(res.body.diagnostics.failureStage,'turn_validation');assert.equal(res.body.diagnostics.providerStatus,'completed');assert.ok(res.body.diagnostics.outputCharacters>0);assert.equal(res.body.result,undefined);assert.ok(!JSON.stringify(res.body).includes('OPENAI_API_KEY'));});
 
 const runSplit=(mode,candidate,status='completed')=>run(turns.slice(0,2),candidate,false,'2B2','ai',null,null,'actual-model',mode,status);
-test('lightweight conversation sends only dialogue context and a three-field output schema',async()=>{
- const {res,sent}=await runSplit('chat',{assistantMessage:'Which feature still needs work?',readyForReview:false,reason:'Concrete work is missing'});
- assert.equal(res.code,200);assert.equal(res.body.manifest.task,'conversation');assert.deepEqual(sent.text.format.schema.required,['assistantMessage','readyForReview','reason']);assert.ok(sent.instructions.length<3000);assert.equal(sent.reasoning.effort,'low');assert.equal(JSON.parse(sent.input).answers,undefined);assert.equal(JSON.parse(sent.input).conversation[1].turnIndex,1);assert.deepEqual(res.body.result.evidenceUpdates,[]);assert.equal(res.body.extractionPending,false);assert.equal(res.body.result.readyForReview,false);
+test('lightweight conversation sends only dialogue context and a five-field output schema',async()=>{
+ const {res,sent}=await runSplit('chat',{assistantMessage:'Which feature still needs work?',readyForReview:false,reason:'Concrete work is missing',target:'work',effect:'Clarify current work'});
+ assert.equal(res.code,200);assert.equal(res.body.manifest.task,'conversation');assert.deepEqual(sent.text.format.schema.required,['assistantMessage','readyForReview','reason','target','effect']);assert.ok(sent.instructions.length<3000);assert.equal(sent.reasoning.effort,'low');assert.equal(JSON.parse(sent.input).answers,undefined);assert.equal(JSON.parse(sent.input).conversation[1].turnIndex,1);assert.deepEqual(res.body.result.evidenceUpdates,[]);assert.equal(res.body.extractionPending,false);assert.equal(res.body.result.readyForReview,false);
 });
 test('specific conversation answer may close without extracting or filling fields',async()=>{
- const {res}=await runSplit('chat',{assistantMessage:'You can now check and confirm your summary.',readyForReview:true,reason:'Work and next direction are clear'});assert.equal(res.code,200);assert.equal(res.body.result.readyForReview,true);assert.equal(res.body.result.route,'review');assert.deepEqual(res.body.result.evidenceUpdates,[]);
+ const {res}=await runSplit('chat',{assistantMessage:'You can now check and confirm your summary.',readyForReview:true,reason:'Work and next direction are clear',target:'none',effect:''});assert.equal(res.code,200);assert.equal(res.body.result.readyForReview,true);assert.equal(res.body.result.route,'review');assert.deepEqual(res.body.result.evidenceUpdates,[]);
 });
 test('final record request uses a separate task and does not require prefilled form answers',async()=>{
  const c={assistantMessage:'Check your summary.',readyForReview:true,route:'review',evidenceUpdates:[{field:'claim',state:'student_claim',value:'Answer 0',progressKind:'unknown',sourceTurn:1,operation:'add',contextTurn:null}],nextStep:{status:'unknown',action:null,expectedEvidence:null,sourceTurn:1,contextTurn:null,additionalActions:[]}};
@@ -100,8 +100,39 @@ test('final record request uses a separate task and does not require prefilled f
 test('incomplete split-task response exposes the actual limit cause without partial record or extra model retry',async()=>{
  const {res,providerCalls}=await runSplit('record',null,'incomplete');assert.equal(res.code,502);assert.equal(providerCalls,1);assert.equal(res.body.reason,'provider_incomplete');assert.equal(res.body.diagnostics.incompleteReason,'max_output_tokens');assert.equal(res.body.diagnostics.task,'record');assert.equal(res.body.diagnostics.maxOutputTokens,6000);assert.equal(res.body.result,undefined);
 });
-test('malformed conversation is a retryable chat error, not a forced review',async()=>{
- const {res}=await runSplit('chat',{assistantMessage:'Hello',reason:'missing ready flag'});assert.equal(res.code,502);assert.equal(res.body.reason,'conversation_schema');assert.equal(res.body.result,undefined);
+test('malformed completed chat output enters review without another question',async()=>{
+ const {res}=await runSplit('chat',{assistantMessage:'Hello',reason:'missing ready flag'});assert.equal(res.code,200);assert.equal(res.body.chatControl.reason,'invalid_chat_format');assert.equal(res.body.result.readyForReview,true);
 });
 
-test('split conversation still respects the existing maximum round ceiling',async()=>{const {res}=await run(turns,{assistantMessage:'One more detail?',readyForReview:false,reason:'Another gap'},false,'2B2','ai',null,null,'actual-model','chat');assert.equal(res.code,200);assert.equal(res.body.result.readyForReview,true);assert.equal(res.body.routeDecision.reason,'question_limit_reached');});
+test('split conversation caps imported long transcript before a provider call',async()=>{const {res}=await run(turns,{assistantMessage:'One more detail?',readyForReview:false,reason:'Another gap'},false,'2B2','ai',null,null,'actual-model','chat');assert.equal(res.code,200);assert.equal(res.body.result.readyForReview,true);assert.equal(res.body.routeDecision.reason,'clarification_budget_exhausted');});
+
+const chatProposal={assistantMessage:'What work remains?',readyForReview:false,reason:'Work unclear',target:'work',effect:'Identify current work'};
+test('chat cap stops before provider call and ignores client purpose exemptions',async()=>{
+ const c=turns.slice(0,6).map(t=>({...t,purpose:t.actor==='system'?'student continuation':t.purpose}));
+ const {res,providerCalls}=await run(c,chatProposal,false,'2B2','ai',null,null,'actual-model','chat');
+ assert.equal(res.code,200);assert.equal(providerCalls,0);assert.equal(res.body.chatControl.providerCalled,false);assert.equal(res.body.chatControl.budget.clarificationsUsed,2);assert.equal(res.body.result.readyForReview,true);
+});
+test('chat accepted question is signed and target reuse enters review without displaying proposal',async()=>{
+ const first=await runSplit('chat',chatProposal);assert.equal(first.res.body.result.readyForReview,false);assert.equal(typeof first.res.body.questionMeta.sig,'string');
+ const c=[...turns.slice(0,2),{actor:'system',purpose:'clarification',text:chatProposal.assistantMessage,questionMeta:first.res.body.questionMeta},{actor:'student',purpose:'student response',text:'Still working'}];
+ const second=await run(c,chatProposal,false,'2B2','ai',null,null,'actual-model','chat');assert.equal(second.res.body.chatControl.reason,'target_exhausted');assert.equal(second.res.body.questionMeta,undefined);assert.equal(second.res.body.rawCandidate.assistantMessage,chatProposal.assistantMessage);
+});
+test('different targets can use two slots; third call is free and retains latest student answer',async()=>{
+ const a=await runSplit('chat',chatProposal);
+ let c=[...turns.slice(0,2),{actor:'system',purpose:'clarification',text:chatProposal.assistantMessage,questionMeta:a.res.body.questionMeta},{actor:'student',purpose:'student response',text:'Still working'}];
+ const proposal={...chatProposal,target:'next'};
+ const b=await run(c,proposal,false,'2B2','ai',null,null,'actual-model','chat');assert.equal(b.res.body.result.readyForReview,false);
+ c=[...c,{actor:'system',purpose:'clarification',text:proposal.assistantMessage,questionMeta:b.res.body.questionMeta},{actor:'student',purpose:'student response',text:'My final update'}];
+ const d=await run(c,proposal,false,'2B2','ai',null,null,'actual-model','chat');assert.equal(d.providerCalls,0);assert.equal(d.res.body.chatControl.reason,'clarification_budget_exhausted');assert.equal(c.at(-1).text,'My final update');
+});
+test('chat invalid target closes and incomplete/outage keep retry semantics',async()=>{
+ for(const target of ['none','conflict',undefined]){const {res}=await runSplit('chat',{...chatProposal,target});assert.equal(res.body.chatControl.reason,'invalid_or_no_target');assert.equal(res.body.result.readyForReview,true);}
+ const incomplete=await runSplit('chat',chatProposal,'incomplete');assert.equal(incomplete.res.code,502);assert.equal(incomplete.res.body.reason,'provider_incomplete');assert.equal(incomplete.res.body.result,undefined);
+ const outage=await run(turns.slice(0,2),chatProposal,true,'2B2','ai',null,null,'actual-model','chat');assert.equal(outage.res.code,502);assert.equal(outage.res.body.result,undefined);
+ const closed=await run(turns.slice(0,6),chatProposal,false,'2B2','disabled',null,null,'actual-model','chat');assert.equal(closed.res.code,403);assert.equal(closed.providerCalls,0);assert.equal(closed.res.body.result,undefined);
+});
+
+test('completed unparseable chat output enters review with usage; legacy mode still errors',async()=>{
+ const r=await runSplit('chat',{__rawOutput:'{invalid json'});assert.equal(r.res.code,200);assert.equal(r.res.body.chatControl.reason,'invalid_chat_format');assert.equal(r.res.body.result.readyForReview,true);assert.equal(r.providerCalls,1);assert.ok(r.res.body.usageAttempts.length>0);
+ const old=await run(turns.slice(0,2),{__rawOutput:'{invalid json'});assert.equal(old.res.code,502);assert.equal(old.res.body.reason,'output_parse');
+});
