@@ -1,6 +1,15 @@
 # Changelog
 
-## Sprint 10 S10-01 — unreleased
+## 2026-10-24 — Sprint 10 closed; classroom feedback phase active
+
+- Joseph accepted basic live testing: new-teacher Session creation and student login work. Closure baseline: main `901fd72` (PR #97).
+- Recorded delivery of S1–S9 progress workflows, split/bounded Intake, focused review/debug and record grounding; independent classes/teacher access; account row actions, explicit teams/projects, password-only activation, auth-refresh draft preservation and class reference-budget ceilings.
+- Updated current roadmap, README, AI context and Sprint 10 handoff; archived earlier planning checkpoints without treating their pending statements as current.
+- Opened a lightweight classroom feedback plan/register. Urgent access/data/security defects remain immediate fixes; ordinary changes wait for evidence and a joint review. No new development sprint scope is committed.
+- Closure does not claim full classroom concurrency, comprehensive hosted recovery/account-management verification, AI effectiveness/safety or institutional approval. See `docs/sprints/sprint-10/CLOSEOUT.md`.
+- Documentation only: no code/schema/production/account change, paid model call or new test run.
+
+## Sprint 10 S10-01 — historical implementation entry (superseded by closeout)
 
 - Extended Work Track entry, teacher controls and server contracts to S1–S9.
 - Added short S1–S5 responsibility/progress/next-action records without computed
@@ -8,7 +17,7 @@
 - Clarified collection-method guidance, separate submission windows and Check-in.
 - Enforced selected-method Work Track writes and retained source-specific history.
 - Added a new reviewed migration and isolated SQL/browser validation evidence.
-  Not applied or deployed to production.
+  This was not applied/deployed at the time of this historical entry; see the 24 October closeout for current status.
 
 
 ## Sprint 8 Phase 2B — Draft

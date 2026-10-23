@@ -1,15 +1,10 @@
 # Engineering Studio Platform
 
-## Sprint 10 S10-01 — pending release
+## Current phase — classroom use and feedback
 
-The proposed S1–S9 Work Track increment is documented in
-`docs/sprints/sprint-10/S10-01_REPORT.md`. S1–S5 use responsibility, current
-progress and next action, with optional evidence/help; S6–S9 retain their
-requirement-completion assessment. Teacher collection-method labels are
-Existing classroom workflow, Guided Form and AI Conversation.
-Apply the reviewed **new** `20261013_sprint10_s01_work_track.sql` migration
-before the matching frontend release. This is not yet a production capability.
+Sprint 10 closed on **24 October 2026**, following Joseph's successful basic rehearsal, new-teacher Session creation and student login. See [closeout](docs/sprints/sprint-10/CLOSEOUT.md) and the active [feedback plan](docs/feedback/PLAN.md).
 
+The delivered baseline supports independent classes and teacher assignments, teacher-owned student rosters/accounts, explicit team/project allocation, password-only activation, S1–S9 progress methods, bounded AI Intake with focused review/debug, draft preservation on auth refresh and administrator-controlled reference-budget ceilings. Real classroom usability, record usefulness and actual latency/cost are the next evidence to collect; no automatic grading is claimed.
 
 A production-deployed teaching platform that turns the final four weeks of NIT3004 into an engineering delivery studio.
 
@@ -37,15 +32,14 @@ The current module guides students through a four-week journey:
 - six-step Week 2 wizard with local draft recovery and read-only completion
 - Published Week 4 Presentation Order
 - duplicate and own-team review prevention
-- guided AI Session Intake (Sprint 8, pilot) — a bounded evidence interview that
-  captures responsibility, evidence/verification and blocker/next action, with
-  student confirmation and a deterministic fallback when the AI provider is
-  unavailable
+- guided AI Session Intake (Sprint 8, pilot) — a structurally bounded progress conversation, separate record extraction,
+  focused student confirmation and retained debug exports; preserve answers
+  when a request fails
 
 ### Teacher dashboard
 
 - Supabase email/password authentication
-- Teacher-only access through `app_metadata.role = teacher`
+- Teacher identity plus active profiles/class memberships; super administrator manages teachers and independent classes
 - RLS-protected records and counts for current activities
 - Restored authenticated sessions with explicit sign-out and access status
 - Clickable activity panels with detailed records for identified activities
@@ -139,42 +133,16 @@ Every push to `main` triggers a production deployment.
 
 ## Current status
 
-Sprints 1–6 are closed and production validated. Sprint 6 closed on 12 August
-2026 after Production build, database security audit and role-based workflow
-regression all passed. Sprint 7 completed a read-only observation of the full
-2026 · 2B1 journey, establishing that report text and self-reported completion
-cannot be treated as verified participation — Teacher Review and specific work
-evidence were decisive.
+Sprint 10 is closed. The latest accepted baseline is main `901fd72` (PR #97); future fixes start from actual latest main. Basic live rehearsal is accepted, while comprehensive classroom load, AI quality/safety, recovery email and teaching impact are not claimed as fully verified. Read the [closure limits](docs/sprints/sprint-10/CLOSEOUT.md).
 
-The active sprint is **Sprint 8 — AI Session Intake & Evidence Verification**.
-It pilots a bounded, guided AI Session Intake that turns a short adaptive
-evidence interview into a structured Progress Report using a versioned
-Claim / Evidence / Owner / Verification / Action model. Phase 1, Phase 2A and
-Phase 2B are merged to `main`. Phase 2C (the conversational Intake workspace,
-adaptive follow-up policy and read-only Visual Harness Debug replay tool)
-remains an open Draft under active development; its database audit and
-authenticated Preview submission are still pending, and merge is gated on
-mock-student validation.
+AI supports evidence collection and teacher review. It does not publish marks, determine authorship or replace teacher academic judgement. Reference budgets monitor usage; rounds bound conversations. Collect real feedback before adding further harness rules or feature scope.
 
-AI does not publish marks, determine authorship, accuse copying, or replace
-live demonstration and Teacher academic judgement. When the AI provider is
-unavailable, Session Intake preserves the student's answers and serves a
-deterministic fallback.
-
-See the [Sprint 8 plan](docs/sprints/sprint-08/PLAN.md), current
-[handoff](docs/sprints/sprint-08/HANDOFF.md), and reusable
-[session start protocol](prompts/START_SESSION.md).
-
+The remaining older sprint descriptions are historical snapshots.
 
 ### Sprint 3 — continuous engagement evidence
 
 Week 1 uses an individual Team Health Check and a ten-question Engagement Check-out. Week 2 adds an Implementation Pre-check. Phase 3 adds a private teacher Review & Follow-up workflow linked to each Implementation Pre-check, plus a Week 3 Check-out. The Teacher Dashboard retains raw evidence and presents descriptive teaching signals only—never an automatic mark or performance judgement. Phase 3B adds an optional AI suggestion card that a teacher may edit, use as a follow-up, regenerate or dismiss.
 
-### Compact early Work Track — S10-01b review candidate
+### Compact early Work Track — delivered in Sprint 10
 
-The proposed S1–S5 form uses choices plus short responsibility/progress/next-action
-answers, conditional help and optional evidence. Previous responsibility requires
-explicit confirmation; previous action stays labelled as history. S6–S9 are
-unchanged. New migration 20261013_sprint10_s01b_compact_work_track.sql must be
-reviewed/applied before the matching frontend release; currently not applied or
-deployed. Full behavior and validation: docs/sprints/sprint-10/S10-01B_REPORT.md.
+S1–S5 use short responsibility/progress/next-action records with optional evidence/help; S6–S9 retain assessment. Earlier implementation evidence is in [S10-01B_REPORT.md](docs/sprints/sprint-10/S10-01B_REPORT.md); current status is the Sprint 10 closeout.
