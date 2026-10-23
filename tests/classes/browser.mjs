@@ -2,7 +2,6 @@
 // real credentials, Supabase project or model provider is contacted.
 import {createServer} from 'vite';import {fileURLToPath} from 'node:url';import {randomUUID} from 'node:crypto';import fs from 'node:fs/promises';import assert from 'node:assert/strict';
 import {db,admin,identity,owner} from './fixture.mjs';
-await db.exec(await fs.readFile('supabase/migrations/20261023_sprint10_unassigned_roster.sql','utf8'));
 const {chromium}=await import(process.env.S10_PLAYWRIGHT_MODULE||'playwright');
 const root=fileURLToPath(new URL('../../',import.meta.url));let server,browser,created=[];
 const source=`import React,{useEffect,useState} from 'react';import {createRoot} from 'react-dom/client';import {TeacherAdministration,TeacherPasswordSetup} from '/src/TeacherAdministration.tsx';import {RosterManager,ProjectManager} from '/src/TeamAllocation.tsx';import '/src/styles.css';
