@@ -15,6 +15,7 @@ type Context = {
   blockId: string;
   blockLabel: string;
   teamName: string;
+  teamAssigned?: boolean;
   projectName: string | null;
   projectProblem: string | null;
   projectDescription: string | null;
@@ -39,6 +40,7 @@ type StudioSession = {
 
 export function StudentAccess({ children }: { children: ReactNode | ((context: Context) => ReactNode) }) {
   const [session, setSession] = useState<Session | null>(null);
+  const [contextRefresh,setContextRefresh]=useState(0);
   const [contextUserId,setContextUserId]=useState<string|null>(null);
   const [context, setContext] = useState<Context | null>(null);
   const [loading, setLoading] = useState(true);
@@ -76,7 +78,7 @@ export function StudentAccess({ children }: { children: ReactNode | ((context: C
       }
     });
     return()=>{active=false;};
-  }, [userId]);
+  }, [userId,contextRefresh]);
 
   useEffect(() => {
     if (!userId || context?.status !== "activated") return;
@@ -192,6 +194,7 @@ export function StudentAccess({ children }: { children: ReactNode | ((context: C
     <a href="/">Back to course information</a>
   </section></main>;
   if (!context||contextUserId!==userId) return <main className="student-access"><p>{message || "Loading your project context…"}</p><button className="secondary" onClick={() => void supabase.auth.signOut()}>Sign out</button></main>;
+  if(context.teamAssigned===false)return <main className="student-access"><section className="access-card"><div className="eyebrow">Class enrolment confirmed</div><h1>Your team is being arranged</h1><p>You are enrolled in {context.blockLabel}. Your teacher will assign your team and project. You do not need to choose a team yourself.</p><button onClick={()=>setContextRefresh(value=>value+1)}>Check team assignment</button><button className="secondary" onClick={()=>void supabase.auth.signOut()}>Sign out</button></section></main>;
   if (context.status === "ready") return <main className="student-access"><section className="access-card">
     <div className="eyebrow">Account Activation & Check-in</div><h1>Welcome, {context.studentName}</h1>
     <dl><div><dt>Teaching block</dt><dd>{context.blockLabel}</dd></div><div><dt>Team</dt><dd>{context.teamName}</dd></div><div><dt>Project</dt><dd>{context.projectName || "Not assigned yet"}</dd></div></dl>
