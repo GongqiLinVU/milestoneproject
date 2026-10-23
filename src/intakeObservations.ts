@@ -1,10 +1,11 @@
 import {REVIEW_CONTRACT_VERSION} from './intakeReviewContract.js';
 // Debug-only sidecar. Never feeds a routing, extraction, or save decision.
-export const OBSERVATION_VERSION = 'intake-observation.v1.1';
+export const OBSERVATION_VERSION = 'intake-observation.v1.2';
 type Obj = Record<string, any>;
 type DebugEvent = {at:string;mode:string;request:Obj;response?:Obj;error?:string};
 export function buildHarnessObservations(events:DebugEvent[]) {
   const observations:Obj[]=[];
+  const route=(s:unknown)=>s==='clarification'?'continue':s;
   // These are observed runtime interventions, not actions performed by this sidecar.
   const interventions:Obj[]=[];
   const record=(index:number,kind:string,detail:Obj)=>interventions.push({eventIndex:index,kind,...detail});
@@ -27,12 +28,21 @@ export function buildHarnessObservations(events:DebugEvent[]) {
     if(event.mode==='chat' && typeof response.result?.assistantMessage==='string')add(event,index,'dialogue_reply_metrics',{
       words:response.result.assistantMessage.trim().split(/\s+/).length,characters:response.result.assistantMessage.length,
       readyForReview:response.result.readyForReview,reason:response.result.reason??null,source:'model_decision_not_verified',affectsConversation:false});
+    if(event.mode==='chat'&&response.chatControl){
+      const control=response.chatControl;
+      add(event,index,'chat_stop_decision',{control,source:'runtime_control',affectsConversation:Boolean(control.intervened)});
+      if(control.intervened){
+        const o=observations[observations.length-1];
+        o.kind='chat_stop_intervention';o.level='A';o.action={executed:true,actor:'chat_runtime',reason:control.reason};
+        record(index,'chat_stop_intervention',{reason:control.reason,before:control.proposal,budget:control.budget,after:control.final});
+      }
+    }
     if(response.routeDecision)add(event,index,'routing_comparison',{routeDecision:response.routeDecision,
-      legacyIntervention:response.routeDecision.proposed!==response.routeDecision.final||response.rawCandidate?.assistantMessage!==response.result?.assistantMessage,
+      legacyIntervention:route(response.routeDecision.proposed)!==route(response.routeDecision.final)||typeof response.rawCandidate?.assistantMessage==='string'&&typeof response.result?.assistantMessage==='string'&&response.rawCandidate.assistantMessage!==response.result.assistantMessage,
       proposedMessage:response.rawCandidate?.assistantMessage??null,deliveredMessage:response.result?.assistantMessage??null});
-    if(response.routeDecision?.proposed && response.routeDecision?.final && response.routeDecision.proposed!==response.routeDecision.final)
+    if(!response.chatControl && response.routeDecision?.proposed && response.routeDecision?.final && route(response.routeDecision.proposed)!==route(response.routeDecision.final))
       record(index,'route_override',{before:response.routeDecision.proposed,after:response.routeDecision.final,reason:response.routeDecision.reason});
-    if(typeof response.rawCandidate?.assistantMessage==='string' && typeof response.result?.assistantMessage==='string' && response.rawCandidate.assistantMessage!==response.result.assistantMessage)
+    if(!response.chatControl && typeof response.rawCandidate?.assistantMessage==='string' && typeof response.result?.assistantMessage==='string' && response.rawCandidate.assistantMessage!==response.result.assistantMessage)
       record(index,'message_replacement',{before:response.rawCandidate.assistantMessage,after:response.result.assistantMessage,reason:response.routeDecision?.reason??'not_recorded'});
     const decisions=Array.isArray(response.fieldDecisions)?response.fieldDecisions:[];
     decisions.forEach((decision:Obj)=>{
@@ -63,11 +73,13 @@ export function buildHarnessObservations(events:DebugEvent[]) {
     if(response.result?.consistencyObservations?.length)add(event,index,'record_consistency',{reasons:response.result.consistencyObservations,displayed:false,affectsConversation:false});
     if(Array.isArray(response.result?.uncertainties)&&response.result.uncertainties.length)add(event,index,'model_uncertainty',{uncertainties:response.result.uncertainties,source:'model_self_report_not_verified'});
   });
-  return {schemaVersion:OBSERVATION_VERSION,mode:'observation_only',
-    scope:'This sidecar does not intervene. Existing runtime controls are reported separately and are not disabled by this export.',
+  const actions=observations.filter(o=>o.level==='A').length;
+  const controlled=events.some(e=>Boolean(e.response?.chatControl));
+  return {schemaVersion:OBSERVATION_VERSION,mode:controlled?'observation_with_chat_control':'observation_only',
+    scope:'The sidecar does not execute actions. A events report enabled chat-runtime stops; legacy controls are listed separately.',
     levels:{O:'Record evidence without intervention',W:'Display a non-blocking warning',A:'Execute an explicitly enabled intervention'},
-    enabledLevels:['O'],indexing:'eventIndex and turnIndex are zero-based; round counts student messages in that request.',
-    summary:{events:events.length,observations:observations.length,warningsDisplayed:0,actionsExecuted:0,
+    enabledLevels:controlled?['O','A']:['O'],indexing:'eventIndex and turnIndex are zero-based; round counts student messages in that request.',
+    summary:{events:events.length,observations:observations.length,warningsDisplayed:0,actionsExecuted:actions,
       observerActionsExecuted:0,observedRuntimeInterventions:interventions.length},
     runtimeInterventions:{scope:'Observed existing controls across extraction, record projection, messages and routing. Separate from sidecar O/W/A counts.',
       items:interventions,coverage:'Only recorded decisions are counted; missing historical details are not treated as zero interventions.'},observations};

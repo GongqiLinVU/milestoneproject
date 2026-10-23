@@ -11,9 +11,9 @@ test('actual failed conversation documents support drift despite known work and 
  assert.match(f.reply.reason,/support/);assert.match(f.reply.assistantMessage,/teacher/);
 });
 test('revised role stays compact and parser preserves model close choice (no automatic gate)',()=>{
- assert.equal(CONVERSATION_VERSION,'intake-conversation.v2');
+ assert.equal(CONVERSATION_VERSION,'intake-conversation.v3');
  assert.ok(CONVERSATION_INSTRUCTIONS.length<3000);
  for(const readyForReview of [false,true]){
-  assert.equal(parseConversationReply({assistantMessage:'Check your summary.',readyForReview,reason:'Context'}).readyForReview,readyForReview);
+  assert.equal(parseConversationReply({assistantMessage:'Check your summary.',readyForReview,reason:'Context',target:readyForReview?'none':'work',effect:''}).readyForReview,readyForReview);
  }
 });

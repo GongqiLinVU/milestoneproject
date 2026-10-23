@@ -38,3 +38,9 @@ test('debug packing is bounded and flags omitted detail',()=>{
  const events=Array.from({length:40},(_,i)=>({at:String(i),mode:'turn',request:{conversation:source.slice(0,2)},response:{rawCandidate:'x'.repeat(20000),result:{readyForReview:true}}}));
  const before=JSON.stringify(events);const packed=packReviewDebug(events);assert.equal(JSON.stringify(events),before);assert.ok(packed.length<=32);assert.ok(JSON.stringify(packed).length<170000);assert.equal(packed[0].request.capturedEventCount,40);assert.equal(packed[0].response.traceDetailOmitted,true);
 });
+
+test('bounded debug packing retains runtime chat stop actions',()=>{
+ const control={intervened:true,reason:'target_exhausted',proposal:{target:'work'},budget:{clarificationsUsed:1,usedTargets:['work']},final:{route:'review'}};
+ const events=[{at:'now',mode:'chat',request:{conversation:source},response:{chatControl:control,padding:'x'.repeat(170000)}}];
+ const packed=packReviewDebug(events);assert.equal(packed[0].response.traceDetailOmitted,true);assert.deepEqual(packed[0].response.chatControl,control);
+});

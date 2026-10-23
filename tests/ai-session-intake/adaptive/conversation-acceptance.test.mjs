@@ -7,7 +7,7 @@ test('golden conversation prefixes make the actual late-closing regression expli
  assert.equal(fixture.cases.find(c=>c.id==='S7-6-unknown-cause').conversation.at(-1).actor,'student');
 });
 test('small dialogue contract preserves model choices and does not impose minimum rounds',()=>{
- for(const readyForReview of [true,false])assert.equal(parseConversationReply({assistantMessage:'Check your summary.',readyForReview,reason:'Enough information'}).readyForReview,readyForReview);
+ for(const readyForReview of [true,false])assert.equal(parseConversationReply({assistantMessage:'Check your summary.',readyForReview,reason:'Enough information',target:readyForReview?'none':'work',effect:''}).readyForReview,readyForReview);
  assert.throws(()=>parseConversationReply({assistantMessage:'Hello',readyForReview:'yes',reason:'x'}));
  assert.ok(CONVERSATION_INSTRUCTIONS.length<3000);
 });
