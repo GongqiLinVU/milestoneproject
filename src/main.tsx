@@ -1,3 +1,4 @@
+import {useStaffSession} from './useStaffSession';
 import {TeacherAdministration,TeacherPasswordSetup,classLabel} from './TeacherAdministration';
 import {chatStopSaveReason,MAX_CHAT_CLARIFICATIONS,type QuestionMeta} from './intakeChatStop';
 import { IntakeReview, IntakeRecordSummary, IntakeReviewDetails } from "./IntakeReview";
@@ -2897,15 +2898,8 @@ function Admin() {
   ] as const;
   type ActivityTable = (typeof activityTables)[number]["table"];
   type ActivityRecord = { id: string } & Record<string, unknown>;
-  const [sessionUser, setSessionUser] = useState<{
-    email: string;
-    isTeacher: boolean;
-    isSuperadmin: boolean;
-    mustChangePassword: boolean;
-  } | null>(null);
-  const [authChecking, setAuthChecking] = useState(true);
+  const {sessionUser,setSessionUser,authChecking,authMessage,setAuthMessage}=useStaffSession(supabase);
   const [authBusy, setAuthBusy] = useState(false);
-  const [authMessage, setAuthMessage] = useState("");
   const [dataStatus, setDataStatus] = useState<
     "idle" | "loading" | "success" | "error"
   >("idle");
@@ -2949,21 +2943,6 @@ function Admin() {
   const [aiSuggestionBusyId, setAiSuggestionBusyId] = useState<string | null>(null);
   const requestSequence = useRef(0);
 
-  useEffect(() => {
-    let active=true,generation=0;
-    const read=async(session:any)=>{
-      const seq=++generation;setAuthChecking(true);
-      if(!session?.user.email){if(active){setSessionUser(null);setAuthChecking(false);}return;}
-      const {data,error}=await supabase.rpc('get_staff_context');
-      if(!active||seq!==generation)return;
-      setSessionUser({email:session.user.email,isTeacher:!error&&data?.isTeacher===true,isSuperadmin:!error&&data?.isSuperadmin===true,mustChangePassword:!error&&data?.mustChangePassword===true});
-      if(error)setAuthMessage('Class access could not be loaded. Check that the teaching-class database update is installed.');
-      setAuthChecking(false);
-    };
-    void supabase.auth.getSession().then(({data:{session}})=>read(session));
-    const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,session)=>{setTimeout(()=>{if(active)void read(session);},0);});
-    return()=>{active=false;subscription.unsubscribe();};
-  }, []);
 
   useEffect(() => {
     if (sessionUser?.isTeacher) {

@@ -39,6 +39,7 @@ type StudioSession = {
 
 export function StudentAccess({ children }: { children: ReactNode | ((context: Context) => ReactNode) }) {
   const [session, setSession] = useState<Session | null>(null);
+  const [contextUserId,setContextUserId]=useState<string|null>(null);
   const [context, setContext] = useState<Context | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -47,42 +48,52 @@ export function StudentAccess({ children }: { children: ReactNode | ((context: C
   const [studioSession, setStudioSession] = useState<StudioSession | null>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setLoading(false);
-    });
+    let active=true,authEventSeen=false;
+    void supabase.auth.getSession().then(({ data }) => {
+      if(!active||authEventSeen)return;
+      setSession(data.session);setLoading(false);
+    }).catch(()=>{if(active&&!authEventSeen){setLoading(false);setMessage("Your session could not be restored. Sign in again.");}});
     const { data } = supabase.auth.onAuthStateChange((event, next) => {
-      setSession(next);
+      if(!active)return;
+      authEventSeen=true;setSession(next);setLoading(false);
       if (event === "PASSWORD_RECOVERY") setRecovering(true);
+      else if(!next)setRecovering(false);
     });
-    return () => data.subscription.unsubscribe();
+    return () => {active=false;data.subscription.unsubscribe();};
   }, []);
+  const userId=session?.user.id;
   useEffect(() => {
-    if (!session) return setContext(null);
-    supabase.rpc("get_my_student_context").then(async ({ data, error }) => {
+    let active=true;
+    setContext(null);setContextUserId(null);setStudioSession(null);setMessage("");
+    if (!userId) return;
+    void supabase.rpc("get_my_student_context").then(async ({ data, error }) => {
+      if(!active)return;
       if (error) setMessage("Your roster context could not be resolved. Ask your teacher to check the active block.");
       else {
-        setContext(data as Context);
+        setContext(data as Context);setContextUserId(userId);
         const { data: sessionData } = await supabase.rpc("get_my_open_studio_session");
-        setStudioSession((sessionData as StudioSession | null) || null);
+        if(active)setStudioSession((sessionData as StudioSession | null) || null);
       }
     });
-  }, [session]);
+    return()=>{active=false;};
+  }, [userId]);
 
   useEffect(() => {
-    if (!session || context?.status !== "activated") return;
+    if (!userId || context?.status !== "activated") return;
+    let active=true;
     const refresh = () => {
-      void supabase.rpc("get_my_open_studio_session").then(({ data }) =>
-        setStudioSession((data as StudioSession | null) || null),
-      );
+      if(document.visibilityState!=="visible")return;
+      void supabase.rpc("get_my_open_studio_session").then(({ data,error }) => {
+        if(active&&!error)setStudioSession((data as StudioSession | null) || null);
+      });
     };
     const timer = window.setInterval(refresh, 30000);
     document.addEventListener("visibilitychange", refresh);
     return () => {
-      window.clearInterval(timer);
+      active=false;window.clearInterval(timer);
       document.removeEventListener("visibilitychange", refresh);
     };
-  }, [session, context?.status]);
+  }, [userId, context?.status]);
 
   async function checkInToSession() {
     if (!studioSession) return;
@@ -180,7 +191,7 @@ export function StudentAccess({ children }: { children: ReactNode | ((context: C
     </form>
     <a href="/">Back to course information</a>
   </section></main>;
-  if (!context) return <main className="student-access"><p>{message || "Loading your project context…"}</p><button className="secondary" onClick={() => void supabase.auth.signOut()}>Sign out</button></main>;
+  if (!context||contextUserId!==userId) return <main className="student-access"><p>{message || "Loading your project context…"}</p><button className="secondary" onClick={() => void supabase.auth.signOut()}>Sign out</button></main>;
   if (context.status === "ready") return <main className="student-access"><section className="access-card">
     <div className="eyebrow">Account Activation & Check-in</div><h1>Welcome, {context.studentName}</h1>
     <dl><div><dt>Teaching block</dt><dd>{context.blockLabel}</dd></div><div><dt>Team</dt><dd>{context.teamName}</dd></div><div><dt>Project</dt><dd>{context.projectName || "Not assigned yet"}</dd></div></dl>
