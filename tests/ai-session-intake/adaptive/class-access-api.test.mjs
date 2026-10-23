@@ -8,12 +8,15 @@ const classId='20000000-0000-0000-0000-000000000001',userId='10000000-0000-0000-
 async function run(handler,body,options={}){
  const requests=[],original=globalThis.fetch;
  globalThis.fetch=async(url,init={})=>{
-  const path=String(url),method=init.method||'GET';requests.push({path,method});let data={},status=200;
+  const path=String(url),method=init.method||'GET';requests.push({path,method,body:init.body?JSON.parse(init.body):null});let data={},status=200;
   if(path.includes('/auth/v1/user'))data={id:userId,email:'owner@example.invalid',app_metadata:{role:'teacher'}};
   else if(path.includes('/rpc/get_staff_context'))data={isSuperadmin:options.admin===true,mustChangePassword:options.password===true};
   else if(path.includes('/rpc/can_manage_teaching_class'))data=options.allowed===true;
   else if(path.includes('/rpc/can_manage_student_credentials'))data=options.reset===true;
   else if(path.includes('/rpc/set_teacher_classes')){data=options.registerFailed?{message:'Unknown class'}:null;status=options.registerFailed?400:200;}
+  else if(path.includes('/platform_administrators'))data=options.targetRoot?{user_id:userId}:null;
+  else if(path.includes('/auth/v1/admin/users/')&&method==='GET')data={id:'10000000-0000-0000-0000-000000000009',email:'new@example.invalid',app_metadata:{role:options.targetStudent?'student':'teacher'}};
+  else if(path.includes('/auth/v1/admin/users')&&((method==='DELETE'&&options.deleteFailed)||(method==='PUT'&&options.resetFailed))){data={msg:'Protected history'};status=409;}
   else if(path.includes('/auth/v1/admin/users')){data=options.duplicate?{msg:'Email exists'}:{id:'10000000-0000-0000-0000-000000000009',email:'new@example.invalid'};status=options.duplicate?422:200;}
   else if(path.includes('/teacher_profiles'))data=method==='GET'?{active:options.inactive!==true}:null;
   else if(path.includes('/student_roster'))data=options.roster||[];
@@ -46,4 +49,29 @@ test('teacher first-password activation is self-scoped and cannot activate a dis
 test('unassigned teacher cannot obtain a poster signed URL or trigger teaching model calls',async()=>{
  const view=await run(poster,{action:'view',versionId:userId});assert.equal(view.res.code,403);assert.ok(!view.requests.some(r=>r.path.includes('/storage/')));
  const advice=await run(suggestion,{blockId:classId,stage:'starting'});assert.equal(advice.res.code,403);assert.ok(!advice.requests.some(r=>r.path.includes('openai.com')));
+});
+
+const targetId='10000000-0000-0000-0000-000000000009';
+test('only administrator can reset/delete verified ordinary teachers; self and roots are protected',async()=>{
+ for(const action of ['reset','delete']){
+  const body={action,userId:targetId};
+  for(const options of [{},{admin:true,targetRoot:true},{admin:true,targetStudent:true}]){
+   const r=await run(teacher,body,options);assert.equal(r.res.code,403);assert.ok(!r.requests.some(x=>x.method==='PUT'||x.method==='PATCH'||x.method==='DELETE'));
+  }
+  const self=await run(teacher,{action,userId},{admin:true});assert.equal(self.res.code,400);
+  const invalid=await run(teacher,{action,userId:'bad'},{admin:true});assert.equal(invalid.res.code,400);
+ }
+});
+test('password reset requires a new password at next login and returns temporary credentials only on success',async()=>{
+ const r=await run(teacher,{action:'reset',userId:targetId},{admin:true});assert.equal(r.res.code,200);assert.equal(r.res.body.email,'new@example.invalid');assert.ok(r.res.body.initialPassword.length>=20);
+ const flag=r.requests.findIndex(x=>x.method==='PATCH'&&x.body.must_change_password===true),password=r.requests.findIndex(x=>x.method==='PUT');assert.ok(flag>=0&&password>flag);assert.equal(r.requests[password].body.password,r.res.body.initialPassword);
+ const disabled=await run(teacher,{action:'reset',userId:targetId},{admin:true,inactive:true});assert.equal(disabled.res.code,409);assert.ok(!disabled.requests.some(x=>x.method==='PUT'));
+ const failed=await run(teacher,{action:'reset',userId:targetId},{admin:true,resetFailed:true});assert.equal(failed.res.code,500);assert.equal(failed.res.body.initialPassword,undefined);
+});
+test('delete disables first; linked history failure remains visible without removing records',async()=>{
+ for(const deleteFailed of [false,true]){
+  const r=await run(teacher,{action:'delete',userId:targetId},{admin:true,deleteFailed});assert.equal(r.res.code,deleteFailed?409:200);
+  const disabled=r.requests.findIndex(x=>x.method==='PATCH'&&x.body.active===false),deleted=r.requests.findIndex(x=>x.method==='DELETE');assert.ok(disabled>=0&&deleted>disabled);assert.ok(r.requests[deleted].path.endsWith(targetId));assert.equal(r.requests.filter(x=>x.method==='DELETE').length,1);
+  if(deleteFailed)assert.match(r.res.body.error,/disabled/);
+ }
 });
