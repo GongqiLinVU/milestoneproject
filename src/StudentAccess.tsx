@@ -143,10 +143,8 @@ export function StudentAccess({ children }: { children: ReactNode | ((context: C
     const { error: passwordError } = await supabase.auth.updateUser({ password: String(values.password) });
     const { data, error } = passwordError
       ? { data: null, error: passwordError }
-      : await supabase.rpc("complete_student_activation", {
-          p_goal: context?.checkinRecognised ? null : String(values.goal || "").trim(),
-        });
-    if (error) setMessage("Activation could not be completed. Check the recovery goal or ask your teacher for help.");
+      : await supabase.rpc("complete_student_activation");
+    if (error) setMessage("Activation could not be completed. Please retry or ask your teacher for help.");
     else setContext(data as Context);
     setBusy(false);
   }
@@ -196,11 +194,10 @@ export function StudentAccess({ children }: { children: ReactNode | ((context: C
   if (!context||contextUserId!==userId) return <main className="student-access"><p>{message || "Loading your project context…"}</p><button className="secondary" onClick={() => void supabase.auth.signOut()}>Sign out</button></main>;
   if(context.teamAssigned===false)return <main className="student-access"><section className="access-card"><div className="eyebrow">Class enrolment confirmed</div><h1>Your team is being arranged</h1><p>You are enrolled in {context.blockLabel}. Your teacher will assign your team and project. You do not need to choose a team yourself.</p><button onClick={()=>setContextRefresh(value=>value+1)}>Check team assignment</button><button className="secondary" onClick={()=>void supabase.auth.signOut()}>Sign out</button></section></main>;
   if (context.status === "ready") return <main className="student-access"><section className="access-card">
-    <div className="eyebrow">Account Activation & Check-in</div><h1>Welcome, {context.studentName}</h1>
+    <div className="eyebrow">Account activation</div><h1>Welcome, {context.studentName}</h1>
     <dl><div><dt>Teaching block</dt><dd>{context.blockLabel}</dd></div><div><dt>Team</dt><dd>{context.teamName}</dd></div><div><dt>Project</dt><dd>{context.projectName || "Not assigned yet"}</dd></div></dl>
-    <p>{context.checkinRecognised ? "Your earlier Week 1 Check-in has been recognised. You do not need to submit it again." : "Complete one short recovery check to activate your account."}</p>
+    <p>Set your password to activate your account.</p>
     <form onSubmit={activate}>
-      {!context.checkinRecognised && <label>What is your main four-week delivery goal?<textarea name="goal" required minLength={3} maxLength={800}/></label>}
       <label>Choose a personal password<input name="password" type="password" required minLength={10} autoComplete="new-password"/></label>
       <label>Confirm password<input name="confirm_password" type="password" required minLength={10} autoComplete="new-password"/></label>
       {message && <p className="admin-alert" role="status">{message}</p>}<button disabled={busy}>{busy ? "Activating…" : "Activate and continue"}</button>
