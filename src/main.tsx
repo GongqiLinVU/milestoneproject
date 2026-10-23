@@ -1,3 +1,4 @@
+import {TeacherAdministration,TeacherPasswordSetup,classLabel} from './TeacherAdministration';
 import {chatStopSaveReason,MAX_CHAT_CLARIFICATIONS,type QuestionMeta} from './intakeChatStop';
 import { IntakeReview, IntakeRecordSummary, IntakeReviewDetails } from "./IntakeReview";
 import { FOCUSED_REVIEW_VERSION, buildFocusedStudentRecord, validateFocusedIntakeRecord, packReviewDebug, restoreReviewDebug } from "./intakeReviewSupport";
@@ -2536,7 +2537,7 @@ function StudioSessionControl({
   onBlockChange,
 }: {
   blockId: string;
-  blocks: Array<{ id: string; academic_year: number; block_code: string; status: string; intake_mode?: "disabled" | "deterministic" | "ai" }>;
+  blocks: Array<{ id: string; academic_year: number; block_code: string; course_code?:string; class_code?:string; status: string; intake_mode?: "disabled" | "deterministic" | "ai" }>;
   onBlockChange: (blockId: string) => void;
 }) {
   const [sessions, setSessions] = useState<StudioSessionRow[]>([]);
@@ -2694,11 +2695,11 @@ function StudioSessionControl({
   return <section className="session-manager">
     <div className="session-manager-heading"><div>
       <div className="eyebrow">Teaching workspace</div>
-      <h2>Studio Sessions</h2><p>Set Block defaults, then manage the Session you are teaching.</p>
-    </div><label className="admin-block-filter">Teaching block<select value={blockId} onChange={event=>onBlockChange(event.target.value)} disabled={busy}>{blocks.map(block=><option key={block.id} value={block.id}>{block.academic_year} · {block.block_code}{block.status==="active"?" — Active":""}</option>)}</select></label></div>
+      <h2>Studio Sessions</h2><p>Set class defaults, then manage the Session you are teaching.</p>
+    </div><label className="admin-block-filter">Class<select value={blockId} onChange={event=>onBlockChange(event.target.value)} disabled={busy}>{blocks.map(block=><option key={block.id} value={block.id}>{classLabel(block)}{block.status==="active"?" — Active":""}</option>)}</select></label></div>
     {message && <p className="admin-alert" role="status">{message}</p>}
     <section className="session-global-settings" aria-labelledby="session-defaults-title">
-      <div className="session-global-top"><div><div className="eyebrow">Applies across this Block</div><h3 id="session-defaults-title">Session defaults</h3><p>{overrideCount?`${overrideCount} Session${overrideCount===1?" overrides":"s override"} this default.`:"All Sessions follow this default."} Check-in and submission windows are controlled separately.</p></div>
+      <div className="session-global-top"><div><div className="eyebrow">Applies across this class</div><h3 id="session-defaults-title">Session defaults</h3><p>{overrideCount?`${overrideCount} Session${overrideCount===1?" overrides":"s override"} this default.`:"All Sessions follow this default."} Check-in and submission windows are controlled separately.</p></div>
       <label className="session-default-method">Default collection method<select aria-label="Default collection method" value={effectiveMode} disabled={modeBusy||!blockId} onChange={event=>void setBlockMode(event.target.value as CollectionMode)}><option value="disabled">Existing classroom workflow</option><option value="deterministic">Guided Form</option><option value="ai">AI Conversation</option></select></label></div>
       <p className="session-default-note">{effectiveMode==="disabled"?"S1–S9 use Work Track: students can update progress while submissions are open.":effectiveMode==="deterministic"?"S1–S9 use Guided Form without AI calls. Confirmed records are read-only.":"S1–S9 use AI Conversation, with a completion path without AI. Confirmed records are read-only."} S10 uses Feedback.</p>
       {modeBusy&&<p role="status">Saving default…</p>}{modeError&&<p className="admin-alert error" role="alert">{modeError}</p>}{!modeError&&modeMessage&&<p role="status">{modeMessage}</p>}
@@ -2781,6 +2782,8 @@ function Admin() {
     id: string;
     academic_year: number;
     block_code: string;
+    course_code?: string;
+    class_code?: string;
     status: string;
     intake_mode?: "disabled" | "deterministic" | "ai";
   };
@@ -2897,6 +2900,8 @@ function Admin() {
   const [sessionUser, setSessionUser] = useState<{
     email: string;
     isTeacher: boolean;
+    isSuperadmin: boolean;
+    mustChangePassword: boolean;
   } | null>(null);
   const [authChecking, setAuthChecking] = useState(true);
   const [authBusy, setAuthBusy] = useState(false);
@@ -2918,7 +2923,7 @@ function Admin() {
     useState<ActivityTable>("team_health_checks");
   const [teachingBlocks, setTeachingBlocks] = useState<TeachingBlock[]>([]);
   const [selectedBlockId, setSelectedBlockId] = useState("");
-  const [adminView, setAdminView] = useState<"overview" | "roster" | "projects" | "sessions" | "posters" | "records">("overview");
+  const [adminView, setAdminView] = useState<"overview" | "roster" | "projects" | "sessions" | "posters" | "records" | "staff">("overview");
   const [activityWorkspace, setActivityWorkspace] = useState<"weekly" | "records" | "presentation">("records");
   const [records, setRecords] = useState<ActivityRecord[]>([]);
   const [editRecord, setEditRecord] = useState<ActivityRecord | null>(null);
@@ -2945,37 +2950,19 @@ function Admin() {
   const requestSequence = useRef(0);
 
   useEffect(() => {
-    let active = true;
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!active) return;
-      setSessionUser(
-        session?.user.email
-          ? {
-              email: session.user.email,
-              isTeacher: session.user.app_metadata.role === "teacher",
-            }
-          : null,
-      );
+    let active=true,generation=0;
+    const read=async(session:any)=>{
+      const seq=++generation;setAuthChecking(true);
+      if(!session?.user.email){if(active){setSessionUser(null);setAuthChecking(false);}return;}
+      const {data,error}=await supabase.rpc('get_staff_context');
+      if(!active||seq!==generation)return;
+      setSessionUser({email:session.user.email,isTeacher:!error&&data?.isTeacher===true,isSuperadmin:!error&&data?.isSuperadmin===true,mustChangePassword:!error&&data?.mustChangePassword===true});
+      if(error)setAuthMessage('Class access could not be loaded. Check that the teaching-class database update is installed.');
       setAuthChecking(false);
-    });
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!active) return;
-      setSessionUser(
-        session?.user.email
-          ? {
-              email: session.user.email,
-              isTeacher: session.user.app_metadata.role === "teacher",
-            }
-          : null,
-      );
-      setAuthChecking(false);
-    });
-    return () => {
-      active = false;
-      subscription.unsubscribe();
     };
+    void supabase.auth.getSession().then(({data:{session}})=>read(session));
+    const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,session)=>{setTimeout(()=>{if(active)void read(session);},0);});
+    return()=>{active=false;subscription.unsubscribe();};
   }, []);
 
   useEffect(() => {
@@ -3083,7 +3070,7 @@ function Admin() {
   async function initialiseDashboard() {
     const { data, error } = await supabase
       .from("teaching_blocks")
-      .select("id, academic_year, block_code, status, intake_mode")
+      .select("id, academic_year, block_code, course_code, class_code, status, intake_mode")
       .order("academic_year", { ascending: false });
     if (error) {
       setDataStatus("error");
@@ -3196,6 +3183,7 @@ function Admin() {
         },
         body: JSON.stringify({
           stage,
+          blockId:selectedBlockId,
           project: {
             name: student.project_name,
             area: student.project_area,
@@ -3514,14 +3502,18 @@ function Admin() {
     const exportRecords =
       activeTable === "weekly_engagement_checkouts" ? visibleRecords : records;
     const headings = [
+      "Course",
       "Academic year",
       "Teaching block",
+      "Class",
       ...activeActivity.columns.map(([, label]) => label),
     ];
     const rows = exportRecords.map((record) =>
       [
+        selectedBlock?.course_code ?? "NIT3004",
         selectedBlock?.academic_year ?? "",
         selectedBlock?.block_code ?? "",
+        selectedBlock?.class_code ?? "C1",
         ...activeActivity.columns.map(([field]) => record[field] ?? ""),
       ],
     );
@@ -3537,7 +3529,7 @@ function Admin() {
     const link = document.createElement("a");
     const date = new Date().toISOString().slice(0, 10);
     link.href = url;
-    link.download = `nit3004-${activeTable.replace(/_/g, "-")}-${date}.csv`;
+    link.download = `${selectedBlock?.course_code||"NIT3004"}-${selectedBlock?.academic_year||""}-${selectedBlock?.block_code||""}-${selectedBlock?.class_code||"C1"}-${activeTable.replace(/_/g, "-")}-${date}.csv`;
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -3658,6 +3650,7 @@ function Admin() {
       </main>
     );
 
+  if(sessionUser.mustChangePassword)return <TeacherPasswordSetup client={supabase} onSignOut={()=>void signOut()} onChanged={()=>{void supabase.rpc('get_staff_context').then(({data})=>{if(data)setSessionUser(current=>current?{...current,isTeacher:data.isTeacher,isSuperadmin:data.isSuperadmin,mustChangePassword:data.mustChangePassword}:null);});}}/>;
   if (!sessionUser.isTeacher)
     return (
       <main className="admin-login">
@@ -3683,7 +3676,7 @@ function Admin() {
   return (
     <main className="admin">
       <div className="admin-heading">
-        <Head label="NIT3004" title="Teacher Dashboard" />
+        <Head label={sessionUser.isSuperadmin?"Administrator":"Teacher"} title="Teaching Dashboard" />
         <div className="admin-session">
           <span>
             Signed in as <b>{sessionUser.email}</b>
@@ -3706,24 +3699,27 @@ function Admin() {
       )}
       <div className="admin-shell">
         <aside className="admin-sidebar" aria-label="Teacher dashboard sections">
-          <button type="button" className={adminView === "overview" ? "active" : ""} onClick={() => setAdminView("overview")}><ListChecks size={18}/><span><b>Overview</b><small>Block snapshot</small></span></button>
-          <button type="button" className={adminView === "roster" ? "active" : ""} onClick={() => setAdminView("roster")}><Users size={18}/><span><b>Blocks & roster</b><small>Students and teams</small></span></button>
+          <button type="button" className={adminView === "overview" ? "active" : ""} onClick={() => setAdminView("overview")}><ListChecks size={18}/><span><b>Overview</b><small>Class snapshot</small></span></button>
+          <button type="button" className={adminView === "roster" ? "active" : ""} onClick={() => setAdminView("roster")}><Users size={18}/><span><b>Class roster</b><small>Students and teams</small></span></button>
           <button type="button" className={adminView === "projects" ? "active" : ""} onClick={() => setAdminView("projects")}><Rocket size={18}/><span><b>Project setup</b><small>Catalogue & assignments</small></span></button>
           <button type="button" className={adminView === "sessions" ? "active" : ""} onClick={() => setAdminView("sessions")}><ClipboardCheck size={18}/><span><b>Session check-in</b><small>Open attendance</small></span></button>
           <button type="button" className={adminView === "posters" ? "active" : ""} onClick={() => setAdminView("posters")}><Presentation size={18}/><span><b>Poster Gallery</b><small>Week 3 publish</small></span></button>
           <button type="button" className={adminView === "records" ? "active" : ""} onClick={() => setAdminView("records")}><ClipboardCheck size={18}/><span><b>Activity management</b><small>Weeks, records & order</small></span></button>
+          {sessionUser.isSuperadmin&&<button type="button" className={adminView==='staff'?'active':''} onClick={()=>setAdminView('staff')}><Users size={18}/><span><b>Classes & teachers</b><small>Administrator</small></span></button>}
           <a href="/" className="admin-sidebar-home">Back to student portal</a>
         </aside>
         <div className="admin-content">
+      {sessionUser.isSuperadmin&&adminView==='staff'&&<TeacherAdministration client={supabase} classes={teachingBlocks} onChanged={()=>void initialiseDashboard()}/>}
+      {teachingBlocks.length===0&&adminView!=='staff'&&<p className="admin-alert">No class is assigned to this account yet. Ask your administrator to assign your class.</p>}
       <section hidden={adminView !== "overview"} className="admin-overview" aria-labelledby="overview-title">
         <div className="admin-overview-heading">
           <div>
-            <div className="eyebrow">Teaching block overview</div>
-            <h2 id="overview-title">Your block at a glance.</h2>
+            <div className="eyebrow">Class overview</div>
+            <h2 id="overview-title">Your class at a glance.</h2>
             <p>Stable course information for planning, review and future block-level analysis.</p>
           </div>
           <label className="admin-block-filter">
-            Teaching block
+            Class
             <select
               value={selectedBlockId}
               onChange={(event) => {
@@ -3737,7 +3733,7 @@ function Admin() {
             >
               {teachingBlocks.map((block) => (
                 <option key={block.id} value={block.id}>
-                  {block.academic_year} · {block.block_code}
+                  {classLabel(block)}
                   {block.status === "active" ? " — Active" : ""}
                 </option>
               ))}
@@ -3779,7 +3775,7 @@ function Admin() {
             <h2 id="activity-workspace-title">Activity Management</h2>
             <p>Open weekly work, review student evidence and publish the presentation sequence from one workspace.</p>
           </div>
-          <label className="admin-block-filter">Teaching block<select value={selectedBlockId} onChange={(event)=>{const nextBlockId=event.target.value;setSelectedBlockId(nextBlockId);void loadDashboard(activeTable,nextBlockId);}}>{teachingBlocks.map(block=><option key={block.id} value={block.id}>{block.academic_year} · {block.block_code}{block.status==="active"?" — Active":""}</option>)}</select></label>
+          <label className="admin-block-filter">Class<select value={selectedBlockId} onChange={(event)=>{const nextBlockId=event.target.value;setSelectedBlockId(nextBlockId);void loadDashboard(activeTable,nextBlockId);}}>{teachingBlocks.map(block=><option key={block.id} value={block.id}>{classLabel(block)}{block.status==="active"?" — Active":""}</option>)}</select></label>
         </div>
         <div className="activity-workspace-tabs" role="tablist" aria-label="Activity management views">
           <button type="button" role="tab" aria-selected={activityWorkspace === "weekly"} className={activityWorkspace === "weekly" ? "active" : ""} onClick={()=>setActivityWorkspace("weekly")}><CalendarPlus size={17}/><span><b>Weekly Activities</b><small>Activation and availability</small></span></button>

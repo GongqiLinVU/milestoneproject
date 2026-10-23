@@ -1,3 +1,4 @@
+import {classLabel} from './TeacherAdministration';
 import { useCallback, useEffect, useState, type ChangeEvent } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { CheckCircle2, Eye, FileUp, Image, RefreshCw, Trash2, X } from "lucide-react";
@@ -154,7 +155,7 @@ export function StudentPosterGallery({ onFeedback }: { onFeedback: (teamName: st
   </section>;
 }
 
-export function TeacherPosterGallery({ blockId, blocks, onBlockChange }: { blockId: string; blocks: Array<{ id:string; academic_year:number; block_code:string; status:string }>; onBlockChange: (id:string)=>void }) {
+export function TeacherPosterGallery({ blockId, blocks, onBlockChange }: { blockId: string; blocks: Array<{ id:string; academic_year:number; block_code:string; course_code?:string;class_code?:string; status:string }>; onBlockChange: (id:string)=>void }) {
   const [data, setData] = useState<{ isPublished: boolean; publishedAt: string | null; teams: TeacherTeamPoster[] } | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -183,7 +184,7 @@ export function TeacherPosterGallery({ blockId, blocks, onBlockChange }: { block
     if (!error) await load();
   }
   return <section className="teacher-poster-workspace">
-    <div className="poster-admin-heading"><div><div className="eyebrow">Week 3 publishing</div><h2>Poster Gallery</h2><p>Collect and preview Team Posters, then publish one fixed block snapshot for peer feedback.</p></div><label className="admin-block-filter">Teaching block<select value={blockId} onChange={(event)=>onBlockChange(event.target.value)}>{blocks.map(block=><option key={block.id} value={block.id}>{block.academic_year} · {block.block_code}{block.status === "active" ? " — Active" : ""}</option>)}</select></label></div>
+    <div className="poster-admin-heading"><div><div className="eyebrow">Week 3 publishing</div><h2>Poster Gallery</h2><p>Collect and preview Team Posters, then publish one fixed class snapshot for peer feedback.</p></div><label className="admin-block-filter">Class<select value={blockId} onChange={(event)=>onBlockChange(event.target.value)}>{blocks.map(block=><option key={block.id} value={block.id}>{classLabel(block)}{block.status === "active" ? " — Active" : ""}</option>)}</select></label></div>
     <div className="poster-publication-bar"><div><span className={`activity-control-status ${data?.isPublished ? "open" : "closed"}`}>{data?.isPublished ? "Published" : "Hidden"}</span><div><b>Upload and Publish are separate.</b><small>{data?.publishedAt ? `Latest snapshot · ${new Date(data.publishedAt).toLocaleString()}` : "No student-visible snapshot yet."}</small></div></div><button type="button" className={data?.isPublished ? "danger" : "primary"} disabled={busy||!data} onClick={()=>void publication(!data?.isPublished)}>{busy ? "Updating…" : data?.isPublished ? "Hide Gallery" : "Publish Gallery"}</button></div>
     {message && <p className="activity-control-message" role="status">{message}</p>}
     {!data ? <p className="empty-state">Loading Team Posters…</p> : <div className="teacher-poster-grid">{data.teams.map(team=>{const published=Boolean(team.draft && team.publishedVersionId===team.draft.versionId);return <article key={team.teamId}><div className="teacher-poster-card-heading"><div><span>{team.teamName}</span><h3>{team.projectName || "Project assignment pending"}</h3></div><span className={`activity-control-status ${published ? "open" : team.draft ? "scheduled" : "closed"}`}>{published ? "Published" : team.draft ? "Ready" : "Missing"}</span></div>{team.draft ? <><PosterPreview versionId={team.draft.versionId} mimeType={team.draft.mimeType} title={team.teamName} compact/><div className="teacher-poster-file"><b>{team.draft.originalFilename}</b><small>{(team.draft.sizeBytes/1024/1024).toFixed(2)} MB · {new Date(team.draft.createdAt).toLocaleString()}</small>{team.publishedVersionId && !published && <span>Draft changed · publish again to update students</span>}</div></> : <div className="poster-missing"><Image/><b>No Poster</b><span>This Team is shown as unavailable if you publish now.</span></div>}<div className="teacher-poster-actions"><UploadControl compact teamId={team.teamId} current={team.draft} onUploaded={load}/>{team.draft && <button type="button" className="secondary danger-text" disabled={busy} onClick={()=>void remove(team)}><Trash2 size={15}/> Remove</button>}</div></article>})}</div>}

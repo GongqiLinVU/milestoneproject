@@ -1,10 +1,8 @@
+import {hasClassAccess,callerClient} from './classAccess.js';
 import { createClient } from "@supabase/supabase-js";
 import { randomBytes } from "node:crypto";
 
 const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-const publishableKey =
-  process.env.SUPABASE_PUBLISHABLE_KEY ||
-  process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const password = () => `Vu!${randomBytes(12).toString("base64url")}9a`;
@@ -23,21 +21,11 @@ async function findAuthUserByEmail(admin: any, email: string) {
   return { user: null, error: null };
 }
 
-async function teacher(token: string) {
-  if (!url || !publishableKey) return false;
-  const response = await fetch(`${url}/auth/v1/user`, {
-    headers: { apikey: publishableKey, Authorization: `Bearer ${token}` },
-  });
-  if (!response.ok) return false;
-  const user = await response.json();
-  return user?.app_metadata?.role === "teacher";
-}
-
 export default async function handler(req: any, res: any) {
   res.setHeader("Cache-Control", "no-store");
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed." });
   const token = String(req.headers.authorization || "").replace(/^Bearer /, "");
-  if (!token || !(await teacher(token))) {
+  if (!token) {
     return res.status(403).json({ error: "Teacher access required." });
   }
   if (!url || !serviceKey) {
@@ -56,6 +44,8 @@ export default async function handler(req: any, res: any) {
   if (action === "reset" && !requestedStudentId) {
     return res.status(400).json({ error: "Select one student account to reset." });
   }
+
+  if (!(await hasClassAccess(token, blockId))) return res.status(403).json({ error: 'This class is not assigned to your account.' });
 
   const admin = createClient(url, serviceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
@@ -82,6 +72,8 @@ export default async function handler(req: any, res: any) {
   const accountsByAuthUser = new Map((existing || []).map((row) => [row.auth_user_id, row]));
 
   if (action === "reset") {
+    const {data:canReset,error:resetScopeError}=await callerClient(token).rpc('can_manage_student_credentials',{p_class_id:blockId,p_student_id:requestedStudentId});
+    if(resetScopeError||canReset!==true)return res.status(403).json({error:'This student’s current account cannot be reset from this class.'});
     const row = selectedRoster[0];
     const account = accounts.get(identityKey(row.student_id));
     if (!account) {
