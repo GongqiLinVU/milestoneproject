@@ -1,14 +1,12 @@
 # Product Roadmap
 
-## Sprint 10 — active
+## Current phase — Classroom observation and real user feedback
 
-Classroom continuity and November readiness: S10-01 extends Work Track to S1–S9
-and clarifies teacher collection methods; S10-02 prepares synthetic 2B3 and real
-2B4 setup/account activation/recovery; S10-03 verifies continuity and remaining
-hosted gaps. AI usage controls and bounded quality/safety acceptance remain
-optional later work. Acceptance ends 29 October, contingency 30 October, teaching
-starts 2 November 2026. See `docs/sprints/sprint-10/PLAN.md` and `HANDOFF.md`.
+**Sprint 10 closed on 24 October 2026.** Joseph confirmed basic testing, new-teacher Session creation and student login. Baseline main: `901fd72` (PR #97). Delivered scope and evidence limits are in [Sprint 10 closeout](docs/sprints/sprint-10/CLOSEOUT.md).
 
+The next priority is real use across the independently managed NIT3004 classes. Follow [the feedback plan](docs/feedback/PLAN.md) and [register](docs/feedback/FEEDBACK_LOG.md). Keep the baseline stable, fix urgent access/data/security defects promptly, and batch normal usability/conversation/record-quality improvements after reviewing real cases. No Sprint 11 feature scope is committed yet.
+
+29 October readiness review, 30 October configuration/contingency and 2 November teaching remain rollout checkpoints. Individual teacher/class setup and institutional arrangements remain their owners' responsibility. Earlier sprint narratives below are historical.
 
 ## Product direction
 

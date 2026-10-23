@@ -1,27 +1,16 @@
 # AI Context — Engineering Studio Platform
 
-## Sprint 10 current checkpoint — 14 October 2026
+## Current checkpoint — 24 October 2026
 
-S10-01/compact S10-01b are released through PRs #71/#73 (latest main 6b2009c).
-Joseph applied all three Work Track migrations and confirmed UI plus production
-save → reload → retained record → teacher read. This supersedes pending-smoke
-statements in implementation-time reports; exact Session coverage is not inferred.
-S1–S9 Work Track is available, early compact questions omit mandatory percentages;
-S6–S9 retain assessment, S10 retains feedback.
+Sprint 10 is CLOSED by Joseph after basic rehearsal passed: new teachers can create Sessions and students can log in. Baseline main is `901fd7254416818c1fdc8803bd20347d7db05176` (PR #97). The active phase is [real classroom feedback](docs/feedback/PLAN.md), with [a register](docs/feedback/FEEDBACK_LOG.md); consult [closeout](docs/sprints/sprint-10/CLOSEOUT.md) and [handoff](docs/sprints/sprint-10/HANDOFF.md). Older sprint checkpoints below are historical unless explicitly retained here.
 
-S10-AI01 is the next implemented review candidate: nullable Session collection
-method override, source history/no duplicate reporting and durable server paid
-attempt/budget accounting. New SQL 20261014_sprint10_ai01_session_controls.sql
-is not applied; no production configuration change or paid call in this task.
-Block selects the default, Session may override, opening windows/Check-in remain
-independent. Work Track and confirmed Intake keep separate schemas/contracts.
-Zero-default limits and missing configured server pricing fail closed only after
-the matching new API is deployed. Live quality/safety acceptance remains open.
-See docs/sprints/sprint-10/S10-AI01_REPORT.md, PLAN.md and HANDOFF.md.
+Current contracts: independent course/year/Block/class instances; super administrator distributes teacher accounts/class access; active assigned teachers manage their own roster/CSV, students, teams, projects and Sessions. Students begin unassigned unless a team is explicitly selected; activation asks only for password/confirmation and creates no artificial Check-in. One active class context per student remains the v1 limit. Same-account auth checks preserve mounted forms.
 
-Test 2B2 → synthetic 2B3; real November 2B4 inputs come from Joseph.
-2B3 support/setup and activation/recovery remain S10-02. Fetch actual latest main
-before further work; do not assume current production modes are disabled.
+S1–S9 support Work Track, Form or per-Session AI Intake; S10 retains feedback. Attendance and progress are separate. Chat and record extraction are split, review is focused, source grounding/unknowns are preserved, and structural stop limits prevent indefinite clarification. Debug exports remain available during observation. Budget references are advisory, with US$10/class/Block default and a default US$25 teacher ceiling adjustable only by super administrators; legacy higher references may retain higher ceilings. Do not restore obsolete monetary refusal rules from old reports.
+
+Joseph confirmed production SQL success for the class, unassigned-roster, password-only activation and budget migrations. This is not blanket acceptance of every legacy scenario, hosted recovery-email delivery, live account-management side effect, concurrent classroom load, AI safety/quality or institutional approval. Keep 29/30 October rollout readiness/configuration checkpoints and 2 November teaching target.
+
+Start from actual latest main and user evidence. No speculative Sprint 11 scope, KB, grading or semantic harness expansion is approved. Urgent operational/security defects get focused fixes; ordinary feedback is collected and reviewed in batches. Never commit identifiable raw debug exports. No paid calls or production data/account operations are authorized merely by this checkpoint.
 
 ## Sprint 6 verified Production state
 
@@ -143,8 +132,8 @@ Do not place service-role keys, database passwords or third-party secrets in cli
 ### Student portal
 
 - Public Landing Page at `/` and authenticated Student Portal at `/student`
-- roster-prepared activation, login, recovery and required personal password
-- roster-derived Block, Team and Project context
+- roster-prepared password-only activation, login, recovery and required personal password
+- class/roster-derived context, with an explicit waiting screen until team allocation
 - teacher-opened Session Check-in and personal attendance history
 - block-controlled Week 1–4 activities with database enforcement
 - Team Health, weekly engagement, Week 2 wizard and Poster Peer Review
@@ -152,6 +141,7 @@ Do not place service-role keys, database passwords or third-party secrets in cli
 
 ### Teacher dashboard
 
+- super administrator class/teacher management and scoped teacher row actions
 - teacher authentication and block-scoped roster, team, project and account
   operations
 - editable studio-session planning, open/close controls, attendance history and
@@ -232,38 +222,17 @@ Important current rules:
 - Student activity evidence is normally create-once; narrowly scoped teacher
   reset is available where the workflow explicitly requires a clean resubmission.
 - Incorrect submissions are intended to be managed by teachers rather than allowing unrestricted student edits.
-- Teacher roles currently use Supabase `app_metadata`.
-- The current database structure remains in place during Sprint 2.
-- AI features are deferred until the operational workflow is stable.
+- Teacher roles combine Supabase identity with active teacher profiles and class memberships; platform administrators manage assignments.
+- Preserve class isolation, continuing student identities and historical records.
+- AI Intake is available through teacher configuration; collect real feedback before expanding it.
 
-## Active sprint
+## Active phase
 
-**Sprint 8 Phase 2B deterministic pilot is active**
+Sprint 10 is closed; classroom observation and feedback is active. See `docs/feedback/PLAN.md`. Joseph will select a later development batch from evidence; Sprint 11 has no committed feature scope.
 
-Sprint 7 analysed the completed 2026 2B1 journey before further feature work.
-The baseline is 17 starting students, 3 withdrawn and 14 active students across
-6 Teams. Final evidence connected Intake, Activities, attendance, Work Track,
-Teacher Review, Poster/Peer Feedback, S10 feedback and Final Report evaluation.
+> Report is a claim; Activity is a process record; Artifact is work evidence; Teacher Review is verification; AI connects them.
 
-The durable product rule is:
-
-> Report is a claim; Activity is a process record; Artifact is work evidence;
-> Teacher Review is verification; AI connects them.
-
-Sprint 8 pilots a bounded AI Session Intake rather than a Report-per-Session
-essay workflow. A short adaptive interview generates a stable structured
-Progress Report and targeted Teacher verification questions. AI may extract,
-clarify, compare, summarise and suggest questions. It may not publish marks,
-verify contribution, determine authorship, accuse copying or replace live
-Teacher judgement.
-
-Phase 1 defined the contract and evaluation standard. Phase 2A delivered the
-default-closed Block-scoped store, validator and fallback RPC and passed its
-10/10 database security audit. Phase 2B implements the deterministic 2B2-only
-student interaction and Teacher access controls before any provider integration.
-
-Detailed scope and next-session instructions are in
-`docs/sprints/sprint-08/PLAN.md` and `docs/sprints/sprint-08/HANDOFF.md`.
+AI may collect, clarify, extract and summarize. It may not publish marks, verify contribution, determine authorship or replace teacher judgement.
 
 ## Sprint continuity
 
