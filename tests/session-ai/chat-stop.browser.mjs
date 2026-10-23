@@ -14,11 +14,11 @@ let code=await readFile(root+'src/main.tsx','utf8');const a=code.indexOf('const 
 assert.ok(a>0&&b>a);
 code=code.slice(0,a)+`const supabase:any={auth:{getSession:async()=>({data:{session:{access_token:'synthetic'}}}),refreshSession:async()=>({data:{session:{access_token:'synthetic'}}})},rpc:async(name:string,args:any)=>{const r=await fetch('/__rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,args})});return r.json();}};\n`+code.slice(b);
 code=code.slice(0,code.lastIndexOf('createRoot(document.getElementById'))+`const smokeRoot=createRoot(document.getElementById('root')!);(window as any).__unmountIntake=()=>smokeRoot.unmount();smokeRoot.render(<SessionIntakeModal session={{sessionId:'${sid(7)}',sessionNumber:7,focus:'Progress Review'} as StudentSessionRecord} onClose={()=>{}} onSaved={()=>{}}/>);`;
-let queue=Promise.resolve(),chatCalls=0,recordCalls=0,providerCalls=0,scenario='invalid',summaryFailure=false,recordConversation;const secret='synthetic-only',binding='student/session';let browser,server;
+let queue=Promise.resolve(),chatCalls=0,recordCalls=0,providerCalls=0,scenario='invalid',summaryFailure=false,recordConversation,recordRelease,holdRecord=false;const secret='synthetic-only',binding='student/session';let browser,server;
 try{
  server=await createServer({root,configFile:false,esbuild:{jsx:'automatic'},server:{host:'127.0.0.1',port:5178},plugins:[{name:'isolated-intake-bridge',enforce:'pre',resolveId(id){if(id==='/src/chat-stop-smoke.tsx')return entry;},load(id){if(id===entry)return code;},configureServer(vite){vite.middlewares.use((req,res,next)=>{
   if(req.url==='/api/session-intake-ai'){
-    let raw='';req.on('data',c=>raw+=c);req.on('end',()=>{
+    let raw='';req.on('data',c=>raw+=c);req.on('end',async()=>{
       const request=JSON.parse(raw);res.setHeader('Content-Type','application/json');
       if(request.mode==='chat'){
         chatCalls++;const budget=questionBudget(secret,binding,request.conversation);
@@ -29,6 +29,7 @@ try{
         res.end(JSON.stringify({model:'synthetic',result:{...d,route:d.readyForReview?'review':'continue',evidenceUpdates:[]},questionMeta:meta,rawCandidate:p,chatControl:{intervened:d.intervened,reason:d.reason,budget,proposal:p,final:{route:d.readyForReview?'review':'continue'}}}));return;
       }
       recordCalls++;recordConversation=request.conversation;
+      if(holdRecord)await new Promise(resolve=>{recordRelease=resolve;});
       if(summaryFailure){summaryFailure=false;res.statusCode=502;res.end(JSON.stringify({code:'invalid_provider_response',reason:'provider_incomplete',stage:'provider_response'}));return;}
       const candidate={assistantMessage:'Check summary.',route:'review',readyForReview:true,evidenceUpdates:[{field:'responsibility',state:'student_claim',value:'Dashboard frontend',sourceTurn:1,operation:'add',contextTurn:null},...request.conversation.flatMap((t,i)=>t.actor==='student'?[{field:'claim',state:'student_claim',value:t.text,progressKind:'unknown',sourceTurn:i,operation:'add',contextTurn:null}]:[])],nextStep:{status:'unknown',action:null,sourceTurn:request.conversation.length-1,contextTurn:null,expectedEvidence:null,additionalActions:[]}};
       const d=decideTurn(candidate,request.conversation,request.answers);res.end(JSON.stringify({model:'synthetic',result:{...candidate,evidenceUpdates:d.accepted},fieldDecisions:d.decisions}));
@@ -45,13 +46,18 @@ try{
  const restart=async()=>{chatCalls=0;providerCalls=0;recordCalls=0;await page.goto('http://127.0.0.1:5178/smoke');await page.locator('.chat-composer textarea').waitFor();};
  scenario='invalid';await restart();await reply('I worked on the dashboard');await page.getByRole('heading',{name:'Work and progress',exact:true}).waitFor();assert.equal(chatCalls,1);assert.equal(recordCalls,1);assert.equal(recordConversation.at(-1).text,'I worked on the dashboard');console.log('PASS invalid completed chat format transitions to record without restoring/deleting student answer');
  scenario='repeat';await restart();await reply('I worked on dashboard');await page.getByText('What remains?',{exact:true}).waitFor();await reply('Still testing');await page.getByRole('heading',{name:'Work and progress',exact:true}).waitFor();assert.equal(chatCalls,2);assert.equal(recordCalls,1);console.log('PASS returned questionMeta survives UI and repeated target starts review');
- scenario='cap';summaryFailure=true;await restart();
+ scenario='cap';summaryFailure=true;holdRecord=true;await restart();
  assert.match(await page.locator('.chat-round-guide').innerText(),/at most 2 follow-up/);
  await reply('My role is Dashboard frontend. I completed dashboard loading');await page.getByText('What remains?',{exact:true}).waitFor();
  await reply('Still testing API integration');await page.getByText('What is next?',{exact:true}).waitFor();
- await reply('Finish integration next week');await page.getByRole('button',{name:'Retry summary',exact:true}).waitFor();
+ await reply('Finish integration next week');
+ const waiting=page.getByRole('region',{name:'Prepare summary'});
+ await waiting.getByRole('status').waitFor();assert.equal(await waiting.getByRole('button').count(),0);assert.equal(await page.locator('.chat-message.thinking').count(),0);assert.equal(await page.getByText('Your answers are still here. You can retry or add a correction.',{exact:true}).count(),0);assert.match(await waiting.innerText(),/putting your update together/);assert.equal(await page.locator('.chat-message.student').count(),3);
+ for(let i=0;i<1000&&!recordRelease;i++)await new Promise(r=>setTimeout(r,10));assert.equal(typeof recordRelease,'function');
+ holdRecord=false;recordRelease();recordRelease=null;
+ await page.getByRole('button',{name:'Retry summary',exact:true}).waitFor();assert.equal(await waiting.getByRole('status').count(),0);assert.equal(await waiting.getByRole('button',{name:'Add or correct something',exact:true}).isEnabled(),true);console.log('PASS loading has one clear status and no retry/correction controls; controls appear only on failure');
  assert.equal(providerCalls,2);assert.equal(chatCalls,3);assert.equal(recordCalls,1);assert.equal(await page.locator('.chat-message.student').count(),3);assert.equal(recordConversation.at(-1).text,'Finish integration next week');
- await page.getByRole('button',{name:'Retry summary',exact:true}).click();await page.getByRole('heading',{name:'Work and progress',exact:true}).waitFor();assert.equal(chatCalls,3);assert.equal(recordCalls,2);
+ holdRecord=true;await page.getByRole('button',{name:'Retry summary',exact:true}).click();await waiting.getByRole('status').waitFor();assert.equal(await waiting.getByRole('button').count(),0);for(let i=0;i<1000&&!recordRelease;i++)await new Promise(r=>setTimeout(r,10));assert.equal(typeof recordRelease,'function');holdRecord=false;recordRelease();recordRelease=null;await page.getByRole('heading',{name:'Work and progress',exact:true}).waitFor();assert.equal(chatCalls,3);assert.equal(recordCalls,2);
  const review=page.getByRole('region',{name:'Review your check-in'});
  assert.match(await review.innerText(),/Finish integration next week/);
  for(let i=0;i<4&&!await review.getByRole('heading',{name:'Ready to save',exact:true}).count();i++){const title=await review.locator('h3').innerText();await review.getByRole('button',{name:/^(Looks right · Continue|Skip for now)$/}).click();await review.getByRole('heading',{name:title,exact:true}).waitFor({state:'hidden'});}
