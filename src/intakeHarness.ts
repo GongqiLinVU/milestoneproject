@@ -2,7 +2,7 @@ import { applyEvidenceUpdates, questionCount, MAX_INTAKE_QUESTIONS, type ChatSou
 import {MAX_EVIDENCE_UPDATES} from './intakeContract.js';
 import type { DeterministicIntakeAnswers } from './aiSessionIntake.js';
 
-export const INTAKE_PARSER_VERSION = 'intake-parser.v1.4.2';
+export const INTAKE_PARSER_VERSION = 'intake-parser.v1.5.0';
 export type CandidateManifest = { model: string; promptVersion: string; policyVersion: string; parserVersion: string; evidenceSchemaVersion: string; knowledgeVersion: string; cost: number | null; latencyMs: number; stopReason: string };
 export type IntakeCase = { id: string; provenance: string; conversation: ChatSource[]; candidate?: unknown; expected?: Record<string, unknown> };
 export type FieldDecision = { index: number; field: string; outcome: 'accepted'|'repaired'|'rejected'; reason: string; originalSourceTurn: unknown; sourceTurn?: number; candidate: unknown; observations?: string[]; appliedCandidate?: EvidenceUpdate; transformations?: string[]; recordBefore?: Record<string,unknown>; recordAfter?: Record<string,unknown> };
@@ -115,7 +115,12 @@ function validShape(u: any): u is EvidenceUpdate {
     && (u.supportRequested==null||typeof u.supportRequested==='string'&&u.supportRequested.length<=500);
 }
 export type MessagePolicy = 'current' | 'legacy_v1' | 'none';
-export type ReplayOptions = { sourcePolicy?: 'repair_unique' | 'strict_pointer'; messagePolicy?: MessagePolicy };
+export type ReplayOptions = { sourcePolicy?: 'repair_unique' | 'strict_pointer'; messagePolicy?: MessagePolicy; recordMode?: boolean };
+// Topic-independent provenance, not semantic verification. Classification still
+// belongs to the model and student review. Normalise layout only, never words.
+const excerptText=(s:string)=>s.normalize('NFC').replace(/\s+/gu,' ').trim();
+const isExcerpt=(value:unknown,source:string)=>typeof value==='string'&&(!value.trim()||excerptText(source).includes(excerptText(value)));
+const explicitAcceptance=(s:string)=>/^(?:yes|yes please|yes, please|yep|yeah|sure|okay|ok|agreed|will do|sounds good|that works|是的|可以|同意|好的|会的)[.!。！\s]*$/iu.test(s.trim());
 export function validateCandidates(raw: unknown, conversation: ChatSource[], current: DeterministicIntakeAnswers, options: ReplayOptions = {}) {
   const decisions: FieldDecision[] = [];
   const accepted: EvidenceUpdate[] = [];
@@ -137,12 +142,25 @@ export function validateCandidates(raw: unknown, conversation: ChatSource[], cur
     if (!fields.has(u?.field)) return reject('field_not_allowed');
     if (!states.has(u.state) || !allowedStates[u.field].includes(u.state)) return reject('state_not_allowed_for_field');
     if (!validShape(u)) return reject('invalid_value_or_shape');
+    if(options.recordMode){
+      if(u.field==='scope')return reject('scope_is_derived_from_responsibility');
+      const student=Number.isInteger(u.sourceTurn)&&conversation[u.sourceTurn!]?.actor==='student'?conversation[u.sourceTurn!]:null;
+      const context=Number.isInteger(u.contextTurn)&&u.contextTurn===u.sourceTurn!-1&&conversation[u.contextTurn!]?.actor==='system'&&student&&explicitAcceptance(student.text)?conversation[u.contextTurn!]:null;
+      if(!student)return reject('invalid_excerpt_source');
+      const source=context?context.text:student.text;
+      if(!isExcerpt(u.value,source))return reject('record_value_not_source_excerpt');
+      // Unsupported auxiliary prose must not erase an otherwise sourced action.
+      const removed=['method','observedResult','expectedEvidence','supportRequested'].filter(k=>(u as any)[k]&&!isExcerpt((u as any)[k],source));
+      if(removed.length){u={...u,...Object.fromEntries(removed.map(k=>[k,null]))};repairs.push(...removed.map(k=>`non_excerpt_${k}_omitted`));}
+      if(u.field==='testing'&&u.state==='executed'&&(!u.method?.trim()||!u.observedResult?.trim()))return reject('executed_test_needs_sourced_method_and_observation');
+      u={...u,contextTurn:context?u.contextTurn:null};
+    }
     if (u.field === 'testing' && u.state === 'executed' && (!u.method?.trim() || !u.observedResult?.trim())) return reject('executed_test_needs_method_and_observation');
     if (u.field === 'testing' && u.state !== 'executed' && u.observedResult?.trim()) return reject('unexecuted_test_has_observation');
     if (u.field === 'evidence' && u.state === 'available' && !u.evidenceType) return reject('evidence_type_missing');
     let source = u.sourceTurn;
     let contextual=u.contextTurn!=null;
-    if(contextual){
+    if(contextual&&!options.recordMode){
       const proposed=u.contextTurn!+1;
       if(Number.isInteger(u.contextTurn)&&conversation[u.contextTurn!]?.actor==='system'&&conversation[proposed]?.actor==='student'&&(source===proposed||u.contextTurn===conversation.length-2)&&(grounded(u,conversation[proposed].text)||source===proposed&&grounded(u,conversation[u.contextTurn!].text))){
         if(source!==proposed){source=proposed;repairs.push('source_relocated_using_context');}
@@ -159,8 +177,8 @@ export function validateCandidates(raw: unknown, conversation: ChatSource[], cur
     }
     const sourceText=(i:number)=>conversation[i].text+(contextual?' '+conversation[u.contextTurn!].text:'');
     let outcome: 'accepted'|'repaired' = repairs.some(r=>r==='invalid_context_recovered_from_unique_student_source'||r==='source_relocated_using_context')?'repaired':'accepted';
-    if (!Number.isInteger(source) || conversation[source]?.actor !== 'student' || !(u.field==='next_action'&&u.state==='unknown')&&!grounded(u,sourceText(source))) {
-      if (options.sourcePolicy === 'strict_pointer') return reject('source_pointer_invalid_strict_policy');
+    if (!Number.isInteger(source) || conversation[source]?.actor !== 'student' || !options.recordMode&&!(u.field==='next_action'&&u.state==='unknown')&&!grounded(u,sourceText(source))) {
+      if (options.sourcePolicy === 'strict_pointer'||options.recordMode) return reject('source_pointer_invalid_strict_policy');
       const matches = conversation.flatMap((turn,i) => turn.actor === 'student' && grounded(u,turn.text) ? [i] : []);
       const anchored=uniqueActionSource(u,matches,conversation);
       if (matches.length !== 1 && anchored==null) return reject('student_source_not_uniquely_grounded');
@@ -181,11 +199,13 @@ export function validateCandidates(raw: unknown, conversation: ChatSource[], cur
     if(u.field==='next_action' && u.expectedEvidence && unsupportedArtifact({...u,value:u.expectedEvidence,expectedEvidence:null},sourceText(source))){
       u={...u,expectedEvidence:null};observations.push('unsupported_expected_evidence_omitted');
     }
-    const unsupported = unsupportedArtifact(u, sourceText(source));
+    const unsupported = options.recordMode?null:unsupportedArtifact(u, sourceText(source));
     if (unsupported) return reject('student_source_not_semantically_supported');
     // Strip unsupported specificity (illustrative numbers, model method
     // paraphrase) from the record-bound text while preserving supported content.
-    const candidate = sanitiseAgainstSource({...u,contextTurn:contextual?u.contextTurn:u.contextTurn==null?u.contextTurn:null,sourceTurn:source}, sourceText(source));
+    const sourced={...u,contextTurn:contextual?u.contextTurn:u.contextTurn==null?u.contextTurn:null,sourceTurn:source};
+    const candidate = options.recordMode?sourced:sanitiseAgainstSource(sourced, sourceText(source));
+    if(options.recordMode&&['claim','next_action'].includes(candidate.field)&&candidate.value.trim()&&accepted.some(prior=>prior.field===candidate.field&&prior.state===candidate.state&&prior.sourceTurn===candidate.sourceTurn&&prior.contextTurn===candidate.contextTurn&&excerptText(prior.value).includes(excerptText(candidate.value))))return reject('duplicate_source_excerpt');
     const keys: Record<string,string[]> = {
       responsibility:['responsibility'],claim:['progress','progressKind'],scope:['scope'],
       evidence:['evidenceType','evidenceAvailability','evidenceReference'],verification_method:['verificationMethod'],
@@ -194,7 +214,7 @@ export function validateCandidates(raw: unknown, conversation: ChatSource[], cur
     };
     const snapshot = (a: DeterministicIntakeAnswers) => Object.fromEntries(keys[u.field].map(k=>[k,(a as any)[k]]));
     const recordBefore=snapshot(next);
-    const transformations=['state','progressKind','contextTurn','value','method','observedResult','expectedEvidence'].filter(k=>(item as any)[k] !== (candidate as any)[k]);
+    const transformations=['state','progressKind','contextTurn','value','method','observedResult','expectedEvidence','supportRequested'].filter(k=>(item as any)[k] !== (candidate as any)[k]);
     try { next = applyEvidenceUpdates(next,[candidate],conversation); }
     catch(error) { return reject(error instanceof Error&&error.message==='record_capacity_exceeded'?'record_capacity_exceeded':'evidence_application_failed'); }
     accepted.push(candidate);
@@ -245,7 +265,23 @@ export function decideTurn(candidate: any, conversation: ChatSource[], current: 
   if(candidate?.nextStep && ['planned','tentative'].includes(candidate.nextStep.status) && Array.isArray(candidate.nextStep.additionalActions)){
     for(const step of candidate.nextStep.additionalActions.slice(0,3))if(step && ['planned','tentative'].includes(step.status) && typeof step.action==='string' && step.action.trim())updates.push({field:'next_action',value:step.action,state:'planned',operation:'add',sourceTurn:step.sourceTurn,contextTurn:step.contextTurn,nextActionStatus:step.status,expectedEvidence:step.expectedEvidence,evidenceType:null,progressKind:null,method:null,observedResult:null});
   }
-  const extracted = validateCandidates(updates,conversation,current,options);
+  if(options.recordMode){
+    // Longest action excerpt first, so a repeated sub-clause cannot duplicate
+    // it. Different actions in the same student turn remain separate.
+    const actions=updates.filter((u:any)=>u?.field==='next_action').sort((a:any,b:any)=>String(b.value??'').length-String(a.value??'').length);
+    updates=[...updates.filter((u:any)=>u.field!=='next_action'),...actions.map((u:any,i:number)=>({...u,operation:i?'add':'replace'}))];
+  }
+  const extracted = validateCandidates(updates,conversation,options.recordMode?{...current,scope:current.responsibility}:current,options);
+  if(options.recordMode){
+    const role=extracted.accepted.filter(u=>u.field==='responsibility').at(-1);
+    if(role){
+      const scope:EvidenceUpdate={...role,field:'scope',operation:'replace'};
+      const before={scope:extracted.answers.scope};
+      extracted.answers=applyEvidenceUpdates(extracted.answers,[scope],conversation);
+      extracted.accepted.push(scope);
+      extracted.decisions.push({index:updates.length,field:'scope',outcome:'accepted',reason:'scope_derived_from_responsibility',originalSourceTurn:role.sourceTurn,sourceTurn:role.sourceTurn,candidate:null,appliedCandidate:scope,observations:['derived_field'],recordBefore:before,recordAfter:{scope:extracted.answers.scope}});
+    }
+  }
   if(candidate?.nextStep&&['planned','tentative'].includes(candidate.nextStep.status)&&!extracted.accepted.some(u=>u.field==='next_action'))consistencyObservations.push('structured_next_step_not_applied');
   if(candidate?.nextStep?.additionalActions?.length && extracted.decisions.some(d=>d.field==='next_action'&&d.outcome==='rejected'))consistencyObservations.push('some_structured_steps_not_applied');
   const message = messageAccepted(candidate?.assistantMessage, options.messagePolicy ?? 'current');

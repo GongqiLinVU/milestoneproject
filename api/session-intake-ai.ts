@@ -2,7 +2,7 @@ import {questionBudget,signQuestion} from './intakeQuestionMeta.js';
 import {chatStopDecision,CHAT_STOP_VERSION,MAX_CHAT_CLARIFICATIONS} from '../src/intakeChatStop.js';
 import {conversationSchema,CONVERSATION_INSTRUCTIONS,RECORD_INSTRUCTIONS,CONVERSATION_VERSION} from '../src/intakeConversation.js';
 import {REVIEW_COLLECTION_INSTRUCTIONS, REVIEW_EFFICIENCY_INSTRUCTIONS, REVIEW_CONTRACT_VERSION} from '../src/intakeReviewContract.js';
-import {intakeRecordSchema} from '../src/intakeRecordSchema.js';
+import {intakeRecordSchema,finalRecordSchema} from '../src/intakeRecordSchema.js';
 import { usagePricing, requestIdentity, reserveUsage, finishUsage, reportedModelLabel } from "./intakeUsage.js";
 import { effectiveCollectionMode } from "../src/sessionCollection.js";
 import { createClient } from "@supabase/supabase-js";
@@ -348,7 +348,7 @@ export default async function handler(req: any, res: any) {
   const sharedInput = JSON.stringify(mode==='chat'?{session:context.sessionContext,priorRole:context.previousRecord?.responsibility?.current||context.answers.responsibility,priorNextAction:context.previousRecord?.next_action?.action||null,conversation:indexedConversation}:mode==='record'?{session:context.sessionContext,priorRole:context.previousRecord?.responsibility?.current||context.answers.responsibility,conversation:indexedConversation}:{...context,budget,policyVersion:INTAKE_POLICY_VERSION});
   const maxOut = mode === "chat" ? 2500 : mode === "record" ? 6000 : mode === "turn" ? 4000 : mode === "questions" ? 700 : 850;
   const schemaName = mode === "chat" ? "intake_conversation" : mode === "record" ? "intake_record" : mode === "turn" ? "intake_turn" : mode === "questions" ? "intake_questions" : "intake_extraction";
-  const activeSchema = mode === "chat" ? conversationSchema : mode === "record" ? turnSchema : mode === "turn" ? turnSchema : mode === "questions" ? questionsSchema : extractionSchema;
+  const activeSchema = mode === "chat" ? conversationSchema : mode === "record" ? finalRecordSchema : mode === "turn" ? turnSchema : mode === "questions" ? questionsSchema : extractionSchema;
 
   const openaiRequest = () => fetch("https://api.openai.com/v1/responses", {
     method: "POST",
@@ -521,11 +521,11 @@ export default async function handler(req: any, res: any) {
     if (mode === "turn" || mode === "record") {
       failureStage='turn_validation';
       const recordBefore = req.body.answers || {};
-      const decision = decideTurn(mode==='record'?{...result,readyForReview:true,route:"review"}:result,req.body.conversation,req.body.answers);
+      const decision = decideTurn(mode==='record'?{...result,readyForReview:true,route:"review"}:result,req.body.conversation,req.body.answers,{recordMode:mode==='record'});
       if (decision.level === 'L3') throw new Error('turn_schema');
       const safeResult = {...result,consistencyObservations:decision.consistencyObservations,assistantMessage:decision.assistantMessage,route:decision.route,readyForReview:decision.readyForReview,evidenceUpdates:decision.accepted};
       const latencyMs=Date.now()-startedAt;
-      const manifest={model:normModel,reportedModel,costBasis:"configured_model_rates",dialogueRevision:mode==='record'?'intake-record.v1':'intake-dialogue.v1.5',task:mode==='record'?'record':'legacy_combined',reviewContractVersion:REVIEW_CONTRACT_VERSION,promptVersion:PROMPT_VERSION,policyVersion:INTAKE_POLICY_VERSION,parserVersion:INTAKE_PARSER_VERSION,evidenceSchemaVersion:'session-intake.v1.2.0',knowledgeVersion:'teacher-approved-kb.none',cost:usageAttempts.length&&usageAttempts.every((a:any)=>a.costUsd!=null)?usageAttempts.reduce((sum:number,a:any)=>sum+a.costUsd,0):null,costComplete:usageAttempts.length>0&&usageAttempts.every((a:any)=>a.costUsd!=null),usageAttempts,usageWarnings,latencyMs,stopReason:decision.readyForReview?'review':'continue'};
+      const manifest={model:normModel,reportedModel,costBasis:"configured_model_rates",dialogueRevision:mode==='record'?'intake-record.v2':'intake-dialogue.v1.5',task:mode==='record'?'record':'legacy_combined',reviewContractVersion:REVIEW_CONTRACT_VERSION,promptVersion:PROMPT_VERSION,policyVersion:INTAKE_POLICY_VERSION,parserVersion:INTAKE_PARSER_VERSION,evidenceSchemaVersion:'session-intake.v1.2.0',knowledgeVersion:'teacher-approved-kb.none',cost:usageAttempts.length&&usageAttempts.every((a:any)=>a.costUsd!=null)?usageAttempts.reduce((sum:number,a:any)=>sum+a.costUsd,0):null,costComplete:usageAttempts.length>0&&usageAttempts.every((a:any)=>a.costUsd!=null),usageAttempts,usageWarnings,latencyMs,stopReason:decision.readyForReview?'review':'continue'};
       return res.status(200).json({mode,provider:provider_id,promptVersion:PROMPT_VERSION,policyVersion:INTAKE_POLICY_VERSION,parserVersion:INTAKE_PARSER_VERSION,model:normModel,reportedModel,configuredModel:provider_id==="deepseek"?deepseekModel:MODEL,usage:normUsage,latencyMs,budget,providerRequestId:response.headers.get('x-request-id'),manifest,usageAttempts,usageWarnings,result:safeResult,rawCandidate:result,routeDecision:decision.routeDecision,fieldDecisions:decision.decisions,extractionPending:decision.extractionPending,acceptanceLevel:decision.level,...(trace?{debugTrace:{...trace,recordBefore,recordAfter:decision.answers}}:{})});
     }
     return res.status(200).json({ mode, provider:provider_id, promptVersion: "session-intake-ai.v1.1.0", policyVersion: INTAKE_POLICY_VERSION, model: normModel, reportedModel, configuredModel: provider_id==="deepseek"?deepseekModel:MODEL, usage: normUsage, latencyMs: Date.now()-startedAt, usageAttempts,usageWarnings,budget, providerRequestId: response.headers.get("x-request-id"), result, ...(trace?{debugTrace:trace}:{}) });

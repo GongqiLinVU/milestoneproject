@@ -1,7 +1,7 @@
 // Run after npm run test:build. Historical mode makes NO model calls.
 import fs from 'node:fs';
 import {CONVERSATION_INSTRUCTIONS,RECORD_INSTRUCTIONS,conversationSchema,parseConversationReply} from '../.test-api/src/intakeConversation.js';
-import {intakeRecordSchema} from '../.test-api/src/intakeRecordSchema.js';
+import {finalRecordSchema} from '../.test-api/src/finalRecordSchema.js';
 import {decideTurn} from '../.test-api/src/intakeHarness.js';
 const fixture=JSON.parse(fs.readFileSync(new URL('../tests/ai-session-intake/fixtures/conversation-acceptance.json',import.meta.url),'utf8'));
 export function gradeReply(testCase,reply){
@@ -22,12 +22,12 @@ for(const c of fixture.cases.slice(0,7)){
 }
 if(live){
  const c=fixture.cases.find(c=>c.id==='S7-6-unknown-cause');const started=Date.now();
- const response=await safeFetch('https://api.openai.com/v1/responses',{method:'POST',signal:AbortSignal.timeout(45000),headers:{Authorization:`Bearer ${process.env.OPENAI_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({model,store:false,max_output_tokens:6000,...(model==='gpt-5-mini'?{reasoning:{effort:'low'}}:{}),instructions:RECORD_INSTRUCTIONS,input:JSON.stringify({session:{sessionNumber:7,focus:'Application Progress + Technical Implementation Report'},priorRole:'UI design and frontend implementation',conversation:c.conversation.map((t,turnIndex)=>({actor:t.actor==='student'?'student':'assistant',text:t.text,turnIndex}))}),text:{format:{type:'json_schema',name:'intake_record',strict:true,schema:intakeRecordSchema}}})});
+ const response=await safeFetch('https://api.openai.com/v1/responses',{method:'POST',signal:AbortSignal.timeout(45000),headers:{Authorization:`Bearer ${process.env.OPENAI_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({model,store:false,max_output_tokens:6000,...(model==='gpt-5-mini'?{reasoning:{effort:'low'}}:{}),instructions:RECORD_INSTRUCTIONS,input:JSON.stringify({session:{sessionNumber:7,focus:'Application Progress + Technical Implementation Report'},priorRole:'UI design and frontend implementation',conversation:c.conversation.map((t,turnIndex)=>({actor:t.actor==='student'?'student':'assistant',text:t.text,turnIndex}))}),text:{format:{type:'json_schema',name:'intake_record',strict:true,schema:finalRecordSchema}}})});
  const body=await response.json();const output=body.output_text??body.output?.flatMap(i=>i.content??[]).find(p=>p.type==='output_text')?.text;
  try{
   if(!response.ok||body.status==='incomplete')throw new Error('provider_response');
   const candidate=JSON.parse(output);const base={responsibility:'UI design and frontend implementation',progress:'',progressKind:'unknown',scope:'UI design and frontend implementation',completionPercent:null,evidenceType:'other',evidenceAvailability:'unknown',evidenceReference:'',verificationMethod:'',testingStatus:'unknown',testingMethod:'',testingResult:'',testingBaseline:'',blockerStatus:'unknown',blockerDescription:'',supportRequested:'',nextAction:'',dueSession:'S8',expectedEvidence:''};
-  const d=decideTurn({...candidate,readyForReview:true,route:'review'},c.conversation,base);
+  const d=decideTurn({...candidate,readyForReview:true,route:'review'},c.conversation,base,{recordMode:true});
   const checks={usable:d.level!=='L3',bookingIssue:/booking/i.test(d.answers.progress),reportPlan:/report/i.test(d.answers.nextAction),demoPlan:/demo/i.test(d.answers.nextAction),invitePlan:/invit/i.test(d.answers.nextAction),noInventedTesting:d.answers.testingStatus!=='executed',noInventedPercent:d.answers.completionPercent==null};
   results.push({id:'S7-final-record',pass:Object.values(checks).every(Boolean),checks,rawCandidate:candidate,conversation:c.conversation,answersBefore:base,answers:d.answers,fieldDecisions:d.decisions,usage:body.usage,latencyMs:Date.now()-started});
  }catch{results.push({id:'S7-final-record',pass:false,error:'record_response_invalid_or_incomplete',incompleteReason:body.incomplete_details?.reason??null,usage:body.usage});}

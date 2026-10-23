@@ -26,3 +26,11 @@ export const intakeRecordSchema = {
     },
     required: ["assistantMessage", "route", "readyForReview", "assessment", "evidenceUpdates", "nextStep", "uncertainties", "suggestedTeacherQuestions"]
   };
+
+// Final extraction is deliberately extractive. The legacy combined turn schema
+// stays unchanged; only the once-per-check-in record task uses this contract.
+export const finalRecordSchema = structuredClone(intakeRecordSchema);
+finalRecordSchema.properties.evidenceUpdates.items.anyOf = finalRecordSchema.properties.evidenceUpdates.items.anyOf.filter(v=>(v.properties.field as {enum:string[]}).enum[0]!=='scope');
+for (const variant of finalRecordSchema.properties.evidenceUpdates.items.anyOf) {
+  Object.assign(variant.properties.value as object,{description:'One exact, contiguous excerpt from the cited student turn. Preserve uncertainty and tense; do not paraphrase or add details.'});
+}
