@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+const {PGlite}=await import(process.env.S10_PGLITE_MODULE||'@electric-sql/pglite');
+const db=new PGlite();await db.exec(`create role anon;create role authenticated;create role service_role bypassrls;create schema auth;create schema storage;create table auth.users(id uuid primary key,email text,raw_app_meta_data jsonb default '{}');create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;create function auth.jwt() returns jsonb language sql stable as $$select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb$$;grant usage on schema public,auth to anon,authenticated,service_role;`);
+for(const file of fs.readdirSync('supabase/migrations').filter(f=>f.endsWith('.sql')&&f<'20261023_sprint10_teaching_classes.sql').sort((a,b)=>a.replace('phase3c2_team_allocation','phase3c2_0team_allocation').localeCompare(b.replace('phase3c2_team_allocation','phase3c2_0team_allocation')))){try{await db.exec(fs.readFileSync('supabase/migrations/'+file,'utf8').replace('create extension if not exists pgcrypto;',''));}catch(e){await db.close();throw new Error(file+': '+e.message);}}
+
+const admin='10000000-0000-0000-0000-000000000001',teacher1='10000000-0000-0000-0000-000000000002',teacher2='10000000-0000-0000-0000-000000000003',student1='10000000-0000-0000-0000-000000000004',student2='10000000-0000-0000-0000-000000000005';
+await db.query("insert into auth.users(id,email,raw_app_meta_data) values($1,'owner@example.invalid','{\"role\":\"teacher\"}')",[admin]);
+const migration=fs.readFileSync('supabase/migrations/20261023_sprint10_teaching_classes.sql','utf8');await db.exec(migration);
+export async function identity(id=admin,role='teacher'){await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false),set_config('request.jwt.claims',$2,false)",[id,JSON.stringify({app_metadata:{role}})]);await db.exec('set role authenticated');}
+export async function owner(){await db.exec('reset role');}
+export {db,admin,teacher1,teacher2,student1,student2,migration};
+

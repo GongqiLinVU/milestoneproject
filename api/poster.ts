@@ -1,3 +1,4 @@
+import {hasClassAccess} from './classAccess.js';
 import { createClient } from "@supabase/supabase-js";
 import { PDFDocument } from "pdf-lib";
 import { randomUUID } from "node:crypto";
@@ -48,7 +49,7 @@ export default async function handler(req: any, res: any) {
     if (user?.app_metadata?.role === "teacher") {
       if (!/^[0-9a-f-]{36}$/i.test(requestedTeamId)) return null;
       const { data: team } = await admin.from("teams").select("id,block_id").eq("id", requestedTeamId).maybeSingle();
-      return team ? { userId: user.id, role: "teacher", blockId: team.block_id, teamId: team.id } : null;
+      return team && await hasClassAccess(token,team.block_id) ? { userId: user.id, role: "teacher", blockId: team.block_id, teamId: team.id } : null;
     }
     const { data: account } = await admin.from("student_accounts").select("student_id,status").eq("auth_user_id", user.id).eq("status", "activated").maybeSingle();
     if (!account) return null;
@@ -142,7 +143,7 @@ export default async function handler(req: any, res: any) {
     const { data: version } = await admin.from("poster_versions").select("id,block_id,team_id,storage_path,status").eq("id", versionId).eq("status", "ready").maybeSingle();
     if (!version) return res.status(404).json({ error: "Poster not found." });
 
-    let allowed = user?.app_metadata?.role === "teacher";
+    let allowed = user?.app_metadata?.role === "teacher" && await hasClassAccess(token,version.block_id);
     if (!allowed) {
       const { data: account } = await admin.from("student_accounts").select("student_id").eq("auth_user_id", user.id).eq("status", "activated").maybeSingle();
       if (account) {

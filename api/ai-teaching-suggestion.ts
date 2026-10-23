@@ -1,3 +1,4 @@
+import {hasClassAccess} from './classAccess.js';
 import { createClient } from "@supabase/supabase-js";
 
 const MAX_BODY_BYTES = 20_000;
@@ -73,18 +74,6 @@ function normalise(body: TeachingSuggestionRequest) {
   };
 }
 
-async function isTeacher(token: string) {
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!supabaseUrl || !serviceKey) return false;
-
-  const admin = createClient(supabaseUrl, serviceKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
-  const { data: { user }, error } = await admin.auth.getUser(token);
-  return !error && user?.app_metadata?.role === "teacher";
-}
-
 function outputText(response: any) {
   if (typeof response.output_text === "string") return response.output_text;
   for (const item of response.output ?? []) {
@@ -107,7 +96,7 @@ export default async function handler(req: any, res: any) {
 
   const bearer = String(req.headers.authorization ?? "");
   const token = bearer.startsWith("Bearer ") ? bearer.slice(7) : "";
-  if (!token || !(await isTeacher(token))) {
+  if (!token || !(await hasClassAccess(token,String(req.body?.blockId||"")))) {
     return res.status(403).json({ error: "Teacher access required." });
   }
 
