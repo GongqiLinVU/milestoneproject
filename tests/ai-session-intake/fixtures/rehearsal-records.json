@@ -1,0 +1,1112 @@
+{
+  "provenance": "Simulated student rehearsal supplied by the user; frozen real provider record outputs. No new model calls. Conforming candidates in tests are synthetic, not regenerated model outputs.",
+  "cases": [
+    {
+      "id": "S1",
+      "sourceFile": "session-intake-debug-S1(1).json",
+      "conversation": [
+        {
+          "actor": "system",
+          "text": "Start with one part of the project that you will personally own before S2. Choose something observable, such as one screen, API endpoint, sensor task, analysis step or report section. What is that specific part, and what first result will you produce?"
+        },
+        {
+          "actor": "student",
+          "text": "I’ll be responsible for the UI design and frontend implementation of our booking system. I’ll start with the booking form, where users choose a date and time and enter their details. By S2, I hope to have a basic version working with sample data. It won’t connect to the backend yet."
+        },
+        {
+          "actor": "system",
+          "text": "Which frontend framework or library will you use for the booking form (e.g., React, Vue, plain HTML/JS)?"
+        },
+        {
+          "actor": "student",
+          "text": "We’ll use React. I’ll build the booking form with date and time selection and basic validation, using sample data first."
+        }
+      ],
+      "answersBefore": {
+        "scope": "",
+        "progress": "",
+        "dueSession": "S2",
+        "nextAction": "",
+        "evidenceType": "other",
+        "progressKind": "advanced",
+        "blockerStatus": "unknown",
+        "testingMethod": "",
+        "testingResult": "",
+        "testingStatus": "unknown",
+        "responsibility": "",
+        "testingBaseline": "",
+        "expectedEvidence": "",
+        "supportRequested": "",
+        "completionPercent": null,
+        "evidenceReference": "",
+        "blockerDescription": "",
+        "verificationMethod": "",
+        "evidenceAvailability": "unknown"
+      },
+      "rawCandidate": {
+        "route": "review",
+        "nextStep": {
+          "action": "Implement the booking form in React with date and time selection and basic client-side validation using sample data",
+          "status": "planned",
+          "sourceTurn": 3,
+          "contextTurn": null,
+          "expectedEvidence": "Working frontend demo of the booking form populated by sample data",
+          "additionalActions": [
+            {
+              "action": "Integrate the frontend with the backend/API later (not part of the S2 deliverable)",
+              "status": "tentative",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "expectedEvidence": "Connected frontend demonstrating live backend data (future)"
+            }
+          ]
+        },
+        "assessment": {
+          "gap": "No backend connection or API integration planned for the S2 deliverable; validation rules and integration details unspecified.",
+          "reason": "Student specified frontend scope, framework, and use of sample data but did not describe backend/API integration, validation details, or testing approach.",
+          "information": "focused",
+          "sourceTurns": [
+            1,
+            3
+          ],
+          "actionability": "clear",
+          "testingMaturity": "planned",
+          "evidenceReadiness": "identified",
+          "verificationReadiness": "unclear"
+        },
+        "uncertainties": [
+          "No details on validation rules (what fields are required, formats, edge cases).",
+          "No plan or timeline for backend/API integration or its API contract.",
+          "No specifics on how the sample data will be structured or stored for the demo.",
+          "No described deployment or broader testing plan beyond a manual demo."
+        ],
+        "readyForReview": true,
+        "evidenceUpdates": [
+          {
+            "field": "responsibility",
+            "state": "student_claim",
+            "value": "UI design and frontend implementation of the booking system",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null
+          },
+          {
+            "field": "claim",
+            "state": "student_claim",
+            "value": "Build the booking form where users choose a date and time and enter their details; basic version working with sample data by S2 (no backend connection yet).",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "progressKind": "unknown"
+          },
+          {
+            "field": "scope",
+            "state": "student_claim",
+            "value": "Frontend booking form implemented in React with date/time selection and basic validation using sample data",
+            "operation": "add",
+            "sourceTurn": 3,
+            "contextTurn": null
+          },
+          {
+            "field": "evidence",
+            "state": "available",
+            "value": "Choice of React and plan to use sample data for booking form implementation",
+            "operation": "add",
+            "sourceTurn": 3,
+            "contextTurn": null,
+            "evidenceType": "design_artifact"
+          },
+          {
+            "field": "verification_method",
+            "state": "planned",
+            "value": "Manual UI demonstration of the booking form using sample data",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null
+          },
+          {
+            "field": "testing",
+            "state": "planned",
+            "value": "Basic validation checks for the form (client-side), to be executed manually",
+            "method": "manual form validation",
+            "operation": "add",
+            "sourceTurn": 3,
+            "contextTurn": null,
+            "observedResult": null
+          },
+          {
+            "field": "blocker",
+            "state": "none",
+            "value": "Will not connect to backend by S2 (explicitly stated), so lack of backend is a known limitation rather than an immediate blocker.",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "supportRequested": null
+          }
+        ],
+        "assistantMessage": "Check your summary and correct anything inaccurate.",
+        "suggestedTeacherQuestions": []
+      }
+    },
+    {
+      "id": "S3",
+      "sourceFile": "session-intake-debug-S3(2).json",
+      "conversation": [
+        {
+          "actor": "system",
+          "text": "In your last confirmed Intake, your responsibility was “Backend API development” and your next action was “Prepare the API demonstration and execute endpoint tests.”. Start there: what did you actually complete, change, test or discover since then? If the plan changed or nothing progressed, say that directly."
+        },
+        {
+          "actor": "student",
+          "text": "My responsibility is UI design and frontend implementation. I helped prepare the API demo with our backend teammate, but I’m not responsible for backend development. Since the last session, I connected the React booking form to the booking API and checked valid bookings and missing required fields. Valid bookings worked, but the confirmation message didn’t always appear after submission. I still need to investigate that with our backend teammate."
+        }
+      ],
+      "answersBefore": {
+        "scope": "Backend API development",
+        "progress": "",
+        "dueSession": "S4",
+        "nextAction": "",
+        "evidenceType": "other",
+        "progressKind": "advanced",
+        "blockerStatus": "unknown",
+        "testingMethod": "",
+        "testingResult": "",
+        "testingStatus": "unknown",
+        "responsibility": "Backend API development",
+        "testingBaseline": "",
+        "expectedEvidence": "",
+        "supportRequested": "",
+        "completionPercent": null,
+        "evidenceReference": "",
+        "blockerDescription": "",
+        "verificationMethod": "",
+        "evidenceAvailability": "unknown"
+      },
+      "rawCandidate": {
+        "route": "review",
+        "nextStep": {
+          "action": "Investigate the missing/inconsistent confirmation message with the backend teammate: reproduce the issue, inspect backend responses and logs, and check frontend display logic.",
+          "status": "planned",
+          "sourceTurn": 1,
+          "contextTurn": null,
+          "expectedEvidence": "Root cause identification and either a frontend fix or backend fix/reproduction notes",
+          "additionalActions": [
+            {
+              "action": "Debug frontend confirmation display logic (event handlers, state updates, and rendering conditions).",
+              "status": "planned",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "expectedEvidence": "Code changes or debugging notes showing where confirmation display fails or succeeds"
+            },
+            {
+              "action": "Coordinate with backend teammate to verify API responses and server logs for submitted bookings.",
+              "status": "planned",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "expectedEvidence": "Backend response logs or API traces showing consistent success responses or an identified mismatch"
+            }
+          ]
+        },
+        "assessment": {
+          "gap": "The confirmation message sometimes fails to appear after a successful booking; root cause not yet identified and requires investigation with the backend teammate.",
+          "reason": "Student changed responsibility to frontend/UI and performed frontend tests; observed inconsistent confirmation behavior that remains unresolved.",
+          "information": "focused",
+          "sourceTurns": [
+            1
+          ],
+          "actionability": "clear",
+          "testingMaturity": "executed",
+          "evidenceReadiness": "identified",
+          "verificationReadiness": "unclear"
+        },
+        "uncertainties": [
+          "Whether the missing confirmation message is caused by frontend display/state update logic or by inconsistent backend responses.",
+          "Whether reproduction of the issue is consistent or intermittent under manual testing."
+        ],
+        "readyForReview": true,
+        "evidenceUpdates": [
+          {
+            "field": "responsibility",
+            "state": "student_claim",
+            "value": "UI design and frontend implementation",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null
+          },
+          {
+            "field": "claim",
+            "state": "student_claim",
+            "value": "Connected the React booking form to the booking API",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "progressKind": "completed"
+          },
+          {
+            "field": "claim",
+            "state": "student_claim",
+            "value": "Checked valid bookings and missing required fields via the frontend",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "progressKind": "completed"
+          },
+          {
+            "field": "claim",
+            "state": "student_claim",
+            "value": "Observed that valid bookings succeeded but the confirmation message did not always appear after submission",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "progressKind": "investigated"
+          },
+          {
+            "field": "evidence",
+            "state": "available",
+            "value": "Manual frontend test results: valid bookings completed; missing-required-field validation triggered appropriately; inconsistent display of confirmation message after submission.",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "evidenceType": "test_result"
+          },
+          {
+            "field": "verification_method",
+            "state": "planned",
+            "value": "Investigate with backend teammate and reproduce the issue through coordinated frontend submissions and backend logs/response inspection",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null
+          },
+          {
+            "field": "testing",
+            "state": "executed",
+            "value": "Manual form submission testing of valid bookings and required-field validation",
+            "method": "manual form submission",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "observedResult": "Valid bookings succeeded; confirmation message was inconsistently displayed."
+          },
+          {
+            "field": "blocker",
+            "state": "student_claim",
+            "value": "Need to investigate inconsistent confirmation message behavior with backend teammate to determine whether the issue is frontend display logic or backend response handling.",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "supportRequested": null
+          }
+        ],
+        "assistantMessage": "Check your summary and correct anything inaccurate.",
+        "suggestedTeacherQuestions": []
+      }
+    },
+    {
+      "id": "S4",
+      "sourceFile": "session-intake-debug-S4(1).json",
+      "conversation": [
+        {
+          "actor": "system",
+          "text": "In your last confirmed Intake, your responsibility was “UI design and frontend implementation” and your next action was “Debug frontend confirmation display logic (event handlers, state updates, and rendering conditions).”. Start there: what did you actually complete, change, test or discover since then? If the plan changed or nothing progressed, say that directly."
+        },
+        {
+          "actor": "student",
+          "text": "> I checked the confirmation message with our backend teammate. The booking API returned successfully, but I found that the React form reset was clearing the confirmation state before the message could stay visible. I changed the reset logic and manually tried a successful booking and a failed request. The success message now stays visible, and a failed request shows an error. I haven’t checked the mobile layout yet. Next, I’ll check that and ask a teammate to try the booking flow."
+        }
+      ],
+      "answersBefore": {
+        "scope": "UI design and frontend implementation",
+        "progress": "",
+        "dueSession": "S5",
+        "nextAction": "",
+        "evidenceType": "other",
+        "progressKind": "advanced",
+        "blockerStatus": "unknown",
+        "testingMethod": "",
+        "testingResult": "",
+        "testingStatus": "unknown",
+        "responsibility": "UI design and frontend implementation",
+        "testingBaseline": "",
+        "expectedEvidence": "",
+        "supportRequested": "",
+        "completionPercent": null,
+        "evidenceReference": "",
+        "blockerDescription": "",
+        "verificationMethod": "",
+        "evidenceAvailability": "unknown"
+      },
+      "rawCandidate": {
+        "route": "review",
+        "nextStep": {
+          "action": "Check the mobile layout for the confirmation/success and error messages",
+          "status": "planned",
+          "sourceTurn": 1,
+          "contextTurn": null,
+          "expectedEvidence": "Visual confirmation (screenshots or notes) that messages display correctly on mobile",
+          "additionalActions": [
+            {
+              "action": "Ask a teammate to run through the booking flow to verify success and failure behavior in another environment/user session",
+              "status": "planned",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "expectedEvidence": "Teammate confirmation or test notes indicating whether the booking flow and messages behave as expected"
+            }
+          ]
+        },
+        "assessment": {
+          "gap": "Mobile layout has not been checked and a teammate has not yet tried the booking flow.",
+          "reason": "Student reports they changed reset logic and manually tested success/failure, but explicitly states they haven't checked mobile layout and will ask a teammate to try the flow (student turn 1).",
+          "information": "focused",
+          "sourceTurns": [
+            1
+          ],
+          "actionability": "clear",
+          "testingMaturity": "executed",
+          "evidenceReadiness": "identified",
+          "verificationReadiness": "clear"
+        },
+        "uncertainties": [
+          "Mobile layout behavior for confirmation and error messages is unverified",
+          "Teammate has not yet attempted the booking flow to independently verify fixes"
+        ],
+        "readyForReview": true,
+        "evidenceUpdates": [
+          {
+            "field": "responsibility",
+            "state": "student_claim",
+            "value": "UI design and frontend implementation",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null
+          },
+          {
+            "field": "claim",
+            "state": "student_claim",
+            "value": "Found that React form reset cleared confirmation state before message remained visible; changed the reset logic so the success message stays visible and a failed request now shows an error; have not yet checked mobile layout; will check mobile layout and ask a teammate to try the booking flow.",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "progressKind": "investigated"
+          },
+          {
+            "field": "scope",
+            "state": "student_claim",
+            "value": "Frontend confirmation display logic (event handlers, state updates, rendering conditions) and booking form behavior across layouts",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null
+          },
+          {
+            "field": "evidence",
+            "state": "available",
+            "value": "Manual end-to-end UI tests: successful booking now shows persistent success message; simulated failed request shows error message.",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "evidenceType": "test_result"
+          },
+          {
+            "field": "verification_method",
+            "state": "student_claim",
+            "value": "Manual testing in the app (manual successful booking and simulated failed request); plan to have teammate attempt booking flow and to check mobile layout.",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null
+          },
+          {
+            "field": "testing",
+            "state": "executed",
+            "value": "Manual booking attempts performed: observed success message persistence and error display on failure.",
+            "method": "manual end-to-end UI interaction",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "observedResult": "Success message persists; failed request shows error"
+          },
+          {
+            "field": "blocker",
+            "state": "none",
+            "value": "No blockers reported; outstanding verification tasks remain (mobile layout check and teammate trial).",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "supportRequested": null
+          }
+        ],
+        "assistantMessage": "Check your summary and correct anything inaccurate.",
+        "suggestedTeacherQuestions": []
+      }
+    },
+    {
+      "id": "S5",
+      "sourceFile": "session-intake-debug-S5(1).json",
+      "conversation": [
+        {
+          "actor": "system",
+          "text": "In your last confirmed Intake, your responsibility was “UI design and frontend implementation” and your next action was “Check the mobile layout for the confirmation/success and error messages\nAsk a teammate to run through the booking flow to verify success and failure behavior in another environment/user session”. Start there: what did you actually complete, change, test or discover since then? If the plan changed or nothing progressed, say that directly."
+        },
+        {
+          "actor": "student",
+          "text": "> I checked the booking form at 375px and 768px. The success message looked fine, but the error message pushed the submit button off-screen on the smaller layout. I adjusted the spacing and checked it again in Chrome’s mobile viewport.\n>\n> A teammate also tried the flow on their laptop. Booking worked, but they found that clicking Submit twice could create two bookings. We haven’t fixed that yet. Next, I’ll work with our backend teammate on preventing duplicate submissions."
+        }
+      ],
+      "answersBefore": {
+        "scope": "UI design and frontend implementation",
+        "progress": "",
+        "dueSession": "S6",
+        "nextAction": "",
+        "evidenceType": "other",
+        "progressKind": "advanced",
+        "blockerStatus": "unknown",
+        "testingMethod": "",
+        "testingResult": "",
+        "testingStatus": "unknown",
+        "responsibility": "UI design and frontend implementation",
+        "testingBaseline": "",
+        "expectedEvidence": "",
+        "supportRequested": "",
+        "completionPercent": null,
+        "evidenceReference": "",
+        "blockerDescription": "",
+        "verificationMethod": "",
+        "evidenceAvailability": "unknown"
+      },
+      "rawCandidate": {
+        "route": "review",
+        "nextStep": {
+          "action": "Work with backend teammate to implement a prevention for duplicate submissions (e.g., backend idempotency or frontend/debounce + server-side check).",
+          "status": "planned",
+          "sourceTurn": 1,
+          "contextTurn": null,
+          "expectedEvidence": "A backend or combined frontend/backend change that prevents duplicate bookings and a repeat booking-flow test showing no duplicate booking creation.",
+          "additionalActions": [
+            {
+              "action": "After the backend change, re-run the booking flow (including double-click submit) to verify duplicate submissions no longer occur.",
+              "status": "planned",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "expectedEvidence": "Test result showing single booking created when Submit is clicked twice."
+            }
+          ]
+        },
+        "assessment": {
+          "gap": "Duplicate-submission bug still present; requires backend/frontend coordination to prevent double bookings.",
+          "reason": "Student reports UI checks and teammate test; teammate discovered double-submit creates two bookings and it is not yet fixed.",
+          "information": "focused",
+          "sourceTurns": [
+            1
+          ],
+          "actionability": "clear",
+          "testingMaturity": "executed",
+          "evidenceReadiness": "identified",
+          "verificationReadiness": "unclear"
+        },
+        "uncertainties": [
+          "Whether the team will fix the issue in the backend, frontend, or both.",
+          "Exact implementation approach for preventing duplicate submissions (backend idempotency vs frontend debounce/disable)."
+        ],
+        "readyForReview": true,
+        "evidenceUpdates": [
+          {
+            "field": "responsibility",
+            "state": "student_claim",
+            "value": "UI design and frontend implementation",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": 0
+          },
+          {
+            "field": "claim",
+            "state": "student_claim",
+            "value": "Checked the booking form at 375px and 768px. The success message looked fine, but the error message pushed the submit button off-screen on the smaller layout. Adjusted spacing and rechecked in Chrome’s mobile viewport.",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "progressKind": "completed"
+          },
+          {
+            "field": "claim",
+            "state": "student_claim",
+            "value": "A teammate ran the booking flow on their laptop; booking worked but clicking Submit twice could create two bookings. This issue has not been fixed yet.",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "progressKind": "investigated"
+          },
+          {
+            "field": "claim",
+            "state": "student_claim",
+            "value": "Next planned action: work with backend teammate on preventing duplicate submissions.",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "progressKind": "unknown"
+          },
+          {
+            "field": "evidence",
+            "state": "available",
+            "value": "Manual UI checks in Chrome mobile viewport at 375px and 768px showing success and error message behaviors; teammate's manual booking attempt on laptop demonstrating double-submit creates two bookings.",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "evidenceType": "test_result"
+          },
+          {
+            "field": "testing",
+            "state": "executed",
+            "value": "Checked mobile viewport and teammate performed booking flow on laptop; observed double-submit creates duplicate bookings.",
+            "method": "manual frontend UI check and teammate manual end-to-end flow",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "observedResult": "Error message layout fixed after spacing adjustment; duplicate bookings occur when Submit is clicked twice"
+          },
+          {
+            "field": "blocker",
+            "state": "student_claim",
+            "value": "Duplicate-submission bug not fixed; needs backend coordination to prevent duplicates.",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "supportRequested": null
+          }
+        ],
+        "assistantMessage": "Check your summary and correct anything inaccurate.",
+        "suggestedTeacherQuestions": []
+      }
+    },
+    {
+      "id": "S6",
+      "sourceFile": "session-intake-debug-S6.json",
+      "conversation": [
+        {
+          "actor": "system",
+          "text": "In your last confirmed Intake, your responsibility was “UI design and frontend implementation” and your next action was “Work with backend teammate to implement a prevention for duplicate submissions (e.g., backend idempotency or frontend/debounce + server-side check).\nAfter the backend change, re-run the booking flow (including double-click submit) to verify duplicate submissions no longer occur.”. Start there: what did you actually complete, change, test or discover since then? If the plan changed or nothing progressed, say that directly."
+        },
+        {
+          "actor": "student",
+          "text": "I disabled the Submit button while a booking request is running and tested rapid double-clicks in Chrome. That stopped duplicate requests from the form in my test.\n\nOur backend teammate hasn’t finished the server-side protection yet, so I can’t say duplicate bookings are fully prevented. We’re still discussing how to handle retries after a connection timeout. Next, I’ll agree on that behavior with them and retest once the backend change is ready."
+        }
+      ],
+      "answersBefore": {
+        "scope": "UI design and frontend implementation",
+        "progress": "",
+        "dueSession": "S7",
+        "nextAction": "",
+        "evidenceType": "other",
+        "progressKind": "advanced",
+        "blockerStatus": "unknown",
+        "testingMethod": "",
+        "testingResult": "",
+        "testingStatus": "unknown",
+        "responsibility": "UI design and frontend implementation",
+        "testingBaseline": "",
+        "expectedEvidence": "",
+        "supportRequested": "",
+        "completionPercent": null,
+        "evidenceReference": "",
+        "blockerDescription": "",
+        "verificationMethod": "",
+        "evidenceAvailability": "unknown"
+      },
+      "rawCandidate": {
+        "route": "review",
+        "nextStep": {
+          "action": "Agree with backend teammate on retry/timeout behavior and then retest the booking flow (including rapid double-click / submit attempts) after backend protection is implemented.",
+          "status": "planned",
+          "sourceTurn": 1,
+          "contextTurn": null,
+          "expectedEvidence": "Retest results showing the booking flow no longer produces duplicate bookings and confirmation that server-side duplicate-prevention (idempotency or equivalent) is implemented.",
+          "additionalActions": [
+            {
+              "action": "Coordinate with backend teammate to implement server-side protection for duplicate bookings.",
+              "status": "planned",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "expectedEvidence": "Backend change merged/deployed or a developer confirmation that server-side idempotency/duplicate-prevention is in place."
+            }
+          ]
+        },
+        "assessment": {
+          "gap": "Server-side protection (idempotency / duplicate-prevention) is not implemented yet by backend teammate.",
+          "reason": "Student implemented a frontend mitigation and tested it, but backend change is pending so full prevention cannot be verified.",
+          "information": "focused",
+          "sourceTurns": [
+            1
+          ],
+          "actionability": "clear",
+          "testingMaturity": "executed",
+          "evidenceReadiness": "identified",
+          "verificationReadiness": "unclear"
+        },
+        "uncertainties": [
+          "Whether retries after a connection timeout could still cause duplicate bookings until server-side protection is implemented.",
+          "Exact backend approach to duplicate-prevention (idempotency vs. other strategies) is undecided."
+        ],
+        "readyForReview": true,
+        "evidenceUpdates": [
+          {
+            "field": "claim",
+            "state": "student_claim",
+            "value": "Disabled the Submit button while a booking request is running.",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "progressKind": "completed"
+          },
+          {
+            "field": "claim",
+            "state": "student_claim",
+            "value": "Tested rapid double-clicks in Chrome; this stopped duplicate requests from the form in my test.",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "progressKind": "completed"
+          },
+          {
+            "field": "testing",
+            "state": "executed",
+            "value": "Manual UI test in Chrome: rapid double-clicks while Submit disabled; no duplicate requests observed from the form.",
+            "method": "manual UI test in Chrome",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "observedResult": "No duplicate requests from the form during the test"
+          },
+          {
+            "field": "claim",
+            "state": "student_claim",
+            "value": "Backend teammate has not finished server-side protection (idempotency / duplicate-prevention).",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "progressKind": "unknown"
+          },
+          {
+            "field": "claim",
+            "state": "student_claim",
+            "value": "Team is still discussing how to handle retries after a connection timeout.",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "progressKind": "unknown"
+          },
+          {
+            "field": "claim",
+            "state": "student_claim",
+            "value": "Next step: agree on retry/timeout behavior with backend teammate and retest once the backend change is ready.",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "progressKind": "advanced"
+          },
+          {
+            "field": "blocker",
+            "state": "none",
+            "value": "No explicit teacher support requested; blocker is backend implementation not yet complete.",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "supportRequested": null
+          }
+        ],
+        "assistantMessage": "Check your summary and correct anything inaccurate.",
+        "suggestedTeacherQuestions": []
+      }
+    },
+    {
+      "id": "S7",
+      "sourceFile": "session-intake-debug-S7(1).json",
+      "conversation": [
+        {
+          "actor": "system",
+          "text": "In your last confirmed Intake, your responsibility was “UI design and frontend implementation” and your next action was “Agree with backend teammate on retry/timeout behavior and then retest the booking flow (including rapid double-click / submit attempts) after backend protection is implemented.\nCoordinate with backend teammate to implement server-side protection for duplicate bookings.”. Start there: what did you actually complete, change, test or discover since then? If the plan changed or nothing progressed, say that directly."
+        },
+        {
+          "actor": "student",
+          "text": "We agreed that after a timeout, the form should say the booking status is uncertain rather than show a definite failure. I added that message and kept the entered details so the user doesn’t have to fill everything in again.\n\nOur backend teammate says the duplicate-booking protection is ready, but I haven’t tested it with the frontend yet because I couldn’t access the updated test environment. Next, I’ll check access with them and run the double-click and timeout cases."
+        }
+      ],
+      "answersBefore": {
+        "scope": "UI design and frontend implementation",
+        "progress": "",
+        "dueSession": "S8",
+        "nextAction": "",
+        "evidenceType": "other",
+        "progressKind": "advanced",
+        "blockerStatus": "unknown",
+        "testingMethod": "",
+        "testingResult": "",
+        "testingStatus": "unknown",
+        "responsibility": "UI design and frontend implementation",
+        "testingBaseline": "",
+        "expectedEvidence": "",
+        "supportRequested": "",
+        "completionPercent": null,
+        "evidenceReference": "",
+        "blockerDescription": "",
+        "verificationMethod": "",
+        "evidenceAvailability": "unknown"
+      },
+      "rawCandidate": {
+        "route": "review",
+        "nextStep": {
+          "action": "Check access with backend teammate to the updated test environment, then run double-click (rapid submit) and timeout test cases to verify duplicate-booking protection and UI behavior.",
+          "status": "planned",
+          "sourceTurn": 1,
+          "contextTurn": null,
+          "expectedEvidence": "Test results showing behavior under rapid double-submit and timeout (e.g., logs, screenshots, reproduced steps, or test environment observations).",
+          "additionalActions": []
+        },
+        "assessment": {
+          "gap": "Frontend changes implemented but not integrated/tested with backend duplicate-booking protection due to lack of access to updated test environment.",
+          "reason": "Student implemented UI change and backend teammate reported protection ready, but the student could not access the updated test environment to verify integration.",
+          "information": "focused",
+          "sourceTurns": [
+            1
+          ],
+          "actionability": "clear",
+          "testingMaturity": "planned",
+          "evidenceReadiness": "identified",
+          "verificationReadiness": "unclear"
+        },
+        "uncertainties": [
+          "Whether the backend duplicate-booking protection actually prevents duplicates when exercised from the frontend (not yet tested).",
+          "Whether any integration issues will arise once test environment access is obtained."
+        ],
+        "readyForReview": true,
+        "evidenceUpdates": [
+          {
+            "field": "responsibility",
+            "state": "student_claim",
+            "value": "UI design and frontend implementation",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null
+          },
+          {
+            "field": "claim",
+            "state": "student_claim",
+            "value": "Added UI behavior: after a timeout the form shows that booking status is uncertain and preserves entered details so the user does not have to re-enter them.",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "progressKind": "completed"
+          },
+          {
+            "field": "claim",
+            "state": "student_claim",
+            "value": "Backend teammate reports duplicate-booking protection is ready",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "progressKind": "unknown"
+          },
+          {
+            "field": "blocker",
+            "state": "student_claim",
+            "value": "Cannot access updated test environment to verify frontend integration with the backend duplicate-booking protection",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "supportRequested": null
+          },
+          {
+            "field": "testing",
+            "state": "planned",
+            "value": "Run double-click (rapid submit) and timeout cases against backend protection",
+            "method": null,
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "observedResult": null
+          },
+          {
+            "field": "verification_method",
+            "state": "planned",
+            "value": "Obtain access to updated test environment from backend teammate and then perform the double-click and timeout tests to observe whether duplicate bookings are prevented and UI handles uncertain status correctly.",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null
+          }
+        ],
+        "assistantMessage": "Check your summary and correct anything inaccurate.",
+        "suggestedTeacherQuestions": []
+      }
+    },
+    {
+      "id": "S8",
+      "sourceFile": "session-intake-debug-S8(1).json",
+      "conversation": [
+        {
+          "actor": "system",
+          "text": "In your last confirmed Intake, your responsibility was “UI design and frontend implementation” and your next action was “Check access with backend teammate to the updated test environment, then run double-click (rapid submit) and timeout test cases to verify duplicate-booking protection and UI behavior.”. Start there: what did you actually complete, change, test or discover since then? If the plan changed or nothing progressed, say that directly."
+        },
+        {
+          "actor": "student",
+          "text": "I got access to the updated test environment and tested the booking flow with our backend teammate. Rapid double-clicks created only one booking in the cases we tried.\n\nFor the timeout case, the form kept the entered details and showed the uncertain-status message. But after reconnecting, there was no clear way for the user to check whether the booking had gone through. We haven’t resolved that yet. Next, we’ll discuss how users can check their booking before trying again, and I’ll update the UI once we agree."
+        }
+      ],
+      "answersBefore": {
+        "scope": "UI design and frontend implementation",
+        "progress": "",
+        "dueSession": "S9",
+        "nextAction": "",
+        "evidenceType": "other",
+        "progressKind": "advanced",
+        "blockerStatus": "unknown",
+        "testingMethod": "",
+        "testingResult": "",
+        "testingStatus": "unknown",
+        "responsibility": "UI design and frontend implementation",
+        "testingBaseline": "",
+        "expectedEvidence": "",
+        "supportRequested": "",
+        "completionPercent": null,
+        "evidenceReference": "",
+        "blockerDescription": "",
+        "verificationMethod": "",
+        "evidenceAvailability": "unknown"
+      },
+      "rawCandidate": {
+        "route": "review",
+        "nextStep": {
+          "action": "Discuss options with teammates for allowing users to check booking status after a timeout/reconnect (before retrying), agree on preferred approach, then update the UI accordingly.",
+          "status": "planned",
+          "sourceTurn": 1,
+          "contextTurn": null,
+          "expectedEvidence": "Updated UI design or implementation demonstrating a means for users to verify booking status (design mockups or frontend change + demo).",
+          "additionalActions": [
+            {
+              "action": "Implement the agreed UI changes to surface booking status or verification flow.",
+              "status": "planned",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "expectedEvidence": "UI update in the test environment or screenshots/demo showing the verification flow."
+            }
+          ]
+        },
+        "assessment": {
+          "gap": "No clear UI path for users to verify booking status after a timeout/reconnect; needs design decision and UI update.",
+          "reason": "Student tested booking flow in updated test environment with backend teammate, observed correct duplicate protection but an unresolved UX issue for timeout/reconnect status visibility.",
+          "information": "focused",
+          "sourceTurns": [
+            1
+          ],
+          "actionability": "clear",
+          "testingMaturity": "executed",
+          "evidenceReadiness": "identified",
+          "verificationReadiness": "clear"
+        },
+        "uncertainties": [
+          "Which exact UX pattern will be chosen to let users check booking status after a timeout/reconnect (e.g., status page, polling, explicit 'check status' button, or notification).",
+          "Whether backend support is required or already sufficient to provide a reliable booking-status check for the frontend."
+        ],
+        "readyForReview": true,
+        "evidenceUpdates": [
+          {
+            "field": "responsibility",
+            "state": "student_claim",
+            "value": "UI design and frontend implementation",
+            "operation": "add",
+            "sourceTurn": 0,
+            "contextTurn": null
+          },
+          {
+            "field": "claim",
+            "state": "student_claim",
+            "value": "Gained access to the updated test environment and tested the booking flow with backend teammate; rapid double-clicks resulted in only one booking for the cases tried.",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "progressKind": "completed"
+          },
+          {
+            "field": "claim",
+            "state": "student_claim",
+            "value": "In timeout cases the form preserved entered details and showed an uncertain-status message; after reconnecting there is no clear way for the user to check whether the booking went through.",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "progressKind": "investigated"
+          },
+          {
+            "field": "claim",
+            "state": "student_claim",
+            "value": "Plan to discuss how users can check their booking before retrying and then update the UI once agreed.",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "progressKind": "unknown"
+          },
+          {
+            "field": "evidence",
+            "state": "available",
+            "value": "Test results from updated test environment: double-click deduplication verified; timeout behavior observed as form retention with uncertain-status message; inability to confirm booking status post-reconnect observed.",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "evidenceType": "test_result"
+          },
+          {
+            "field": "testing",
+            "state": "executed",
+            "value": "Ran rapid double-click (duplicate submission) tests and timeout/reconnect scenarios with backend teammate.",
+            "method": "double-click and timeout/reconnect manual testing with backend teammate",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "observedResult": "Double-clicks produced only one booking in tested cases; timeout preserved form and showed uncertain-status message, but no post-reconnect verification path found."
+          },
+          {
+            "field": "blocker",
+            "state": "student_claim",
+            "value": "Unresolved UX flow for users to verify booking status after a timeout/reconnect; requires design decision and frontend update.",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "supportRequested": null
+          }
+        ],
+        "assistantMessage": "Check your summary and correct anything inaccurate.",
+        "suggestedTeacherQuestions": []
+      }
+    },
+    {
+      "id": "S9",
+      "sourceFile": "session-intake-debug-S9-2(1).json",
+      "conversation": [
+        {
+          "actor": "system",
+          "text": "In your last confirmed Intake, your responsibility was “UI design and frontend implementation” and your next action was “Discuss options with teammates for allowing users to check booking status after a timeout/reconnect (before retrying), agree on preferred approach, then update the UI accordingly.\nImplement the agreed UI changes to surface booking status or verification flow.”. Start there: what did you actually complete, change, test or discover since then? If the plan changed or nothing progressed, say that directly."
+        },
+        {
+          "actor": "student",
+          "text": "We agreed to show a “Check booking status” button after a timeout. I added the button and the loading, confirmed and not-found messages. It works with sample responses, but the backend status endpoint isn’t connected yet, so I haven’t tested the full recovery flow.\n\nI also drafted the frontend section of our final report. Next, I’ll connect the status check when the endpoint is ready, test it with our backend teammate, and update the report with the actual results."
+        }
+      ],
+      "answersBefore": {
+        "scope": "UI design and frontend implementation",
+        "progress": "",
+        "dueSession": "S10",
+        "nextAction": "",
+        "evidenceType": "other",
+        "progressKind": "advanced",
+        "blockerStatus": "unknown",
+        "testingMethod": "",
+        "testingResult": "",
+        "testingStatus": "unknown",
+        "responsibility": "UI design and frontend implementation",
+        "testingBaseline": "",
+        "expectedEvidence": "",
+        "supportRequested": "",
+        "completionPercent": null,
+        "evidenceReference": "",
+        "blockerDescription": "",
+        "verificationMethod": "",
+        "evidenceAvailability": "unknown"
+      },
+      "rawCandidate": {
+        "route": "review",
+        "nextStep": {
+          "action": "Connect the frontend status check to the backend status endpoint when the endpoint is ready, test the full recovery/status-check flow with the backend teammate, and update the final report with the actual test results.",
+          "status": "planned",
+          "sourceTurn": 1,
+          "contextTurn": null,
+          "expectedEvidence": "Integration test results and updated final report section.",
+          "additionalActions": [
+            {
+              "action": "Update the frontend section of the final report with the observed results after backend testing.",
+              "status": "planned",
+              "sourceTurn": 1,
+              "contextTurn": null,
+              "expectedEvidence": "Revised report text or document with documented test outcomes."
+            }
+          ]
+        },
+        "assessment": {
+          "gap": "Backend status endpoint not connected, preventing end-to-end verification of the new UI flow.",
+          "reason": "Student implemented frontend UI and local sample-response checks but could not test with the real backend; next steps depend on backend teammate providing the endpoint.",
+          "information": "focused",
+          "sourceTurns": [
+            1
+          ],
+          "actionability": "clear",
+          "testingMaturity": "planned",
+          "evidenceReadiness": "identified",
+          "verificationReadiness": "unclear"
+        },
+        "uncertainties": [
+          "When the backend teammate will provide the status endpoint.",
+          "How the frontend will behave with real backend responses (edge cases, error modes, timing)."
+        ],
+        "readyForReview": true,
+        "evidenceUpdates": [
+          {
+            "field": "responsibility",
+            "state": "student_claim",
+            "value": "UI design and frontend implementation",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": 0
+          },
+          {
+            "field": "claim",
+            "state": "student_claim",
+            "value": "Added a 'Check booking status' button plus loading, confirmed, and not‑found messages in the frontend; UI works with sample responses but the backend status endpoint is not connected yet so full recovery flow is untested.",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "progressKind": "advanced"
+          },
+          {
+            "field": "scope",
+            "state": "student_claim",
+            "value": "Drafted the frontend section of the final report.",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null
+          },
+          {
+            "field": "evidence",
+            "state": "available",
+            "value": "Frontend changes exist and have been exercised against sample responses (local/sample data).",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "evidenceType": "repository_change"
+          },
+          {
+            "field": "verification_method",
+            "state": "planned",
+            "value": "Connect the frontend status-check to the backend status endpoint and test the end-to-end flow with the backend teammate.",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null
+          },
+          {
+            "field": "testing",
+            "state": "planned",
+            "value": "Will perform integration testing of the status-check button against the backend status endpoint once it is available.",
+            "method": "integration with backend endpoint",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "observedResult": null
+          },
+          {
+            "field": "blocker",
+            "state": "student_claim",
+            "value": "Backend status endpoint not connected; blocks end-to-end testing.",
+            "operation": "add",
+            "sourceTurn": 1,
+            "contextTurn": null,
+            "supportRequested": null
+          }
+        ],
+        "assistantMessage": "Check your summary and correct anything inaccurate.",
+        "suggestedTeacherQuestions": []
+      }
+    }
+  ]
+}
