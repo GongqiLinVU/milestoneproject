@@ -1,3 +1,4 @@
+import {selectCurrentSession,intakePlanningEstimate,DEFAULT_CLASS_AI_BUDGET_USD} from './sessionPlanning';
 import {useStaffSession} from './useStaffSession';
 import {TeacherAdministration,TeacherPasswordSetup,classLabel} from './TeacherAdministration';
 import {chatStopSaveReason,MAX_CHAT_CLARIFICATIONS,type QuestionMeta} from './intakeChatStop';
@@ -2628,10 +2629,13 @@ function StudioSessionControl({
   async function saveUsageBudget(event:FormEvent<HTMLFormElement>){
     event.preventDefault();const form=new FormData(event.currentTarget);setBusy(true);
     const budget=Number(form.get("budget")),attempts=Number(form.get("attempts"));
-    const {error}=await supabase.from("teaching_blocks").update({intake_ai_budget_usd:budget,intake_ai_attempt_limit:attempts}).eq("id",blockId);
+    const ceiling=usageData?.canManageBudgetCeiling?Number(form.get("ceiling")):Number(usageData?.budgetCeilingUsd);
+    if(!Number.isFinite(ceiling)||!Number.isFinite(budget)||budget<0||budget>ceiling){setMessage("Budget must stay within the administrator ceiling.");setBusy(false);return;}
+    const update={intake_ai_budget_usd:budget,intake_ai_attempt_limit:attempts,...(usageData?.canManageBudgetCeiling?{intake_ai_budget_ceiling_usd:ceiling}:{})};
+    const {error}=await supabase.from("teaching_blocks").update(update).eq("id",blockId);
     const read=error?null:await supabase.rpc("get_teacher_session_ai_usage",{p_block_id:blockId});
-    const confirmed=!error&&!read?.error&&Number(read?.data?.budgetUsd)===budget&&Number(read?.data?.attemptLimit)===attempts;
-    setMessage(confirmed?"AI trial limits saved. Selecting AI and opening submissions remain separate steps.":"AI trial limits could not be confirmed. Reload and check before continuing.");await load();setBusy(false);
+    const confirmed=!error&&!read?.error&&Number(read?.data?.budgetUsd)===budget&&Number(read?.data?.attemptLimit)===attempts&&Number(read?.data?.budgetCeilingUsd)===ceiling;
+    setMessage(confirmed?"AI reference budget saved.":error?.message||"AI reference budget could not be confirmed. Reload and check before continuing.");await load();setBusy(false);
   }
   function effectiveStatus(item:StudioSessionRow){const now=Date.now();if(item.status==="open")return "open";if(item.status==="closed")return "closed";if(item.starts_at&&new Date(item.starts_at).getTime()<=now&&(!item.ends_at||new Date(item.ends_at).getTime()>now))return "open";if(item.ends_at&&new Date(item.ends_at).getTime()<=now)return "closed";return "scheduled";}
   function effectiveTrackStatus(item:StudioSessionRow){if(item.work_track_access==="open")return "open";if(item.work_track_access==="closed")return "closed";return effectiveStatus(item);}
@@ -2680,12 +2684,8 @@ function StudioSessionControl({
   function evidenceValue(value:unknown){if(typeof value==="boolean")return value?"Yes":"No";if(Array.isArray(value))return value.join(", ");if(value&&typeof value==="object")return Object.entries(value as Record<string,unknown>).map(([key,item])=>key+": "+String(item)).join(" · ");return String(value??"");}
   async function verifyEvidence(row:TeacherTrackRow,completion:number,reason:string){if(!evidenceSession||!Number.isFinite(completion))return;setMessage("");const{data,error}=await supabase.rpc("verify_teacher_session_work_track",{p_session_id:evidenceSession.id,p_student_id:row.studentId,p_verified_completion:completion,p_reason:reason||null});if(error){setMessage(error.message||"Teacher verification could not be saved.");return;}const verified=data as {teacherVerifiedCompletion:number;teacherVerificationStatus:"confirmed"|"adjusted";teacherVerificationReason:string|null;teacherVerifiedAt:string};setEvidenceRows(current=>current.map(item=>item.studentId===row.studentId?{...item,...verified}:item));}
 
-  const dateNow=new Date();
-  const todayKey=`${dateNow.getFullYear()}-${String(dateNow.getMonth()+1).padStart(2,"0")}-${String(dateNow.getDate()).padStart(2,"0")}`;
-  const currentSession=sessions.find(item=>effectiveStatus(item)==="open")
-    ??sessions.find(item=>item.session_date===todayKey)
-    ??sessions.find(item=>item.session_date>todayKey&&effectiveStatus(item)!=="closed")
-    ??sessions[sessions.length-1];
+  const currentSession=selectCurrentSession(sessions,effectiveStatus);
+  const planning=intakePlanningEstimate(Number(usageData?.rosterSize)||0);
   const focusedSession=sessions.find(item=>item.id===focusedSessionId)??currentSession;
   const visibleSessions=sessionView==="all"?sessions:focusedSession?[focusedSession]:[];
   const allExpanded=sessions.length>0&&sessions.every(item=>expandedSessionIds.includes(item.id));
@@ -2705,7 +2705,12 @@ function StudioSessionControl({
       <p className="session-default-note">{effectiveMode==="disabled"?"S1–S9 use Work Track: students can update progress while submissions are open.":effectiveMode==="deterministic"?"S1–S9 use Guided Form without AI calls. Confirmed records are read-only.":"S1–S9 use AI Conversation, with a completion path without AI. Confirmed records are read-only."} S10 uses Feedback.</p>
       {modeBusy&&<p role="status">Saving default…</p>}{modeError&&<p className="admin-alert error" role="alert">{modeError}</p>}{!modeError&&modeMessage&&<p role="status">{modeMessage}</p>}
       {usageData?.reconciliationRequired&&<p className="admin-alert error" role="alert">Some AI costs need review. This does not pause student conversations.</p>}
-      <details className="ai-trial-controls"><summary>AI usage · estimates and reference limits (USD)</summary>{usageData?<><p>{usageData.attempts} attempts · token-based estimate ${Number(usageData.reportedUsd).toFixed(4)} · budget provision ${Number(usageData.chargedUsd).toFixed(4)} / ${Number(usageData.budgetUsd).toFixed(2)}. {usageData.unresolvedAttempts} attempts have unconfirmed cost.</p>{usageData.reconciliationRequired&&<p role="alert">Some costs are unconfirmed. Conversations can continue.</p>}<form key={blockId+":"+usageData.budgetUsd+":"+usageData.attemptLimit} onSubmit={saveUsageBudget}><label>Block reference budget (USD)<input name="budget" type="number" min="0" max="1000" step="0.01" defaultValue={usageData.budgetUsd} required/></label><label>Reference attempts per student per Session<input name="attempts" type="number" min="0" max="50" step="1" defaultValue={usageData.attemptLimit} required/></label><button type="submit" disabled={busy}>Save reference limits</button></form><small>These values are for monitoring only and do not stop conversations, including when set to zero. Conversation length is controlled by rounds. Retries are included in usage statistics.</small></>:<p>AI usage statistics are unavailable. This panel does not control conversation availability.</p>}</details>
+      <details className="ai-trial-controls"><summary>AI usage · class budget and estimates (USD)</summary>{usageData?<><p>{usageData.attempts} attempts · estimated cost ${Number(usageData.reportedUsd).toFixed(4)} · provision ${Number(usageData.chargedUsd).toFixed(4)} / ${Number(usageData.budgetUsd).toFixed(2)}. {usageData.unresolvedAttempts} attempts have unconfirmed cost.</p>
+      <p>Suggested starting budget: US${DEFAULT_CLASS_AI_BUDGET_USD} per class for the whole teaching block. Administrator ceiling: US${Number(usageData.budgetCeilingUsd).toFixed(2)}.</p><p>{planning.students} enrolled students × 9 possible Intake Sessions: roughly US${planning.lowUsd.toFixed(2)}–${planning.highUsd.toFixed(2)} using gpt-5-mini. Planning assumption: US$0.01–0.03 per completed Intake including chat and record extraction. Actual cost varies with tokens, retries and model choice; this is not a spending guarantee.</p>
+      {usageData.reconciliationRequired&&<p role="alert">Some costs are unconfirmed. Conversations can continue.</p>}<form key={blockId+":"+usageData.budgetUsd+":"+usageData.attemptLimit+":"+usageData.budgetCeilingUsd} onSubmit={saveUsageBudget}>
+      <label>Class reference budget (USD)<input name="budget" type="number" min="0" max={usageData.canManageBudgetCeiling?1000:usageData.budgetCeilingUsd} step="0.01" defaultValue={usageData.budgetUsd} required/></label>
+      {usageData.canManageBudgetCeiling&&<label>Administrator ceiling (USD)<input name="ceiling" type="number" min="0" max="1000" step="0.01" defaultValue={usageData.budgetCeilingUsd} required/></label>}
+      <label>Reference attempts per student per Session<input name="attempts" type="number" min="0" max="50" step="1" defaultValue={usageData.attemptLimit} required/></label><button type="submit" disabled={busy}>Save reference limits</button></form><small>Only a super administrator can change the ceiling. Reference budgets are for monitoring; they do not stop conversations. Conversation length is controlled by rounds. Retries are included in usage statistics.</small></>:<p>AI usage statistics are unavailable. This panel does not control conversation availability.</p>}</details>
       <details className="session-plan-tools"><summary>Session plan setup</summary><p>Prepare the standard curriculum, then edit each Session's dates and guidance.</p><button className="secondary compact" disabled={busy||!blockId||sessions.length>=10} onClick={()=>void prepareTen()}><CalendarPlus size={17}/> {sessions.length>=10?"10-session plan prepared":`Prepare ${10-sessions.length} sessions`}</button></details>
     </section>
     {sessions.length>0&&<section className="session-navigation" aria-label="Session navigation">
