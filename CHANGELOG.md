@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-26 — Sprint 11 S11-01 — pending release
+
+- Joseph extended the increment to S1–S9 (S11-02): short stage-specific openings and optional guidance, plus a collapsed prior-role/action panel. Full historical context stays in the source opening; hints/examples do not. Previous saved records and structural stopping are unchanged.
+
+- Opened Sprint 11 for the approved NIT3004 first-check-in rehearsal finding; Sprint 10 remains closed and classroom observation continues.
+- Replaced the first question's “before S2” commitment with existing project baseline and personal responsibility. Added optional display-only hint, sentence starters and collapsed illustration, plus first-Session not-started/help wording.
+- Kept scaffolding outside source conversations; no mandatory extra question, model instruction/schema change, migration or structural-stop change. Later Session carryover and saved history remain unchanged; NIT3003 design is deferred.
+
 ## 2026-10-24 — Sprint 10 closed; classroom feedback phase active
 
 - Joseph accepted basic live testing: new-teacher Session creation and student login work. Closure baseline: main `901fd72` (PR #97).

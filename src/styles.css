@@ -1972,6 +1972,17 @@ button.danger:hover {
 .chat-message{display:grid;gap:.35rem;max-width:760px;margin:0 auto 1.35rem}
 .chat-message>span{color:#68736c;font-size:.7rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
 .chat-message p{width:fit-content;max-width:min(680px,92%);margin:0;padding:.9rem 1.05rem;border-radius:18px 18px 18px 5px;background:#fff;border:1px solid #dfe5e0;line-height:1.6;white-space:pre-wrap;box-shadow:0 5px 18px rgba(27,45,36,.04)}
+.intake-start-help{max-width:680px;margin:.75rem 0 1.25rem;color:#46554e;font-size:.925rem;line-height:1.55}
+.intake-start-help p{margin:.5rem 0}
+.intake-start-help details{margin:.65rem 0}
+.intake-start-help summary{width:fit-content;cursor:pointer;font-weight:600;color:#273c67;padding:.3rem 0}
+.intake-start-help ul{padding-left:1.35rem;margin:.5rem 0}
+.intake-last-checkin{margin:0 0 1.25rem;color:#46554e;line-height:1.55;overflow-wrap:anywhere}
+.intake-last-checkin summary{cursor:pointer;font-weight:600;padding:.35rem 0;color:#273c67}
+.intake-last-checkin dl{display:grid;gap:.65rem;margin:.65rem 0}
+.intake-last-checkin dt{font-size:.85rem;color:#526176}
+.intake-last-checkin dd{margin:.15rem 0;white-space:pre-wrap}
+.intake-last-checkin p{font-size:.9rem}
 .chat-message.student{justify-items:end}
 .chat-message.student>span{text-align:right}
 .chat-message.student p{border:0;border-radius:18px 18px 5px 18px;background:#245cff;color:#fff}

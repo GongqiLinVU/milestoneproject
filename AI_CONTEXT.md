@@ -1,6 +1,8 @@
 # AI Context — Engineering Studio Platform
 
-## Current checkpoint — 24 October 2026
+## Current checkpoint — 26 October 2026
+
+Joseph opened [Sprint 11](docs/sprints/sprint-11/PLAN.md) and extended S11-01/02 to all NIT3004 S1–S9 openings: stage-specific short questions, optional display-only hints/starters/examples, friendlier S1 shortcuts and separately displayed prior context. Full historical role/actions remain in the source opening for interpretation, labelled as historical rather than current evidence. No mandatory next-action question, provider instruction change, new semantic stopping or NIT3003 implementation. Read [handoff](docs/sprints/sprint-11/HANDOFF.md) and preserve the closed Sprint 10 contracts below.
 
 Sprint 10 is CLOSED by Joseph after basic rehearsal passed: new teachers can create Sessions and students can log in. Baseline main is `901fd7254416818c1fdc8803bd20347d7db05176` (PR #97). The active phase is [real classroom feedback](docs/feedback/PLAN.md), with [a register](docs/feedback/FEEDBACK_LOG.md); consult [closeout](docs/sprints/sprint-10/CLOSEOUT.md) and [handoff](docs/sprints/sprint-10/HANDOFF.md). Older sprint checkpoints below are historical unless explicitly retained here.
 
@@ -10,7 +12,7 @@ S1–S9 support Work Track, Form or per-Session AI Intake; S10 retains feedback.
 
 Joseph confirmed production SQL success for the class, unassigned-roster, password-only activation and budget migrations. This is not blanket acceptance of every legacy scenario, hosted recovery-email delivery, live account-management side effect, concurrent classroom load, AI safety/quality or institutional approval. Keep 29/30 October rollout readiness/configuration checkpoints and 2 November teaching target.
 
-Start from actual latest main and user evidence. No speculative Sprint 11 scope, KB, grading or semantic harness expansion is approved. Urgent operational/security defects get focused fixes; ordinary feedback is collected and reviewed in batches. Never commit identifiable raw debug exports. No paid calls or production data/account operations are authorized merely by this checkpoint.
+Start from actual latest main and user evidence. Only the focused Sprint 11 scope above is approved; no KB, grading or semantic harness expansion. Urgent operational/security defects get focused fixes; ordinary feedback is collected and reviewed in batches. Never commit identifiable raw debug exports. No paid calls or production data/account operations are authorized merely by this checkpoint.
 
 ## Sprint 6 verified Production state
 
@@ -228,7 +230,7 @@ Important current rules:
 
 ## Active phase
 
-Sprint 10 is closed; classroom observation and feedback is active. See `docs/feedback/PLAN.md`. Joseph will select a later development batch from evidence; Sprint 11 has no committed feature scope.
+Sprint 10 is closed. Sprint 11 is active for the approved NIT3004 onboarding refinement; classroom observation continues alongside it. See `docs/sprints/sprint-11/PLAN.md` and `docs/feedback/PLAN.md`. Additional development scope requires evidence and Joseph's review.
 
 > Report is a claim; Activity is a process record; Artifact is work evidence; Teacher Review is verification; AI connects them.
 

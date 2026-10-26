@@ -4,7 +4,7 @@
 
 ## Goal
 
-Learn whether students can complete their work without friction and whether the resulting records make teacher review more useful and efficient. Keep the deployed baseline stable while collecting real classroom evidence. This phase has no precommitted feature sprint or harness expansion.
+Learn whether students can complete their work without friction and whether the resulting records make teacher review more useful and efficient. Keep the deployed baseline stable while collecting real classroom evidence. Joseph opened [Sprint 11](../sprints/sprint-11/PLAN.md) on 26 October for the NIT3004 opening-question rehearsal findings, subsequently extending review to S1–S9. The scope is short stage-specific questions, optional guidance and readable previous context. This does not authorize broader harness expansion.
 
 ## Rollout
 
@@ -40,4 +40,4 @@ For each accepted change, state the evidence, intended outcome and regression ca
 
 ## First review output
 
-A short summary of the most consequential cases, what worked, what failed, evidence gaps, and the next few approved changes. Do not report learning gains or time/cost savings without a comparison and sufficient evidence. Joseph decides whether the next development batch becomes Sprint 11.
+A short summary of the most consequential cases, what worked, what failed, evidence gaps, and the next few approved changes. Do not report learning gains or time/cost savings without a comparison and sufficient evidence. Joseph reviews further development scope; Sprint 11 currently contains only the approved onboarding increment.
