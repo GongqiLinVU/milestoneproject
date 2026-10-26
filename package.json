@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "test:build": "tsc --outDir .test-build --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck src/intakeObservations.ts src/intakePolicy.ts src/intakeHarness.ts src/aiSessionIntake.ts src/intakeExitGuard.ts src/sessionPlanning.ts && tsc --outDir .test-api --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck api/session-intake-ai.ts && tsc --outDir .test-api --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck --rootDir . api/teacher-accounts.ts api/student-accounts.ts api/poster.ts api/ai-teaching-suggestion.ts",
+    "test:build": "tsc --outDir .test-build --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck src/intakeObservations.ts src/intakePolicy.ts src/intakeHarness.ts src/aiSessionIntake.ts src/intakeExitGuard.ts src/sessionPlanning.ts src/intakeStart.ts && tsc --outDir .test-api --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck api/session-intake-ai.ts && tsc --outDir .test-api --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck --rootDir . api/teacher-accounts.ts api/student-accounts.ts api/poster.ts api/ai-teaching-suggestion.ts",
     "test:intake": "npm run test:build && node --test tests/ai-session-intake/adaptive/*.test.mjs",
     "test": "npm run test:intake",
     "seed:local": "node scripts/seed-local-testdata.mjs",

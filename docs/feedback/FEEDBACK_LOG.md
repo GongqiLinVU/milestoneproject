@@ -1,9 +1,10 @@
 # Classroom feedback register
 
-Use anonymous case IDs. Raw debug/screenshots stay in an authorized private location; this register contains redacted summaries only. No real classroom observations have been recorded here yet.
+Use anonymous case IDs. Raw debug/screenshots stay in an authorized private location; this register contains redacted summaries only. The first entry is a pre-classroom demonstration rehearsal, not independent real-student evidence.
 
 | Case ID / date | Class / Session / role | Observed versus expected | Impact / frequency | Private evidence reference | Status / next step |
 |---|---|---|---|---|---|
+| REHEARSAL-S1-01 / 2026-10-26 | NIT3004 / 2B2 C1 / S1 / teacher rehearsal | First question asks for ownership before “S2” without an existing-project baseline. Expected: short reconnection question, understandable language and optional answer scaffolding. | One rehearsal reviewed; student frequency and outcome unknown | Joseph's private first-Session screenshot; no raw export committed | selected for [Sprint 11 S11-01](../sprints/sprint-11/PLAN.md); production verification pending |
 
 Status values: observed, investigating, selected, fixed, verified, deferred. Unknown evidence or frequency stays unknown.
 

@@ -1,10 +1,12 @@
 # Product Roadmap
 
-## Current phase — Classroom observation and real user feedback
+## Current phase — Sprint 11 and classroom observation
 
 **Sprint 10 closed on 24 October 2026.** Joseph confirmed basic testing, new-teacher Session creation and student login. Baseline main: `901fd72` (PR #97). Delivered scope and evidence limits are in [Sprint 10 closeout](docs/sprints/sprint-10/CLOSEOUT.md).
 
-The next priority is real use across the independently managed NIT3004 classes. Follow [the feedback plan](docs/feedback/PLAN.md) and [register](docs/feedback/FEEDBACK_LOG.md). Keep the baseline stable, fix urgent access/data/security defects promptly, and batch normal usability/conversation/record-quality improvements after reviewing real cases. No Sprint 11 feature scope is committed yet.
+Joseph opened [Sprint 11](docs/sprints/sprint-11/PLAN.md) on 26 October 2026 following the first-Session demonstration rehearsal. S11-01 refines NIT3004 onboarding with a project baseline and personal-role question plus optional hints/example. NIT3003 design remains deferred. No broader harness, grading or knowledge-base scope is approved.
+
+Continue real use across independently managed NIT3004 classes through [the feedback plan](docs/feedback/PLAN.md) and [register](docs/feedback/FEEDBACK_LOG.md). Preserve the stopping and record contracts, fix urgent access/data/security defects promptly, and review ordinary improvements in batches.
 
 29 October readiness review, 30 October configuration/contingency and 2 November teaching remain rollout checkpoints. Individual teacher/class setup and institutional arrangements remain their owners' responsibility. Earlier sprint narratives below are historical.
 
