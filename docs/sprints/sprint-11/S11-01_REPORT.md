@@ -1,5 +1,7 @@
 # S11-01 — NIT3004 first Intake reconnection
 
+This report records the initial S1 increment at `f5fce13`. Joseph subsequently approved S1–S9 revision; [S11-02_REPORT.md](S11-02_REPORT.md) supersedes statements below that later openings are unchanged. The original verification results remain historical, not the extended increment's results.
+
 ## Scope and basis
 
 Joseph reviewed the opening in a synthetic student demonstration on 26 October 2026 and approved the change. Start from main `edaa4ec` (PR #98). This is a pre-classroom usability finding, not measured learning improvement. The currently supported Intake teaching flow is NIT3004; NIT3003 design remains deferred.

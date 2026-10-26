@@ -2,7 +2,7 @@
 
 ## Current checkpoint — 26 October 2026
 
-Joseph opened [Sprint 11](docs/sprints/sprint-11/PLAN.md). Approved S11-01: NIT3004 first-Session project baseline and personal responsibility, with optional display-only hints, sentence starters and a collapsed example; friendlier first-Session shortcuts. No mandatory next-action question, prompt/provider change, new semantic stopping or NIT3003 implementation. Read [handoff](docs/sprints/sprint-11/HANDOFF.md) and preserve the closed Sprint 10 contracts below.
+Joseph opened [Sprint 11](docs/sprints/sprint-11/PLAN.md) and extended S11-01/02 to all NIT3004 S1–S9 openings: stage-specific short questions, optional display-only hints/starters/examples, friendlier S1 shortcuts and separately displayed prior context. Full historical role/actions remain in the source opening for interpretation, labelled as historical rather than current evidence. No mandatory next-action question, provider instruction change, new semantic stopping or NIT3003 implementation. Read [handoff](docs/sprints/sprint-11/HANDOFF.md) and preserve the closed Sprint 10 contracts below.
 
 Sprint 10 is CLOSED by Joseph after basic rehearsal passed: new teachers can create Sessions and students can log in. Baseline main is `901fd7254416818c1fdc8803bd20347d7db05176` (PR #97). The active phase is [real classroom feedback](docs/feedback/PLAN.md), with [a register](docs/feedback/FEEDBACK_LOG.md); consult [closeout](docs/sprints/sprint-10/CLOSEOUT.md) and [handoff](docs/sprints/sprint-10/HANDOFF.md). Older sprint checkpoints below are historical unless explicitly retained here.
 

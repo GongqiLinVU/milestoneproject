@@ -4,7 +4,7 @@
 
 ## Goal
 
-Learn whether students can complete their work without friction and whether the resulting records make teacher review more useful and efficient. Keep the deployed baseline stable while collecting real classroom evidence. Joseph opened [Sprint 11](../sprints/sprint-11/PLAN.md) on 26 October for one approved rehearsal finding: the first NIT3004 question needs a project baseline, a personal role and optional guidance. This does not authorize broader harness expansion.
+Learn whether students can complete their work without friction and whether the resulting records make teacher review more useful and efficient. Keep the deployed baseline stable while collecting real classroom evidence. Joseph opened [Sprint 11](../sprints/sprint-11/PLAN.md) on 26 October for the NIT3004 opening-question rehearsal findings, subsequently extending review to S1–S9. The scope is short stage-specific questions, optional guidance and readable previous context. This does not authorize broader harness expansion.
 
 ## Rollout
 

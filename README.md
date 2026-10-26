@@ -2,7 +2,7 @@
 
 ## Current phase — Sprint 11 and classroom feedback
 
-Joseph opened [Sprint 11](docs/sprints/sprint-11/PLAN.md) on **26 October 2026**. Its first approved increment refines the NIT3004 first check-in: existing project baseline and personal responsibility, with optional guidance. Structural stopping, record extraction and later-Session carryover stay unchanged. NIT3003 design is deferred. See [the handoff](docs/sprints/sprint-11/HANDOFF.md).
+Joseph opened [Sprint 11](docs/sprints/sprint-11/PLAN.md) on **26 October 2026**. The approved NIT3004 increment covers S1–S9: short stage-specific opening questions, optional guidance and separately displayed last-check-in context. Structural stopping and record extraction remain unchanged; full historical role/action context is retained. NIT3003 design is deferred. See [the handoff](docs/sprints/sprint-11/HANDOFF.md).
 
 Sprint 10 closed on **24 October 2026**, following Joseph's successful basic rehearsal, new-teacher Session creation and student login. See [closeout](docs/sprints/sprint-10/CLOSEOUT.md) and the active [feedback plan](docs/feedback/PLAN.md).
 

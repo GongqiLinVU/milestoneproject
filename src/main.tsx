@@ -1,5 +1,5 @@
 import {selectCurrentSession,intakePlanningEstimate,DEFAULT_CLASS_AI_BUDGET_USD} from './sessionPlanning';
-import {intakeStart} from './intakeStart';
+import {intakeStart,intakePriorContext,intakeOpeningText} from './intakeStart';
 import {useStaffSession} from './useStaffSession';
 import {TeacherAdministration,TeacherPasswordSetup,classLabel} from './TeacherAdministration';
 import {chatStopSaveReason,MAX_CHAT_CLARIFICATIONS,type QuestionMeta} from './intakeChatStop';
@@ -684,14 +684,7 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
       }
       const prior=nextContext.previousConfirmed?.studentRecord;
       if(prior)setAnswers(current=>({...current,responsibility:prior.responsibility.current,scope:prior.responsibility.current}));
-      const priorAction=prior?.next_action?.action?.trim();
-      const first=session.sessionNumber===1
-        ?intakeStart(session.sessionNumber).question!
-        :prior
-          ?priorAction
-            ?`In your last confirmed Intake, your responsibility was “${prior.responsibility.current}” and your next action was “${priorAction}”. Start there: what did you actually complete, change, test or discover since then? If the plan changed or nothing progressed, say that directly.`
-            :`In your last confirmed Intake, your responsibility was “${prior.responsibility.current}”. What did you actually complete, change, test or discover since then? If your responsibility changed or nothing progressed, say that directly.`
-          :`This is S${session.sessionNumber}: ${session.focus}. Start with one specific part you personally worked on since the previous class. What changed, and what observable result exists now?`;
+      const first=intakeOpeningText(session.sessionNumber,prior);
       setTurns([{actor:"system",purpose:"session starting point",text:first}]);
       setLoading(false);
     };
@@ -828,6 +821,7 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
     setBusy(false);
   }
   const saved=context?.confirmedRecord;
+  const previousCheckin=session.sessionNumber>1?intakePriorContext(context?.previousConfirmed?.studentRecord):null;
   const evidence=saved?.studentRecord||record;
   // R05: unsaved-exit protection for the conversational AI lifecycle. The opening
   // assistant turn is not student content; dirtiness is driven by student turns,
@@ -844,9 +838,10 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
     <main className="chat-intake-shell"><section className="chat-thread" aria-label="Session Intake conversation"><div className="chat-messages">
       {loading?<p className="empty-state">Loading Session Intake…</p>:saved?<IntakeRecordSummary record={saved.studentRecord} confirmedAt={saved.confirmedAt}/>:!context?.isOpen?<div className="chat-message assistant"><p>This Session Intake is closed. Your Teacher controls when it is available.</p></div>:<>
         {stage<4&&<div className="chat-round-guide" style={{marginBottom:"1.25rem",padding:"1rem 1.2rem",borderRadius:16,background:"#edf3ff",color:"#273c67",lineHeight:1.5}}><strong>{start.guideTitle}</strong><p style={{margin:".3rem 0 0"}}>{start.guideLead} We’ll ask at most {MAX_CHAT_CLARIFICATIONS} follow-up questions. You can review and finish whenever you’re ready.</p></div>}
-        <details className={`chat-transcript ${stage===4?"archived":"live"}`} open={stage!==4}><summary>View conversation</summary>{turns.map((turn,index)=><div key={index} className={`chat-message ${turn.actor==="student"?"student":"assistant"}`}><span>{turn.actor==="student"?"You":"Intake assistant"}{turn.source==="llm"?<b className="llm-message-badge">LLM</b>:turn.source==="fallback"?<b className="llm-message-badge">Fallback</b>:null}</span><p>{turn.text}</p>{turn.actor==="student"&&turn.evidenceChanges?.length?<button type="button" className="message-evidence-update" onClick={()=>openEvidence(turn.evidenceChanges||[])}><b>{turn.evidenceChanges.length} evidence field{turn.evidenceChanges.length===1?"":"s"} updated</b><span>{turn.evidenceChanges.map(value=>value.replace("_"," ")).join(" · ")} · View changes</span></button>:null}</div>)}
+        {stage<4&&previousCheckin&&<details className="intake-last-checkin" aria-label="Your last confirmed check-in"><summary>Your last check-in</summary><dl>{previousCheckin.role&&<div><dt>Your part last time</dt><dd>{previousCheckin.role}</dd></div>}{previousCheckin.action&&<div><dt>Your planned next step</dt><dd>{previousCheckin.action}</dd></div>}</dl><p>Roles and plans can change. Tell us if anything is different now.</p></details>}
+        <details className={`chat-transcript ${stage===4?"archived":"live"}`} open={stage!==4}><summary>View conversation</summary>{turns.map((turn,index)=><div key={index} className={`chat-message ${turn.actor==="student"?"student":"assistant"}`}><span>{turn.actor==="student"?"You":"Intake assistant"}{turn.source==="llm"?<b className="llm-message-badge">LLM</b>:turn.source==="fallback"?<b className="llm-message-badge">Fallback</b>:null}</span><p>{index===0&&turn.purpose==="session starting point"?start.question:turn.text}</p>{turn.actor==="student"&&turn.evidenceChanges?.length?<button type="button" className="message-evidence-update" onClick={()=>openEvidence(turn.evidenceChanges||[])}><b>{turn.evidenceChanges.length} evidence field{turn.evidenceChanges.length===1?"":"s"} updated</b><span>{turn.evidenceChanges.map(value=>value.replace("_"," ")).join(" · ")} · View changes</span></button>:null}</div>)}
         {busy&&stage<4&&!pendingReview&&<div className="chat-message assistant thinking"><span>Intake assistant</span><p role="status" aria-live="polite"><span className="intake-loading-spinner" aria-hidden="true"/>Thinking…</p></div>}</details>
-        {start.first&&stage===0&&turns.length===1&&!pendingReview&&<section className="intake-start-help" aria-label="Help with your first reply"><p>{start.hint}</p><details><summary>Need a starting point?</summary><p>You can use these sentence starters. There’s no need to answer every line.</p><ul>{start.sentenceStarters.map(text=><li key={text}>{text}</li>)}</ul></details><details><summary>See an example</summary><p>An illustration, not your project’s recorded progress:</p><p>{start.example}</p></details></section>}
+        {stage===0&&turns.length===1&&!pendingReview&&<section className="intake-start-help" aria-label="Help with your opening reply"><p>{start.hint}</p><details><summary>Need a starting point?</summary><p>You can use these sentence starters. There’s no need to answer every line.</p><ul>{start.sentenceStarters.map(text=><li key={text}>{text}</li>)}</ul></details><details><summary>See an example</summary><p>An illustration, not your project’s recorded progress:</p><p>{start.example}</p></details></section>}
         {stage===4&&record&&<IntakeReview answers={answers} onChange={correct} confirmed={confirmed} onConfirm={setConfirmed} onSave={()=>void submit()} busy={busy}/>}
 
         <div ref={endRef}/>

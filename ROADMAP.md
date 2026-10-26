@@ -4,7 +4,7 @@
 
 **Sprint 10 closed on 24 October 2026.** Joseph confirmed basic testing, new-teacher Session creation and student login. Baseline main: `901fd72` (PR #97). Delivered scope and evidence limits are in [Sprint 10 closeout](docs/sprints/sprint-10/CLOSEOUT.md).
 
-Joseph opened [Sprint 11](docs/sprints/sprint-11/PLAN.md) on 26 October 2026 following the first-Session demonstration rehearsal. S11-01 refines NIT3004 onboarding with a project baseline and personal-role question plus optional hints/example. NIT3003 design remains deferred. No broader harness, grading or knowledge-base scope is approved.
+Joseph opened [Sprint 11](docs/sprints/sprint-11/PLAN.md) on 26 October 2026 following the first-Session demonstration rehearsal, then extended review to all S1–S9 openings. S11-01/02 provide short NIT3004 stage-specific questions, optional hints/examples and a collapsed prior-context panel; full historical role/action context remains available. NIT3003 design remains deferred. No broader harness, grading or knowledge-base scope is approved.
 
 Continue real use across independently managed NIT3004 classes through [the feedback plan](docs/feedback/PLAN.md) and [register](docs/feedback/FEEDBACK_LOG.md). Preserve the stopping and record contracts, fix urgent access/data/security defects promptly, and review ordinary improvements in batches.
 
