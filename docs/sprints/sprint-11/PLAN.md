@@ -32,3 +32,10 @@ No schema/RPC migration, grading, knowledge base, new semantic harness or provid
 ## Evidence and release
 
 See [S11-01_REPORT.md](S11-01_REPORT.md) for the initial S1 increment and [S11-02_REPORT.md](S11-02_REPORT.md) for the approved S1–S9 extension. Keep one focused Draft PR; merge only after Joseph's approval. Continue real-use collection in [the feedback register](../../feedback/FEEDBACK_LOG.md).
+
+
+## S11-03 — Public classroom onboarding (approved 1 November 2026)
+
+Joseph approved refreshing the public landing page before teaching starts on 2 November. Lead with project progress, explain attendance versus progress, describe Form/AI review accurately, and give first-login guidance verified against StudentAccess. Retain the visual identity, four-week course overview and deliverables; make studio guidance independent of weekday and use supportive wording. Formal submission instructions remain teacher/course authoritative. Assessment Assistant remains a separate project.
+
+Acceptance: working student/teacher links, keyboard-accessible section links and expandable guides, readable desktop/mobile layouts, no public database-health request, production build. No auth, API, database, provider or Intake behaviour changes. See [S11-03_REPORT.md](S11-03_REPORT.md).

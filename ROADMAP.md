@@ -10,6 +10,8 @@ Continue real use across independently managed NIT3004 classes through [the feed
 
 29 October readiness review, 30 October configuration/contingency and 2 November teaching remain rollout checkpoints. Individual teacher/class setup and institutional arrangements remain their owners' responsibility. Earlier sprint narratives below are historical.
 
+S11-03 adds the approved public landing-page onboarding refresh: classroom routine, first-login guidance and clear progress-record boundaries. See [report](docs/sprints/sprint-11/S11-03_REPORT.md). Release pending review.
+
 ## Product direction
 
 Engineering Studio Platform will evolve from a single-course delivery portal into a reusable studio-based teaching platform. The roadmap deliberately prioritises reliable teaching workflows before analytics and AI.

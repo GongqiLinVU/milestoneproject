@@ -132,32 +132,43 @@ const titles: Record<Kind, string> = {
   review: "Poster Peer Review",
 };
 function PublicLanding() {
-  const [live, setLive] = useState<boolean | null>(null);
-  useEffect(() => {
-    supabase.from("portal_health").select("status").limit(1).then(({ error }) => setLive(!error));
-  }, []);
   return <>
-    <header>
+    <header className="landing-header">
       <a className="brand" href="#top">NIT3004 <span>Engineering Studio</span></a>
-      <nav><a href="#journey">Journey</a><a href="#deliverables">Deliverables</a><a href="/student">Student Login</a><a href="/admin">Teacher</a></nav>
+      <nav aria-label="Main navigation"><a href="#how-it-works">How it works</a><a href="#deliverables">Delivery evidence</a><a href="#journey">Four-week challenge</a><a href="/student">Student Login</a><a href="/admin">Teacher Login</a></nav>
     </header>
-    <main id="top">
+    <main id="top" className="landing-page">
       <section className="hero">
         <div>
-          <div className="eyebrow">Applied Project II · Four-week delivery studio</div>
-          <h1>Build less.<br/>Deliver <em>better.</em></h1>
-          <p>Course information stays open to everyone. Students can log in at any time to view their project, weekly activities and attendance. Session Check-in appears only when your teacher opens a studio session.</p>
+          <div className="eyebrow">Applied Project II · Your class companion</div>
+          <h1>Make progress.<br/>Show your <em>work.</em></h1>
+          <p>Keep track of your project, reflect on your progress, and prepare for useful conversations with your teacher.</p>
           <div className="actions">
             <a className="primary" href="/student">Student Login <ArrowRight size={18}/></a>
-            <a className="secondary" href="#journey">Explore the journey</a>
+            <a className="secondary" href="#how-it-works">How it works <ArrowDown size={18}/></a>
           </div>
-          <div className={"status " + (live ? "ok" : "")}><span></span>{live === null ? "Checking live data…" : live ? "Live data connected" : "Database setup required"}</div>
+          <LandingLoginHelp/>
         </div>
-        <div className="hero-card"><b>4 Weeks</b><span>1 Mission</span><span>1 Product</span><span>1 Team</span><small>∞ possibilities</small></div>
+        <aside className="hero-card landing-hero-card" aria-label="Your studio routine">
+          <small>YOUR STUDIO ROUTINE</small>
+          <span><b>01</b> Check in</span>
+          <span><b>02</b> Share progress</span>
+          <span><b>03</b> Plan your next step</span>
+          <p>Small updates. A clearer project journey.</p>
+        </aside>
       </section>
-      <Journey/><Studio/><Deliverables/>
+      <section id="how-it-works" className="landing-how">
+        <Head label="Each studio session" title="A clear picture, one session at a time." text="Log in to view your project, activities and attendance. When your teacher opens a session, follow these steps."/>
+        <div className="landing-steps">
+          <article><small>01 · ATTENDANCE</small><h3>Check in</h3><p>Check in when your teacher opens the session. This records your attendance.</p></article>
+          <article><small>02 · PROGRESS</small><h3>Share your progress</h3><p>Explain what you worked on, what is difficult, and your next step. Your teacher will choose a short form or an AI-guided conversation for your session.</p></article>
+          <article><small>03 · YOUR RECORD</small><h3>Review and save</h3><p>Check your answers before submitting. In an AI-guided conversation, review the summary, correct anything that does not reflect what you meant, and confirm it before saving.</p></article>
+        </div>
+        <div className="landing-purpose"><CircleHelp aria-hidden="true" size={24}/><div><b>Attendance and progress are separate steps.</b><p>Checking in records attendance; complete the progress activity your teacher has enabled as well. Your progress record helps your teacher understand where you need support. It does not automatically assign marks.</p></div></div>
+      </section>
+      <Deliverables/><DeliveryChallenge/>
     </main>
-    <footer>NIT3004 Engineering Studio · Learn to deliver like an engineer.</footer>
+    <footer>NIT3004 Engineering Studio · Keep progressing. Ask for support. Deliver with confidence.</footer>
   </>;
 }
 
@@ -854,6 +865,37 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
     <aside className={`evidence-drawer ${evidenceOpen?"open":""}`} aria-hidden={!evidenceOpen}><div className="evidence-drawer-head"><div><span>Evidence chain</span><h3>{saved?"Confirmed snapshot":"Progress across Sessions"}</h3></div><button type="button" className="secondary compact" onClick={()=>setEvidenceOpen(false)}>Close</button></div><div className="evidence-tabs" role="tablist"><button type="button" className={evidenceTab==="current"?"active":""} onClick={()=>setEvidenceTab("current")}>Current Session</button><button type="button" className={evidenceTab==="previous"?"active":""} onClick={()=>setEvidenceTab("previous")}>Previous Sessions <b>{historyRecords.length}</b></button></div>{evidenceTab==="current"&&stage<4&&!saved?<p>Your conversation is being kept. A structured summary will be prepared when you choose Review and confirm.</p>:evidenceTab==="current"?<dl><div className={highlightFields.includes("responsibility")?"highlight":""}><dt>Responsibility</dt><dd>{evidence?.responsibility.current||answers.responsibility||"Not captured yet"}</dd></div><div className={highlightFields.includes("claim")?"highlight":""}><dt>Claim</dt><dd>{evidence?.claims?.[0]?.statement||answers.progress||"Not captured yet"}</dd></div><div className={highlightFields.includes("evidence")?"highlight":""}><dt>Evidence</dt><dd>{evidence?.evidence?.[0]?.reference||answers.evidenceReference||(noProgress?"Not produced":"Not identified yet")}</dd></div><div className={highlightFields.includes("testing")?"highlight":""}><dt>Verification method</dt><dd>{evidence?.evidence?.[0]?.verification_method||answers.verificationMethod||"Not established"}</dd></div><div><dt>Testing</dt><dd>{evidence?.testing?.[0]?.execution_status?.replaceAll("_"," ")||(capturedFields.includes("testing")?answers.testingStatus.replaceAll("_"," "):"Not discussed yet")}{(evidence?.testing?.[0]?.method||answers.testingMethod)&&<p>Method: {evidence?.testing?.[0]?.method||answers.testingMethod}</p>}{(evidence?.testing?.[0]?.observed_result||answers.testingResult)&&<p>Observed: {evidence?.testing?.[0]?.observed_result||answers.testingResult}</p>}{(evidence?.testing?.[0]?.baseline_or_expected||answers.testingBaseline)&&<p>Expected / limitation: {evidence?.testing?.[0]?.baseline_or_expected||answers.testingBaseline}</p>}</dd></div><div className={highlightFields.includes("blocker")?"highlight":""}><dt>Blocker</dt><dd>{evidence?.blocker.description||answers.blockerDescription||answers.blockerStatus}</dd></div><div className={highlightFields.includes("next_action")?"highlight":""}><dt>Next action</dt><dd>{evidence?.next_action.action||answers.nextAction||"Not captured yet"}</dd></div></dl>:<div className="previous-evidence-list">{historyRecords.length?historyRecords.map(item=><article key={item.sessionNumber}><header><b>S{item.sessionNumber} · {item.focus}</b><small>{new Date(item.confirmedAt).toLocaleDateString()}</small></header><dl><div><dt>Responsibility</dt><dd>{item.record.responsibility.current}</dd></div><div><dt>Claim</dt><dd>{item.record.claims.map(claim=>claim.statement).join(" · ")}</dd></div><div><dt>Evidence</dt><dd>{item.record.evidence.map(value=>value.reference||value.availability.replaceAll("_"," ")).join(" · ")}</dd></div><div><dt>Testing</dt><dd>{item.record.testing?.[0]?.execution_status?.replaceAll("_"," ")||"not discussed"}{item.record.testing?.[0]?.baseline_or_expected?<p>Expected / limitation: {item.record.testing[0].baseline_or_expected}</p>:null}</dd></div><div><dt>Next action</dt><dd>{item.record.next_action.action}</dd></div></dl></article>):<p>No previous confirmed Intake exists for this student in this Block.</p>}</div>}<p>Student claims · Teacher verification is stored separately.</p></aside></main>{debugOpen&&<IntakeDebugViewer payload={debugPayload()} onClose={()=>setDebugOpen(false)} onDownload={downloadDebug}/>}{harnessOpen&&<IntakeHarnessViewer events={debugEvents} onClose={()=>setHarnessOpen(false)} onDownload={downloadDebug}/>}</div>,document.body);
 }
 
+function SessionAttendance({session}: {session: StudentSessionRecord}) {
+  const [busy, setBusy] = useState(false);
+  const [checkedInAt, setCheckedInAt] = useState(session.checkedInAt);
+  const [error, setError] = useState("");
+  useEffect(() => { setCheckedInAt(session.checkedInAt); }, [session.sessionId, session.checkedInAt]);
+  async function checkIn() {
+    if (busy || checkedInAt) return;
+    setBusy(true); setError("");
+    try {
+      const {data, error: checkInError} = await supabase.rpc("check_in_to_studio_session", {p_session_id: session.sessionId});
+      if (checkInError || !data) throw new Error("check_in_failed");
+      setCheckedInAt(String(data));
+      window.dispatchEvent(new CustomEvent("student-session-checkin"));
+    } catch {
+      setError("Check-in could not be completed. Try again or ask your teacher whether this session is still open.");
+    } finally { setBusy(false); }
+  }
+  return <div className="session-attendance-control">
+    {checkedInAt ? <strong className="session-checked-in" role="status"><CheckCircle2 size={18} aria-hidden="true"/>Checked in · {new Date(checkedInAt).toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"})}</strong>
+      : session.status === "open" ? <button type="button" className="primary session-checkin-button" disabled={busy} onClick={() => void checkIn()} aria-label={`Check in to Session ${session.sessionNumber}`}>{busy ? "Checking in…" : "Check in"}<CheckCircle2 size={18} aria-hidden="true"/></button>
+      : <span>No recorded check-in</span>}
+    {error && <p className="form-status" role="alert">{error}</p>}
+  </div>;
+}
+function SessionsHeading() {
+  const dialog = useRef<HTMLDialogElement>(null);
+  return <div className="sessions-heading"><h2>Sessions</h2><button type="button" className="secondary compact" aria-label="How sessions work" aria-haspopup="dialog" onClick={() => dialog.current?.showModal()}><CircleHelp size={20} aria-hidden="true"/></button>
+    <dialog ref={dialog} className="landing-help-dialog" aria-labelledby="sessions-help-title"><div className="landing-help-body"><h2 id="sessions-help-title">How sessions work</h2><p>Check in inside your open session to record attendance. Then complete the progress activity your teacher has enabled: a short form, an AI-guided conversation, or Work Track.</p><p>Attendance and progress are separate. Review your answers or summary before saving. Previous and upcoming sessions are folded away below; open them when you need them. Weekly Activities are separate class tasks.</p><button type="button" className="secondary" autoFocus onClick={() => dialog.current?.close()}>Close</button></div></dialog>
+  </div>;
+}
+
 function LegacyStudentSessions({intakePilot=false}:{intakePilot?:boolean}) {
   const [sessions, setSessions] = useState<StudentSessionRecord[]>([]);
   const [trackSession, setTrackSession] = useState<StudentSessionRecord | null>(null);
@@ -897,13 +939,13 @@ function LegacyStudentSessions({intakePilot=false}:{intakePilot?:boolean}) {
       document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, []);
-  return <section id="sessions" className="portal-panel portal-section student-sessions project-journey">
-    <Head label="Session Check-in" title="Your session journey." text={intakePilot?"Check-in records attendance. Session Intake captures your responsibility, evidence and next action as a claim for Teacher verification.":"Check-in records attendance for each studio session. Weekly Activities remain separate. Use Track to open the independent Session Task + Work Track for a live session."}/>
-    {loading ? <p className="empty-state">Loading your Project Journey…</p> : error ? <p className="empty-state error-state" role="alert">{error}</p> : sessions.length ? <div className="journey-session-list">
-      {sessions.map(item => <article key={item.sessionId} className={`journey-session-card ${item.status}`}>
+  const openSessions = sessions.filter(item => item.status === "open");
+  const previousSessions = sessions.filter(item => item.status === "closed");
+  const upcomingSessions = sessions.filter(item => item.status === "scheduled");
+  const renderSession = (item: StudentSessionRecord) => <article key={item.sessionId} className={`journey-session-card ${item.status}`}>
         <div className="journey-session-marker"><b>S{item.sessionNumber}</b><span>Week {item.weekNumber}</span></div>
         <div className="journey-session-content"><div className="journey-session-heading"><div><small>{new Date(`${item.sessionDate}T00:00:00`).toLocaleDateString()}</small><h3>{item.focus}</h3></div><span className={`activity-control-status ${item.status}`}>{item.status === "open" ? "Current" : item.status === "closed" ? "Closed" : "Upcoming"}</span></div>
-          <div className="journey-attendance">{item.checkedInAt ? <strong><CheckCircle2 size={14}/>Checked in · {new Date(item.checkedInAt).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</strong> : <span>{item.status === "closed" ? "No recorded Session Check-in" : item.status === "open" ? "Session Check-in is available from the top of this page" : "Session Check-in not open yet"}</span>}</div>
+          <div className="journey-attendance"><SessionAttendance session={item}/></div>
           <div className="journey-track-action">{item.sessionNumber===10 ? item.status==="open"||item.platformFeedbackCompletedAt?<button type="button" className="secondary compact" onClick={()=>setFeedbackSession(item)}>{item.platformFeedbackCompletedAt?"View feedback":"Feedback →"}</button>:<span>Feedback opens with S10</span>
             :item.intakeConfirmedAt||intakeHistory.some(past=>past.sessionId===item.sessionId)?<button type="button" className="secondary compact" onClick={()=>setHistoryView(item)}>View confirmed Intake</button>
             :item.workTrackUpdatedAt||((item.collectionMode??"disabled")==="disabled"&&item.workTrackStatus==="open")?<button type="button" className="secondary compact" onClick={()=>setTrackSession(item)}>{(item.collectionMode??"disabled")==="disabled"&&item.workTrackStatus==="open"?item.workTrackUpdatedAt?"Update track":"Complete Track →":"View Work Track history"}</button>
@@ -911,7 +953,13 @@ function LegacyStudentSessions({intakePilot=false}:{intakePilot?:boolean}) {
             {item.sessionNumber<=9&&!item.intakeConfirmedAt&&!intakeHistory.some(past=>past.sessionId===item.sessionId)&&!item.workTrackUpdatedAt&&(item.collectionMode??"disabled")!=="disabled"&&item.intakeStatus==="open"&&<small className="journey-action-note">{item.collectionMode==="ai"?"A short AI-guided chat about your work and next steps.":"A short form about your work and next steps."}</small>}
           </div>
         </div>
-      </article>)}
+      </article>;
+  return <section id="sessions" className="portal-panel portal-section student-sessions project-journey">
+    <SessionsHeading/>
+    {loading ? <p className="empty-state">Loading your Project Journey…</p> : error ? <p className="empty-state error-state" role="alert">{error}</p> : sessions.length ? <div className="journey-session-list">
+      {openSessions.length ? openSessions.map(renderSession) : <p className="empty-state">No session is open right now.</p>}
+      {previousSessions.length > 0 && <details className="session-group"><summary><span><b>Previous sessions</b><small>{previousSessions.length} previous</small></span><ChevronDown size={20} aria-hidden="true"/></summary><div>{previousSessions.map(renderSession)}</div></details>}
+      {upcomingSessions.length > 0 && <details className="session-group"><summary><span><b>Upcoming sessions</b><small>{upcomingSessions.length} prepared</small></span><ChevronDown size={20} aria-hidden="true"/></summary><div>{upcomingSessions.map(renderSession)}</div></details>}
     </div> : <p className="empty-state">No sessions have been prepared for this block yet.</p>}
     {intakeHistory.length>0 && <details className="session-group intake-history-group"><summary><span><b>Confirmed Session Intake history</b><small>{intakeHistory.length} confirmed · read-only</small></span><ChevronDown size={20}/></summary><div>{intakeHistory.map(item=><article key={item.sessionId} className="session-compact-row"><div><b>S{item.sessionNumber} · {item.focus}</b><small>Confirmed · read-only</small></div><button type="button" className="secondary compact" onClick={()=>setHistoryView(item)}>View confirmed Intake</button></article>)}</div></details>}
     {historyView&&<FormSessionIntakePrototype session={historyView} aiEnabled={false} onClose={()=>setHistoryView(null)} onSaved={()=>{}}/>}
@@ -949,11 +997,9 @@ function StudentSessions({intakePilot=false,intakeMode="disabled"}:{intakePilot?
     return()=>{active=false;window.removeEventListener("student-session-checkin",onRefresh);};
   },[]);
   const openSessions=sessions.filter(item=>item.status==="open").sort((a,b)=>b.sessionNumber-a.sessionNumber);
-  const available=sessions.filter(item=>intakes[item.sessionId]?.isOpen&&!intakes[item.sessionId]?.confirmedRecord).sort((a,b)=>b.sessionNumber-a.sessionNumber);
-  const primary=openSessions[0]||available[0]||sessions.find(item=>item.status==="scheduled")||sessions.at(-1)||null;
-  const others=sessions.filter(item=>item.sessionId!==primary?.sessionId);
+  const others=sessions.filter(item=>item.status!=="open");
   const catchup=others.filter(item=>intakes[item.sessionId]?.isOpen&&!intakes[item.sessionId]?.confirmedRecord);
-  const history=others.filter(item=>Boolean(intakes[item.sessionId]?.confirmedRecord)||item.status==="closed");
+  const history=others.filter(item=>!catchup.includes(item)&&(Boolean(intakes[item.sessionId]?.confirmedRecord)||item.status==="closed"));
   const upcoming=others.filter(item=>!catchup.includes(item)&&!history.includes(item));
   const action=(item:StudentSessionRecord,catchUp=false)=>{
     const intake=intakes[item.sessionId];
@@ -965,18 +1011,19 @@ function StudentSessions({intakePilot=false,intakeMode="disabled"}:{intakePilot?
   };
   const compact=(item:StudentSessionRecord,catchUp=false)=><article key={item.sessionId} className="session-compact-row"><div><b>S{item.sessionNumber} · {item.focus}</b><small>{new Date(item.sessionDate+"T00:00:00").toLocaleDateString()} · {intakes[item.sessionId]?.confirmedRecord?"Confirmed":catchUp?"Catch-up available":item.status==="closed"?"Closed":"Upcoming"}</small></div>{action(item,catchUp)}</article>;
   return <section id="sessions" className="portal-section session-first-area">
-    {loading?<p className="empty-state">Loading your Current Session…</p>:error?<p className="empty-state error-state" role="alert">{error}</p>:primary?<><article className="current-session-panel">
+    <SessionsHeading/>
+    {loading?<p className="empty-state">Loading your Current Session…</p>:error?<p className="empty-state error-state" role="alert">{error}</p>:sessions.length?<>{openSessions.length?openSessions.map(primary=><article key={primary.sessionId} className="current-session-panel">
       <div className="current-session-top"><div><span className="current-session-label">Current Session</span><h2>S{primary.sessionNumber} · {primary.focus}</h2><p>{primary.title}</p></div><span className={"activity-control-status "+primary.status}>{primary.status==="open"?"Current":primary.status==="closed"?"Closed":"Next"}</span></div>
       <div className="current-session-status">
-        <div><span>Attendance</span>{primary.checkedInAt?<b><CheckCircle2 size={16}/> Checked in</b>:<b>Check-in pending</b>}</div>
+        <div><span>Attendance</span><SessionAttendance session={primary}/></div>
         <div><span>Session Intake</span><b>{intakes[primary.sessionId]?.confirmedRecord?"Confirmed":intakes[primary.sessionId]?.isOpen?"Ready":"Not available"}</b></div>
       </div>
       <div className="current-session-action"><div><span>Your evidence journey</span><p>{intakes[primary.sessionId]?.confirmedRecord?"This Session is locked as read-only history.":intakes[primary.sessionId]?.isOpen?"Describe what happened, organise evidence and agree your next step.":"Your Teacher controls when this Intake opens."}</p></div>{action(primary)}</div>
-    </article>
+    </article>):<p className="empty-state">No session is open right now.</p>}
     {catchup.length>0&&<details className="session-group"><summary><span><b>Catch-up available</b><small>{catchup.length} incomplete Session{catchup.length===1?"":"s"}</small></span><ChevronDown size={20}/></summary><div>{catchup.map(item=>compact(item,true))}</div></details>}
-    {history.length>0&&<details className="session-group"><summary><span><b>Session history</b><small>{history.length} previous Session{history.length===1?"":"s"} · read-only after confirmation</small></span><ChevronDown size={20}/></summary><div>{history.map(item=>compact(item))}</div></details>}
+    {history.length>0&&<details className="session-group"><summary><span><b>Previous sessions</b><small>{history.length} previous Session{history.length===1?"":"s"} · read-only after confirmation</small></span><ChevronDown size={20}/></summary><div>{history.map(item=>compact(item))}</div></details>}
     {sessions.some(item=>item.workTrackUpdatedAt)&&<details className="session-group"><summary><span><b>Work Track history</b><small>Previous classroom workflow · read-only</small></span><ChevronDown size={20}/></summary><div>{sessions.filter(item=>item.workTrackUpdatedAt).map(item=><article className="session-compact-row" key={item.sessionId}><b>S{item.sessionNumber} · {item.focus}</b><button type="button" className="secondary compact" onClick={()=>setTrackHistoryView(item)}>View Work Track history</button></article>)}</div></details>}
-    {upcoming.length>0&&<details className="session-group"><summary><span><b>Upcoming Sessions</b><small>{upcoming.length} prepared</small></span><ChevronDown size={20}/></summary><div>{upcoming.map(item=>compact(item))}</div></details>}
+    {upcoming.length>0&&<details className="session-group"><summary><span><b>Upcoming sessions</b><small>{upcoming.length} prepared</small></span><ChevronDown size={20}/></summary><div>{upcoming.map(item=>compact(item))}</div></details>}
     </>:<p className="empty-state">No Sessions have been prepared for this Block.</p>}
     {trackHistoryView&&<SessionWorkTrackModal session={trackHistoryView} readOnly onClose={()=>setTrackHistoryView(null)} onSaved={()=>{}}/>}
     {collectionTrack&&<SessionWorkTrackModal session={collectionTrack} readOnly={(collectionTrack.collectionMode??intakeMode)!=="disabled"} onClose={()=>setCollectionTrack(null)} onSaved={()=>window.dispatchEvent(new CustomEvent("student-session-checkin"))}/>}
@@ -984,6 +1031,23 @@ function StudentSessions({intakePilot=false,intakeMode="disabled"}:{intakePilot?
       ?<SessionIntakeModal session={selected} onClose={()=>setSelected(null)} onSaved={()=>window.dispatchEvent(new CustomEvent("student-session-checkin"))}/>
       :<FormSessionIntakePrototype session={selected} aiEnabled={false} onClose={()=>setSelected(null)} onSaved={()=>window.dispatchEvent(new CustomEvent("student-session-checkin"))}/>)}
   </section>;
+}
+
+function WeeklyActivitiesHelp() {
+  const dialog = useRef<HTMLDialogElement>(null);
+  return <><button type="button" className="secondary compact" aria-label="About weekly activities" aria-haspopup="dialog" onClick={() => dialog.current?.showModal()}><CircleHelp size={20} aria-hidden="true"/></button><dialog ref={dialog} className="landing-help-dialog" aria-labelledby="weekly-help-title"><div className="landing-help-body"><h2 id="weekly-help-title">Weekly Activities</h2><p>These are class activities such as Team Health, implementation checks and peer review. Your teacher will tell you which activity to complete and when it is available.</p><p>They are separate from session attendance and your progress record. Open the activities below and choose the relevant week. If an activity is closed, ask your teacher.</p><button type="button" className="secondary" autoFocus onClick={() => dialog.current?.close()}>Close</button></div></dialog></>;
+}
+function StudentQuickLinks() {
+  function reveal(id: string) {
+    const target = document.getElementById(id);
+    if (target instanceof HTMLDetailsElement) target.open = true;
+    else { const details = target?.querySelector('details'); if (details) details.open = true; }
+  }
+  return <nav className="student-quick-links" aria-label="Student sections">
+    <a href="#sessions" onClick={() => reveal('sessions')}><ClipboardCheck size={18} aria-hidden="true"/>Sessions</a>
+    <a href="#weekly" onClick={() => reveal('weekly')}><ListChecks size={18} aria-hidden="true"/>Activities</a>
+    <a href="#my-project" onClick={() => reveal('my-project')}><Code2 size={18} aria-hidden="true"/>My Project</a>
+  </nav>;
 }
 
 function StudentPortal({ student }: { student: AuthenticatedStudent }) {
@@ -1006,35 +1070,17 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
   // existing non-Intake classroom workflow. A display label is never consulted.
   const intakeMode=student.intakeMode??"disabled";
   const intakePilot=intakeMode!=="disabled";
-  const projectPanel=<section id="my-project" className="portal-panel portal-section"><details className={intakePilot?"project-summary-details":""} open={!intakePilot}><summary className={intakePilot?"project-summary-toggle":undefined}><div><span>My Project</span><b>{student.projectName||"Project not assigned"}</b></div>{intakePilot&&<ChevronDown size={20}/>}</summary><div className="project-summary-body"><Head label="My Project" title={student.projectName || "Project not assigned"} text={student.projectDescription || (student.projectSource === "roster" ? "This project name came from the roster but is not yet linked to the Project Catalogue. Ask your teacher to complete the team assignment." : "Your teacher has not assigned a catalogue project to this team yet.")}/><div className="student-project-summary"><div><span>Student</span><b>{student.studentName}</b><small>{student.studentId}</small></div><div><span>Team</span><b>{student.teamName}</b><small>Roster assignment</small></div><div><span>Project</span><b>{student.projectName || "Pending"}</b><small>{student.projectCategory || "Catalogue assignment pending"}{student.projectDifficulty ? ` · ${student.projectDifficulty}` : ""}</small></div></div>{student.projectSource === "catalogue" && <div className="project-detail-grid"><article><span>Problem</span><p>{student.projectProblem || "Not specified"}</p></article><article><span>Target users</span><p>{student.projectTargetUsers || "Not specified"}</p></article><article className="wide"><span>Expected outcomes</span><p>{student.projectExpectedOutcomes || "Not specified"}</p></article></div>}</div></details></section>;
-  const activities=<details className="portal-section class-activities"><summary><div><span>Class Activities</span><b>Guided together during class</b><small>{weekStates?Object.values(weekStates).filter(Boolean).length:0} weeks available</small></div><span className="class-activities-show">Show activities <ChevronDown size={20}/></span></summary><div className="portal-weekly-section"><WeeklyHub open={(kind)=>{setReviewTarget(null);setForm(kind)}} openReview={(teamName)=>{setReviewTarget(teamName);setForm("review")}} weekStates={weekStates} presentationOrder={presentationOrder}/></div></details>;
+  const projectPanel=<section id="my-project" className="portal-panel portal-section"><details className="project-summary-details"><summary className="project-summary-toggle"><div><span>My Project</span><b>{student.projectName||"Project not assigned"}</b></div><ChevronDown size={20} aria-hidden="true"/></summary><div className="project-summary-body"><Head label="My Project" title={student.projectName || "Project not assigned"} text={student.projectDescription || (student.projectSource === "roster" ? "This project name came from the roster but is not yet linked to the Project Catalogue. Ask your teacher to complete the team assignment." : "Your teacher has not assigned a catalogue project to this team yet.")}/><div className="student-project-summary"><div><span>Student</span><b>{student.studentName}</b><small>{student.studentId}</small></div><div><span>Team</span><b>{student.teamName}</b><small>Roster assignment</small></div><div><span>Project</span><b>{student.projectName || "Pending"}</b><small>{student.projectCategory || "Catalogue assignment pending"}{student.projectDifficulty ? ` · ${student.projectDifficulty}` : ""}</small></div></div>{student.projectSource === "catalogue" && <div className="project-detail-grid"><article><span>Problem</span><p>{student.projectProblem || "Not specified"}</p></article><article><span>Target users</span><p>{student.projectTargetUsers || "Not specified"}</p></article><article className="wide"><span>Expected outcomes</span><p>{student.projectExpectedOutcomes || "Not specified"}</p></article></div>}</div></details></section>;
+  const activities=<section id="weekly" className="portal-section weekly-activities-panel"><div className="sessions-heading"><h2>Weekly Activities</h2><WeeklyActivitiesHelp/></div><details className="class-activities"><summary><div><b>View this week’s activities</b></div><span className="class-activities-show"><ChevronDown size={20} aria-hidden="true"/></span></summary><div className="portal-weekly-section"><WeeklyHub open={(kind)=>{setReviewTarget(null);setForm(kind)}} openReview={(teamName)=>{setReviewTarget(teamName);setForm("review")}} weekStates={weekStates} presentationOrder={presentationOrder}/></div></details></section>;
   return (
     <>
-      <header>
-        <a className="brand" href="/">
-          NIT3004 <span>Engineering Studio</span>
-        </a>
-        <nav>
-          <a href="#sessions">Current Session</a>
-          <a href="#my-project">My Project</a>
-          <a href="#weekly">Activities</a>
-          <a href="#get-help">Get Help</a>
-        </nav>
-      </header>
+      <header className="student-portal-header"><a className="brand" href="/">NIT3004 <span>Engineering Studio</span></a><a className="student-help-link" href="#get-help">Get Help</a></header>
+      <StudentQuickLinks/>
       <main id="top" className="student-portal-main">
-        <section className="portal-intro">
-          <div className="eyebrow">Authenticated student portal</div>
-          <div className="portal-title-row">
-            <h1>This Week</h1>
-            {student.studioSession && (
-              student.studioSession.checkedInAt
-                ? <a className="nav-session-status complete" href="#sessions" aria-label={`${student.studioSession.title}, checked in`}><CheckCircle2 size={16}/><span>{student.studioSession.title}</span><b>Checked in</b></a>
-                : <button className="nav-session-status attention" disabled={student.sessionCheckinBusy} onClick={() => void student.checkInToSession?.()} aria-label={`Check in to ${student.studioSession.title}`}><span>{student.studioSession.title}</span><b>{student.sessionCheckinBusy ? "Checking in…" : "Check in"}</b></button>
-            )}
-          </div>
-          <p>{student.blockLabel} · Complete only the activity that matters now.</p>
-        </section>
-        {intakePilot?<><StudentSessions intakePilot intakeMode={intakeMode}/>{projectPanel}{activities}</>:<><div className="portal-section portal-weekly-section"><WeeklyHub open={(kind)=>{setReviewTarget(null);setForm(kind)}} openReview={(teamName)=>{setReviewTarget(teamName);setForm("review")}} weekStates={weekStates} presentationOrder={presentationOrder}/></div>{projectPanel}<StudentSessions/></>}
+        <p className="student-class-label">{student.blockLabel}</p>
+        <StudentSessions intakePilot={intakePilot} intakeMode={intakeMode}/>
+        {activities}
+        {projectPanel}
         <section id="get-help" className="portal-panel portal-section"><Head label="Get Help" title="Bring one clear question." text="Use the support choices inside the current weekly activity so your teacher can connect help to the right evidence and session."/></section>
       </main>
       <footer>
@@ -1052,114 +1098,33 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
     </>
   );
 }
-function Journey() {
-  const weeks = [
-    [
-      "01",
-      "Commit",
-      "Studio Kickoff",
-      "Align the team, understand the rules and make a practical four-week plan.",
-    ],
-    [
-      "02",
-      "Prove",
-      "Design Review",
-      "Show what works, explain decisions and expose delivery risks.",
-    ],
-    [
-      "03",
-      "Validate",
-      "Project Expo",
-      "Peer-review products, evidence and document readiness.",
-    ],
-    [
-      "04",
-      "Deliver",
-      "Demo Day",
-      "Tell one credible delivery story supported by a working product.",
-    ],
-  ];
-  return (
-    <section id="journey" className="journey-collapsible">
-      <details>
-        <summary>
-          <div>
-            <span>Course journey · Four-week overview</span>
-            <h2>Commit. Prove. Validate. Deliver.</h2>
-          </div>
-          <span className="journey-expand">
-            <span>View journey</span>
-            <ChevronDown aria-hidden="true" />
-          </span>
-        </summary>
-        <div className="journey-content">
-          <div className="week-grid">
-            {weeks.map((w) => (
-              <article key={w[0]}>
-                <small>WEEK {w[0]}</small>
-                <h3>{w[1]}</h3>
-                <b>{w[2]}</b>
-                <p>{w[3]}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </details>
-    </section>
-  );
+function LandingLoginHelp() {
+  const dialog = useRef<HTMLDialogElement>(null);
+  return <>
+    <button type="button" className="landing-help-trigger" aria-haspopup="dialog" onClick={() => dialog.current?.showModal()}><CircleHelp size={20} aria-hidden="true"/>First time here?</button>
+    <dialog ref={dialog} className="landing-help-dialog" aria-labelledby="login-help-title" aria-describedby="login-help-intro" onClick={event => { if (event.target === event.currentTarget) dialog.current?.close(); }}>
+      <div className="landing-help-body">
+        <div className="eyebrow">Getting started</div>
+        <h2 id="login-help-title">Your first login</h2>
+        <p id="login-help-intro">Your teacher provides your account. There is no public registration.</p>
+        <ol><li>Open Student Login and enter your Student ID and the individual password provided by your teacher.</li><li>When prompted, choose and confirm your own password to activate your account.</li><li>Check your class, team and project. If your team is still being arranged, follow the message shown and ask your teacher for help.</li></ol>
+        <p>Missing login details or unable to sign in? Ask your teacher. If you have forgotten your password, enter your Student ID on the login page and choose Forgot password.</p>
+        <div className="actions"><button type="button" className="secondary" autoFocus onClick={() => dialog.current?.close()}>Close</button><a className="primary" href="/student">Student Login <ArrowRight size={18}/></a></div>
+      </div>
+    </dialog>
+  </>;
 }
-function Studio() {
-  return (
-    <section className="dark studio-collapsible">
-      <details>
-        <summary>
-          <div>
-            <span>Monday Studio · First session guide</span>
-            <h2>The one session every team protects.</h2>
-          </div>
-          <span className="studio-expand">
-            <span>View session guide</span>
-            <ChevronDown aria-hidden="true" />
-          </span>
-        </summary>
-        <div className="studio-content">
-          <p className="studio-flow">
-            Industry story → team stand-up → design review → workshop → checkpoint → next mission.
-          </p>
-          <div className="principles">
-            {[
-              [
-                Users,
-                "Show up",
-                "Real engineering teams protect shared delivery time.",
-              ],
-              [
-                Presentation,
-                "Speak up",
-                "Every member should explain decisions and contribution.",
-              ],
-              [
-                ClipboardCheck,
-                "Help another team",
-                "Peer feedback is part of professional practice.",
-              ],
-              [
-                CheckCircle2,
-                "Demo over excuses",
-                "Evidence of working software matters.",
-              ],
-            ].map(([Icon, t, p]: any) => (
-              <div key={t}>
-                <Icon />
-                <b>{t}</b>
-                <p>{p}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </details>
-    </section>
-  );
+function DeliveryChallenge() {
+  const stages = [
+    ["01", "Commit", "What will you deliver?", "Agree on a realistic scope and make your part clear."],
+    ["02", "Prove", "Can you show it working?", "Demonstrate the core flow and explain a design decision."],
+    ["03", "Validate", "What did testing change?", "Use tests and peer feedback to choose what to improve."],
+    ["04", "Deliver", "Can someone else use it?", "Bring the product, documentation and demonstration together."],
+  ];
+  return <section id="journey" className="landing-challenge dark">
+    <Head label="The four-week challenge" title="Bring one better answer each week." text="Bring something to show, a decision to explain, and a question to explore together."/>
+    <div className="landing-challenge-grid">{stages.map(([week, title, question, purpose]) => <article key={week}><small>WEEK {week}</small><h3>{title}</h3><b>{question}</b><p>{purpose}</p></article>)}</div>
+  </section>;
 }
 function WeeklyHub({
   open,
@@ -1180,7 +1145,7 @@ function WeeklyHub({
     { number: 4 as const, label: "Deliver", hint: "Prepare presentation" },
   ];
   return (
-    <section id="weekly" className="weekly-hub">
+    <section className="weekly-hub">
       <Head
         label="Weekly Check-in"
         title="One place for every week."
@@ -1353,6 +1318,7 @@ function Deliverables() {
       <Head
         label="Delivery evidence"
         title="One delivery story, three forms of evidence."
+        text="Use these as a course overview. Follow your teacher’s current assessment brief, deadlines and submission instructions; your class progress record does not replace formal submissions."
       />
       <div className="deliverables">
         {[
