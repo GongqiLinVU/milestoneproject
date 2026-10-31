@@ -29,3 +29,8 @@ Focused Draft PR for review. Not merged or production deployed by this task.
 Joseph requested a shorter first-day teaching surface after reviewing the initial change. The main sequence is now session routine → delivery evidence → one four-week challenge. The former Journey and Studio sections are merged into four concrete weekly questions (scope, working flow, validation and handover), avoiding a second explanation of the session routine. First-login instructions move to a question-mark trigger opening a native modal dialog with labelled heading, Close button, Escape handling and browser-managed focus containment/return. Navigation follows the presentation order.
 
 Production build and diff checks repeated. Visual and modal browser acceptance remain pending under the environment limits above; the Vercel Preview also requires Vercel authentication.
+
+
+## Student My Project refinement
+
+Joseph requested My Project collapsed by default after login. The existing details/summary styling now applies to every progress mode, rather than only AI Intake. The label and project title use separate rows with increased spacing, wrapped titles and a persistent expand chevron. Expanded content has a dividing line. No data or authentication behaviour changes. Build and diff checks pass; authenticated visual acceptance remains pending.

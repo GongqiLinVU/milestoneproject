@@ -1917,12 +1917,15 @@ button.danger:hover {
 .session-compact-row>div{display:grid;gap:.25rem}
 .session-compact-row small{color:#6b766f}
 .project-summary-details>summary{list-style:none;cursor:pointer}
-.project-summary-toggle{display:flex;align-items:center;justify-content:space-between}
-.project-summary-toggle>div{display:grid;gap:.3rem}
+.project-summary-toggle{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.35rem 0}
+.project-summary-toggle>div{display:grid;gap:.65rem;min-width:0}
 .project-summary-toggle span,.class-activities>summary>div>span{color:#245cff;font-size:.75rem;font-weight:850;letter-spacing:.08em;text-transform:uppercase}
 .project-summary-toggle b,.class-activities>summary b{font-size:1.15rem}
-.project-summary-body{padding-top:1.25rem}
-.project-summary-details:not([open])+.project-summary-body{display:none}
+.project-summary-toggle b{line-height:1.5;overflow-wrap:anywhere}
+.project-summary-toggle>svg{flex-shrink:0}
+.project-summary-toggle:focus-visible{outline:3px solid var(--blue);outline-offset:6px;border-radius:4px}
+.project-summary-body{margin-top:1rem;padding-top:1.5rem;border-top:1px solid var(--line)}
+.project-summary-details:not([open])>.project-summary-body{display:none}
 .class-activities{padding:0;overflow:hidden}
 .class-activities>summary{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1.35rem clamp(1.25rem,4vw,2.25rem);cursor:pointer;list-style:none}
 .class-activities>summary>div{display:grid;gap:.25rem}
