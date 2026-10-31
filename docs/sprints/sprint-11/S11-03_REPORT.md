@@ -56,3 +56,8 @@ Attendance component server-render checks passed for open, closed, scheduled and
 ## Check-in visual feedback
 
 Joseph requested the original blue attention treatment inside the Session card. Unrecorded/open attendance uses the platform blue with the existing pulse slowed to 2.8 seconds. Submitting disables animation; completed attendance remains a static green timestamp. Reduced-motion preference disables pulsing. Production build/diff checks repeated; no live attendance writes.
+
+
+## Persistent student shortcuts
+
+Joseph requested removal of the oversized This Week introduction and “Complete only…” sentence. A fixed desktop column links to Sessions, Activities and My Project; smaller screens use a fixed bottom shortcut row with reserved content space. Activity/project shortcuts reveal the disclosure before navigating. Class identity remains as a small label. Weekly Activities gets a separate question-mark help dialog outside its disclosure summary. Build/diff checks repeated; browser visual and click acceptance remain pending.

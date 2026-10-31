@@ -2336,3 +2336,23 @@ button.danger:hover {
 .session-attendance-control .session-checkin-button:focus-visible{outline:3px solid #2456f580;outline-offset:5px}
 .session-attendance-control .session-checkin-button:disabled{animation:none}
 @media(prefers-reduced-motion:reduce){.session-attendance-control .session-checkin-button{animation:none}}
+
+/* Persistent student section shortcuts replace the oversized introduction. */
+.student-portal-main{padding-left:184px}
+.student-class-label{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:24px 4px 16px;color:var(--muted);font-size:14px}
+.student-portal-header .student-help-link{color:var(--muted);text-decoration:none;font-size:14px}
+.student-quick-links{position:fixed;left:16px;top:140px;z-index:12;width:156px;display:flex;flex-direction:column;gap:8px;padding:10px;border:1px solid var(--line);border-radius:18px;background:#ffffffed;box-shadow:0 8px 24px #17202a12;backdrop-filter:blur(12px)}
+.student-quick-links a{display:flex;align-items:center;gap:8px;padding:13px 10px;border-radius:12px;color:var(--ink);font-weight:700;font-size:14px;white-space:nowrap}
+.student-quick-links a:hover,.student-quick-links a:focus-visible{background:#edf2ff;color:var(--blue)}
+.student-quick-links a:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.weekly-activities-panel>.sessions-heading{margin-bottom:16px}
+.weekly-activities-panel .class-activities{border:1px solid var(--line);border-radius:16px}
+.weekly-activities-panel .portal-weekly-section{padding:20px}
+@media(max-width:900px){
+ .student-portal-main{padding-left:0;padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+ .student-quick-links{top:auto;bottom:calc(12px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100% - 20px);flex-direction:row;gap:4px;padding:6px}
+ .student-quick-links a{padding:12px 10px;font-size:13px;gap:6px}
+ .student-portal-main .portal-section{scroll-margin-top:90px}
+}
+@media(max-width:360px){.student-quick-links a{padding:12px 8px;font-size:12px}.student-quick-links a svg{width:15px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}

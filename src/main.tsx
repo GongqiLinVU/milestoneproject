@@ -1033,6 +1033,23 @@ function StudentSessions({intakePilot=false,intakeMode="disabled"}:{intakePilot?
   </section>;
 }
 
+function WeeklyActivitiesHelp() {
+  const dialog = useRef<HTMLDialogElement>(null);
+  return <><button type="button" className="secondary compact" aria-label="About weekly activities" aria-haspopup="dialog" onClick={() => dialog.current?.showModal()}><CircleHelp size={20} aria-hidden="true"/></button><dialog ref={dialog} className="landing-help-dialog" aria-labelledby="weekly-help-title"><div className="landing-help-body"><h2 id="weekly-help-title">Weekly Activities</h2><p>These are class activities such as Team Health, implementation checks and peer review. Your teacher will tell you which activity to complete and when it is available.</p><p>They are separate from session attendance and your progress record. Open the activities below and choose the relevant week. If an activity is closed, ask your teacher.</p><button type="button" className="secondary" autoFocus onClick={() => dialog.current?.close()}>Close</button></div></dialog></>;
+}
+function StudentQuickLinks() {
+  function reveal(id: string) {
+    const target = document.getElementById(id);
+    if (target instanceof HTMLDetailsElement) target.open = true;
+    else { const details = target?.querySelector('details'); if (details) details.open = true; }
+  }
+  return <nav className="student-quick-links" aria-label="Student sections">
+    <a href="#sessions" onClick={() => reveal('sessions')}><ClipboardCheck size={18} aria-hidden="true"/>Sessions</a>
+    <a href="#weekly" onClick={() => reveal('weekly')}><ListChecks size={18} aria-hidden="true"/>Activities</a>
+    <a href="#my-project" onClick={() => reveal('my-project')}><Code2 size={18} aria-hidden="true"/>My Project</a>
+  </nav>;
+}
+
 function StudentPortal({ student }: { student: AuthenticatedStudent }) {
   const [form, setForm] = useState<Kind | null>(null);
   const [reviewTarget, setReviewTarget] = useState<string | null>(null);
@@ -1054,29 +1071,13 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
   const intakeMode=student.intakeMode??"disabled";
   const intakePilot=intakeMode!=="disabled";
   const projectPanel=<section id="my-project" className="portal-panel portal-section"><details className="project-summary-details"><summary className="project-summary-toggle"><div><span>My Project</span><b>{student.projectName||"Project not assigned"}</b></div><ChevronDown size={20} aria-hidden="true"/></summary><div className="project-summary-body"><Head label="My Project" title={student.projectName || "Project not assigned"} text={student.projectDescription || (student.projectSource === "roster" ? "This project name came from the roster but is not yet linked to the Project Catalogue. Ask your teacher to complete the team assignment." : "Your teacher has not assigned a catalogue project to this team yet.")}/><div className="student-project-summary"><div><span>Student</span><b>{student.studentName}</b><small>{student.studentId}</small></div><div><span>Team</span><b>{student.teamName}</b><small>Roster assignment</small></div><div><span>Project</span><b>{student.projectName || "Pending"}</b><small>{student.projectCategory || "Catalogue assignment pending"}{student.projectDifficulty ? ` · ${student.projectDifficulty}` : ""}</small></div></div>{student.projectSource === "catalogue" && <div className="project-detail-grid"><article><span>Problem</span><p>{student.projectProblem || "Not specified"}</p></article><article><span>Target users</span><p>{student.projectTargetUsers || "Not specified"}</p></article><article className="wide"><span>Expected outcomes</span><p>{student.projectExpectedOutcomes || "Not specified"}</p></article></div>}</div></details></section>;
-  const activities=<details id="weekly" className="portal-section class-activities"><summary><div><span>Weekly Activities</span><b>View this week’s activities</b></div><span className="class-activities-show"><ChevronDown size={20} aria-hidden="true"/></span></summary><div className="portal-weekly-section"><WeeklyHub open={(kind)=>{setReviewTarget(null);setForm(kind)}} openReview={(teamName)=>{setReviewTarget(teamName);setForm("review")}} weekStates={weekStates} presentationOrder={presentationOrder}/></div></details>;
+  const activities=<section id="weekly" className="portal-section weekly-activities-panel"><div className="sessions-heading"><h2>Weekly Activities</h2><WeeklyActivitiesHelp/></div><details className="class-activities"><summary><div><b>View this week’s activities</b></div><span className="class-activities-show"><ChevronDown size={20} aria-hidden="true"/></span></summary><div className="portal-weekly-section"><WeeklyHub open={(kind)=>{setReviewTarget(null);setForm(kind)}} openReview={(teamName)=>{setReviewTarget(teamName);setForm("review")}} weekStates={weekStates} presentationOrder={presentationOrder}/></div></details></section>;
   return (
     <>
-      <header>
-        <a className="brand" href="/">
-          NIT3004 <span>Engineering Studio</span>
-        </a>
-        <nav>
-          <a href="#sessions">Current Session</a>
-          <a href="#weekly">Weekly Activities</a>
-          <a href="#my-project">My Project</a>
-          <a href="#get-help">Get Help</a>
-        </nav>
-      </header>
+      <header className="student-portal-header"><a className="brand" href="/">NIT3004 <span>Engineering Studio</span></a><a className="student-help-link" href="#get-help">Get Help</a></header>
+      <StudentQuickLinks/>
       <main id="top" className="student-portal-main">
-        <section className="portal-intro">
-          <div className="eyebrow">Authenticated student portal</div>
-          <div className="portal-title-row">
-            <h1>This Week</h1>
-
-          </div>
-          <p>{student.blockLabel} · Complete only the activity that matters now.</p>
-        </section>
+        <p className="student-class-label">{student.blockLabel}</p>
         <StudentSessions intakePilot={intakePilot} intakeMode={intakeMode}/>
         {activities}
         {projectPanel}
