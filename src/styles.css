@@ -2322,3 +2322,11 @@ button.danger:hover {
 .landing-challenge-grid p { color: #c8d1da; line-height: 1.6; }
 @media (max-width: 900px) { .landing-challenge-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 520px) { .landing-challenge-grid { grid-template-columns: 1fr; } .landing-help-body { padding: 24px; } }
+
+.sessions-heading{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+.sessions-heading>h2{font-size:28px;letter-spacing:-.03em}
+.sessions-heading>button{padding:9px}
+.session-attendance-control{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.session-checked-in{display:inline-flex;align-items:center;gap:8px;color:#237442;font-size:14px}
+.session-attendance-control .form-status{flex-basis:100%;font-size:14px;line-height:1.5}
+.session-attendance-control button:disabled{opacity:.65;cursor:wait}

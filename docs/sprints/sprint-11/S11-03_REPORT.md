@@ -44,3 +44,10 @@ Joseph approved Sessions first, Weekly Activities second (collapsed by default),
 ## Session visibility refinement
 
 Joseph approved expanding only teacher-opened Sessions, with previous/upcoming groups collapsed. Both legacy Work Track and Intake layouts now follow classroom status, independent of intake availability. No open classroom shows an explicit “No session is open right now” message; it no longer promotes a scheduled, closed or catch-up Session to Current. Multiple open classrooms remain visible. Existing read-only history and collapsed catch-up entry points are preserved, with catch-up excluded from the duplicate previous list. No server eligibility or submission rules change. Build/diff verification performed; authenticated visual acceptance remains pending.
+
+
+## In-session attendance
+
+Joseph reported students missed the page-level attendance badge. Check-in is now inside each open session card in both legacy and Intake layouts, using the existing authenticated check_in_to_studio_session RPC with that card’s session ID. Success displays the saved timestamp in place and refreshes journey data; failures preserve a retry button with an inline error. Closed/scheduled sessions have no check-in action. The redundant page-level badge is removed. “Your session journey” and its paragraph become a compact Sessions heading with a question-mark modal. No permissions, schema or progress-submission rules change. Build/diff checks performed; live authenticated attendance writes and visual acceptance not exercised.
+
+Attendance component server-render checks passed for open, closed, scheduled and already-checked-in fixtures: only open/unrecorded renders a check-in button; confirmed attendance renders the saved status. These checks make no network/database calls and do not validate live RPC success/failure or browser interaction.
