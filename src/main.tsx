@@ -884,7 +884,7 @@ function SessionAttendance({session}: {session: StudentSessionRecord}) {
   }
   return <div className="session-attendance-control">
     {checkedInAt ? <strong className="session-checked-in" role="status"><CheckCircle2 size={18} aria-hidden="true"/>Checked in · {new Date(checkedInAt).toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"})}</strong>
-      : session.status === "open" ? <button type="button" className="primary" disabled={busy} onClick={() => void checkIn()} aria-label={`Check in to Session ${session.sessionNumber}`}>{busy ? "Checking in…" : "Check in"}<CheckCircle2 size={18} aria-hidden="true"/></button>
+      : session.status === "open" ? <button type="button" className="primary session-checkin-button" disabled={busy} onClick={() => void checkIn()} aria-label={`Check in to Session ${session.sessionNumber}`}>{busy ? "Checking in…" : "Check in"}<CheckCircle2 size={18} aria-hidden="true"/></button>
       : <span>No recorded check-in</span>}
     {error && <p className="form-status" role="alert">{error}</p>}
   </div>;

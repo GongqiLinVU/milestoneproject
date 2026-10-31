@@ -51,3 +51,8 @@ Joseph approved expanding only teacher-opened Sessions, with previous/upcoming g
 Joseph reported students missed the page-level attendance badge. Check-in is now inside each open session card in both legacy and Intake layouts, using the existing authenticated check_in_to_studio_session RPC with that card’s session ID. Success displays the saved timestamp in place and refreshes journey data; failures preserve a retry button with an inline error. Closed/scheduled sessions have no check-in action. The redundant page-level badge is removed. “Your session journey” and its paragraph become a compact Sessions heading with a question-mark modal. No permissions, schema or progress-submission rules change. Build/diff checks performed; live authenticated attendance writes and visual acceptance not exercised.
 
 Attendance component server-render checks passed for open, closed, scheduled and already-checked-in fixtures: only open/unrecorded renders a check-in button; confirmed attendance renders the saved status. These checks make no network/database calls and do not validate live RPC success/failure or browser interaction.
+
+
+## Check-in visual feedback
+
+Joseph requested the original blue attention treatment inside the Session card. Unrecorded/open attendance uses the platform blue with the existing pulse slowed to 2.8 seconds. Submitting disables animation; completed attendance remains a static green timestamp. Reduced-motion preference disables pulsing. Production build/diff checks repeated; no live attendance writes.

@@ -2330,3 +2330,9 @@ button.danger:hover {
 .session-checked-in{display:inline-flex;align-items:center;gap:8px;color:#237442;font-size:14px}
 .session-attendance-control .form-status{flex-basis:100%;font-size:14px;line-height:1.5}
 .session-attendance-control button:disabled{opacity:.65;cursor:wait}
+
+.session-attendance-control .session-checkin-button{background:var(--blue);color:#fff;animation:checkin-pulse 2.8s ease-in-out infinite}
+.session-attendance-control .session-checkin-button:hover{background:#1945d4}
+.session-attendance-control .session-checkin-button:focus-visible{outline:3px solid #2456f580;outline-offset:5px}
+.session-attendance-control .session-checkin-button:disabled{animation:none}
+@media(prefers-reduced-motion:reduce){.session-attendance-control .session-checkin-button{animation:none}}
