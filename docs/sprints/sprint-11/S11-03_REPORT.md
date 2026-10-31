@@ -22,3 +22,10 @@ PublicLanding, Studio, Journey, Deliverables and scoped landing CSS only, plus S
 ## Release
 
 Focused Draft PR for review. Not merged or production deployed by this task.
+
+
+## Classroom presentation refinement
+
+Joseph requested a shorter first-day teaching surface after reviewing the initial change. The main sequence is now session routine → delivery evidence → one four-week challenge. The former Journey and Studio sections are merged into four concrete weekly questions (scope, working flow, validation and handover), avoiding a second explanation of the session routine. First-login instructions move to a question-mark trigger opening a native modal dialog with labelled heading, Close button, Escape handling and browser-managed focus containment/return. Navigation follows the presentation order.
+
+Production build and diff checks repeated. Visual and modal browser acceptance remain pending under the environment limits above; the Vercel Preview also requires Vercel authentication.

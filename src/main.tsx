@@ -135,7 +135,7 @@ function PublicLanding() {
   return <>
     <header className="landing-header">
       <a className="brand" href="#top">NIT3004 <span>Engineering Studio</span></a>
-      <nav aria-label="Main navigation"><a href="#how-it-works">How it works</a><a href="#journey">Journey</a><a href="#deliverables">Deliverables</a><a href="/student">Student Login</a><a href="/admin">Teacher Login</a></nav>
+      <nav aria-label="Main navigation"><a href="#how-it-works">How it works</a><a href="#deliverables">Delivery evidence</a><a href="#journey">Four-week challenge</a><a href="/student">Student Login</a><a href="/admin">Teacher Login</a></nav>
     </header>
     <main id="top" className="landing-page">
       <section className="hero">
@@ -147,7 +147,7 @@ function PublicLanding() {
             <a className="primary" href="/student">Student Login <ArrowRight size={18}/></a>
             <a className="secondary" href="#how-it-works">How it works <ArrowDown size={18}/></a>
           </div>
-          <p className="landing-login-note">First time here? Your teacher will provide your login details.</p>
+          <LandingLoginHelp/>
         </div>
         <aside className="hero-card landing-hero-card" aria-label="Your studio routine">
           <small>YOUR STUDIO ROUTINE</small>
@@ -166,11 +166,7 @@ function PublicLanding() {
         </div>
         <div className="landing-purpose"><CircleHelp aria-hidden="true" size={24}/><div><b>Attendance and progress are separate steps.</b><p>Checking in records attendance; complete the progress activity your teacher has enabled as well. Your progress record helps your teacher understand where you need support. It does not automatically assign marks.</p></div></div>
       </section>
-      <section className="landing-first-time" aria-labelledby="first-time-title">
-        <div><div className="eyebrow">First time here?</div><h2 id="first-time-title">Start with your teacher’s login details.</h2></div>
-        <div><ol><li>Open Student Login and enter your Student ID and the individual password provided by your teacher.</li><li>When prompted, choose and confirm your own password to activate your account.</li><li>Check your class, team and project. If your team is still being arranged, follow the message shown and ask your teacher for help.</li></ol><p>There is no public registration. Missing login details or unable to sign in? Ask your teacher. If you have forgotten your password, enter your Student ID on the login page and choose Forgot password.</p><a className="primary" href="/student">Student Login <ArrowRight size={18}/></a></div>
-      </section>
-      <Journey/><Studio/><Deliverables/>
+      <Deliverables/><DeliveryChallenge/>
     </main>
     <footer>NIT3004 Engineering Studio · Keep progressing. Ask for support. Deliver with confidence.</footer>
   </>;
@@ -1067,114 +1063,33 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
     </>
   );
 }
-function Journey() {
-  const weeks = [
-    [
-      "01",
-      "Commit",
-      "Studio Kickoff",
-      "Align the team, understand the rules and make a practical four-week plan.",
-    ],
-    [
-      "02",
-      "Prove",
-      "Implementation and review",
-      "Show what works, explain decisions and expose delivery risks.",
-    ],
-    [
-      "03",
-      "Validate",
-      "Testing and feedback",
-      "Peer-review products, evidence and document readiness.",
-    ],
-    [
-      "04",
-      "Deliver",
-      "Demo Day",
-      "Tell one credible delivery story supported by a working product.",
-    ],
-  ];
-  return (
-    <section id="journey" className="journey-collapsible">
-      <details>
-        <summary>
-          <div>
-            <span>Course journey · Four-week overview</span>
-            <h2>Commit. Prove. Validate. Deliver.</h2>
-          </div>
-          <span className="journey-expand">
-            <span>View journey</span>
-            <ChevronDown aria-hidden="true" />
-          </span>
-        </summary>
-        <div className="journey-content">
-          <div className="week-grid">
-            {weeks.map((w) => (
-              <article key={w[0]}>
-                <small>WEEK {w[0]}</small>
-                <h3>{w[1]}</h3>
-                <b>{w[2]}</b>
-                <p>{w[3]}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </details>
-    </section>
-  );
+function LandingLoginHelp() {
+  const dialog = useRef<HTMLDialogElement>(null);
+  return <>
+    <button type="button" className="landing-help-trigger" aria-haspopup="dialog" onClick={() => dialog.current?.showModal()}><CircleHelp size={20} aria-hidden="true"/>First time here?</button>
+    <dialog ref={dialog} className="landing-help-dialog" aria-labelledby="login-help-title" aria-describedby="login-help-intro" onClick={event => { if (event.target === event.currentTarget) dialog.current?.close(); }}>
+      <div className="landing-help-body">
+        <div className="eyebrow">Getting started</div>
+        <h2 id="login-help-title">Your first login</h2>
+        <p id="login-help-intro">Your teacher provides your account. There is no public registration.</p>
+        <ol><li>Open Student Login and enter your Student ID and the individual password provided by your teacher.</li><li>When prompted, choose and confirm your own password to activate your account.</li><li>Check your class, team and project. If your team is still being arranged, follow the message shown and ask your teacher for help.</li></ol>
+        <p>Missing login details or unable to sign in? Ask your teacher. If you have forgotten your password, enter your Student ID on the login page and choose Forgot password.</p>
+        <div className="actions"><button type="button" className="secondary" autoFocus onClick={() => dialog.current?.close()}>Close</button><a className="primary" href="/student">Student Login <ArrowRight size={18}/></a></div>
+      </div>
+    </dialog>
+  </>;
 }
-function Studio() {
-  return (
-    <section className="dark studio-collapsible">
-      <details>
-        <summary>
-          <div>
-            <span>Your studio session</span>
-            <h2>Come ready to share and learn.</h2>
-          </div>
-          <span className="studio-expand">
-            <span>View session guide</span>
-            <ChevronDown aria-hidden="true" />
-          </span>
-        </summary>
-        <div className="studio-content">
-          <p className="studio-flow">
-            Bring your current work, explain your decisions, and leave with a practical next step. Your teacher will guide the activities for each class.
-          </p>
-          <div className="principles">
-            {[
-              [
-                Users,
-                "Show up",
-                "Real engineering teams protect shared delivery time.",
-              ],
-              [
-                Presentation,
-                "Speak up",
-                "Every member should explain decisions and contribution.",
-              ],
-              [
-                ClipboardCheck,
-                "Help another team",
-                "Peer feedback is part of professional practice.",
-              ],
-              [
-                CheckCircle2,
-                "Share difficulties early",
-                "Show what works, explain what does not, and ask for support when you need it.",
-              ],
-            ].map(([Icon, t, p]: any) => (
-              <div key={t}>
-                <Icon />
-                <b>{t}</b>
-                <p>{p}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </details>
-    </section>
-  );
+function DeliveryChallenge() {
+  const stages = [
+    ["01", "Commit", "What will you deliver?", "Agree on a realistic scope and make your part clear."],
+    ["02", "Prove", "Can you show it working?", "Demonstrate the core flow and explain a design decision."],
+    ["03", "Validate", "What did testing change?", "Use tests and peer feedback to choose what to improve."],
+    ["04", "Deliver", "Can someone else use it?", "Bring the product, documentation and demonstration together."],
+  ];
+  return <section id="journey" className="landing-challenge dark">
+    <Head label="The four-week challenge" title="Bring one better answer each week." text="Bring something to show, a decision to explain, and a question to explore together."/>
+    <div className="landing-challenge-grid">{stages.map(([week, title, question, purpose]) => <article key={week}><small>WEEK {week}</small><h3>{title}</h3><b>{question}</b><p>{purpose}</p></article>)}</div>
+  </section>;
 }
 function WeeklyHub({
   open,
