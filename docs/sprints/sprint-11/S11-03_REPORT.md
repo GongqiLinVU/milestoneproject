@@ -39,3 +39,8 @@ Joseph requested My Project collapsed by default after login. The existing detai
 ## Weekly Activities placement
 
 Joseph approved Sessions first, Weekly Activities second (collapsed by default), My Project third. This sequence applies to all Block intake modes. Reuses the existing activity components and controls; removes the misleading available-weeks counter in favour of “View this week’s activities”. The weekly navigation anchor targets the visible disclosure rather than its hidden contents. Production build and diff checks pass; authenticated visual acceptance remains pending.
+
+
+## Session visibility refinement
+
+Joseph approved expanding only teacher-opened Sessions, with previous/upcoming groups collapsed. Both legacy Work Track and Intake layouts now follow classroom status, independent of intake availability. No open classroom shows an explicit “No session is open right now” message; it no longer promotes a scheduled, closed or catch-up Session to Current. Multiple open classrooms remain visible. Existing read-only history and collapsed catch-up entry points are preserved, with catch-up excluded from the duplicate previous list. No server eligibility or submission rules change. Build/diff verification performed; authenticated visual acceptance remains pending.

@@ -908,10 +908,10 @@ function LegacyStudentSessions({intakePilot=false}:{intakePilot?:boolean}) {
       document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, []);
-  return <section id="sessions" className="portal-panel portal-section student-sessions project-journey">
-    <Head label="Session Check-in" title="Your session journey." text={intakePilot?"Check-in records attendance. Session Intake captures your responsibility, evidence and next action as a claim for Teacher verification.":"Check-in records attendance for each studio session. Weekly Activities remain separate. Use Track to open the independent Session Task + Work Track for a live session."}/>
-    {loading ? <p className="empty-state">Loading your Project Journey…</p> : error ? <p className="empty-state error-state" role="alert">{error}</p> : sessions.length ? <div className="journey-session-list">
-      {sessions.map(item => <article key={item.sessionId} className={`journey-session-card ${item.status}`}>
+  const openSessions = sessions.filter(item => item.status === "open");
+  const previousSessions = sessions.filter(item => item.status === "closed");
+  const upcomingSessions = sessions.filter(item => item.status === "scheduled");
+  const renderSession = (item: StudentSessionRecord) => <article key={item.sessionId} className={`journey-session-card ${item.status}`}>
         <div className="journey-session-marker"><b>S{item.sessionNumber}</b><span>Week {item.weekNumber}</span></div>
         <div className="journey-session-content"><div className="journey-session-heading"><div><small>{new Date(`${item.sessionDate}T00:00:00`).toLocaleDateString()}</small><h3>{item.focus}</h3></div><span className={`activity-control-status ${item.status}`}>{item.status === "open" ? "Current" : item.status === "closed" ? "Closed" : "Upcoming"}</span></div>
           <div className="journey-attendance">{item.checkedInAt ? <strong><CheckCircle2 size={14}/>Checked in · {new Date(item.checkedInAt).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</strong> : <span>{item.status === "closed" ? "No recorded Session Check-in" : item.status === "open" ? "Session Check-in is available from the top of this page" : "Session Check-in not open yet"}</span>}</div>
@@ -922,7 +922,13 @@ function LegacyStudentSessions({intakePilot=false}:{intakePilot?:boolean}) {
             {item.sessionNumber<=9&&!item.intakeConfirmedAt&&!intakeHistory.some(past=>past.sessionId===item.sessionId)&&!item.workTrackUpdatedAt&&(item.collectionMode??"disabled")!=="disabled"&&item.intakeStatus==="open"&&<small className="journey-action-note">{item.collectionMode==="ai"?"A short AI-guided chat about your work and next steps.":"A short form about your work and next steps."}</small>}
           </div>
         </div>
-      </article>)}
+      </article>;
+  return <section id="sessions" className="portal-panel portal-section student-sessions project-journey">
+    <Head label="Session Check-in" title="Your session journey." text={intakePilot?"Check-in records attendance. Session Intake captures your responsibility, evidence and next action as a claim for Teacher verification.":"Check-in records attendance for each studio session. Weekly Activities remain separate. Use Track to open the independent Session Task + Work Track for a live session."}/>
+    {loading ? <p className="empty-state">Loading your Project Journey…</p> : error ? <p className="empty-state error-state" role="alert">{error}</p> : sessions.length ? <div className="journey-session-list">
+      {openSessions.length ? openSessions.map(renderSession) : <p className="empty-state">No session is open right now.</p>}
+      {previousSessions.length > 0 && <details className="session-group"><summary><span><b>Previous sessions</b><small>{previousSessions.length} previous</small></span><ChevronDown size={20} aria-hidden="true"/></summary><div>{previousSessions.map(renderSession)}</div></details>}
+      {upcomingSessions.length > 0 && <details className="session-group"><summary><span><b>Upcoming sessions</b><small>{upcomingSessions.length} prepared</small></span><ChevronDown size={20} aria-hidden="true"/></summary><div>{upcomingSessions.map(renderSession)}</div></details>}
     </div> : <p className="empty-state">No sessions have been prepared for this block yet.</p>}
     {intakeHistory.length>0 && <details className="session-group intake-history-group"><summary><span><b>Confirmed Session Intake history</b><small>{intakeHistory.length} confirmed · read-only</small></span><ChevronDown size={20}/></summary><div>{intakeHistory.map(item=><article key={item.sessionId} className="session-compact-row"><div><b>S{item.sessionNumber} · {item.focus}</b><small>Confirmed · read-only</small></div><button type="button" className="secondary compact" onClick={()=>setHistoryView(item)}>View confirmed Intake</button></article>)}</div></details>}
     {historyView&&<FormSessionIntakePrototype session={historyView} aiEnabled={false} onClose={()=>setHistoryView(null)} onSaved={()=>{}}/>}
@@ -960,11 +966,9 @@ function StudentSessions({intakePilot=false,intakeMode="disabled"}:{intakePilot?
     return()=>{active=false;window.removeEventListener("student-session-checkin",onRefresh);};
   },[]);
   const openSessions=sessions.filter(item=>item.status==="open").sort((a,b)=>b.sessionNumber-a.sessionNumber);
-  const available=sessions.filter(item=>intakes[item.sessionId]?.isOpen&&!intakes[item.sessionId]?.confirmedRecord).sort((a,b)=>b.sessionNumber-a.sessionNumber);
-  const primary=openSessions[0]||available[0]||sessions.find(item=>item.status==="scheduled")||sessions.at(-1)||null;
-  const others=sessions.filter(item=>item.sessionId!==primary?.sessionId);
+  const others=sessions.filter(item=>item.status!=="open");
   const catchup=others.filter(item=>intakes[item.sessionId]?.isOpen&&!intakes[item.sessionId]?.confirmedRecord);
-  const history=others.filter(item=>Boolean(intakes[item.sessionId]?.confirmedRecord)||item.status==="closed");
+  const history=others.filter(item=>!catchup.includes(item)&&(Boolean(intakes[item.sessionId]?.confirmedRecord)||item.status==="closed"));
   const upcoming=others.filter(item=>!catchup.includes(item)&&!history.includes(item));
   const action=(item:StudentSessionRecord,catchUp=false)=>{
     const intake=intakes[item.sessionId];
@@ -976,18 +980,18 @@ function StudentSessions({intakePilot=false,intakeMode="disabled"}:{intakePilot?
   };
   const compact=(item:StudentSessionRecord,catchUp=false)=><article key={item.sessionId} className="session-compact-row"><div><b>S{item.sessionNumber} · {item.focus}</b><small>{new Date(item.sessionDate+"T00:00:00").toLocaleDateString()} · {intakes[item.sessionId]?.confirmedRecord?"Confirmed":catchUp?"Catch-up available":item.status==="closed"?"Closed":"Upcoming"}</small></div>{action(item,catchUp)}</article>;
   return <section id="sessions" className="portal-section session-first-area">
-    {loading?<p className="empty-state">Loading your Current Session…</p>:error?<p className="empty-state error-state" role="alert">{error}</p>:primary?<><article className="current-session-panel">
+    {loading?<p className="empty-state">Loading your Current Session…</p>:error?<p className="empty-state error-state" role="alert">{error}</p>:sessions.length?<>{openSessions.length?openSessions.map(primary=><article key={primary.sessionId} className="current-session-panel">
       <div className="current-session-top"><div><span className="current-session-label">Current Session</span><h2>S{primary.sessionNumber} · {primary.focus}</h2><p>{primary.title}</p></div><span className={"activity-control-status "+primary.status}>{primary.status==="open"?"Current":primary.status==="closed"?"Closed":"Next"}</span></div>
       <div className="current-session-status">
         <div><span>Attendance</span>{primary.checkedInAt?<b><CheckCircle2 size={16}/> Checked in</b>:<b>Check-in pending</b>}</div>
         <div><span>Session Intake</span><b>{intakes[primary.sessionId]?.confirmedRecord?"Confirmed":intakes[primary.sessionId]?.isOpen?"Ready":"Not available"}</b></div>
       </div>
       <div className="current-session-action"><div><span>Your evidence journey</span><p>{intakes[primary.sessionId]?.confirmedRecord?"This Session is locked as read-only history.":intakes[primary.sessionId]?.isOpen?"Describe what happened, organise evidence and agree your next step.":"Your Teacher controls when this Intake opens."}</p></div>{action(primary)}</div>
-    </article>
+    </article>):<p className="empty-state">No session is open right now.</p>}
     {catchup.length>0&&<details className="session-group"><summary><span><b>Catch-up available</b><small>{catchup.length} incomplete Session{catchup.length===1?"":"s"}</small></span><ChevronDown size={20}/></summary><div>{catchup.map(item=>compact(item,true))}</div></details>}
-    {history.length>0&&<details className="session-group"><summary><span><b>Session history</b><small>{history.length} previous Session{history.length===1?"":"s"} · read-only after confirmation</small></span><ChevronDown size={20}/></summary><div>{history.map(item=>compact(item))}</div></details>}
+    {history.length>0&&<details className="session-group"><summary><span><b>Previous sessions</b><small>{history.length} previous Session{history.length===1?"":"s"} · read-only after confirmation</small></span><ChevronDown size={20}/></summary><div>{history.map(item=>compact(item))}</div></details>}
     {sessions.some(item=>item.workTrackUpdatedAt)&&<details className="session-group"><summary><span><b>Work Track history</b><small>Previous classroom workflow · read-only</small></span><ChevronDown size={20}/></summary><div>{sessions.filter(item=>item.workTrackUpdatedAt).map(item=><article className="session-compact-row" key={item.sessionId}><b>S{item.sessionNumber} · {item.focus}</b><button type="button" className="secondary compact" onClick={()=>setTrackHistoryView(item)}>View Work Track history</button></article>)}</div></details>}
-    {upcoming.length>0&&<details className="session-group"><summary><span><b>Upcoming Sessions</b><small>{upcoming.length} prepared</small></span><ChevronDown size={20}/></summary><div>{upcoming.map(item=>compact(item))}</div></details>}
+    {upcoming.length>0&&<details className="session-group"><summary><span><b>Upcoming sessions</b><small>{upcoming.length} prepared</small></span><ChevronDown size={20}/></summary><div>{upcoming.map(item=>compact(item))}</div></details>}
     </>:<p className="empty-state">No Sessions have been prepared for this Block.</p>}
     {trackHistoryView&&<SessionWorkTrackModal session={trackHistoryView} readOnly onClose={()=>setTrackHistoryView(null)} onSaved={()=>{}}/>}
     {collectionTrack&&<SessionWorkTrackModal session={collectionTrack} readOnly={(collectionTrack.collectionMode??intakeMode)!=="disabled"} onClose={()=>setCollectionTrack(null)} onSaved={()=>window.dispatchEvent(new CustomEvent("student-session-checkin"))}/>}
