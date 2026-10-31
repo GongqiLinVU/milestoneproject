@@ -132,32 +132,47 @@ const titles: Record<Kind, string> = {
   review: "Poster Peer Review",
 };
 function PublicLanding() {
-  const [live, setLive] = useState<boolean | null>(null);
-  useEffect(() => {
-    supabase.from("portal_health").select("status").limit(1).then(({ error }) => setLive(!error));
-  }, []);
   return <>
-    <header>
+    <header className="landing-header">
       <a className="brand" href="#top">NIT3004 <span>Engineering Studio</span></a>
-      <nav><a href="#journey">Journey</a><a href="#deliverables">Deliverables</a><a href="/student">Student Login</a><a href="/admin">Teacher</a></nav>
+      <nav aria-label="Main navigation"><a href="#how-it-works">How it works</a><a href="#journey">Journey</a><a href="#deliverables">Deliverables</a><a href="/student">Student Login</a><a href="/admin">Teacher Login</a></nav>
     </header>
-    <main id="top">
+    <main id="top" className="landing-page">
       <section className="hero">
         <div>
-          <div className="eyebrow">Applied Project II · Four-week delivery studio</div>
-          <h1>Build less.<br/>Deliver <em>better.</em></h1>
-          <p>Course information stays open to everyone. Students can log in at any time to view their project, weekly activities and attendance. Session Check-in appears only when your teacher opens a studio session.</p>
+          <div className="eyebrow">Applied Project II · Your class companion</div>
+          <h1>Make progress.<br/>Show your <em>work.</em></h1>
+          <p>Keep track of your project, reflect on your progress, and prepare for useful conversations with your teacher.</p>
           <div className="actions">
             <a className="primary" href="/student">Student Login <ArrowRight size={18}/></a>
-            <a className="secondary" href="#journey">Explore the journey</a>
+            <a className="secondary" href="#how-it-works">How it works <ArrowDown size={18}/></a>
           </div>
-          <div className={"status " + (live ? "ok" : "")}><span></span>{live === null ? "Checking live data…" : live ? "Live data connected" : "Database setup required"}</div>
+          <p className="landing-login-note">First time here? Your teacher will provide your login details.</p>
         </div>
-        <div className="hero-card"><b>4 Weeks</b><span>1 Mission</span><span>1 Product</span><span>1 Team</span><small>∞ possibilities</small></div>
+        <aside className="hero-card landing-hero-card" aria-label="Your studio routine">
+          <small>YOUR STUDIO ROUTINE</small>
+          <span><b>01</b> Check in</span>
+          <span><b>02</b> Share progress</span>
+          <span><b>03</b> Plan your next step</span>
+          <p>Small updates. A clearer project journey.</p>
+        </aside>
+      </section>
+      <section id="how-it-works" className="landing-how">
+        <Head label="Each studio session" title="A clear picture, one session at a time." text="Log in to view your project, activities and attendance. When your teacher opens a session, follow these steps."/>
+        <div className="landing-steps">
+          <article><small>01 · ATTENDANCE</small><h3>Check in</h3><p>Check in when your teacher opens the session. This records your attendance.</p></article>
+          <article><small>02 · PROGRESS</small><h3>Share your progress</h3><p>Explain what you worked on, what is difficult, and your next step. Your teacher will choose a short form or an AI-guided conversation for your session.</p></article>
+          <article><small>03 · YOUR RECORD</small><h3>Review and save</h3><p>Check your answers before submitting. In an AI-guided conversation, review the summary, correct anything that does not reflect what you meant, and confirm it before saving.</p></article>
+        </div>
+        <div className="landing-purpose"><CircleHelp aria-hidden="true" size={24}/><div><b>Attendance and progress are separate steps.</b><p>Checking in records attendance; complete the progress activity your teacher has enabled as well. Your progress record helps your teacher understand where you need support. It does not automatically assign marks.</p></div></div>
+      </section>
+      <section className="landing-first-time" aria-labelledby="first-time-title">
+        <div><div className="eyebrow">First time here?</div><h2 id="first-time-title">Start with your teacher’s login details.</h2></div>
+        <div><ol><li>Open Student Login and enter your Student ID and the individual password provided by your teacher.</li><li>When prompted, choose and confirm your own password to activate your account.</li><li>Check your class, team and project. If your team is still being arranged, follow the message shown and ask your teacher for help.</li></ol><p>There is no public registration. Missing login details or unable to sign in? Ask your teacher. If you have forgotten your password, enter your Student ID on the login page and choose Forgot password.</p><a className="primary" href="/student">Student Login <ArrowRight size={18}/></a></div>
       </section>
       <Journey/><Studio/><Deliverables/>
     </main>
-    <footer>NIT3004 Engineering Studio · Learn to deliver like an engineer.</footer>
+    <footer>NIT3004 Engineering Studio · Keep progressing. Ask for support. Deliver with confidence.</footer>
   </>;
 }
 
@@ -1063,13 +1078,13 @@ function Journey() {
     [
       "02",
       "Prove",
-      "Design Review",
+      "Implementation and review",
       "Show what works, explain decisions and expose delivery risks.",
     ],
     [
       "03",
       "Validate",
-      "Project Expo",
+      "Testing and feedback",
       "Peer-review products, evidence and document readiness.",
     ],
     [
@@ -1114,8 +1129,8 @@ function Studio() {
       <details>
         <summary>
           <div>
-            <span>Monday Studio · First session guide</span>
-            <h2>The one session every team protects.</h2>
+            <span>Your studio session</span>
+            <h2>Come ready to share and learn.</h2>
           </div>
           <span className="studio-expand">
             <span>View session guide</span>
@@ -1124,7 +1139,7 @@ function Studio() {
         </summary>
         <div className="studio-content">
           <p className="studio-flow">
-            Industry story → team stand-up → design review → workshop → checkpoint → next mission.
+            Bring your current work, explain your decisions, and leave with a practical next step. Your teacher will guide the activities for each class.
           </p>
           <div className="principles">
             {[
@@ -1145,8 +1160,8 @@ function Studio() {
               ],
               [
                 CheckCircle2,
-                "Demo over excuses",
-                "Evidence of working software matters.",
+                "Share difficulties early",
+                "Show what works, explain what does not, and ask for support when you need it.",
               ],
             ].map(([Icon, t, p]: any) => (
               <div key={t}>
@@ -1353,6 +1368,7 @@ function Deliverables() {
       <Head
         label="Delivery evidence"
         title="One delivery story, three forms of evidence."
+        text="Use these as a course overview. Follow your teacher’s current assessment brief, deadlines and submission instructions; your class progress record does not replace formal submissions."
       />
       <div className="deliverables">
         {[

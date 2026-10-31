@@ -2261,3 +2261,46 @@ button.danger:hover {
 .teacher-administration{display:grid;gap:1.2rem;max-width:1000px}.teacher-administration fieldset{min-width:0;border:1px solid #dbe1e8;border-radius:14px;padding:1.2rem;background:white}.teacher-administration legend{font-weight:700;padding:0 .4rem}.staff-form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1rem}.staff-form-grid label,.staff-class-list label{display:grid;gap:.35rem}.staff-assignments{display:flex;flex-wrap:wrap;gap:.75rem 1.5rem;margin:1rem 0}.staff-assignments label{display:flex;align-items:center;gap:.5rem}.staff-assignments input[type=checkbox],.teacher-administration input[type=checkbox]{width:auto}.staff-class-list{list-style:none;padding:0}.staff-class-list li{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.75rem 0;border-bottom:1px solid #eee}.staff-credentials{padding:1.2rem;border:2px solid #93c5fd;border-radius:14px;background:#eff6ff}.staff-credentials dd{margin:0 0 .75rem;overflow-wrap:anywhere}
 
 .teacher-administration input:not([type=checkbox]),.teacher-administration select{width:100%;min-width:0;box-sizing:border-box;padding:.65rem .75rem;border:1px solid #cbd5e1;border-radius:9px;background:#fff;font:inherit;color:#243449}.teacher-administration fieldset>label{display:inline-flex;align-items:center;gap:.5rem}.staff-class-list label{min-width:100px}.staff-class-list strong{line-height:1.5}
+
+
+/* Public classroom onboarding; scoped to preserve portal/dashboard layouts. */
+.landing-page section[id] { scroll-margin-top: 100px; }
+.landing-page .hero { min-height: auto; padding-block: 80px; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 48px; }
+.landing-page .hero h1 { font-size: clamp(48px, 6.3vw, 90px); line-height: 1.02; letter-spacing: -.055em; }
+.landing-page .hero .landing-login-note { font-size: 14px; margin: 0; }
+.landing-hero-card { min-height: 300px; padding: 32px; gap: 24px; }
+.landing-hero-card span { display: flex; align-items: baseline; gap: 16px; font-size: clamp(18px, 2vw, 26px); }
+.landing-hero-card span b { font-size: 24px; }
+.landing-hero-card p { font-size: 15px; color: #c8d1da; margin: 0; }
+.landing-page .landing-how { padding-block: 64px; background: #ecefe8; }
+.landing-page .section-head h2 { font-size: clamp(32px, 4vw, 52px); }
+.landing-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.landing-steps article { background: white; border: 1px solid var(--line); border-radius: 20px; padding: 26px; }
+.landing-steps small { color: var(--blue); font-weight: 700; }
+.landing-steps h3 { font-size: 24px; margin-top: 20px; }
+.landing-steps p, .landing-purpose p, .landing-first-time p, .landing-first-time li { color: #52616d; line-height: 1.7; }
+.landing-purpose { display: flex; align-items: flex-start; gap: 14px; margin-top: 24px; padding: 24px; border: 1px solid #cbd5c3; border-radius: 16px; }
+.landing-purpose svg { flex-shrink: 0; color: var(--blue); }
+.landing-purpose p { margin: 8px 0 0; }
+.landing-first-time { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
+.landing-first-time h2 { font-size: clamp(30px, 3.5vw, 46px); letter-spacing: -.04em; margin-top: 16px; }
+.landing-first-time ol { margin-top: 0; padding-left: 22px; }
+.landing-first-time li { padding-left: 6px; margin-bottom: 12px; }
+.landing-header a:focus-visible, .landing-page a:focus-visible { outline: 3px solid var(--blue); outline-offset: 5px; }
+@media (max-width: 900px) {
+  .landing-header { height: auto; min-height: 72px; padding-block: 16px; gap: 16px; flex-wrap: wrap; }
+  .landing-header nav { display: flex; flex-wrap: wrap; gap: 12px 20px; }
+  .landing-page .hero { grid-template-columns: 1fr; gap: 32px; padding-block: 48px; }
+  .landing-hero-card { transform: none; min-height: auto; }
+  .landing-steps, .landing-first-time { grid-template-columns: 1fr; }
+  .landing-first-time { gap: 24px; }
+  .landing-page section[id] { scroll-margin-top: 150px; }
+}
+@media (max-width: 520px) {
+  .landing-header { padding-inline: 20px; position: static; }
+  .landing-header nav { display: flex; font-size: 13px; }
+  .landing-page .hero h1 { font-size: clamp(40px, 10vw, 52px); }
+  .landing-page .hero p { font-size: 16px; }
+  .landing-page section[id] { scroll-margin-top: 20px; }
+  .landing-page .landing-how { padding-block: 48px; }
+}
