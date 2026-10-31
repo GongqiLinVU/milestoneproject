@@ -34,3 +34,8 @@ Production build and diff checks repeated. Visual and modal browser acceptance r
 ## Student My Project refinement
 
 Joseph requested My Project collapsed by default after login. The existing details/summary styling now applies to every progress mode, rather than only AI Intake. The label and project title use separate rows with increased spacing, wrapped titles and a persistent expand chevron. Expanded content has a dividing line. No data or authentication behaviour changes. Build and diff checks pass; authenticated visual acceptance remains pending.
+
+
+## Weekly Activities placement
+
+Joseph approved Sessions first, Weekly Activities second (collapsed by default), My Project third. This sequence applies to all Block intake modes. Reuses the existing activity components and controls; removes the misleading available-weeks counter in favour of “View this week’s activities”. The weekly navigation anchor targets the visible disclosure rather than its hidden contents. Production build and diff checks pass; authenticated visual acceptance remains pending.

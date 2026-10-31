@@ -1018,7 +1018,7 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
   const intakeMode=student.intakeMode??"disabled";
   const intakePilot=intakeMode!=="disabled";
   const projectPanel=<section id="my-project" className="portal-panel portal-section"><details className="project-summary-details"><summary className="project-summary-toggle"><div><span>My Project</span><b>{student.projectName||"Project not assigned"}</b></div><ChevronDown size={20} aria-hidden="true"/></summary><div className="project-summary-body"><Head label="My Project" title={student.projectName || "Project not assigned"} text={student.projectDescription || (student.projectSource === "roster" ? "This project name came from the roster but is not yet linked to the Project Catalogue. Ask your teacher to complete the team assignment." : "Your teacher has not assigned a catalogue project to this team yet.")}/><div className="student-project-summary"><div><span>Student</span><b>{student.studentName}</b><small>{student.studentId}</small></div><div><span>Team</span><b>{student.teamName}</b><small>Roster assignment</small></div><div><span>Project</span><b>{student.projectName || "Pending"}</b><small>{student.projectCategory || "Catalogue assignment pending"}{student.projectDifficulty ? ` · ${student.projectDifficulty}` : ""}</small></div></div>{student.projectSource === "catalogue" && <div className="project-detail-grid"><article><span>Problem</span><p>{student.projectProblem || "Not specified"}</p></article><article><span>Target users</span><p>{student.projectTargetUsers || "Not specified"}</p></article><article className="wide"><span>Expected outcomes</span><p>{student.projectExpectedOutcomes || "Not specified"}</p></article></div>}</div></details></section>;
-  const activities=<details className="portal-section class-activities"><summary><div><span>Class Activities</span><b>Guided together during class</b><small>{weekStates?Object.values(weekStates).filter(Boolean).length:0} weeks available</small></div><span className="class-activities-show">Show activities <ChevronDown size={20}/></span></summary><div className="portal-weekly-section"><WeeklyHub open={(kind)=>{setReviewTarget(null);setForm(kind)}} openReview={(teamName)=>{setReviewTarget(teamName);setForm("review")}} weekStates={weekStates} presentationOrder={presentationOrder}/></div></details>;
+  const activities=<details id="weekly" className="portal-section class-activities"><summary><div><span>Weekly Activities</span><b>View this week’s activities</b></div><span className="class-activities-show"><ChevronDown size={20} aria-hidden="true"/></span></summary><div className="portal-weekly-section"><WeeklyHub open={(kind)=>{setReviewTarget(null);setForm(kind)}} openReview={(teamName)=>{setReviewTarget(teamName);setForm("review")}} weekStates={weekStates} presentationOrder={presentationOrder}/></div></details>;
   return (
     <>
       <header>
@@ -1027,8 +1027,8 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
         </a>
         <nav>
           <a href="#sessions">Current Session</a>
+          <a href="#weekly">Weekly Activities</a>
           <a href="#my-project">My Project</a>
-          <a href="#weekly">Activities</a>
           <a href="#get-help">Get Help</a>
         </nav>
       </header>
@@ -1045,7 +1045,9 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
           </div>
           <p>{student.blockLabel} · Complete only the activity that matters now.</p>
         </section>
-        {intakePilot?<><StudentSessions intakePilot intakeMode={intakeMode}/>{projectPanel}{activities}</>:<><div className="portal-section portal-weekly-section"><WeeklyHub open={(kind)=>{setReviewTarget(null);setForm(kind)}} openReview={(teamName)=>{setReviewTarget(teamName);setForm("review")}} weekStates={weekStates} presentationOrder={presentationOrder}/></div>{projectPanel}<StudentSessions/></>}
+        <StudentSessions intakePilot={intakePilot} intakeMode={intakeMode}/>
+        {activities}
+        {projectPanel}
         <section id="get-help" className="portal-panel portal-section"><Head label="Get Help" title="Bring one clear question." text="Use the support choices inside the current weekly activity so your teacher can connect help to the right evidence and session."/></section>
       </main>
       <footer>
@@ -1110,7 +1112,7 @@ function WeeklyHub({
     { number: 4 as const, label: "Deliver", hint: "Prepare presentation" },
   ];
   return (
-    <section id="weekly" className="weekly-hub">
+    <section className="weekly-hub">
       <Head
         label="Weekly Check-in"
         title="One place for every week."
