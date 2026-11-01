@@ -632,7 +632,7 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
   const showIntakeDebug=intakeDebugEnabled&&debugStudentId?.trim().toLowerCase()==="g001";
   useEffect(()=>{
     let active=true;
-    void supabase.rpc("get_my_student_context").then(({data,error})=>{
+    void Promise.resolve(supabase.rpc("get_my_student_context")).then(({data,error})=>{
       if(active)setDebugStudentId(!error&&typeof data?.studentId==="string"?data.studentId:null);
     }).catch(()=>{if(active)setDebugStudentId(null);});
     return()=>{active=false};
