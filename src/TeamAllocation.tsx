@@ -198,9 +198,9 @@ export function ProjectManager() {
       return team.assignment?supabase.from("team_project_assignments").update(payload).eq("id",team.assignment.id).select("id"):supabase.from("team_project_assignments").insert(payload).select("id");
     }));
     setBusy(false);
-    if (results.some((result) => result.error)) return setMessage("Some team assignments could not be saved. Please try again.");
-    setMessage(`${changedTeams.length} team assignment${changedTeams.length === 1 ? "" : "s"} saved.`);
+    if (results.some((result,index) => result.error || (assignmentDrafts[changedTeams[index].id] && !result.data?.length))) return setMessage("Some team assignments could not be saved. Check class permissions, active project status and any continuation link, then retry.");
     await loadFoundation();
+    setMessage(`${changedTeams.length} team assignment${changedTeams.length === 1 ? "" : "s"} saved.`);
   }
 
   async function reviewProposal(proposal: Proposal, status: "approved" | "changes_requested" | "rejected") {
