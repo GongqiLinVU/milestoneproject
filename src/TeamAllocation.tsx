@@ -1,5 +1,5 @@
 import {classLabel} from './TeacherAdministration';
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { BookOpen, Check, ChevronLeft, ChevronRight, Download, FileUp, KeyRound, Pencil, Plus, Save, Trash2, Users, X } from "lucide-react";
 
@@ -9,8 +9,8 @@ const supabase = createClient(
 );
 type Block = { id: string; academic_year: number; block_code: string; course_code?:string; class_code?:string; status: string; starts_on?: string | null; ends_on?: string | null };
 type RosterRow = { id: string; block_id: string; student_id: string; full_name: string; preferred_name: string | null; vu_email: string | null; team_number: number|null; project_name: string | null; account_status?: string; password_reset_at?: string | null };
-type Project = { id: string; block_id: string; title: string; problem: string; target_users: string; description: string; expected_outcomes: string | null; category: string; difficulty: string; status: string };
-type TeamProjectRow = { id: string; team_number: number; assignment?: { id: string; project_id: string; selection_status: string } | null };
+type Project = { id: string; created_by: string | null; legacy_block_id: string | null; title: string; problem: string; target_users: string; description: string; expected_outcomes: string | null; category: string; difficulty: string; status: string };
+type TeamProjectRow = { id: string; team_number: number; assignment?: { id: string; project_id: string; selection_status: string; predecessor_assignment_id: string | null } | null };
 type Proposal = { id: string; title: string; problem: string; target_users: string; proposed_solution: string; category: string; status: string; teacher_note: string | null; team: { team_number: number } | null };
 
 function Pagination({ total, page, pageSize, onPageChange, onPageSizeChange }: { total: number; page: number; pageSize: number; onPageChange: (page: number) => void; onPageSizeChange: (pageSize: number) => void }) {
@@ -69,6 +69,17 @@ export function ProjectManager() {
   const [blocks, setBlocks] = useState<Array<Block & { project_setup_mode: string }>>([]);
   const [blockId, setBlockId] = useState("");
   const [projects, setProjects] = useState<Project[]>([]);
+  const foundationRequest=useRef(0);
+  const currentBlock=useRef(blockId);currentBlock.current=blockId;
+  const [foundationLoading,setFoundationLoading]=useState(false);
+  const [libraryFilter, setLibraryFilter] = useState("active");
+  const [staff, setStaff] = useState<{id:string;isSuperadmin:boolean}|null>(null);
+  const [predecessors, setPredecessors] = useState<Array<{id:string;project_id:string;team_id:string}>>([]);
+  const [sourceTeams, setSourceTeams] = useState<Array<{id:string;team_number:number;block_id:string}>>([]);
+  const [predecessorDrafts, setPredecessorDrafts] = useState<Record<string,string>>({});
+  const canEdit=(project:Project)=>Boolean(staff&&(staff.isSuperadmin||project.created_by===staff.id));
+  const filteredProjects=projects.filter(project=>libraryFilter==="all"||project.status===libraryFilter);
+
   const [members,setMembers]=useState<Array<{student_id:string;full_name:string;preferred_name:string|null;team_number:number|null}>>([]);
   const [teams, setTeams] = useState<TeamProjectRow[]>([]);
   const [proposals, setProposals] = useState<Proposal[]>([]);
@@ -79,22 +90,24 @@ export function ProjectManager() {
   const [projectPage, setProjectPage] = useState(1);
   const [projectPageSize, setProjectPageSize] = useState(10);
   const block = blocks.find((item) => item.id === blockId);
-  const visibleProjects = useMemo(() => projects.slice((projectPage - 1) * projectPageSize, projectPage * projectPageSize), [projects, projectPage, projectPageSize]);
-  const assignmentsChanged = teams.some((team) => (assignmentDrafts[team.id] ?? team.assignment?.project_id ?? "") !== (team.assignment?.project_id ?? ""));
+  const visibleProjects = useMemo(() => filteredProjects.slice((projectPage - 1) * projectPageSize, projectPage * projectPageSize), [projects, libraryFilter, projectPage, projectPageSize]);
+  const assignmentsChanged = teams.some((team) => (assignmentDrafts[team.id] ?? team.assignment?.project_id ?? "") !== (team.assignment?.project_id ?? "") || (predecessorDrafts[team.id]??"") !== (team.assignment?.predecessor_assignment_id??""));
 
   useEffect(() => {
     void loadBlocks();
+    void loadLibrary();
+    void Promise.all([supabase.auth.getSession(),supabase.rpc("get_staff_context")]).then(([auth,context])=>{if(auth.data.session)setStaff({id:auth.data.session.user.id,isSuperadmin:Boolean(context.data?.isSuperadmin)});});
   }, []);
   useEffect(() => {
     if (blockId) void loadFoundation();
   }, [blockId]);
   useEffect(() => {
     setProjectPage(1);
-  }, [blockId, projectPageSize]);
+  }, [libraryFilter, projectPageSize]);
   useEffect(() => {
-    const last = Math.max(1, Math.ceil(projects.length / projectPageSize));
+    const last = Math.max(1, Math.ceil(filteredProjects.length / projectPageSize));
     if (projectPage > last) setProjectPage(last);
-  }, [projects.length, projectPage, projectPageSize]);
+  }, [filteredProjects.length, projectPage, projectPageSize]);
 
   async function loadBlocks() {
     const { data, error } = await supabase
@@ -107,22 +120,35 @@ export function ProjectManager() {
     setBlockId((current) => current || next.find((item) => item.status === "active")?.id || next[0]?.id || "");
   }
 
+  async function loadLibrary() {
+    const {data,error}=await supabase.from("projects").select("*").order("title");
+    if(error){setProjects([]);setMessage("Project Library could not be loaded. Ask the administrator to check the shared-library migration.");return;}
+    if((data??[]).some(row=>!("created_by" in row))){setProjects([]);setMessage("Apply the shared Project Library migration before using this page.");return;}
+    setProjects((data??[]) as Project[]);
+  }
   async function loadFoundation() {
+    const request=++foundationRequest.current;const requestedBlock=blockId;
+    setFoundationLoading(true);setTeams([]);setMembers([]);setProposals([]);
     setMessage("");
-    const [projectResult, teamResult, proposalResult,rosterResult] = await Promise.all([
-      supabase.from("projects").select("*").eq("block_id", blockId).order("title"),
-      supabase.from("teams").select("id, team_number, assignment:team_project_assignments(id, project_id, selection_status)").eq("block_id", blockId).order("team_number"),
+    const [teamResult, proposalResult,rosterResult,sourceTeamResult,predecessorResult] = await Promise.all([
+      supabase.from("teams").select("id, team_number, assignment:team_project_assignments!team_project_assignments_team_id_fkey(id, project_id, selection_status, predecessor_assignment_id)").eq("block_id", blockId).order("team_number"),
       supabase.from("project_proposals").select("id, title, problem, target_users, proposed_solution, category, status, teacher_note, team:teams!inner(team_number, block_id)").eq("team.block_id", blockId).order("created_at", { ascending: false }),
       supabase.from("student_roster").select("student_id, full_name, preferred_name, team_number").eq("block_id",blockId).order("full_name"),
+      supabase.from("teams").select("id,team_number,block_id"),
+      supabase.from("team_project_assignments").select("id,project_id,team_id"),
     ]);
-    if (projectResult.error || teamResult.error || proposalResult.error||rosterResult.error) {
+    if(request!==foundationRequest.current||requestedBlock!==currentBlock.current)return;
+    setFoundationLoading(false);
+    if (teamResult.error || proposalResult.error||rosterResult.error||sourceTeamResult.error||predecessorResult.error) {
       setMessage("Team and project data could not be loaded.");
       return;
     }
     setMembers(rosterResult.data??[]);
-    setProjects((projectResult.data ?? []) as Project[]);
+    setSourceTeams(sourceTeamResult.data??[]);
+    setPredecessors(predecessorResult.data??[]);
     const nextTeams = (teamResult.data ?? []).map((row: any) => ({ ...row, assignment: Array.isArray(row.assignment) ? row.assignment[0] ?? null : row.assignment })) as TeamProjectRow[];
     setTeams(nextTeams);
+    setPredecessorDrafts(Object.fromEntries(nextTeams.map(team=>[team.id,team.assignment?.predecessor_assignment_id??""])));
     setAssignmentDrafts(Object.fromEntries(nextTeams.map((team) => [team.id, team.assignment?.project_id ?? ""])));
     setProposals((proposalResult.data ?? []).map((row: any) => ({ ...row, team: Array.isArray(row.team) ? row.team[0] ?? null : row.team })) as Proposal[]);
   }
@@ -141,7 +167,6 @@ export function ProjectManager() {
     setBusy(true);
     const values = Object.fromEntries(new FormData(event.currentTarget));
     const payload = {
-      block_id: blockId,
       title: String(values.title).trim(),
       problem: String(values.problem).trim(),
       target_users: String(values.target_users).trim(),
@@ -154,34 +179,28 @@ export function ProjectManager() {
     const query = projectModal === "new"
       ? supabase.from("projects").insert(payload)
       : supabase.from("projects").update(payload).eq("id", projectModal!.id);
-    const { error } = await query;
+    const { data, error } = await query.select("id");
     setBusy(false);
-    if (error) return setMessage(error.code === "23505" ? "That project title already exists in this block." : "Project could not be saved.");
+    if (error||!data?.length) return setMessage(error?.code === "23505" ? "The project could not be saved because it conflicts with an existing record." : "Project could not be saved.");
     setProjectModal(null);
-    setMessage("Project saved.");
-    await loadFoundation();
+    setMessage("Library project saved. Changes are shared across classes; existing student records are retained.");
+    await loadLibrary();
   }
 
   async function saveAssignments() {
-    const changedTeams = teams.filter((team) => (assignmentDrafts[team.id] ?? "") !== (team.assignment?.project_id ?? ""));
+    const changedTeams = teams.filter((team) => (assignmentDrafts[team.id] ?? "") !== (team.assignment?.project_id ?? "") || (predecessorDrafts[team.id]??"") !== (team.assignment?.predecessor_assignment_id??""));
     if (!changedTeams.length) return;
     setBusy(true);
     const results = await Promise.all(changedTeams.map((team) => {
       const projectId = assignmentDrafts[team.id] ?? "";
-      return projectId
-        ? supabase.from("team_project_assignments").upsert({
-            team_id: team.id,
-            project_id: projectId,
-            selection_status: "teacher_confirmed",
-            confirmed_at: new Date().toISOString(),
-            selected_by_student_id: null,
-          }, { onConflict: "team_id" })
-        : supabase.from("team_project_assignments").delete().eq("team_id", team.id);
+      if(!projectId)return supabase.from("team_project_assignments").delete().eq("team_id",team.id);
+      const payload={team_id:team.id,project_id:projectId,predecessor_assignment_id:predecessorDrafts[team.id]||null,origin_unit:predecessorDrafts[team.id]?"NIT3003":(block?.course_code==="NIT3003"?"NIT3003":"NIT3004"),selection_status:"teacher_confirmed",confirmed_at:new Date().toISOString(),selected_by_student_id:null};
+      return team.assignment?supabase.from("team_project_assignments").update(payload).eq("id",team.assignment.id).select("id"):supabase.from("team_project_assignments").insert(payload).select("id");
     }));
     setBusy(false);
-    if (results.some((result) => result.error)) return setMessage("Some team assignments could not be saved. Please try again.");
-    setMessage(`${changedTeams.length} team assignment${changedTeams.length === 1 ? "" : "s"} saved.`);
+    if (results.some((result,index) => result.error || (assignmentDrafts[changedTeams[index].id] && !result.data?.length))) return setMessage("Some team assignments could not be saved. Check class permissions, active project status and any continuation link, then retry.");
     await loadFoundation();
+    setMessage(`${changedTeams.length} team assignment${changedTeams.length === 1 ? "" : "s"} saved.`);
   }
 
   async function reviewProposal(proposal: Proposal, status: "approved" | "changes_requested" | "rejected") {
@@ -189,25 +208,27 @@ export function ProjectManager() {
     let approvedProjectId: string | null = null;
     if (status === "approved") {
       const team = teams.find((item) => item.team_number === proposal.team?.team_number);
+      if(!team){setBusy(false);return setMessage("The proposal team is not available in this class.");}
       const { data, error } = await supabase.from("projects").insert({
-        block_id: blockId,
-        title: proposal.title,
+          title: proposal.title,
         problem: proposal.problem,
         target_users: proposal.target_users,
         description: proposal.proposed_solution,
         category: proposal.category,
         difficulty: "Standard",
-        status: "published",
+        status: "active",
         source: "student_proposal",
       }).select("id").single();
       if (error || !team) {
         setBusy(false);
-        return setMessage("The approved project could not be created. Check for a duplicate title.");
+        return setMessage("The approved project could not be created. Check your library permissions and the team assignment.");
       }
       approvedProjectId = data.id;
       const { error: assignmentError } = await supabase.from("team_project_assignments").upsert({
         team_id: team.id,
         project_id: approvedProjectId,
+        predecessor_assignment_id: null,
+        origin_unit: block?.course_code==="NIT3003"?"NIT3003":"NIT3004",
         selection_status: "teacher_confirmed",
         confirmed_at: new Date().toISOString(),
       }, { onConflict: "team_id" });
@@ -220,32 +241,44 @@ export function ProjectManager() {
     setBusy(false);
     if (error) return setMessage("Proposal status could not be updated.");
     setMessage(status === "approved" ? "Proposal approved and assigned to the team." : "Proposal review saved.");
+    await loadLibrary();
     await loadFoundation();
+  }
+
+  async function toggleProject(project:Project){
+    const next=project.status==="active"?"archived":"active";
+    if(!confirm(next==="archived"?"Archive this project? Existing teams retain it, but new assignments will be blocked.":"Restore this project to the active library?"))return;
+    setBusy(true);setMessage("");
+    const {data,error}=await supabase.from("projects").update({status:next}).eq("id",project.id).select("id");
+    setBusy(false);if(error||!data?.length)return setMessage("Project status could not be changed. Only the creator or an administrator can maintain this project.");
+    await loadLibrary();
   }
 
   return <section className="project-manager">
     <div className="roster-toolbar">
-      <div><div className="eyebrow">Team & project foundation</div><h2>Project setup</h2><p>Publish projects and connect one current project to each team.</p></div>
-      <button type="button" onClick={() => setProjectModal("new")} disabled={!blockId}><Plus size={17}/>Add project</button>
+      <div><div className="eyebrow">Team & project foundation</div><h2>Project Library & assignments</h2><p>Reuse active projects across classes and units. Assignments and student records stay with their class.</p></div>
+      <button type="button" onClick={() => setProjectModal("new")} disabled={!staff||busy}><Plus size={17}/>Add library project</button>
     </div>
     <div className="block-switcher">
-      <label><span>Class</span><select value={blockId} onChange={(event) => setBlockId(event.target.value)}>{blocks.map((item) => <option key={item.id} value={item.id}>{classLabel(item)}{item.status === "active" ? " — Active" : ""}</option>)}</select></label>
-      {block && <label><span>Project setup mode</span><select value={block.project_setup_mode} disabled={busy} onChange={(event) => void updateMode(event.target.value)}><option value="teacher_assigned">Teacher assigned</option><option value="student_selection">Student selection at Check-in</option></select></label>}
+      <label><span>Class</span><select value={blockId} disabled={busy} onChange={(event) => {if(assignmentsChanged&&!confirm("Discard unsaved team assignment changes?"))return;setBlockId(event.target.value);}}>{blocks.map((item) => <option key={item.id} value={item.id}>{classLabel(item)}{item.status === "active" ? " — Active" : ""}</option>)}</select></label>
+      {block && <label><span>Project setup mode</span><select value={block.project_setup_mode} disabled={busy} onChange={(event) => void updateMode(event.target.value)}><option value="teacher_assigned">Teacher assigned</option><option value="student_selection">Student project selection</option></select></label>}
     </div>
     {message && <p className="admin-alert" role="status">{message}</p>}
     <div className="project-foundation-stack">
+      {foundationLoading&&<p role="status">Loading class assignments…</p>}
       <details className="roster-list-card setup-section" open>
-        <summary className="roster-list-heading"><div><Users/><span><b>Team assignments</b><small>One current project per team</small></span></div><span className="setup-section-toggle">Show or hide</span></summary>
+        <summary className="roster-list-heading"><div><Users/><span><b>Team assignments</b><small>One current project per team. Optional NIT3003 links record continuity; historical records stay in their original class.</small></span></div><span className="setup-section-toggle">Show or hide</span></summary>
         {members.some(member=>member.team_number==null)&&<p className="admin-alert">{members.filter(member=>member.team_number==null).length} unassigned student(s): {members.filter(member=>member.team_number==null).map(member=>member.preferred_name||member.full_name).join(", ")}. Edit their Team in Class roster.</p>}
         {members.some(member=>member.team_number!=null&&!teams.some(team=>team.team_number===member.team_number))&&<p className="admin-alert" role="alert">Roster teams are missing their team records. Ask the administrator to apply the roster-team repair migration.</p>}
-        {teams.length ? <><div className="team-assignment-list">{teams.map((team) => <label key={team.id}><span><b>Team {team.team_number}</b><small>{members.filter(member=>member.team_number===team.team_number).map(member=>member.preferred_name||member.full_name).join(", ")||"No current students"}</small><small>{team.assignment?.selection_status === "student_selected" ? "Student selected · awaiting confirmation" : team.assignment ? "Teacher confirmed" : "Not assigned"}</small></span><select value={assignmentDrafts[team.id] ?? team.assignment?.project_id ?? ""} disabled={busy} onChange={(event) => setAssignmentDrafts((current) => ({ ...current, [team.id]: event.target.value }))}><option value="">Not assigned</option>{projects.filter((project) => project.status !== "archived").map((project) => <option key={project.id} value={project.id}>{project.title}</option>)}</select></label>)}</div><div className="assignment-save-bar"><span>{assignmentsChanged ? "You have unsaved assignment changes." : "All assignments are saved."}</span><button type="button" disabled={busy || !assignmentsChanged} onClick={() => void saveAssignments()}><Save size={16}/>{busy ? "Saving…" : "Save assignments"}</button></div></> : <div className="roster-empty"><Users/><b>No teams yet</b><p>Assign students to a team in Class roster first, then choose that team’s project here.</p></div>}
+        {teams.length ? <><div className="team-assignment-list">{teams.map((team) => <div className="library-team-assignment" key={team.id}><span><b>Team {team.team_number}</b><small>{members.filter(member=>member.team_number===team.team_number).map(member=>member.preferred_name||member.full_name).join(", ")||"No current students"}</small><small>{team.assignment?.selection_status === "student_selected" ? "Student selected · awaiting confirmation" : team.assignment ? "Teacher confirmed" : "Not assigned"}</small></span><select aria-label={`Project for Team ${team.team_number}`} value={assignmentDrafts[team.id] ?? team.assignment?.project_id ?? ""} disabled={busy} onChange={(event) => {setAssignmentDrafts((current) => ({ ...current, [team.id]: event.target.value }));setPredecessorDrafts(current=>({...current,[team.id]:""}));}}><option value="">Not assigned</option>{projects.filter((project) => project.status === "active" || project.id === team.assignment?.project_id).map((project) => <option key={project.id} value={project.id}>{project.title}{project.status==="archived"?" (archived · existing assignment)":""} · {project.id.slice(0,8)}</option>)}</select>{block?.course_code==="NIT3004"&&<select aria-label={`Continue Team ${team.team_number} from NIT3003`} value={predecessorDrafts[team.id]??""} disabled={busy} onChange={event=>{const id=event.target.value;setPredecessorDrafts(current=>({...current,[team.id]:id}));const prior=predecessors.find(p=>p.id===id);if(prior)setAssignmentDrafts(current=>({...current,[team.id]:prior.project_id}));}}><option value="">Independent assignment / no continuation link</option>{team.assignment?.predecessor_assignment_id&&!predecessors.some(prior=>prior.id===team.assignment?.predecessor_assignment_id&&projects.some(p=>p.id===prior.project_id&&p.status==="active"))&&<option value={team.assignment.predecessor_assignment_id}>Existing NIT3003 continuation (retained)</option>}{predecessors.filter(prior=>{const source=sourceTeams.find(t=>t.id===prior.team_id);return blocks.some(b=>b.id===source?.block_id&&b.course_code==="NIT3003")&&projects.some(p=>p.id===prior.project_id&&p.status==="active");}).map(prior=>{const source=sourceTeams.find(t=>t.id===prior.team_id);const sourceBlock=blocks.find(b=>b.id===source?.block_id);return <option key={prior.id} value={prior.id}>{sourceBlock?classLabel(sourceBlock):"NIT3003"} · Team {source?.team_number} · {projects.find(p=>p.id===prior.project_id)?.title}</option>;})}</select>}</div>)}</div><div className="assignment-save-bar"><span>{assignmentsChanged ? "You have unsaved assignment changes." : "All assignments are saved."}</span><button type="button" disabled={busy || !assignmentsChanged} onClick={() => void saveAssignments()}><Save size={16}/>{busy ? "Saving…" : "Save assignments"}</button></div></> : <div className="roster-empty"><Users/><b>No teams yet</b><p>Assign students to a team in Class roster first, then choose that team’s project here.</p></div>}
       </details>
       <details className="roster-list-card setup-section">
-        <summary className="roster-list-heading"><div><BookOpen/><span><b>Project catalogue</b><small>{projects.length} projects in this block</small></span></div><span className="setup-section-toggle">Show or hide</span></summary>
-        {projects.length ? <><div className="admin-table-wrap"><table><thead><tr><th>Project</th><th>Category</th><th>Difficulty</th><th>Status</th><th></th></tr></thead><tbody>{visibleProjects.map((project) => <tr key={project.id}><td><b>{project.title}</b><small>{project.target_users}</small></td><td>{project.category}</td><td>{project.difficulty}</td><td>{project.status}</td><td><button type="button" className="secondary compact" onClick={() => setProjectModal(project)}><Pencil size={15}/>Edit</button></td></tr>)}</tbody></table></div><Pagination total={projects.length} page={projectPage} pageSize={projectPageSize} onPageChange={setProjectPage} onPageSizeChange={setProjectPageSize}/></> : <div className="roster-empty"><BookOpen/><b>No projects yet</b><p>Add the projects available to this block.</p></div>}
+        <summary className="roster-list-heading"><div><BookOpen/><span><b>Project Library</b><small>{projects.length} shared projects · active and archived</small></span></div><span className="setup-section-toggle">Show or hide</span></summary>
+        <div className="project-library-filter"><label>Show<select value={libraryFilter} onChange={event=>setLibraryFilter(event.target.value)}><option value="active">Active</option><option value="archived">Archived</option><option value="all">All projects</option></select></label><p>Teachers can use all active projects. Only the creator or an administrator can edit, archive or restore them. Legacy projects are administrator-maintained.</p></div>
+        {filteredProjects.length ? <><div className="admin-table-wrap"><table><thead><tr><th>Project</th><th>Category</th><th>Difficulty</th><th>Status</th><th></th></tr></thead><tbody>{visibleProjects.map((project) => <tr key={project.id}><td><b>{project.title}</b><small>{project.target_users}</small>{projects.filter(p=>p.title===project.title).length>1&&<small>Reference: {project.id.slice(0,8)}</small>}</td><td>{project.category}</td><td>{project.difficulty}</td><td>{project.status}</td><td>{canEdit(project)?<><button type="button" className="secondary compact" onClick={() => setProjectModal(project)}><Pencil size={15}/>Edit</button><button type="button" className="secondary compact" disabled={busy} onClick={()=>void toggleProject(project)}>{project.status==="active"?"Archive":"Restore"}</button></>:<small>Read only</small>}</td></tr>)}</tbody></table></div><Pagination total={filteredProjects.length} page={projectPage} pageSize={projectPageSize} onPageChange={setProjectPage} onPageSizeChange={setProjectPageSize}/></> : <div className="roster-empty"><BookOpen/><b>No {libraryFilter==="all"?"":libraryFilter} projects</b><p>Choose another filter or add a shared library project.</p></div>}
       </details>
     </div>
     {proposals.length > 0 && <section className="roster-list-card proposal-review-list"><div className="roster-list-heading"><div><BookOpen/><span><b>Student proposals</b><small>Team ideas for teacher review</small></span></div></div>{proposals.map((proposal) => <article key={proposal.id}><div><small>Team {proposal.team?.team_number} · {proposal.category}</small><h3>{proposal.title}</h3><p><b>Problem:</b> {proposal.problem}</p><p><b>Users:</b> {proposal.target_users}</p><p>{proposal.proposed_solution}</p></div><div><span className={`block-status ${proposal.status}`}>{proposal.status.replace("_", " ")}</span>{proposal.status !== "approved" && <><button disabled={busy} onClick={() => void reviewProposal(proposal, "approved")}><Check size={15}/>Approve</button><button className="secondary" disabled={busy} onClick={() => void reviewProposal(proposal, "changes_requested")}>Request changes</button><button className="danger" disabled={busy} onClick={() => void reviewProposal(proposal, "rejected")}>Reject</button></>}</div></article>)}</section>}
-    {projectModal && <div className="modal" role="presentation"><div className="dialog roster-dialog" role="dialog" aria-modal="true"><button className="close" onClick={() => setProjectModal(null)} aria-label="Close"><X size={18}/></button><div className="eyebrow">{block?classLabel(block):""}</div><h2>{projectModal === "new" ? "Add project" : "Edit project"}</h2><form onSubmit={saveProject}><div className="roster-modal-grid"><label>Title<input name="title" required maxLength={120} defaultValue={projectModal === "new" ? "" : projectModal.title}/></label><label>Target users<input name="target_users" required maxLength={300} defaultValue={projectModal === "new" ? "" : projectModal.target_users}/></label><label className="wide">Problem or opportunity<textarea name="problem" required maxLength={600} defaultValue={projectModal === "new" ? "" : projectModal.problem}/></label><label className="wide">Project description<textarea name="description" required maxLength={1200} defaultValue={projectModal === "new" ? "" : projectModal.description}/></label><label className="wide">Expected outcomes <small>Optional</small><textarea name="expected_outcomes" maxLength={600} defaultValue={projectModal === "new" ? "" : projectModal.expected_outcomes || ""}/></label><label>Category<select name="category" defaultValue={projectModal === "new" ? "Other" : projectModal.category}>{["Web","Mobile","AI","Data","IoT","Cybersecurity","Game","Other"].map((value) => <option key={value}>{value}</option>)}</select></label><label>Difficulty<select name="difficulty" defaultValue={projectModal === "new" ? "Standard" : projectModal.difficulty}>{["Foundation","Standard","Advanced"].map((value) => <option key={value}>{value}</option>)}</select></label><label>Status<select name="status" defaultValue={projectModal === "new" ? "draft" : projectModal.status}><option value="draft">Draft</option><option value="published">Published</option><option value="archived">Archived</option></select></label></div><div className="admin-dialog-actions"><button type="button" className="secondary" onClick={() => setProjectModal(null)}>Cancel</button><button disabled={busy}>{busy ? "Saving…" : "Save project"}</button></div></form></div></div>}
+    {projectModal && <div className="modal" role="presentation"><div className="dialog roster-dialog" role="dialog" aria-modal="true"><button className="close" onClick={() => setProjectModal(null)} aria-label="Close"><X size={18}/></button><div className="eyebrow">Shared Project Library</div><h2>{projectModal === "new" ? "Add project" : "Edit project"}</h2><form onSubmit={saveProject}><div className="roster-modal-grid"><label>Title<input name="title" required maxLength={120} defaultValue={projectModal === "new" ? "" : projectModal.title}/></label><label>Target users<input name="target_users" required maxLength={300} defaultValue={projectModal === "new" ? "" : projectModal.target_users}/></label><label className="wide">Problem or opportunity<textarea name="problem" required maxLength={600} defaultValue={projectModal === "new" ? "" : projectModal.problem}/></label><label className="wide">Project description<textarea name="description" required maxLength={1200} defaultValue={projectModal === "new" ? "" : projectModal.description}/></label><label className="wide">Expected outcomes <small>Optional</small><textarea name="expected_outcomes" maxLength={600} defaultValue={projectModal === "new" ? "" : projectModal.expected_outcomes || ""}/></label><label>Category<select name="category" defaultValue={projectModal === "new" ? "Other" : projectModal.category}>{["Web","Mobile","AI","Data","IoT","Cybersecurity","Game","Other"].map((value) => <option key={value}>{value}</option>)}</select></label><label>Difficulty<select name="difficulty" defaultValue={projectModal === "new" ? "Standard" : projectModal.difficulty}>{["Foundation","Standard","Advanced"].map((value) => <option key={value}>{value}</option>)}</select></label><label>Status<select name="status" defaultValue={projectModal === "new" ? "active" : projectModal.status}><option value="active">Active</option><option value="archived">Archived</option></select></label></div><div className="admin-dialog-actions"><button type="button" className="secondary" onClick={() => setProjectModal(null)}>Cancel</button><button disabled={busy}>{busy ? "Saving…" : "Save project"}</button></div></form></div></div>}
   </section>;
 }

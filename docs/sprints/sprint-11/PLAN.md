@@ -39,3 +39,8 @@ See [S11-01_REPORT.md](S11-01_REPORT.md) for the initial S1 increment and [S11-0
 Joseph approved refreshing the public landing page before teaching starts on 2 November. Lead with project progress, explain attendance versus progress, describe Form/AI review accurately, and give first-login guidance verified against StudentAccess. Retain the visual identity, four-week course overview and deliverables; make studio guidance independent of weekday and use supportive wording. Formal submission instructions remain teacher/course authoritative. Assessment Assistant remains a separate project.
 
 Acceptance: working student/teacher links, keyboard-accessible section links and expandable guides, readable desktop/mobile layouts, no public database-health request, production build. No auth, API, database, provider or Intake behaviour changes. See [S11-03_REPORT.md](S11-03_REPORT.md).
+
+
+## S11-04 — Shared Project Library (approved 1 November)
+
+Joseph created 2B4 and approved removing Block ownership from project definitions. Implement Active/Archived lifecycle, shared teacher read with creator/admin maintenance, class-scoped assignments and optional explicit NIT3003 predecessor links for NIT3004. Preserve all IDs and historical evidence. Include an idempotent migration, matching installation snapshot, local RLS/integrity tests and a production rollout/recovery runbook. No production database action, automatic history merge or assessment expansion. See [S11-04_PROJECT_LIBRARY.md](S11-04_PROJECT_LIBRARY.md).

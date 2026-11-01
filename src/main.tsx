@@ -2369,7 +2369,7 @@ function CheckinFields() {
       </> : <>
         <h3>Choose one project for your team</h3>
         <p>One team member can select on behalf of the whole team. Other members will see the same selection.</p>
-        {!proposeOwn && <label>Published projects<select name="project_choice" required defaultValue=""><option value="" disabled>Select a project</option>{context.availableProjects.map((project) => <option key={project.id} value={project.id}>{project.title} · {project.category}</option>)}</select></label>}
+        {!proposeOwn && <label>Active library projects<select name="project_choice" required defaultValue=""><option value="" disabled>Select a project</option>{context.availableProjects.map((project) => <option key={project.id} value={project.id}>{project.title} · {project.category}</option>)}</select></label>}
         <label className="project-proposal-toggle"><input type="checkbox" checked={proposeOwn} onChange={(event) => setProposeOwn(event.target.checked)}/><span>Our team wants to propose its own idea</span></label>
         {proposeOwn && <div className="project-proposal-fields">
           <label>Project title<input name="proposal_title" required maxLength={120}/></label>
@@ -3045,7 +3045,7 @@ function Admin() {
       await Promise.all([
         supabase.from("student_roster").select("*", { count: "exact", head: true }).eq("block_id", blockId),
         supabase.from("teams").select("*", { count: "exact", head: true }).eq("block_id", blockId),
-        supabase.from("projects").select("*", { count: "exact", head: true }).eq("block_id", blockId),
+        supabase.from("projects").select("*", { count: "exact", head: true }).eq("status", "active"),
         supabase.from("teams").select("id, assignment:team_project_assignments(id)").eq("block_id", blockId),
       ]);
     if (studentsResult.error || teamsResult.error || projectsResult.error || assignmentsResult.error) {
@@ -3649,7 +3649,7 @@ function Admin() {
         <aside className="admin-sidebar" aria-label="Teacher dashboard sections">
           <button type="button" className={adminView === "overview" ? "active" : ""} onClick={() => setAdminView("overview")}><ListChecks size={18}/><span><b>Overview</b><small>Class snapshot</small></span></button>
           <button type="button" className={adminView === "roster" ? "active" : ""} onClick={() => setAdminView("roster")}><Users size={18}/><span><b>Class roster</b><small>Students and teams</small></span></button>
-          <button type="button" className={adminView === "projects" ? "active" : ""} onClick={() => setAdminView("projects")}><Rocket size={18}/><span><b>Project setup</b><small>Catalogue & assignments</small></span></button>
+          <button type="button" className={adminView === "projects" ? "active" : ""} onClick={() => setAdminView("projects")}><Rocket size={18}/><span><b>Project setup</b><small>Shared library & assignments</small></span></button>
           <button type="button" className={adminView === "sessions" ? "active" : ""} onClick={() => setAdminView("sessions")}><ClipboardCheck size={18}/><span><b>Session check-in</b><small>Open attendance</small></span></button>
           <button type="button" className={adminView === "posters" ? "active" : ""} onClick={() => setAdminView("posters")}><Presentation size={18}/><span><b>Poster Gallery</b><small>Week 3 publish</small></span></button>
           <button type="button" className={adminView === "records" ? "active" : ""} onClick={() => setAdminView("records")}><ClipboardCheck size={18}/><span><b>Activity management</b><small>Weeks, records & order</small></span></button>
@@ -3692,7 +3692,7 @@ function Admin() {
           {[
             ["Students", overviewCounts.students, "Current roster"],
             ["Teams", overviewCounts.teams, "Established groups"],
-            ["Projects", overviewCounts.projects, "Project catalogue"],
+            ["Projects", overviewCounts.projects, "Active library projects"],
             ["Assigned teams", overviewCounts.assignedTeams, "Teams linked to a project"],
           ].map(([label, value, note]) => (
             <article key={label}>

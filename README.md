@@ -86,9 +86,10 @@ The Supabase publishable key is intended for browser use. Never commit a service
 ## Supabase setup
 
 1. Create a Supabase project.
-2. Run `supabase/schema.sql` in the Supabase SQL Editor.
-3. Create a teacher user through **Authentication → Users → Create user**.
-4. Assign the teacher role:
+2. Create the initial owner through **Authentication → Users → Create user**, and set its teacher app metadata using the SQL below. A new installation needs exactly one initial teacher (or an explicit `studio.bootstrap_administrator` UUID).
+3. Run `supabase/schema.sql` only for an empty installation. Existing environments use incremental migrations; do not rerun this snapshot against production.
+
+Assign the initial owner role before running the fresh schema:
 
 ```sql
 update auth.users
@@ -148,3 +149,8 @@ Week 1 uses an individual Team Health Check and a ten-question Engagement Check-
 ### Compact early Work Track — delivered in Sprint 10
 
 S1–S5 use short responsibility/progress/next-action records with optional evidence/help; S6–S9 retain assessment. Earlier implementation evidence is in [S10-01B_REPORT.md](docs/sprints/sprint-10/S10-01B_REPORT.md); current status is the Sprint 10 closeout.
+
+
+### Shared Project Library
+
+Project definitions are reusable across classes and NIT3003/NIT3004. Active projects can be assigned to teams; Archived projects retain existing assignments and can be restored. Project creators and administrators maintain definitions; team assignments stay class-scoped. See [S11-04 migration, verification and rollout](docs/sprints/sprint-11/S11-04_PROJECT_LIBRARY.md). The new frontend requires the matching migration; no automatic production database upgrade occurs.

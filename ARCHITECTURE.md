@@ -57,16 +57,14 @@ GitHub is the source of truth for application code, database schema and project 
 
 `teaching_blocks` owns the rollout mode (`teacher_assigned` or
 `student_selection`). `teams` provides a stable block-scoped identity derived
-from private roster team numbers. `projects` is a block-scoped catalogue, while
+from private roster team numbers. `projects` is a shared Active/Archived library, while
 `team_project_assignments` enforces one current project per team. A project may
 be assigned to several teams.
 
 The current course lifecycle spans two units: NIT3003 establishes the team,
 project and prototype; NIT3004 resumes that work after a break at an expected
 approximately 80% completion baseline. Assignments therefore record
-`origin_unit` and `continued_from_previous_unit`. Projects remain block-scoped
-in this rollout-safe version; the platform records continuity without adding a
-generic cross-course workflow or project-version system.
+`origin_unit` and `continued_from_previous_unit`. Project definitions are independent of classes; `legacy_block_id` retains origin metadata only. Assignments remain class-scoped and may explicitly reference a NIT3003 predecessor assignment for a NIT3004 continuation of the same project. No historic records are moved or automatically combined. Creators/administrators maintain definitions; class membership still controls assignment and evidence access. See the [S11-04 contract](docs/sprints/sprint-11/S11-04_PROJECT_LIBRARY.md).
 
 Student browsers never select directly from roster, team, assignment or
 proposal tables. Restricted functions validate Student ID against the active

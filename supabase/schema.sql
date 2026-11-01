@@ -313,102 +313,14 @@ for all to authenticated using (public.is_teacher()) with check (public.is_teach
 
 
 
--- Sprint 3 Phase 2: Week 2 individual progress review
+-- Sprint 3 Phase 2: Week 2 implementation pre-check
+-- Apply after 20260729_sprint3_phase1_engagement_loop.sql.
+
 create table if not exists public.week2_progress_reviews (
   id uuid primary key default gen_random_uuid(),
   student_name text not null check (char_length(student_name) between 1 and 100),
   student_id text not null,
-  team_name text not null check (team_name ~ '^Team [1-8]
-  implementation_item text not null check (char_length(implementation_item) between 1 and 200),
-  implementation_state text not null check (implementation_state in ('Implemented and verified','Implemented but not fully verified','Partially implemented','Designed but not implemented','Blocked')),
-  work_location text not null check (work_location in ('GitHub repository / commits','Application or deployed system','Database / backend service','Test records','Design or documentation','Hardware prototype','Not yet available','Other')),
-  evidence_reference text check (evidence_reference is null or char_length(evidence_reference) <= 300),
-  demonstration_method text not null check (demonstration_method in ('Run the function live','Show the implemented code and explain it','Run a test case','Show database / API output','Demonstrate hardware integration','Show design / document evidence','Cannot demonstrate it yet')),
-  verification_level text not null check (verification_level in ('Demonstrated successfully on the target system','Integrated with other project components','Tested independently only','Informally checked','Not yet tested')),
-  implementation_methods text[] not null check (cardinality(implementation_methods) > 0),
-  remaining_issue text not null check (remaining_issue in ('No major issue','Integration incomplete','Testing incomplete','Technical defect','Security or data concern','Dependency on another team member','Scope or time constraint','Implementation not yet working','Other')),
-  issue_note text check (issue_note is null or char_length(issue_note) <= 200),
-  next_action text not null check (next_action in ('Complete implementation','Integrate components','Fix defects','Add or run tests','Verify security / data','Deploy to target device or environment','Prepare evidence','Update documentation','Other')),
-  teacher_verification text not null check (teacher_verification in ('Whether the function works','My implementation method','My individual contribution','Integration with the team project','Testing and evidence','Current blocker','Progress Report accuracy','Other')),
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  constraint week2_progress_reviews_student_id_key unique (student_id)
-);
-
-alter table public.week2_progress_reviews enable row level security;
-revoke all on public.week2_progress_reviews from anon, authenticated;
-grant insert on public.week2_progress_reviews to anon, authenticated;
-grant select, update, delete on public.week2_progress_reviews to authenticated;
-
-drop policy if exists "students create week2 progress" on public.week2_progress_reviews;
-create policy "students create week2 progress" on public.week2_progress_reviews
-for insert to anon, authenticated with check (true);
-drop policy if exists "teachers read week2 progress" on public.week2_progress_reviews;
-create policy "teachers read week2 progress" on public.week2_progress_reviews
-for select to authenticated using (public.is_teacher());
-drop policy if exists "teachers manage week2 progress" on public.week2_progress_reviews;
-create policy "teachers manage week2 progress" on public.week2_progress_reviews
-for all to authenticated using (public.is_teacher()) with check (public.is_teacher());
-
--- Verification: anon INSERT only; teacher manage through is_teacher().
--- Rollback: drop table if exists public.week2_progress_reviews;
-
-
--- Sprint 3 Phase 3: teacher review outcomes and Week 3 engagement
--- Week 3 engagement uses the existing weekly_engagement_checkouts table.
-
-create table if not exists public.teacher_progress_reviews (
-  id uuid primary key default gen_random_uuid(),
-  student_name text not null check (char_length(student_name) between 1 and 100),
-  student_id text not null,
   team_name text not null check (team_name ~ '^Team [1-8]$'),
-  review_outcome text not null check (review_outcome in ('Verified','Partially verified','Not verified','Unable to demonstrate','Further evidence required')),
-  demonstration_outcome text not null check (demonstration_outcome in ('Worked on target system','Worked with limitations','Partial demonstration','Could not demonstrate','Not applicable')),
-  method_explanation text not null check (method_explanation in ('Clear and credible','Mostly clear','Limited explanation','Could not explain')),
-  evidence_quality text not null check (evidence_quality in ('Strong and traceable','Adequate','Partial','No usable evidence')),
-  contribution_verification text not null check (contribution_verification in ('Clearly verified','Partly verified','Needs further evidence','Not verified')),
-  report_alignment text not null check (report_alignment in ('Consistent','Minor update needed','Significant update needed','Not checked')),
-  teacher_feedback text not null check (char_length(teacher_feedback) between 1 and 800),
-  follow_up_status text not null check (follow_up_status in ('Not reviewed','No follow-up needed','Action required','In progress','Recheck next session','Resolved')),
-  follow_up_actions text[] not null check (
-    cardinality(follow_up_actions) between 1 and 10
-    and follow_up_actions <@ array['No action required','Complete implementation','Fix identified issue','Provide code or commit evidence','Add or run tests','Complete integration','Update Progress Report','Clarify individual contribution','Prepare another demonstration','Other']::text[]
-  ),
-  follow_up_note text check (follow_up_note is null or char_length(follow_up_note) <= 400),
-  recheck_week smallint check (recheck_week is null or recheck_week between 2 and 4),
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  constraint teacher_progress_reviews_student_id_key unique (student_id)
-);
-alter table public.teacher_progress_reviews enable row level security;
-revoke all on public.teacher_progress_reviews from anon, authenticated;
-grant select, insert, update, delete on public.teacher_progress_reviews to authenticated;
-
-drop trigger if exists normalise_teacher_progress_review_id on public.teacher_progress_reviews;
-create trigger normalise_teacher_progress_review_id
-before insert or update on public.teacher_progress_reviews
-for each row execute function public.normalise_student_id();
-
-drop trigger if exists set_teacher_progress_reviews_updated_at on public.teacher_progress_reviews;
-create trigger set_teacher_progress_reviews_updated_at
-before update on public.teacher_progress_reviews
-for each row execute function public.set_updated_at();
-
-drop policy if exists "teachers manage progress reviews" on public.teacher_progress_reviews;
-create policy "teachers manage progress reviews" on public.teacher_progress_reviews
-for all to authenticated using (public.is_teacher()) with check (public.is_teacher());
-
--- Verification:
--- 1. anon cannot INSERT or SELECT teacher reviews.
--- 2. authenticated non-teachers receive no rows and cannot mutate.
--- 3. teachers can create, read, update and delete.
--- 4. the same student can submit weekly_engagement_checkouts for week_number 3.
--- Rollback: drop table if exists public.teacher_progress_reviews;
-),
-  project_name text check (project_name is null or char_length(trim(project_name)) between 1 and 120),
-  project_area text check (project_area is null or project_area in ('Web','Mobile','AI','Data','IoT','Cybersecurity','Game','Other')),
-  project_description text check (project_description is null or char_length(trim(project_description)) between 1 and 300),
-  target_user_problem text check (target_user_problem is null or char_length(trim(target_user_problem)) <= 150),
   deliverable_area text not null check (deliverable_area in ('Frontend / UI','Backend / API','Database','Authentication / Security','Hardware / Integration','Testing','Documentation','Project coordination','Other')),
   implementation_item text not null check (char_length(implementation_item) between 1 and 200),
   implementation_state text not null check (implementation_state in ('Implemented and verified','Implemented but not fully verified','Partially implemented','Designed but not implemented','Blocked')),
@@ -427,6 +339,7 @@ for all to authenticated using (public.is_teacher()) with check (public.is_teach
 );
 
 alter table public.week2_progress_reviews enable row level security;
+
 revoke all on public.week2_progress_reviews from anon, authenticated;
 grant insert on public.week2_progress_reviews to anon, authenticated;
 grant select, update, delete on public.week2_progress_reviews to authenticated;
@@ -434,16 +347,32 @@ grant select, update, delete on public.week2_progress_reviews to authenticated;
 drop policy if exists "students create week2 progress" on public.week2_progress_reviews;
 create policy "students create week2 progress" on public.week2_progress_reviews
 for insert to anon, authenticated with check (true);
+
 drop policy if exists "teachers read week2 progress" on public.week2_progress_reviews;
 create policy "teachers read week2 progress" on public.week2_progress_reviews
 for select to authenticated using (public.is_teacher());
+
 drop policy if exists "teachers manage week2 progress" on public.week2_progress_reviews;
 create policy "teachers manage week2 progress" on public.week2_progress_reviews
 for all to authenticated using (public.is_teacher()) with check (public.is_teacher());
 
--- Verification: anon INSERT only; teacher manage through is_teacher().
+-- Verification:
+-- 1. anon can INSERT one record and cannot SELECT, UPDATE or DELETE it.
+-- 2. duplicate student_id fails with 23505.
+-- 3. teacher can SELECT/UPDATE/DELETE through is_teacher().
+-- 4. non-teacher authenticated users cannot read or manage records.
+-- 5. weekly_engagement_checkouts accepts week_number = 2 and keeps the
+--    existing unique (student_id, week_number) constraint.
 -- Rollback: drop table if exists public.week2_progress_reviews;
 
+
+-- Phase 3A: project context is optional at database level for compatibility
+-- with Phase 2 submissions, but required by the new student form.
+alter table public.week2_progress_reviews
+  add column if not exists project_name text check (project_name is null or char_length(trim(project_name)) between 1 and 120),
+  add column if not exists project_area text check (project_area is null or project_area in ('Web','Mobile','AI','Data','IoT','Cybersecurity','Game','Other')),
+  add column if not exists project_description text check (project_description is null or char_length(trim(project_description)) between 1 and 300),
+  add column if not exists target_user_problem text check (target_user_problem is null or char_length(trim(target_user_problem)) <= 150);
 
 -- Sprint 3 Phase 3: teacher review outcomes and Week 3 engagement
 -- Week 3 engagement uses the existing weekly_engagement_checkouts table.
@@ -1503,6 +1432,441 @@ for all to authenticated using (public.is_teacher()) with check (public.is_teach
 -- Do not drop project_id after submissions use it. The new tables may be
 -- dropped only before project data or new-block submissions enter production.
 
+-- Sprint 5 Phase 2: roster-prepared student identities and activation.
+
+create table if not exists public.student_accounts (
+  student_id text primary key check (char_length(trim(student_id)) between 3 and 40),
+  auth_user_id uuid not null unique references auth.users(id) on delete restrict,
+  status text not null default 'ready' check (status in ('ready', 'activated', 'disabled')),
+  activated_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.student_checkins
+  add column if not exists auth_user_id uuid references auth.users(id) on delete set null;
+create unique index if not exists student_checkins_auth_user_block_idx
+  on public.student_checkins (auth_user_id, block_id) where auth_user_id is not null;
+
+drop trigger if exists set_student_accounts_updated_at on public.student_accounts;
+create trigger set_student_accounts_updated_at
+before update on public.student_accounts
+for each row execute function public.set_updated_at();
+
+alter table public.student_accounts enable row level security;
+revoke all on public.student_accounts from anon, authenticated;
+grant select, update on public.student_accounts to authenticated;
+
+drop policy if exists "students read own account" on public.student_accounts;
+create policy "students read own account" on public.student_accounts
+for select to authenticated using (auth_user_id = auth.uid() or public.is_teacher());
+drop policy if exists "teachers manage student accounts" on public.student_accounts;
+create policy "teachers manage student accounts" on public.student_accounts
+for all to authenticated using (public.is_teacher()) with check (public.is_teacher());
+
+create or replace function public.get_my_student_context()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_account public.student_accounts;
+  v_roster public.student_roster;
+  v_block public.teaching_blocks;
+  v_project_name text;
+  v_checkin boolean;
+begin
+  select * into v_account from public.student_accounts
+  where auth_user_id = auth.uid() and status <> 'disabled';
+  if v_account.auth_user_id is null then
+    raise exception using errcode = 'P0001', message = 'Student account is not available';
+  end if;
+
+  if (select count(*) from public.student_roster roster
+      join public.teaching_blocks block on block.id = roster.block_id
+      where roster.student_id = v_account.student_id and block.status = 'active') > 1 then
+    raise exception using errcode = 'P0001', message = 'Student belongs to more than one active block';
+  end if;
+
+  select roster.* into v_roster
+  from public.student_roster roster
+  join public.teaching_blocks block on block.id = roster.block_id
+  where roster.student_id = v_account.student_id and block.status = 'active'
+  order by block.starts_on desc nulls last, block.created_at desc
+  limit 1;
+  if v_roster.id is null then
+    raise exception using errcode = 'P0001', message = 'No active roster context is available';
+  end if;
+
+  select * into v_block
+  from public.teaching_blocks
+  where id = v_roster.block_id;
+
+  select project.title into v_project_name
+  from public.teams team
+  join public.team_project_assignments assignment on assignment.team_id = team.id
+  join public.projects project on project.id = assignment.project_id
+  where team.block_id = v_roster.block_id and team.team_number = v_roster.team_number;
+
+  select exists(select 1 from public.student_checkins
+    where lower(trim(student_id)) = v_account.student_id)
+    into v_checkin;
+  return jsonb_build_object(
+    'status', v_account.status,
+    'studentName', coalesce(v_roster.preferred_name, v_roster.full_name),
+    'blockLabel', concat(v_block.academic_year, ' · ', v_block.block_code),
+    'teamName', concat('Team ', v_roster.team_number),
+    'projectName', v_project_name,
+    'checkinRecognised', v_checkin
+  );
+end;
+$$;
+revoke all on function public.get_my_student_context() from public;
+grant execute on function public.get_my_student_context() to authenticated;
+
+create or replace function public.complete_student_activation(p_goal text default null)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_account public.student_accounts;
+  v_roster public.student_roster;
+  v_existing_id uuid;
+begin
+  select * into v_account from public.student_accounts
+  where auth_user_id = auth.uid() and status = 'ready' for update;
+  if v_account.auth_user_id is null then
+    raise exception using errcode = 'P0001', message = 'Account is not ready to activate';
+  end if;
+  select roster.* into v_roster from public.student_roster roster
+  join public.teaching_blocks block on block.id = roster.block_id
+  where roster.student_id = v_account.student_id and block.status = 'active'
+  limit 1;
+  if v_roster.id is null then
+    raise exception using errcode = 'P0001', message = 'Active roster context is missing';
+  end if;
+
+  select id into v_existing_id from public.student_checkins
+  where lower(trim(student_id)) = v_account.student_id;
+  if v_existing_id is not null then
+    update public.student_checkins set auth_user_id = auth.uid()
+    where id = v_existing_id and auth_user_id is null;
+  else
+    if char_length(trim(coalesce(p_goal, ''))) < 3 then
+      raise exception using errcode = 'P0001', message = 'A Week 1 recovery goal is required';
+    end if;
+    insert into public.student_checkins (
+      student_id, student_name, team_name, goal, block_id, auth_user_id
+    ) values (
+      v_account.student_id, coalesce(v_roster.preferred_name, v_roster.full_name),
+      concat('Team ', v_roster.team_number), trim(p_goal), v_roster.block_id, auth.uid()
+    );
+  end if;
+  update public.student_accounts
+  set status = 'activated', activated_at = now()
+  where auth_user_id = auth.uid();
+  return public.get_my_student_context();
+end;
+$$;
+revoke all on function public.complete_student_activation(text) from public;
+grant execute on function public.complete_student_activation(text) to authenticated;
+
+-- Retire anonymous team lookup only after student activation is deployed.
+revoke execute on function public.find_student_team(text, text, text) from anon;
+
+-- Verification:
+-- 1. anon cannot select student_accounts or execute student context RPCs.
+-- 2. authenticated students receive exactly one active roster context.
+-- 3. a second active-block roster match raises an actionable ambiguity error.
+-- 4. activation links one matching legacy check-in, or creates one recovery row.
+-- 5. repeated provisioning never changes existing student_accounts.
+-- Rollback:
+-- Re-grant find_student_team to anon before rolling back the frontend. Revoke
+-- the two RPCs, then drop policies/table only if no accounts have been issued.
+-- Keep auth_user_id once production evidence has been linked.
+
+
+-- Sprint 5 Phase 3: teacher-opened studio sessions and authenticated check-in.
+
+create or replace function public.get_my_student_context()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_account public.student_accounts;
+  v_roster public.student_roster;
+  v_block public.teaching_blocks;
+  v_project public.projects%rowtype;
+  v_checkin boolean;
+begin
+  select * into v_account from public.student_accounts
+  where auth_user_id = auth.uid() and status <> 'disabled';
+  if v_account.auth_user_id is null then
+    raise exception using errcode = 'P0001', message = 'Student account is not available';
+  end if;
+
+  if (select count(*) from public.student_roster roster
+      join public.teaching_blocks block on block.id = roster.block_id
+      where roster.student_id = v_account.student_id and block.status = 'active') <> 1 then
+    raise exception using errcode = 'P0001', message = 'Student must belong to exactly one active block';
+  end if;
+
+  select roster.* into v_roster
+  from public.student_roster roster
+  join public.teaching_blocks block on block.id = roster.block_id
+  where roster.student_id = v_account.student_id and block.status = 'active'
+  order by block.starts_on desc nulls last, block.created_at desc
+  limit 1;
+
+  select * into v_block from public.teaching_blocks where id = v_roster.block_id;
+
+  select project.* into v_project
+  from public.teams team
+  join public.team_project_assignments assignment on assignment.team_id = team.id
+  join public.projects project on project.id = assignment.project_id
+  where team.block_id = v_roster.block_id and team.team_number = v_roster.team_number;
+
+  select exists(select 1 from public.student_checkins
+    where lower(trim(student_id)) = v_account.student_id)
+    into v_checkin;
+
+  return jsonb_build_object(
+    'status', v_account.status,
+    'studentId', v_account.student_id,
+    'studentName', coalesce(v_roster.preferred_name, v_roster.full_name),
+    'blockLabel', concat(v_block.academic_year, ' · ', v_block.block_code),
+    'teamName', concat('Team ', v_roster.team_number),
+    'projectName', coalesce(v_project.title, v_roster.project_name),
+    'projectProblem', v_project.problem,
+    'projectDescription', v_project.description,
+    'projectTargetUsers', v_project.target_users,
+    'projectExpectedOutcomes', v_project.expected_outcomes,
+    'projectCategory', v_project.category,
+    'projectDifficulty', v_project.difficulty,
+    'projectSource', case when v_project.id is not null then 'catalogue' when v_roster.project_name is not null then 'roster' else 'none' end,
+    'checkinRecognised', v_checkin
+  );
+end;
+$$;
+
+revoke all on function public.get_my_student_context() from public;
+grant execute on function public.get_my_student_context() to authenticated;
+
+create table if not exists public.studio_sessions (
+  id uuid primary key default gen_random_uuid(),
+  block_id uuid not null references public.teaching_blocks(id) on delete restrict,
+  title text not null check (char_length(trim(title)) between 3 and 120),
+  session_date date not null,
+  status text not null default 'scheduled' check (status in ('scheduled', 'open', 'closed')),
+  starts_at timestamptz,
+  ends_at timestamptz,
+  opened_at timestamptz,
+  closed_at timestamptz,
+  created_by uuid not null default auth.uid() references auth.users(id) on delete restrict,
+  created_at timestamptz not null default now()
+);
+
+alter table public.studio_sessions add column if not exists starts_at timestamptz;
+alter table public.studio_sessions add column if not exists ends_at timestamptz;
+alter table public.studio_sessions alter column opened_at drop not null;
+alter table public.studio_sessions alter column opened_at drop default;
+alter table public.studio_sessions drop constraint if exists studio_sessions_status_check;
+alter table public.studio_sessions add constraint studio_sessions_status_check check (status in ('scheduled', 'open', 'closed')) not valid;
+alter table public.studio_sessions validate constraint studio_sessions_status_check;
+alter table public.studio_sessions drop constraint if exists studio_sessions_schedule_check;
+alter table public.studio_sessions add constraint studio_sessions_schedule_check check (ends_at is null or starts_at is null or ends_at > starts_at) not valid;
+alter table public.studio_sessions validate constraint studio_sessions_schedule_check;
+
+create unique index if not exists studio_sessions_one_open_per_block_idx
+  on public.studio_sessions (block_id) where status = 'open';
+
+create table if not exists public.student_session_checkins (
+  id uuid primary key default gen_random_uuid(),
+  session_id uuid not null references public.studio_sessions(id) on delete restrict,
+  student_id text not null references public.student_accounts(student_id) on delete restrict,
+  auth_user_id uuid not null references auth.users(id) on delete restrict,
+  block_id uuid not null references public.teaching_blocks(id) on delete restrict,
+  checked_in_at timestamptz not null default now(),
+  unique (session_id, student_id),
+  unique (session_id, auth_user_id)
+);
+
+alter table public.studio_sessions enable row level security;
+alter table public.student_session_checkins enable row level security;
+
+revoke all on public.studio_sessions, public.student_session_checkins from anon, authenticated;
+grant select, insert, update on public.studio_sessions to authenticated;
+grant select on public.student_session_checkins to authenticated;
+
+drop policy if exists "teachers manage studio sessions" on public.studio_sessions;
+create policy "teachers manage studio sessions" on public.studio_sessions
+for all to authenticated using (public.is_teacher()) with check (public.is_teacher());
+
+drop policy if exists "teachers read session checkins" on public.student_session_checkins;
+create policy "teachers read session checkins" on public.student_session_checkins
+for select to authenticated using (public.is_teacher());
+
+drop policy if exists "students read own session checkins" on public.student_session_checkins;
+create policy "students read own session checkins" on public.student_session_checkins
+for select to authenticated using (auth_user_id = auth.uid());
+
+create or replace function public.get_my_open_studio_session()
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_account public.student_accounts%rowtype;
+  v_roster public.student_roster%rowtype;
+  v_session public.studio_sessions%rowtype;
+  v_checked_in_at timestamptz;
+begin
+  select * into v_account
+  from public.student_accounts
+  where auth_user_id = auth.uid() and status = 'activated';
+
+  if v_account.student_id is null then
+    return null;
+  end if;
+
+  select roster.* into v_roster
+  from public.student_roster roster
+  join public.teaching_blocks block on block.id = roster.block_id
+  where roster.student_id = v_account.student_id and block.status = 'active'
+  order by block.starts_on desc nulls last, block.created_at desc
+  limit 1;
+
+  select * into v_session
+  from public.studio_sessions
+  where block_id = v_roster.block_id
+    and (status = 'open' or (status = 'scheduled' and starts_at <= now() and (ends_at is null or ends_at > now())))
+  limit 1;
+
+  if v_session.id is null then
+    return null;
+  end if;
+
+  select checked_in_at into v_checked_in_at
+  from public.student_session_checkins
+  where session_id = v_session.id and auth_user_id = auth.uid();
+
+  return jsonb_build_object(
+    'sessionId', v_session.id,
+    'title', v_session.title,
+    'sessionDate', v_session.session_date,
+    'checkedInAt', v_checked_in_at
+  );
+end;
+$$;
+
+revoke all on function public.get_my_open_studio_session() from public;
+grant execute on function public.get_my_open_studio_session() to authenticated;
+
+create or replace function public.get_my_session_history()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_account public.student_accounts%rowtype;
+  v_block_id uuid;
+  v_result jsonb;
+begin
+  select * into v_account from public.student_accounts
+  where auth_user_id = auth.uid() and status = 'activated';
+  select roster.block_id into v_block_id from public.student_roster roster
+  join public.teaching_blocks block on block.id = roster.block_id
+  where roster.student_id = v_account.student_id and block.status = 'active' limit 1;
+  if v_block_id is null then return '[]'::jsonb; end if;
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'sessionId', session.id, 'title', session.title, 'sessionDate', session.session_date,
+    'startsAt', session.starts_at, 'endsAt', session.ends_at,
+    'status', case when session.status = 'closed' or (session.ends_at is not null and session.ends_at <= now()) then 'closed'
+      when session.status = 'open' or (session.starts_at <= now() and (session.ends_at is null or session.ends_at > now())) then 'open' else 'scheduled' end,
+    'checkedInAt', checkin.checked_in_at
+  ) order by session.session_date, session.created_at), '[]'::jsonb) into v_result
+  from public.studio_sessions session left join public.student_session_checkins checkin
+    on checkin.session_id = session.id and checkin.auth_user_id = auth.uid()
+  where session.block_id = v_block_id;
+  return v_result;
+end;
+$$;
+
+revoke all on function public.get_my_session_history() from public;
+grant execute on function public.get_my_session_history() to authenticated;
+
+create or replace function public.check_in_to_studio_session(p_session_id uuid)
+returns timestamptz
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_account public.student_accounts%rowtype;
+  v_session public.studio_sessions%rowtype;
+  v_block_id uuid;
+  v_checked_in_at timestamptz;
+begin
+  select * into v_account
+  from public.student_accounts
+  where auth_user_id = auth.uid() and status = 'activated';
+
+  select * into v_session
+  from public.studio_sessions
+  where id = p_session_id
+    and (status = 'open' or (status = 'scheduled' and starts_at <= now() and (ends_at is null or ends_at > now())));
+
+  select roster.block_id into v_block_id
+  from public.student_roster roster
+  join public.teaching_blocks block on block.id = roster.block_id
+  where roster.student_id = v_account.student_id
+    and roster.block_id = v_session.block_id
+    and block.status = 'active'
+  limit 1;
+
+  if v_account.student_id is null or v_session.id is null or v_block_id is null then
+    raise exception using errcode = 'P0001', message = 'Open session does not match the authenticated student';
+  end if;
+
+  insert into public.student_session_checkins (
+    session_id, student_id, auth_user_id, block_id
+  ) values (
+    v_session.id, v_account.student_id, auth.uid(), v_block_id
+  )
+  on conflict (session_id, student_id) do update
+    set checked_in_at = public.student_session_checkins.checked_in_at
+  returning checked_in_at into v_checked_in_at;
+
+  return v_checked_in_at;
+end;
+$$;
+
+revoke all on function public.check_in_to_studio_session(uuid) from public;
+grant execute on function public.check_in_to_studio_session(uuid) to authenticated;
+
+-- Verification:
+-- 1. A teacher can open only one session per block and can close it.
+-- 2. An activated student in that block receives only the open session.
+-- 3. Check-in is idempotent and the original timestamp is preserved.
+-- 4. Students cannot check in to another block or a closed session.
+-- 5. Students can read only their own check-in; teachers can read the block.
+-- 6. Scheduled sessions cannot be checked into before starts_at or after ends_at.
+--
+-- Rollback:
+-- Close open sessions, revoke both RPCs, then deploy the previous frontend.
+-- Preserve both tables once real attendance exists; they are historical evidence.
+
+
 -- Sprint 5 Phase 4A: block-based weekly activity activation.
 
 create table if not exists public.weekly_activity_settings (
@@ -1564,7 +1928,7 @@ $$;
 revoke all on function public.get_my_weekly_activity_states() from public;
 grant execute on function public.get_my_weekly_activity_states() to authenticated;
 
-create or replace function public.student_can_submit_week(p_block_id uuid, p_week smallint)
+create or replace function public.student_can_submit_week_v2(p_block_id uuid, p_week integer)
 returns boolean language sql stable security definer set search_path = '' as $$
   select exists (
     select 1 from public.student_accounts account
@@ -1573,27 +1937,27 @@ returns boolean language sql stable security definer set search_path = '' as $$
     where account.auth_user_id = auth.uid() and account.status = 'activated' and setting.is_open
   );
 $$;
-revoke all on function public.student_can_submit_week(uuid, smallint) from public;
-grant execute on function public.student_can_submit_week(uuid, smallint) to authenticated;
+revoke all on function public.student_can_submit_week_v2(uuid, integer) from public;
+grant execute on function public.student_can_submit_week_v2(uuid, integer) to authenticated;
 
 revoke insert on public.team_health_checks, public.weekly_engagement_checkouts, public.week2_progress_reviews, public.poster_reviews from anon;
 
 drop policy if exists "students create team health" on public.team_health_checks;
 create policy "students create team health" on public.team_health_checks for insert to authenticated
-with check (public.student_can_submit_week(block_id, 1));
+with check (public.student_can_submit_week_v2(block_id, 1));
 
 drop policy if exists "students create engagement checkout" on public.weekly_engagement_checkouts;
 create policy "students create engagement checkout" on public.weekly_engagement_checkouts for insert to authenticated
-with check (public.student_can_submit_week(block_id, week_number));
+with check (public.student_can_submit_week_v2(block_id, week_number::integer));
 
 drop policy if exists "students create week2 progress" on public.week2_progress_reviews;
 create policy "students create week2 progress" on public.week2_progress_reviews for insert to authenticated
-with check (public.student_can_submit_week(block_id, 2));
+with check (public.student_can_submit_week_v2(block_id, 2));
 
 drop policy if exists "Students can submit poster reviews" on public.poster_reviews;
 create policy "Students can submit poster reviews" on public.poster_reviews for insert to authenticated
 with check (
-  public.student_can_submit_week(block_id, 3)
+  public.student_can_submit_week_v2(block_id, 3)
   and lower(trim(reviewer_team)) <> lower(trim(reviewed_team))
   and problem_clarity between 1 and 5 and working_product between 1 and 5
   and evidence_testing between 1 and 5 and document_readiness between 1 and 5
@@ -1635,7 +1999,9 @@ grant execute on function public.get_my_student_context() to authenticated;
 -- Verification: every block has four rows; all rows default closed; teachers can
 -- update only the selected block; students can read only through the RPC; direct
 -- inserts fail for a closed week and succeed for the student's own open week.
-\n+-- Sprint 5 Phase 4A: block-based Presentation Order draft and publication.
+
+
+-- Sprint 5 Phase 4A: block-based Presentation Order draft and publication.
 
 create table if not exists public.presentation_orders (
   block_id uuid primary key references public.teaching_blocks(id) on delete cascade,
@@ -1792,6 +2158,2235 @@ grant execute on function public.get_my_published_presentation_order() to authen
 -- 5. A student receives [] while Week 4 is closed or before publication.
 -- 6. In active Week 4, a student receives only their block's latest snapshot.
 -- 7. anon and students cannot read presentation_orders directly.
+
+
+
+-- Missing Sprint 6/7 installation prerequisites, restored from released migrations.
+-- Sprint 5 Phase 4A hotfix: authoritative completed-state lookup and teacher reset.
+
+create or replace function public.get_my_week2_precheck_submission()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_account public.student_accounts;
+  v_roster public.student_roster;
+  v_submission public.week2_progress_reviews;
+begin
+  select account.* into v_account
+  from public.student_accounts account
+  where account.auth_user_id = auth.uid()
+    and account.status = 'activated';
+
+  if v_account.auth_user_id is null then
+    raise exception using errcode = '42501', message = 'Active student account is required';
+  end if;
+
+  select roster.* into v_roster
+  from public.student_roster roster
+  join public.teaching_blocks block on block.id = roster.block_id
+  where lower(trim(roster.student_id)) = lower(trim(v_account.student_id))
+    and block.status = 'active'
+  order by block.starts_on desc nulls last, block.created_at desc
+  limit 1;
+
+  if v_roster.id is null then
+    return null;
+  end if;
+
+  select submission.* into v_submission
+  from public.week2_progress_reviews submission
+  where submission.block_id = v_roster.block_id
+    and lower(trim(submission.student_id)) = lower(trim(v_account.student_id))
+  order by submission.created_at desc
+  limit 1;
+
+  if v_submission.id is null then
+    return null;
+  end if;
+
+  return jsonb_build_object(
+    'submittedAt', v_submission.created_at,
+    'answers', (
+      select coalesce(jsonb_agg(jsonb_build_object('label', answer.label, 'value', answer.value)), '[]'::jsonb)
+      from (values
+        ('Project name', v_submission.project_name),
+        ('Project area', v_submission.project_area),
+        ('Project description', v_submission.project_description),
+        ('Target user / problem', v_submission.target_user_problem),
+        ('Deliverable', v_submission.deliverable_area),
+        ('Implementation claim', v_submission.implementation_item),
+        ('Current state', v_submission.implementation_state),
+        ('Where to find it', v_submission.work_location),
+        ('Evidence reference', v_submission.evidence_reference),
+        ('Demonstration plan', v_submission.demonstration_method),
+        ('Verification completed', v_submission.verification_level),
+        ('Method to explain', array_to_string(v_submission.implementation_methods, ', ')),
+        ('Remaining issue', v_submission.remaining_issue),
+        ('Issue details', v_submission.issue_note),
+        ('Next action', v_submission.next_action),
+        ('Teacher should verify', v_submission.teacher_verification)
+      ) as answer(label, value)
+      where answer.value is not null and trim(answer.value) <> ''
+    )
+  );
+end;
+$$;
+
+revoke all on function public.get_my_week2_precheck_submission() from public;
+grant execute on function public.get_my_week2_precheck_submission() to authenticated;
+
+create or replace function public.teacher_reset_week2_precheck(p_submission_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_submission public.week2_progress_reviews;
+begin
+  if not coalesce(public.is_teacher(), false) then
+    raise exception using errcode = '42501', message = 'Teacher access is required';
+  end if;
+
+  select submission.* into v_submission
+  from public.week2_progress_reviews submission
+  where submission.id = p_submission_id;
+
+  if v_submission.id is null then
+    raise exception using errcode = 'P0002', message = 'Pre-check submission was not found';
+  end if;
+
+  delete from public.teacher_progress_reviews review
+  where review.block_id = v_submission.block_id
+    and lower(trim(review.student_id)) = lower(trim(v_submission.student_id));
+
+  delete from public.week2_progress_reviews submission
+  where submission.id = p_submission_id;
+end;
+$$;
+
+revoke all on function public.teacher_reset_week2_precheck(uuid) from public;
+grant execute on function public.teacher_reset_week2_precheck(uuid) to authenticated;
+
+-- Verification:
+-- 1. An authenticated student receives only their own active-block Pre-check receipt.
+-- 2. A student without a submission receives null.
+-- 3. A teacher reset removes the selected Pre-check and its matching private follow-up.
+-- 4. Non-teachers cannot execute the reset.
+
+
+-- Sprint 5 Phase 4A: block-based Presentation Order draft and publication.
+
+create table if not exists public.presentation_orders (
+  block_id uuid primary key references public.teaching_blocks(id) on delete cascade,
+  draft_team_ids uuid[] not null default '{}',
+  published_snapshot jsonb,
+  published_at timestamptz,
+  updated_at timestamptz not null default now()
+);
+
+drop trigger if exists set_presentation_orders_updated_at on public.presentation_orders;
+create trigger set_presentation_orders_updated_at
+before update on public.presentation_orders
+for each row execute function public.set_updated_at();
+
+alter table public.presentation_orders enable row level security;
+revoke all on public.presentation_orders from anon, authenticated;
+grant select on public.presentation_orders to authenticated;
+
+drop policy if exists "teachers read presentation orders" on public.presentation_orders;
+create policy "teachers read presentation orders" on public.presentation_orders
+for select to authenticated using (public.is_teacher());
+
+create or replace function public.save_presentation_order_draft(
+  p_block_id uuid,
+  p_team_ids uuid[]
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_team_count integer;
+begin
+  if not public.is_teacher() then
+    raise exception using errcode = '42501', message = 'Teacher access required';
+  end if;
+
+  select count(*)::integer into v_team_count
+  from public.teams where block_id = p_block_id;
+
+  if v_team_count = 0
+     or coalesce(array_length(p_team_ids, 1), 0) <> v_team_count
+     or (select count(distinct team_id) from unnest(p_team_ids) as supplied(team_id)) <> v_team_count
+     or exists (
+       select 1 from unnest(p_team_ids) as supplied(team_id)
+       where not exists (
+         select 1 from public.teams team
+         where team.id = supplied.team_id and team.block_id = p_block_id
+       )
+     ) then
+    raise exception using errcode = '22023',
+      message = 'Presentation order must contain every block team exactly once';
+  end if;
+
+  insert into public.presentation_orders (block_id, draft_team_ids)
+  values (p_block_id, p_team_ids)
+  on conflict (block_id) do update
+  set draft_team_ids = excluded.draft_team_ids;
+end;
+$$;
+
+revoke all on function public.save_presentation_order_draft(uuid, uuid[]) from public;
+grant execute on function public.save_presentation_order_draft(uuid, uuid[]) to authenticated;
+
+create or replace function public.publish_presentation_order(
+  p_block_id uuid,
+  p_team_ids uuid[]
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_snapshot jsonb;
+begin
+  perform public.save_presentation_order_draft(p_block_id, p_team_ids);
+
+  select jsonb_agg(
+    jsonb_build_object(
+      'position', ordered.ordinality,
+      'teamName', concat('Team ', team.team_number),
+      'projectName', project.title
+    ) order by ordered.ordinality
+  ) into v_snapshot
+  from unnest(p_team_ids) with ordinality as ordered(team_id, ordinality)
+  join public.teams team on team.id = ordered.team_id
+  left join public.team_project_assignments assignment on assignment.team_id = team.id
+  left join public.projects project on project.id = assignment.project_id;
+
+  update public.presentation_orders
+  set published_snapshot = v_snapshot,
+      published_at = now()
+  where block_id = p_block_id;
+
+  return coalesce(v_snapshot, '[]'::jsonb);
+end;
+$$;
+
+revoke all on function public.publish_presentation_order(uuid, uuid[]) from public;
+grant execute on function public.publish_presentation_order(uuid, uuid[]) to authenticated;
+
+create or replace function public.get_my_published_presentation_order()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_block_id uuid;
+  v_is_week_four_open boolean;
+  v_snapshot jsonb;
+begin
+  select roster.block_id into v_block_id
+  from public.student_accounts account
+  join public.student_roster roster on roster.student_id = account.student_id
+  join public.teaching_blocks block on block.id = roster.block_id
+  where account.auth_user_id = auth.uid()
+    and account.status = 'activated'
+    and block.status = 'active'
+  order by block.starts_on desc nulls last, block.created_at desc
+  limit 1;
+
+  if v_block_id is null then
+    raise exception using errcode = 'P0001', message = 'Active student block is not available';
+  end if;
+
+  select is_open into v_is_week_four_open
+  from public.weekly_activity_settings
+  where block_id = v_block_id and week_number = 4;
+
+  if not coalesce(v_is_week_four_open, false) then
+    return '[]'::jsonb;
+  end if;
+
+  select published_snapshot into v_snapshot
+  from public.presentation_orders
+  where block_id = v_block_id and published_at is not null;
+
+  return coalesce(v_snapshot, '[]'::jsonb);
+end;
+$$;
+
+revoke all on function public.get_my_published_presentation_order() from public;
+grant execute on function public.get_my_published_presentation_order() to authenticated;
+
+-- Verification:
+-- 1. A teacher sees natural Team-number order before the first saved draft.
+-- 2. A draft contains every selected-block team exactly once.
+-- 3. Saving a changed draft leaves published_snapshot and published_at intact.
+-- 4. Publishing stores a fixed ordered snapshot including project titles.
+-- 5. A student receives [] while Week 4 is closed or before publication.
+-- 6. In active Week 4, a student receives only their block's latest snapshot.
+-- 7. anon and students cannot read presentation_orders directly.
+
+
+-- Sprint 6 Phase 1: private, block-scoped Poster Gallery.
+-- Originals live in a private Storage bucket. Immutable poster_versions keep
+-- replacement history while team_posters separates draft from published state.
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'poster-gallery',
+  'poster-gallery',
+  false,
+  1048576,
+  array['application/pdf','image/png','image/jpeg']::text[]
+)
+on conflict (id) do update set
+  public = false,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
+create table if not exists public.poster_gallery_settings (
+  block_id uuid primary key references public.teaching_blocks(id) on delete cascade,
+  is_published boolean not null default false,
+  published_at timestamptz,
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.poster_versions (
+  id uuid primary key default gen_random_uuid(),
+  block_id uuid not null references public.teaching_blocks(id) on delete restrict,
+  team_id uuid not null references public.teams(id) on delete restrict,
+  storage_path text not null unique,
+  original_filename text not null check (char_length(original_filename) between 1 and 255),
+  mime_type text not null check (mime_type in ('application/pdf','image/png','image/jpeg')),
+  size_bytes integer not null check (size_bytes between 1 and 1048576),
+  uploader_auth_user_id uuid not null references auth.users(id) on delete restrict,
+  uploader_role text not null check (uploader_role in ('student','teacher')),
+  status text not null default 'ready' check (status in ('ready','removed')),
+  removed_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists poster_versions_block_team_created_idx
+  on public.poster_versions (block_id, team_id, created_at desc);
+
+-- Keep a re-run of this migration authoritative for Preview environments that
+-- previously used the original 5 MB Phase 1 limit.
+alter table public.poster_versions
+  drop constraint if exists poster_versions_size_bytes_check;
+alter table public.poster_versions
+  add constraint poster_versions_size_bytes_check
+  check (size_bytes between 1 and 1048576);
+
+create table if not exists public.team_posters (
+  block_id uuid not null references public.teaching_blocks(id) on delete cascade,
+  team_id uuid not null references public.teams(id) on delete cascade,
+  draft_version_id uuid references public.poster_versions(id) on delete restrict,
+  published_version_id uuid references public.poster_versions(id) on delete restrict,
+  updated_at timestamptz not null default now(),
+  primary key (block_id, team_id),
+  unique (team_id)
+);
+
+insert into public.poster_gallery_settings (block_id)
+select id from public.teaching_blocks
+on conflict (block_id) do nothing;
+
+create or replace function public.prepare_poster_gallery_settings()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  insert into public.poster_gallery_settings (block_id) values (new.id)
+  on conflict (block_id) do nothing;
+  return new;
+end;
+$$;
+revoke all on function public.prepare_poster_gallery_settings() from public;
+drop trigger if exists prepare_poster_gallery_settings on public.teaching_blocks;
+create trigger prepare_poster_gallery_settings after insert on public.teaching_blocks
+for each row execute function public.prepare_poster_gallery_settings();
+
+drop trigger if exists set_poster_gallery_settings_updated_at on public.poster_gallery_settings;
+create trigger set_poster_gallery_settings_updated_at before update on public.poster_gallery_settings
+for each row execute function public.set_updated_at();
+drop trigger if exists set_team_posters_updated_at on public.team_posters;
+create trigger set_team_posters_updated_at before update on public.team_posters
+for each row execute function public.set_updated_at();
+
+alter table public.poster_gallery_settings enable row level security;
+alter table public.poster_versions enable row level security;
+alter table public.team_posters enable row level security;
+revoke all on public.poster_gallery_settings, public.poster_versions, public.team_posters from anon, authenticated;
+grant select, insert, update on public.poster_gallery_settings, public.poster_versions, public.team_posters to authenticated;
+
+drop policy if exists "teachers manage poster gallery settings" on public.poster_gallery_settings;
+create policy "teachers manage poster gallery settings" on public.poster_gallery_settings
+for all to authenticated using (public.is_teacher()) with check (public.is_teacher());
+drop policy if exists "teachers read poster versions" on public.poster_versions;
+create policy "teachers read poster versions" on public.poster_versions
+for select to authenticated using (public.is_teacher());
+drop policy if exists "teachers read team posters" on public.team_posters;
+create policy "teachers read team posters" on public.team_posters
+for select to authenticated using (public.is_teacher());
+
+-- Student reads use narrow security-definer RPCs. Browser roles cannot list the
+-- Storage bucket or the underlying poster tables.
+create or replace function public.get_my_poster_upload_status()
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare
+  v_block_id uuid; v_team_id uuid; v_team_number smallint; v_version public.poster_versions;
+begin
+  select roster.block_id, team.id, team.team_number
+    into v_block_id, v_team_id, v_team_number
+  from public.student_accounts account
+  join public.student_roster roster on roster.student_id = account.student_id
+  join public.teaching_blocks block on block.id = roster.block_id
+  join public.teams team on team.block_id = roster.block_id and team.team_number = roster.team_number
+  where account.auth_user_id = auth.uid() and account.status = 'activated' and block.status = 'active'
+  order by block.starts_on desc nulls last, block.created_at desc limit 1;
+  if v_team_id is null then
+    raise exception using errcode='P0001', message='Active student team is not available';
+  end if;
+  select version.* into v_version
+  from public.team_posters poster
+  join public.poster_versions version on version.id = poster.draft_version_id
+  where poster.block_id = v_block_id and poster.team_id = v_team_id and version.status = 'ready';
+  return jsonb_build_object(
+    'blockId', v_block_id, 'teamId', v_team_id, 'teamName', concat('Team ', v_team_number),
+    'draft', case when v_version.id is null then null else jsonb_build_object(
+      'versionId',v_version.id,'originalFilename',v_version.original_filename,
+      'mimeType',v_version.mime_type,'sizeBytes',v_version.size_bytes,'createdAt',v_version.created_at) end
+  );
+end;
+$$;
+revoke all on function public.get_my_poster_upload_status() from public;
+grant execute on function public.get_my_poster_upload_status() to authenticated;
+
+create or replace function public.get_my_poster_gallery()
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare
+  v_student_id text; v_block_id uuid; v_team_number smallint; v_published boolean;
+begin
+  select account.student_id, roster.block_id, roster.team_number
+    into v_student_id, v_block_id, v_team_number
+  from public.student_accounts account
+  join public.student_roster roster on roster.student_id = account.student_id
+  join public.teaching_blocks block on block.id = roster.block_id
+  where account.auth_user_id = auth.uid() and account.status = 'activated' and block.status = 'active'
+  order by block.starts_on desc nulls last, block.created_at desc limit 1;
+  if v_block_id is null then
+    raise exception using errcode='P0001', message='Active student block is not available';
+  end if;
+  select is_published into v_published from public.poster_gallery_settings where block_id = v_block_id;
+  return jsonb_build_object(
+    'isPublished', coalesce(v_published,false),
+    'posters', case when coalesce(v_published,false) then coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'teamId',team.id,'teamName',concat('Team ',team.team_number),
+        'projectName',project.title,'versionId',version.id,
+        'originalFilename',version.original_filename,'mimeType',version.mime_type,
+        'isOwnTeam',team.team_number = v_team_number,
+        'feedbackCompleted',exists(select 1 from public.poster_reviews review
+          where review.block_id = v_block_id and lower(trim(review.reviewer_student_id)) = v_student_id
+            and lower(trim(review.reviewed_team)) = lower(concat('Team ',team.team_number)))
+      ) order by team.team_number)
+      from public.teams team
+      left join public.team_project_assignments assignment on assignment.team_id = team.id
+      left join public.projects project on project.id = assignment.project_id
+      left join public.team_posters poster on poster.block_id = v_block_id and poster.team_id = team.id
+      left join public.poster_versions version on version.id = poster.published_version_id and version.status = 'ready'
+      where team.block_id = v_block_id
+    ),'[]'::jsonb) else '[]'::jsonb end
+  );
+end;
+$$;
+revoke all on function public.get_my_poster_gallery() from public;
+grant execute on function public.get_my_poster_gallery() to authenticated;
+
+create or replace function public.get_teacher_poster_gallery(p_block_id uuid)
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare v_published boolean; v_published_at timestamptz;
+begin
+  if not public.is_teacher() then raise exception using errcode='42501', message='Teacher access required'; end if;
+  select is_published,published_at into v_published,v_published_at from public.poster_gallery_settings where block_id=p_block_id;
+  return jsonb_build_object(
+    'isPublished',coalesce(v_published,false),'publishedAt',v_published_at,
+    'teams',coalesce((select jsonb_agg(jsonb_build_object(
+      'teamId',team.id,'teamName',concat('Team ',team.team_number),'projectName',project.title,
+      'draft',case when draft.id is null then null else jsonb_build_object('versionId',draft.id,'originalFilename',draft.original_filename,'mimeType',draft.mime_type,'sizeBytes',draft.size_bytes,'createdAt',draft.created_at) end,
+      'publishedVersionId',published.id
+    ) order by team.team_number)
+    from public.teams team
+    left join public.team_project_assignments assignment on assignment.team_id=team.id
+    left join public.projects project on project.id=assignment.project_id
+    left join public.team_posters poster on poster.block_id=p_block_id and poster.team_id=team.id
+    left join public.poster_versions draft on draft.id=poster.draft_version_id and draft.status='ready'
+    left join public.poster_versions published on published.id=poster.published_version_id and published.status='ready'
+    where team.block_id=p_block_id),'[]'::jsonb)
+  );
+end;
+$$;
+revoke all on function public.get_teacher_poster_gallery(uuid) from public;
+grant execute on function public.get_teacher_poster_gallery(uuid) to authenticated;
+
+create or replace function public.publish_poster_gallery(p_block_id uuid)
+returns void language plpgsql security definer set search_path = '' as $$
+begin
+  if not public.is_teacher() then raise exception using errcode='42501', message='Teacher access required'; end if;
+  update public.team_posters set published_version_id=draft_version_id
+  where block_id=p_block_id;
+  insert into public.poster_gallery_settings(block_id,is_published,published_at)
+  values(p_block_id,true,now())
+  on conflict(block_id) do update set is_published=true,published_at=now();
+end;
+$$;
+revoke all on function public.publish_poster_gallery(uuid) from public;
+grant execute on function public.publish_poster_gallery(uuid) to authenticated;
+
+create or replace function public.hide_poster_gallery(p_block_id uuid)
+returns void language plpgsql security definer set search_path = '' as $$
+begin
+  if not public.is_teacher() then raise exception using errcode='42501', message='Teacher access required'; end if;
+  update public.poster_gallery_settings set is_published=false where block_id=p_block_id;
+end;
+$$;
+revoke all on function public.hide_poster_gallery(uuid) from public;
+grant execute on function public.hide_poster_gallery(uuid) to authenticated;
+
+create or replace function public.remove_team_poster_draft(p_team_id uuid)
+returns void language plpgsql security definer set search_path = '' as $$
+declare v_version_id uuid;
+begin
+  if not public.is_teacher() then raise exception using errcode='42501', message='Teacher access required'; end if;
+  select draft_version_id into v_version_id from public.team_posters where team_id=p_team_id;
+  update public.team_posters set draft_version_id=null where team_id=p_team_id;
+  if v_version_id is not null then
+    update public.poster_versions set status='removed',removed_at=now() where id=v_version_id;
+  end if;
+end;
+$$;
+revoke all on function public.remove_team_poster_draft(uuid) from public;
+grant execute on function public.remove_team_poster_draft(uuid) to authenticated;
+
+-- Gallery publication is the authoritative Peer Feedback gate for the direct
+-- Poster -> feedback flow. It is intentionally independent from Week 3's broad
+-- activity activation switch.
+create or replace function public.student_can_review_poster_gallery(p_block_id uuid)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select exists(
+    select 1 from public.student_accounts account
+    join public.student_roster roster on roster.student_id=account.student_id and roster.block_id=p_block_id
+    join public.poster_gallery_settings gallery on gallery.block_id=roster.block_id and gallery.is_published
+    where account.auth_user_id=auth.uid() and account.status='activated'
+  );
+$$;
+revoke all on function public.student_can_review_poster_gallery(uuid) from public;
+grant execute on function public.student_can_review_poster_gallery(uuid) to authenticated;
+
+drop policy if exists "Students can submit poster reviews" on public.poster_reviews;
+create policy "Students can submit poster reviews" on public.poster_reviews for insert to authenticated
+with check (
+  public.student_can_review_poster_gallery(block_id)
+  and lower(trim(reviewer_team)) <> lower(trim(reviewed_team))
+  and exists (
+    select 1 from public.teams team
+    join public.team_posters poster on poster.team_id=team.id and poster.block_id=team.block_id
+    join public.poster_versions version on version.id=poster.published_version_id and version.status='ready'
+    where team.block_id=poster_reviews.block_id
+      and lower(concat('Team ',team.team_number))=lower(trim(poster_reviews.reviewed_team))
+  )
+  and problem_clarity between 1 and 5 and working_product between 1 and 5
+  and evidence_testing between 1 and 5 and document_readiness between 1 and 5
+  and presentation_quality between 1 and 5
+);
+
+-- Storage stays private and service-managed. No browser SELECT/LIST policy is
+-- created on storage.objects; uploads and reads use short-lived signed tokens.
+
+-- Verification:
+-- 1. bucket is private, 1 MB, PDF/PNG/JPEG only; browser roles cannot list it.
+-- 2. student RPCs resolve only the authenticated active Block/Team.
+-- 3. publish copies each Team's draft pointer into an immutable published snapshot.
+-- 4. replacement changes only draft_version_id until Publish is called again.
+-- 5. Hide preserves versions, published pointers and existing feedback.
+
+
+-- Sprint 6 Phase 2A: stable S1-S10 curriculum identity and student Project Journey.
+-- Attendance remains governed by the existing studio session lifecycle.
+-- Weekly Activities remain independent and are never mapped into Session Check-in.
+
+alter table public.studio_sessions add column if not exists session_number smallint;
+alter table public.studio_sessions add column if not exists week_number smallint;
+alter table public.studio_sessions add column if not exists curriculum_focus text;
+
+-- Number existing sessions deterministically without changing their dates, titles,
+-- attendance or teacher-authored schedule windows.
+with ranked as (
+  select id,
+         row_number() over (
+           partition by block_id
+           order by session_date, created_at, id
+         )::smallint as session_number
+  from public.studio_sessions
+)
+update public.studio_sessions session
+set session_number = ranked.session_number
+from ranked
+where session.id = ranked.id
+  and session.session_number is null
+  and ranked.session_number between 1 and 10;
+
+update public.studio_sessions
+set week_number = case session_number
+      when 1 then 1 when 2 then 1 when 3 then 1
+      when 4 then 2 when 5 then 2 when 6 then 2
+      when 7 then 3 when 8 then 3 when 9 then 3
+      when 10 then 4 else week_number end,
+    curriculum_focus = case session_number
+      when 1 then 'Project Reconnect & Check-in'
+      when 2 then 'Team Alignment & Four-Week Commitment'
+      when 3 then 'Project Progress & Work Focus'
+      when 4 then 'Progress Pre-check'
+      when 5 then 'Progress Review'
+      when 6 then 'Review → Action'
+      when 7 then 'Application Progress + Technical Implementation Report'
+      when 8 then 'Completion Check + Product Verification'
+      when 9 then 'Final Readiness'
+      when 10 then 'Platform Feedback + Final Presentation'
+      else curriculum_focus end
+where session_number between 1 and 10;
+
+alter table public.studio_sessions drop constraint if exists studio_sessions_session_number_check;
+alter table public.studio_sessions add constraint studio_sessions_session_number_check
+  check (session_number is null or session_number between 1 and 10) not valid;
+alter table public.studio_sessions validate constraint studio_sessions_session_number_check;
+
+alter table public.studio_sessions drop constraint if exists studio_sessions_week_number_check;
+alter table public.studio_sessions add constraint studio_sessions_week_number_check
+  check (week_number is null or week_number between 1 and 4) not valid;
+alter table public.studio_sessions validate constraint studio_sessions_week_number_check;
+
+create unique index if not exists studio_sessions_block_session_number_idx
+  on public.studio_sessions (block_id, session_number)
+  where session_number is not null;
+
+-- The current 2026 2B1 class is already past S1-S5. Preserve those sessions as
+-- read-only history even if an old schedule row was left in "scheduled" state.
+update public.studio_sessions session
+set status = 'closed',
+    closed_at = coalesce(session.closed_at, now())
+from public.teaching_blocks block
+where session.block_id = block.id
+  and block.academic_year = 2026
+  and block.block_code = '2B1'
+  and session.session_number between 1 and 5
+  and session.status <> 'closed';
+
+create or replace function public.get_my_session_journey()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_account public.student_accounts%rowtype;
+  v_block_id uuid;
+  v_result jsonb;
+begin
+  select * into v_account
+  from public.student_accounts
+  where auth_user_id = auth.uid() and status = 'activated';
+
+  if v_account.student_id is null then
+    return '[]'::jsonb;
+  end if;
+
+  select roster.block_id into v_block_id
+  from public.student_roster roster
+  join public.teaching_blocks block on block.id = roster.block_id
+  where roster.student_id = v_account.student_id
+    and block.status = 'active'
+  order by block.starts_on desc nulls last, block.created_at desc
+  limit 1;
+
+  if v_block_id is null then
+    return '[]'::jsonb;
+  end if;
+
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'sessionId', session.id,
+    'sessionNumber', session.session_number,
+    'weekNumber', session.week_number,
+    'focus', coalesce(session.curriculum_focus, session.title),
+    'title', session.title,
+    'sessionDate', session.session_date,
+    'startsAt', session.starts_at,
+    'endsAt', session.ends_at,
+    'status', case
+      when session.status = 'closed'
+        or (session.ends_at is not null and session.ends_at <= now()) then 'closed'
+      when session.status = 'open'
+        or (session.starts_at is not null and session.starts_at <= now()
+          and (session.ends_at is null or session.ends_at > now())) then 'open'
+      else 'scheduled' end,
+    'checkedInAt', checkin.checked_in_at
+  ) order by session.session_number nulls last, session.session_date, session.created_at), '[]'::jsonb)
+  into v_result
+  from public.studio_sessions session
+  left join public.student_session_checkins checkin
+    on checkin.session_id = session.id and checkin.auth_user_id = auth.uid()
+  where session.block_id = v_block_id;
+
+  return v_result;
+end;
+$$;
+
+revoke all on function public.get_my_session_journey() from public;
+grant execute on function public.get_my_session_journey() to authenticated;
+
+-- Verification:
+-- 1. Existing block session dates, titles, attendance and schedule windows are unchanged.
+-- 2. Existing sessions are numbered S1-S10 in chronological order and have the agreed focus.
+-- 3. 2026 2B1 S1-S5 are closed; S6-S10 retain their existing lifecycle state.
+-- 4. Students receive only their active block and only their own Session Check-in history.
+-- 5. Weekly Activity evidence is not mapped, copied or backfilled into the Session Journey.
+-- 6. Existing get_my_session_history/check-in RPCs continue to work unchanged.
+
+
+-- Sprint 6 Phase 2B: independent Session Task + Work Track for S6-S9.
+-- Attendance and Weekly Activities remain separate evidence streams.
+
+alter table public.studio_sessions add column if not exists task_guidance text;
+alter table public.studio_sessions add column if not exists expected_evidence text;
+
+alter table public.studio_sessions drop constraint if exists studio_sessions_task_guidance_length_check;
+alter table public.studio_sessions add constraint studio_sessions_task_guidance_length_check
+  check (task_guidance is null or char_length(task_guidance) <= 600) not valid;
+alter table public.studio_sessions validate constraint studio_sessions_task_guidance_length_check;
+
+alter table public.studio_sessions drop constraint if exists studio_sessions_expected_evidence_length_check;
+alter table public.studio_sessions add constraint studio_sessions_expected_evidence_length_check
+  check (expected_evidence is null or char_length(expected_evidence) <= 400) not valid;
+alter table public.studio_sessions validate constraint studio_sessions_expected_evidence_length_check;
+
+create table if not exists public.student_session_work_tracks (
+  id uuid primary key default gen_random_uuid(),
+  session_id uuid not null references public.studio_sessions(id) on delete restrict,
+  student_id text not null references public.student_accounts(student_id) on delete restrict,
+  auth_user_id uuid not null references auth.users(id) on delete restrict,
+  block_id uuid not null references public.teaching_blocks(id) on delete restrict,
+  response jsonb not null default '{}'::jsonb check (jsonb_typeof(response) = 'object'),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (session_id, student_id),
+  unique (session_id, auth_user_id)
+);
+
+alter table public.student_session_work_tracks add column if not exists teacher_verified_completion smallint;
+alter table public.student_session_work_tracks add column if not exists teacher_verification_status text;
+alter table public.student_session_work_tracks add column if not exists teacher_verification_reason text;
+alter table public.student_session_work_tracks add column if not exists teacher_verified_at timestamptz;
+alter table public.student_session_work_tracks add column if not exists teacher_verified_by uuid references auth.users(id) on delete set null;
+
+alter table public.student_session_work_tracks drop constraint if exists student_session_work_tracks_teacher_completion_check;
+alter table public.student_session_work_tracks add constraint student_session_work_tracks_teacher_completion_check
+  check (teacher_verified_completion is null or teacher_verified_completion between 0 and 100) not valid;
+alter table public.student_session_work_tracks validate constraint student_session_work_tracks_teacher_completion_check;
+
+alter table public.student_session_work_tracks drop constraint if exists student_session_work_tracks_teacher_status_check;
+alter table public.student_session_work_tracks add constraint student_session_work_tracks_teacher_status_check
+  check (teacher_verification_status is null or teacher_verification_status in ('confirmed', 'adjusted')) not valid;
+alter table public.student_session_work_tracks validate constraint student_session_work_tracks_teacher_status_check;
+
+create index if not exists student_session_work_tracks_block_session_idx
+  on public.student_session_work_tracks (block_id, session_id);
+
+alter table public.student_session_work_tracks enable row level security;
+revoke all on public.student_session_work_tracks from anon, authenticated;
+grant select on public.student_session_work_tracks to authenticated;
+
+drop policy if exists "teachers read session work tracks" on public.student_session_work_tracks;
+create policy "teachers read session work tracks" on public.student_session_work_tracks
+for select to authenticated using (public.is_teacher());
+
+drop policy if exists "students read own session work tracks" on public.student_session_work_tracks;
+create policy "students read own session work tracks" on public.student_session_work_tracks
+for select to authenticated using (auth_user_id = auth.uid());
+
+create or replace function public.get_my_session_work_track(p_session_id uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_account public.student_accounts%rowtype;
+  v_session public.studio_sessions%rowtype;
+  v_track public.student_session_work_tracks%rowtype;
+  v_previous_next_focus text;
+  v_previous_response jsonb;
+  v_previous_completion integer;
+  v_block_id uuid;
+begin
+  select * into v_account
+  from public.student_accounts
+  where auth_user_id = auth.uid() and status = 'activated';
+
+  if v_account.student_id is null then
+    raise exception using errcode = 'P0001', message = 'Student account is not available';
+  end if;
+
+  select roster.block_id into v_block_id
+  from public.student_roster roster
+  join public.teaching_blocks block on block.id = roster.block_id
+  where roster.student_id = v_account.student_id and block.status = 'active'
+  order by block.starts_on desc nulls last, block.created_at desc
+  limit 1;
+
+  select * into v_session
+  from public.studio_sessions
+  where id = p_session_id
+    and block_id = v_block_id
+    and session_number between 6 and 9;
+
+  if v_session.id is null then
+    raise exception using errcode = 'P0001', message = 'Session Work Track is not available';
+  end if;
+
+  select * into v_track
+  from public.student_session_work_tracks
+  where session_id = v_session.id and auth_user_id = auth.uid();
+
+  if v_session.session_number > 6 then
+    select track.response,
+           track.response ->> 'nextFocus',
+           case when jsonb_typeof(track.response -> 'completionPercent') = 'number'
+             then (track.response ->> 'completionPercent')::numeric::integer else null end
+    into v_previous_response, v_previous_next_focus, v_previous_completion
+    from public.student_session_work_tracks track
+    join public.studio_sessions previous on previous.id = track.session_id
+    where track.auth_user_id = auth.uid()
+      and track.block_id = v_block_id
+      and previous.session_number < v_session.session_number
+      and previous.session_number between 6 and 9
+    order by previous.session_number desc
+    limit 1;
+  end if;
+
+  return jsonb_build_object(
+    'sessionId', v_session.id,
+    'sessionNumber', v_session.session_number,
+    'focus', coalesce(v_session.curriculum_focus, v_session.title),
+    'taskGuidance', v_session.task_guidance,
+    'expectedEvidence', v_session.expected_evidence,
+    'isOpen', (v_session.status = 'open' or (v_session.status = 'scheduled' and v_session.starts_at <= now() and (v_session.ends_at is null or v_session.ends_at > now()))),
+    'response', coalesce(v_track.response, '{}'::jsonb),
+    'updatedAt', v_track.updated_at,
+    'previousNextFocus', v_previous_next_focus,
+    'previousResponse', v_previous_response,
+    'previousCompletion', v_previous_completion
+  );
+end;
+$$;
+
+revoke all on function public.get_my_session_work_track(uuid) from public;
+grant execute on function public.get_my_session_work_track(uuid) to authenticated;
+
+create or replace function public.save_my_session_work_track(p_session_id uuid, p_response jsonb)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_account public.student_accounts%rowtype;
+  v_session public.studio_sessions%rowtype;
+  v_block_id uuid;
+  v_track public.student_session_work_tracks%rowtype;
+  v_response jsonb;
+  v_requirement_count integer;
+  v_invalid_requirement_count integer;
+  v_completion integer;
+  v_stage text;
+  v_path text;
+begin
+  if p_response is null or jsonb_typeof(p_response) <> 'object' or length(p_response::text) > 12000 then
+    raise exception using errcode = 'P0001', message = 'Work Track response is invalid';
+  end if;
+
+  select * into v_account
+  from public.student_accounts
+  where auth_user_id = auth.uid() and status = 'activated';
+
+  select roster.block_id into v_block_id
+  from public.student_roster roster
+  join public.teaching_blocks block on block.id = roster.block_id
+  where roster.student_id = v_account.student_id and block.status = 'active'
+  order by block.starts_on desc nulls last, block.created_at desc
+  limit 1;
+
+  select * into v_session
+  from public.studio_sessions
+  where id = p_session_id
+    and block_id = v_block_id
+    and session_number between 6 and 9
+    and (status = 'open' or (status = 'scheduled' and starts_at <= now() and (ends_at is null or ends_at > now())));
+
+  if v_account.student_id is null or v_session.id is null then
+    raise exception using errcode = 'P0001', message = 'Work Track can only be updated while this session is open';
+  end if;
+
+  if jsonb_typeof(p_response -> 'requirements') is distinct from 'array' then
+    raise exception using errcode = 'P0001', message = 'Add and assess the committed project requirements first';
+  end if;
+
+  select count(*),
+         count(*) filter (
+           where coalesce(btrim(requirement ->> 'label'), '') = ''
+              or char_length(requirement ->> 'label') > 120
+              or coalesce(requirement ->> 'score', '') not in ('0','25','50','75','100')
+         ),
+         round(avg(case when coalesce(requirement ->> 'score', '') in ('0','25','50','75','100') then (requirement ->> 'score')::numeric else null end))::integer
+  into v_requirement_count, v_invalid_requirement_count, v_completion
+  from jsonb_array_elements(p_response -> 'requirements') requirement;
+
+  if v_requirement_count < 3 or v_requirement_count > 8 or v_invalid_requirement_count > 0 then
+    raise exception using errcode = 'P0001', message = 'Assess the 3 core requirements and any optional requirements with the 0/25/50/75/100 standard';
+  end if;
+
+  if coalesce(p_response -> 'requirements' -> 0 ->> 'label', '') <> 'Core functionality meets the primary user needs'
+     or coalesce(p_response -> 'requirements' -> 1 ->> 'label', '') <> 'Main workflow works end-to-end across integrated components'
+     or coalesce(p_response -> 'requirements' -> 2 ->> 'label', '') <> 'Critical features are tested or validated with evidence' then
+    raise exception using errcode = 'P0001', message = 'The 3 IT Milestone Project core requirements cannot be changed';
+  end if;
+
+  v_stage := case
+    when v_completion <= 40 then 'Building'
+    when v_completion <= 70 then 'Developing'
+    when v_completion <= 90 then 'Completing'
+    when v_completion < 100 then 'Finalising / Verifying'
+    else 'Completed & Verified'
+  end;
+  v_path := case when v_completion <= 70 then 'building' when v_completion <= 90 then 'completing' else 'verifying' end;
+  v_response := jsonb_set(
+    jsonb_set(
+      jsonb_set(p_response, '{completionPercent}', to_jsonb(v_completion), true),
+      '{completionStage}', to_jsonb(v_stage), true
+    ),
+    '{progressPath}', to_jsonb(v_path), true
+  );
+
+  insert into public.student_session_work_tracks (
+    session_id, student_id, auth_user_id, block_id, response
+  ) values (
+    v_session.id, v_account.student_id, auth.uid(), v_block_id, v_response
+  )
+  on conflict (session_id, student_id) do update
+    set response = excluded.response,
+        updated_at = now(),
+        teacher_verified_completion = null,
+        teacher_verification_status = null,
+        teacher_verification_reason = null,
+        teacher_verified_at = null,
+        teacher_verified_by = null
+  returning * into v_track;
+
+  return jsonb_build_object('updatedAt', v_track.updated_at, 'response', v_track.response);
+end;
+$$;
+
+revoke all on function public.save_my_session_work_track(uuid, jsonb) from public;
+grant execute on function public.save_my_session_work_track(uuid, jsonb) to authenticated;
+
+create or replace function public.get_teacher_session_work_tracks(p_session_id uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_session public.studio_sessions%rowtype;
+  v_result jsonb;
+begin
+  if not public.is_teacher() then
+    raise exception using errcode = 'P0001', message = 'Teacher access required';
+  end if;
+
+  select * into v_session from public.studio_sessions where id = p_session_id;
+  if v_session.id is null then return '[]'::jsonb; end if;
+
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'studentId', roster.student_id,
+    'studentName', coalesce(roster.preferred_name, roster.full_name),
+    'teamName', concat('Team ', roster.team_number),
+    'checkedInAt', checkin.checked_in_at,
+    'response', track.response,
+    'updatedAt', track.updated_at,
+    'teacherVerifiedCompletion', track.teacher_verified_completion,
+    'teacherVerificationStatus', track.teacher_verification_status,
+    'teacherVerificationReason', track.teacher_verification_reason,
+    'teacherVerifiedAt', track.teacher_verified_at
+  ) order by roster.team_number, coalesce(roster.preferred_name, roster.full_name), roster.student_id), '[]'::jsonb)
+  into v_result
+  from public.student_roster roster
+  left join public.student_session_checkins checkin
+    on checkin.session_id = v_session.id and checkin.student_id = roster.student_id
+  left join public.student_session_work_tracks track
+    on track.session_id = v_session.id and track.student_id = roster.student_id
+  where roster.block_id = v_session.block_id;
+
+  return v_result;
+end;
+$$;
+
+revoke all on function public.get_teacher_session_work_tracks(uuid) from public;
+grant execute on function public.get_teacher_session_work_tracks(uuid) to authenticated;
+
+create or replace function public.verify_teacher_session_work_track(
+  p_session_id uuid,
+  p_student_id text,
+  p_verified_completion integer,
+  p_reason text default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_track public.student_session_work_tracks%rowtype;
+  v_student_completion integer;
+  v_status text;
+begin
+  if not public.is_teacher() then
+    raise exception using errcode = 'P0001', message = 'Teacher access required';
+  end if;
+  if p_verified_completion is null or p_verified_completion < 0 or p_verified_completion > 100 then
+    raise exception using errcode = 'P0001', message = 'Verified completion must be between 0 and 100';
+  end if;
+  if p_reason is not null and char_length(p_reason) > 300 then
+    raise exception using errcode = 'P0001', message = 'Verification reason is too long';
+  end if;
+
+  select * into v_track
+  from public.student_session_work_tracks
+  where session_id = p_session_id and student_id = p_student_id;
+
+  if v_track.id is null then
+    raise exception using errcode = 'P0001', message = 'Student Work Track not found';
+  end if;
+
+  v_student_completion := case
+    when jsonb_typeof(v_track.response -> 'completionPercent') = 'number'
+    then (v_track.response ->> 'completionPercent')::numeric::integer
+    else null
+  end;
+  if v_student_completion is null then
+    raise exception using errcode = 'P0001', message = 'Student completion measure is not available';
+  end if;
+
+  v_status := case when p_verified_completion = v_student_completion then 'confirmed' else 'adjusted' end;
+  if v_status = 'adjusted' and coalesce(btrim(p_reason), '') = '' then
+    raise exception using errcode = 'P0001', message = 'Choose a reason when adjusting student completion';
+  end if;
+
+  update public.student_session_work_tracks
+  set teacher_verified_completion = p_verified_completion,
+      teacher_verification_status = v_status,
+      teacher_verification_reason = nullif(btrim(p_reason), ''),
+      teacher_verified_at = now(),
+      teacher_verified_by = auth.uid()
+  where id = v_track.id
+  returning * into v_track;
+
+  return jsonb_build_object(
+    'teacherVerifiedCompletion', v_track.teacher_verified_completion,
+    'teacherVerificationStatus', v_track.teacher_verification_status,
+    'teacherVerificationReason', v_track.teacher_verification_reason,
+    'teacherVerifiedAt', v_track.teacher_verified_at
+  );
+end;
+$$;
+
+revoke all on function public.verify_teacher_session_work_track(uuid, text, integer, text) from public;
+grant execute on function public.verify_teacher_session_work_track(uuid, text, integer, text) to authenticated;
+
+-- Extend the Phase 2A Journey with only the student's own Track completion marker.
+create or replace function public.get_my_session_journey()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_account public.student_accounts%rowtype;
+  v_block_id uuid;
+  v_result jsonb;
+begin
+  select * into v_account from public.student_accounts
+  where auth_user_id = auth.uid() and status = 'activated';
+  if v_account.student_id is null then return '[]'::jsonb; end if;
+
+  select roster.block_id into v_block_id
+  from public.student_roster roster join public.teaching_blocks block on block.id = roster.block_id
+  where roster.student_id = v_account.student_id and block.status = 'active'
+  order by block.starts_on desc nulls last, block.created_at desc limit 1;
+  if v_block_id is null then return '[]'::jsonb; end if;
+
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'sessionId', session.id,
+    'sessionNumber', session.session_number,
+    'weekNumber', session.week_number,
+    'focus', coalesce(session.curriculum_focus, session.title),
+    'title', session.title,
+    'sessionDate', session.session_date,
+    'startsAt', session.starts_at,
+    'endsAt', session.ends_at,
+    'status', case
+      when session.status = 'closed' or (session.ends_at is not null and session.ends_at <= now()) then 'closed'
+      when session.status = 'open' or (session.starts_at is not null and session.starts_at <= now() and (session.ends_at is null or session.ends_at > now())) then 'open'
+      else 'scheduled' end,
+    'checkedInAt', checkin.checked_in_at,
+    'workTrackUpdatedAt', track.updated_at
+  ) order by session.session_number nulls last, session.session_date, session.created_at), '[]'::jsonb)
+  into v_result
+  from public.studio_sessions session
+  left join public.student_session_checkins checkin
+    on checkin.session_id = session.id and checkin.auth_user_id = auth.uid()
+  left join public.student_session_work_tracks track
+    on track.session_id = session.id and track.auth_user_id = auth.uid()
+  where session.block_id = v_block_id;
+
+  return v_result;
+end;
+$$;
+
+revoke all on function public.get_my_session_journey() from public;
+grant execute on function public.get_my_session_journey() to authenticated;
+
+-- Verification:
+-- 1. Session Check-in and Weekly Activity tables/functions are unchanged.
+-- 2. S6-S9 accept at most one Work Track per student/session and only save while open.
+-- 3. Closed Work Tracks remain readable but cannot be edited by students.
+-- 4. S7 may read S6 nextFocus as context; it is not copied into S7 evidence.
+-- 5. Completion is server-calculated from 3 fixed IT core requirements plus up to 5 optional project-specific requirements.
+-- 6. The first 3 requirement labels are enforced server-side and use the shared 0/25/50/75/100 evidence standard.
+-- 7. S7-S9 carry the previous requirement assessment forward for longitudinal comparison.
+-- 8. Teacher evidence is block/session scoped and teachers can confirm or adjust the calculated completion with a reason.
+
+
+-- Sprint 6 Phase 2C: S10 individual Platform Feedback checkpoint.
+-- This is intentionally separate from attendance, Weekly Activities and S6-S9 Work Track.
+
+create table if not exists public.student_platform_feedback (
+  id uuid primary key default gen_random_uuid(),
+  session_id uuid not null references public.studio_sessions(id) on delete restrict,
+  student_id text not null references public.student_accounts(student_id) on delete restrict,
+  auth_user_id uuid not null references auth.users(id) on delete restrict,
+  block_id uuid not null references public.teaching_blocks(id) on delete restrict,
+  overall_usefulness smallint not null check (overall_usefulness between 1 and 5),
+  engagement_help text not null check (engagement_help in ('Yes', 'Somewhat', 'No')),
+  most_useful_feature text not null check (most_useful_feature in ('Session Check-in', 'Weekly Activities', 'Teacher Review', 'Poster Gallery', 'Work Track', 'Peer Feedback')),
+  improve_area text not null check (improve_area in ('Navigation', 'Activities', 'Feedback', 'Session workflow', 'Poster', 'Other')),
+  recommendation text not null check (recommendation in ('Yes', 'Maybe', 'No')),
+  change_note text check (change_note is null or char_length(change_note) <= 300),
+  submitted_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (session_id, student_id),
+  unique (session_id, auth_user_id)
+);
+
+create index if not exists student_platform_feedback_block_session_idx
+  on public.student_platform_feedback (block_id, session_id);
+
+alter table public.student_platform_feedback enable row level security;
+revoke all on public.student_platform_feedback from anon, authenticated;
+grant select on public.student_platform_feedback to authenticated;
+
+drop policy if exists "students read own platform feedback" on public.student_platform_feedback;
+create policy "students read own platform feedback" on public.student_platform_feedback
+for select to authenticated using (auth_user_id = auth.uid());
+
+drop policy if exists "teachers read platform feedback" on public.student_platform_feedback;
+
+create or replace function public.get_my_platform_feedback(p_session_id uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_account public.student_accounts%rowtype;
+  v_session public.studio_sessions%rowtype;
+  v_feedback public.student_platform_feedback%rowtype;
+  v_block_id uuid;
+begin
+  select * into v_account
+  from public.student_accounts
+  where auth_user_id = auth.uid() and status = 'activated';
+
+  if v_account.student_id is null then
+    raise exception using errcode = 'P0001', message = 'Student account is not available';
+  end if;
+
+  select roster.block_id into v_block_id
+  from public.student_roster roster
+  join public.teaching_blocks block on block.id = roster.block_id
+  where roster.student_id = v_account.student_id and block.status = 'active'
+  order by block.starts_on desc nulls last, block.created_at desc
+  limit 1;
+
+  select * into v_session
+  from public.studio_sessions
+  where id = p_session_id and block_id = v_block_id and session_number = 10;
+
+  if v_session.id is null then
+    raise exception using errcode = 'P0001', message = 'Final Platform Feedback is not available';
+  end if;
+
+  select * into v_feedback
+  from public.student_platform_feedback
+  where session_id = v_session.id and auth_user_id = auth.uid();
+
+  return jsonb_build_object(
+    'sessionId', v_session.id,
+    'focus', coalesce(v_session.curriculum_focus, v_session.title),
+    'isOpen', (v_session.status = 'open' or (v_session.status = 'scheduled' and v_session.starts_at <= now() and (v_session.ends_at is null or v_session.ends_at > now()))),
+    'response', case when v_feedback.id is null then '{}'::jsonb else jsonb_build_object(
+      'overallUsefulness', v_feedback.overall_usefulness,
+      'engagementHelp', v_feedback.engagement_help,
+      'mostUsefulFeature', v_feedback.most_useful_feature,
+      'improveArea', v_feedback.improve_area,
+      'recommendation', v_feedback.recommendation,
+      'changeNote', coalesce(v_feedback.change_note, '')
+    ) end,
+    'submittedAt', v_feedback.submitted_at,
+    'updatedAt', v_feedback.updated_at
+  );
+end;
+$$;
+
+revoke all on function public.get_my_platform_feedback(uuid) from public;
+grant execute on function public.get_my_platform_feedback(uuid) to authenticated;
+
+create or replace function public.save_my_platform_feedback(p_session_id uuid, p_response jsonb)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_account public.student_accounts%rowtype;
+  v_session public.studio_sessions%rowtype;
+  v_feedback public.student_platform_feedback%rowtype;
+  v_block_id uuid;
+  v_usefulness integer;
+  v_engagement text;
+  v_feature text;
+  v_improve text;
+  v_recommendation text;
+  v_note text;
+begin
+  if p_response is null or jsonb_typeof(p_response) <> 'object' or length(p_response::text) > 3000 then
+    raise exception using errcode = 'P0001', message = 'Platform Feedback is invalid';
+  end if;
+
+  select * into v_account
+  from public.student_accounts
+  where auth_user_id = auth.uid() and status = 'activated';
+
+  select roster.block_id into v_block_id
+  from public.student_roster roster
+  join public.teaching_blocks block on block.id = roster.block_id
+  where roster.student_id = v_account.student_id and block.status = 'active'
+  order by block.starts_on desc nulls last, block.created_at desc
+  limit 1;
+
+  select * into v_session
+  from public.studio_sessions
+  where id = p_session_id
+    and block_id = v_block_id
+    and session_number = 10
+    and (status = 'open' or (status = 'scheduled' and starts_at <= now() and (ends_at is null or ends_at > now())));
+
+  if v_account.student_id is null or v_session.id is null then
+    raise exception using errcode = 'P0001', message = 'Platform Feedback can only be updated while Session 10 is open';
+  end if;
+
+  begin
+    v_usefulness := (p_response ->> 'overallUsefulness')::integer;
+  exception when invalid_text_representation then
+    raise exception using errcode = 'P0001', message = 'Choose an overall usefulness rating from 1 to 5';
+  end;
+  v_engagement := p_response ->> 'engagementHelp';
+  v_feature := p_response ->> 'mostUsefulFeature';
+  v_improve := p_response ->> 'improveArea';
+  v_recommendation := p_response ->> 'recommendation';
+  v_note := nullif(btrim(p_response ->> 'changeNote'), '');
+
+  if v_usefulness is null
+     or v_usefulness not between 1 and 5
+     or coalesce(v_engagement, '') not in ('Yes', 'Somewhat', 'No')
+     or coalesce(v_feature, '') not in ('Session Check-in', 'Weekly Activities', 'Teacher Review', 'Poster Gallery', 'Work Track', 'Peer Feedback')
+     or coalesce(v_improve, '') not in ('Navigation', 'Activities', 'Feedback', 'Session workflow', 'Poster', 'Other')
+     or coalesce(v_recommendation, '') not in ('Yes', 'Maybe', 'No')
+     or char_length(coalesce(v_note, '')) > 300 then
+    raise exception using errcode = 'P0001', message = 'Complete all required Platform Feedback choices';
+  end if;
+
+  insert into public.student_platform_feedback (
+    session_id, student_id, auth_user_id, block_id, overall_usefulness, engagement_help,
+    most_useful_feature, improve_area, recommendation, change_note
+  ) values (
+    v_session.id, v_account.student_id, auth.uid(), v_block_id, v_usefulness, v_engagement,
+    v_feature, v_improve, v_recommendation, v_note
+  )
+  on conflict (session_id, student_id) do update
+    set overall_usefulness = excluded.overall_usefulness,
+        engagement_help = excluded.engagement_help,
+        most_useful_feature = excluded.most_useful_feature,
+        improve_area = excluded.improve_area,
+        recommendation = excluded.recommendation,
+        change_note = excluded.change_note,
+        updated_at = now()
+  returning * into v_feedback;
+
+  return jsonb_build_object('submittedAt', v_feedback.submitted_at, 'updatedAt', v_feedback.updated_at);
+end;
+$$;
+
+revoke all on function public.save_my_platform_feedback(uuid, jsonb) from public;
+grant execute on function public.save_my_platform_feedback(uuid, jsonb) to authenticated;
+
+create or replace function public.get_teacher_platform_feedback_status(p_session_id uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_session public.studio_sessions%rowtype;
+  v_result jsonb;
+begin
+  if not public.is_teacher() then
+    raise exception using errcode = 'P0001', message = 'Teacher access required';
+  end if;
+
+  select * into v_session from public.studio_sessions where id = p_session_id and session_number = 10;
+  if v_session.id is null then return '[]'::jsonb; end if;
+
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'studentId', roster.student_id,
+    'studentName', coalesce(roster.preferred_name, roster.full_name),
+    'teamName', concat('Team ', roster.team_number),
+    'completedAt', feedback.submitted_at,
+    'updatedAt', feedback.updated_at
+  ) order by roster.team_number, coalesce(roster.preferred_name, roster.full_name), roster.student_id), '[]'::jsonb)
+  into v_result
+  from public.student_roster roster
+  left join public.student_platform_feedback feedback
+    on feedback.session_id = v_session.id and feedback.student_id = roster.student_id
+  where roster.block_id = v_session.block_id;
+
+  return v_result;
+end;
+$$;
+
+revoke all on function public.get_teacher_platform_feedback_status(uuid) from public;
+grant execute on function public.get_teacher_platform_feedback_status(uuid) to authenticated;
+
+-- Extend the Session Journey with only the authenticated student's S10 completion marker.
+create or replace function public.get_my_session_journey()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_account public.student_accounts%rowtype;
+  v_block_id uuid;
+  v_result jsonb;
+begin
+  select * into v_account from public.student_accounts
+  where auth_user_id = auth.uid() and status = 'activated';
+  if v_account.student_id is null then return '[]'::jsonb; end if;
+
+  select roster.block_id into v_block_id
+  from public.student_roster roster join public.teaching_blocks block on block.id = roster.block_id
+  where roster.student_id = v_account.student_id and block.status = 'active'
+  order by block.starts_on desc nulls last, block.created_at desc limit 1;
+  if v_block_id is null then return '[]'::jsonb; end if;
+
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'sessionId', session.id,
+    'sessionNumber', session.session_number,
+    'weekNumber', session.week_number,
+    'focus', coalesce(session.curriculum_focus, session.title),
+    'title', session.title,
+    'sessionDate', session.session_date,
+    'startsAt', session.starts_at,
+    'endsAt', session.ends_at,
+    'status', case
+      when session.status = 'open' then 'open'
+      when session.status = 'closed' then 'closed'
+      when session.starts_at is not null and session.starts_at <= now() and (session.ends_at is null or session.ends_at > now()) then 'open'
+      when session.ends_at is not null and session.ends_at <= now() then 'closed'
+      else 'scheduled' end,
+    'checkedInAt', checkin.checked_in_at,
+    'workTrackUpdatedAt', track.updated_at,
+    'platformFeedbackCompletedAt', feedback.submitted_at
+  ) order by session.session_number nulls last, session.session_date, session.created_at), '[]'::jsonb)
+  into v_result
+  from public.studio_sessions session
+  left join public.student_session_checkins checkin
+    on checkin.session_id = session.id and checkin.auth_user_id = auth.uid()
+  left join public.student_session_work_tracks track
+    on track.session_id = session.id and track.auth_user_id = auth.uid()
+  left join public.student_platform_feedback feedback
+    on feedback.session_id = session.id and feedback.auth_user_id = auth.uid()
+  where session.block_id = v_block_id;
+
+  return v_result;
+end;
+$$;
+
+revoke all on function public.get_my_session_journey() from public;
+grant execute on function public.get_my_session_journey() to authenticated;
+
+-- Verification:
+-- 1. S10 feedback is one individual record per student/session and cannot be written outside the open S10 window.
+-- 2. The five structured questions are required; the final change note is optional and capped at 300 characters.
+-- 3. Teacher status exposes completion only; it does not convert feedback into a grade.
+-- 4. Session Check-in, Weekly Activities and S6-S9 Work Track remain independent.
+-- 5. An explicit Teacher reopen remains open even when an older automatic end time has passed.
+
+
+-- Sprint 6 hotfix: bind Poster Gallery feedback to the authenticated roster identity.
+-- The UI supplies reviewer_team again. A narrow SECURITY DEFINER helper performs
+-- the private roster lookup because browser roles cannot read those tables.
+
+create or replace function public.student_matches_poster_reviewer(
+  p_block_id uuid,
+  p_student_id text,
+  p_team_name text
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.student_accounts account
+    join public.student_roster roster
+      on lower(trim(roster.student_id)) = lower(trim(account.student_id))
+     and roster.block_id = p_block_id
+    join public.teaching_blocks block
+      on block.id = roster.block_id
+     and block.status = 'active'
+    where account.auth_user_id = auth.uid()
+      and account.status = 'activated'
+      and lower(trim(account.student_id)) = lower(trim(p_student_id))
+      and lower(trim(concat('Team ', roster.team_number))) = lower(trim(p_team_name))
+  );
+$$;
+
+revoke all on function public.student_matches_poster_reviewer(uuid, text, text) from public;
+grant execute on function public.student_matches_poster_reviewer(uuid, text, text) to authenticated;
+
+drop policy if exists "Students can submit poster reviews"
+on public.poster_reviews;
+
+create policy "Students can submit poster reviews"
+on public.poster_reviews
+for insert
+to authenticated
+with check (
+  public.student_can_review_poster_gallery(block_id)
+  and public.student_matches_poster_reviewer(
+    block_id,
+    reviewer_student_id,
+    reviewer_team
+  )
+  and lower(trim(reviewer_team)) <> lower(trim(reviewed_team))
+  and exists (
+    select 1
+    from public.teams team
+    join public.team_posters poster
+      on poster.team_id = team.id
+     and poster.block_id = team.block_id
+    join public.poster_versions version
+      on version.id = poster.published_version_id
+     and version.status = 'ready'
+    where team.block_id = poster_reviews.block_id
+      and lower(concat('Team ', team.team_number)) = lower(trim(poster_reviews.reviewed_team))
+  )
+  and char_length(trim(reviewer_name)) between 1 and 100
+  and problem_clarity between 1 and 5
+  and working_product between 1 and 5
+  and evidence_testing between 1 and 5
+  and document_readiness between 1 and 5
+  and presentation_quality between 1 and 5
+  and char_length(trim(strongest_part)) between 1 and 1000
+  and char_length(trim(highest_priority)) between 1 and 1000
+);
+
+-- Verification:
+-- 1. A logged-in student can submit against another published Team Poster.
+-- 2. The browser role never receives direct SELECT access to accounts or roster.
+-- 3. Changing reviewer_student_id, reviewer_team or block_id is rejected.
+-- 4. Own-Team, hidden-Gallery and missing published-Poster submissions are rejected.
+
+
+-- Submit through one authoritative server path. Reviewer identity and Block are
+-- derived from auth.uid(); the browser supplies only the review target/content.
+create or replace function public.submit_poster_review(
+  p_reviewed_team text,
+  p_problem_clarity integer,
+  p_working_product integer,
+  p_evidence_testing integer,
+  p_document_readiness integer,
+  p_presentation_quality integer,
+  p_strongest_part text,
+  p_highest_priority text
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_account public.student_accounts%rowtype;
+  v_roster public.student_roster%rowtype;
+  v_target_team public.teams%rowtype;
+  v_review_id uuid;
+begin
+  select * into v_account
+  from public.student_accounts
+  where auth_user_id = auth.uid()
+    and status = 'activated';
+
+  if v_account.student_id is null then
+    raise exception using errcode = '42501', message = 'Activated student account is not available';
+  end if;
+
+  select roster.* into v_roster
+  from public.student_roster roster
+  join public.teaching_blocks block
+    on block.id = roster.block_id
+   and block.status = 'active'
+  where lower(trim(roster.student_id)) = lower(trim(v_account.student_id))
+  order by block.starts_on desc nulls last, block.created_at desc
+  limit 1;
+
+  if v_roster.id is null then
+    raise exception using errcode = '42501', message = 'Active class roster is not available';
+  end if;
+
+  if not exists (
+    select 1
+    from public.poster_gallery_settings gallery
+    where gallery.block_id = v_roster.block_id
+      and gallery.is_published
+  ) then
+    raise exception using errcode = '42501', message = 'Poster Gallery is not published';
+  end if;
+
+  select team.* into v_target_team
+  from public.teams team
+  where team.block_id = v_roster.block_id
+    and lower(trim(concat('Team ', team.team_number))) = lower(trim(p_reviewed_team))
+  limit 1;
+
+  if v_target_team.id is null or not exists (
+    select 1
+    from public.team_posters poster
+    join public.poster_versions version
+      on version.id = poster.published_version_id
+     and version.status = 'ready'
+    where poster.block_id = v_roster.block_id
+      and poster.team_id = v_target_team.id
+  ) then
+    raise exception using errcode = '42501', message = 'The published Poster is not available';
+  end if;
+
+  if v_target_team.team_number = v_roster.team_number then
+    raise exception using errcode = '42501', message = 'Your Team cannot review its own Poster';
+  end if;
+
+  if p_problem_clarity not between 1 and 5
+    or p_working_product not between 1 and 5
+    or p_evidence_testing not between 1 and 5
+    or p_document_readiness not between 1 and 5
+    or p_presentation_quality not between 1 and 5 then
+    raise exception using errcode = '22023', message = 'Complete every Poster rating';
+  end if;
+
+  if char_length(trim(coalesce(p_strongest_part, ''))) < 1
+    or char_length(trim(coalesce(p_highest_priority, ''))) < 1 then
+    raise exception using errcode = '22023', message = 'Complete the strongest area and next priority';
+  end if;
+
+  insert into public.poster_reviews (
+    reviewer_name,
+    reviewer_student_id,
+    reviewer_team,
+    reviewed_team,
+    problem_clarity,
+    working_product,
+    evidence_testing,
+    document_readiness,
+    presentation_quality,
+    strongest_part,
+    highest_priority,
+    block_id
+  ) values (
+    coalesce(v_roster.preferred_name, v_roster.full_name),
+    v_account.student_id,
+    concat('Team ', v_roster.team_number),
+    concat('Team ', v_target_team.team_number),
+    p_problem_clarity,
+    p_working_product,
+    p_evidence_testing,
+    p_document_readiness,
+    p_presentation_quality,
+    trim(p_strongest_part),
+    trim(p_highest_priority),
+    v_roster.block_id
+  )
+  returning id into v_review_id;
+
+  return v_review_id;
+end;
+$$;
+
+revoke all on function public.submit_poster_review(text, integer, integer, integer, integer, integer, text, text) from public;
+grant execute on function public.submit_poster_review(text, integer, integer, integer, integer, integer, text, text) to authenticated;
+
+
+-- Hotfix: align the live teacher_progress_reviews table with the current
+-- Week 2 Teacher Review UI, then save through an authoritative teacher-only RPC.
+--
+-- Some databases contain legacy columns (claim_status, follow_up_priority,
+-- teacher_note) because an older table pre-dated the repository migration.
+-- Keep those columns for backwards compatibility, but stop requiring them for
+-- current writes. Existing legacy rows are mapped before current constraints
+-- are enforced. This script is idempotent and does not delete review records.
+
+alter table public.teacher_progress_reviews
+  add column if not exists block_id uuid references public.teaching_blocks(id),
+  add column if not exists claim_status text,
+  add column if not exists review_outcome text,
+  add column if not exists demonstration_outcome text,
+  add column if not exists method_explanation text,
+  add column if not exists evidence_quality text,
+  add column if not exists contribution_verification text,
+  add column if not exists report_alignment text,
+  add column if not exists teacher_feedback text,
+  add column if not exists follow_up_priority text,
+  add column if not exists follow_up_status text,
+  add column if not exists follow_up_actions text[] default array[]::text[],
+  add column if not exists teacher_note text,
+  add column if not exists follow_up_note text,
+  add column if not exists recheck_week smallint,
+  add column if not exists created_at timestamptz default now(),
+  add column if not exists updated_at timestamptz default now();
+
+-- Legacy-only fields must not be mandatory for the current review model.
+alter table public.teacher_progress_reviews
+  alter column claim_status drop not null,
+  alter column follow_up_priority drop not null;
+
+-- Migrate any legacy rows without overwriting current review data.
+update public.teacher_progress_reviews
+set
+  review_outcome = coalesce(
+    review_outcome,
+    case claim_status
+      when 'Verified' then 'Verified'
+      when 'Partially verified' then 'Partially verified'
+      when 'Not demonstrated' then 'Unable to demonstrate'
+      when 'Different from pre-check' then 'Further evidence required'
+    end
+  ),
+  teacher_feedback = coalesce(
+    teacher_feedback,
+    nullif(trim(teacher_note), ''),
+    'Migrated from legacy teacher review.'
+  ),
+  follow_up_status = coalesce(
+    follow_up_status,
+    case
+      when follow_up_priority = 'No follow-up' then 'No follow-up needed'
+      when follow_up_priority is not null then 'Action required'
+      else 'Not reviewed'
+    end
+  ),
+  follow_up_actions = case
+    when coalesce(cardinality(follow_up_actions), 0) > 0 then follow_up_actions
+    when follow_up_priority = 'No follow-up' then array['No action required']::text[]
+    when follow_up_priority = 'Implementation' then array['Complete implementation']::text[]
+    when follow_up_priority = 'Integration' then array['Complete integration']::text[]
+    when follow_up_priority = 'Testing' then array['Add or run tests']::text[]
+    when follow_up_priority = 'Evidence' then array['Provide code or commit evidence']::text[]
+    when follow_up_priority = 'Documentation' then array['Update Progress Report']::text[]
+    when follow_up_priority = 'Team contribution' then array['Clarify individual contribution']::text[]
+    when follow_up_priority = 'Urgent intervention' then array['Other']::text[]
+    else array['Other']::text[]
+  end;
+
+-- Replace only the current-model constraints so reruns converge to one schema.
+alter table public.teacher_progress_reviews
+  drop constraint if exists teacher_progress_reviews_review_outcome_check,
+  drop constraint if exists teacher_progress_reviews_demonstration_outcome_check,
+  drop constraint if exists teacher_progress_reviews_method_explanation_check,
+  drop constraint if exists teacher_progress_reviews_evidence_quality_check,
+  drop constraint if exists teacher_progress_reviews_contribution_verification_check,
+  drop constraint if exists teacher_progress_reviews_report_alignment_check,
+  drop constraint if exists teacher_progress_reviews_teacher_feedback_check,
+  drop constraint if exists teacher_progress_reviews_follow_up_status_check,
+  drop constraint if exists teacher_progress_reviews_follow_up_actions_check,
+  drop constraint if exists teacher_progress_reviews_follow_up_note_check,
+  drop constraint if exists teacher_progress_reviews_recheck_week_check;
+
+alter table public.teacher_progress_reviews
+  alter column review_outcome set not null,
+  alter column demonstration_outcome set not null,
+  alter column method_explanation set not null,
+  alter column evidence_quality set not null,
+  alter column contribution_verification set not null,
+  alter column report_alignment set not null,
+  alter column teacher_feedback set not null,
+  alter column follow_up_status set not null,
+  alter column follow_up_actions set default array[]::text[],
+  alter column follow_up_actions set not null,
+  alter column created_at set default now(),
+  alter column created_at set not null,
+  alter column updated_at set default now(),
+  alter column updated_at set not null,
+  add constraint teacher_progress_reviews_review_outcome_check
+    check (review_outcome in ('Verified','Partially verified','Not verified','Unable to demonstrate','Further evidence required')),
+  add constraint teacher_progress_reviews_demonstration_outcome_check
+    check (demonstration_outcome in ('Worked on target system','Worked with limitations','Partial demonstration','Could not demonstrate','Not applicable')),
+  add constraint teacher_progress_reviews_method_explanation_check
+    check (method_explanation in ('Clear and credible','Mostly clear','Limited explanation','Could not explain')),
+  add constraint teacher_progress_reviews_evidence_quality_check
+    check (evidence_quality in ('Strong and traceable','Adequate','Partial','No usable evidence')),
+  add constraint teacher_progress_reviews_contribution_verification_check
+    check (contribution_verification in ('Clearly verified','Partly verified','Needs further evidence','Not verified')),
+  add constraint teacher_progress_reviews_report_alignment_check
+    check (report_alignment in ('Consistent','Minor update needed','Significant update needed','Not checked')),
+  add constraint teacher_progress_reviews_teacher_feedback_check
+    check (char_length(teacher_feedback) between 1 and 800),
+  add constraint teacher_progress_reviews_follow_up_status_check
+    check (follow_up_status in ('Not reviewed','No follow-up needed','Action required','In progress','Recheck next session','Resolved')),
+  add constraint teacher_progress_reviews_follow_up_actions_check
+    check (
+      cardinality(follow_up_actions) between 1 and 10
+      and follow_up_actions <@ array[
+        'No action required','Complete implementation','Fix identified issue',
+        'Provide code or commit evidence','Add or run tests','Complete integration',
+        'Update Progress Report','Clarify individual contribution',
+        'Prepare another demonstration','Other'
+      ]::text[]
+    ),
+  add constraint teacher_progress_reviews_follow_up_note_check
+    check (follow_up_note is null or char_length(follow_up_note) <= 400),
+  add constraint teacher_progress_reviews_recheck_week_check
+    check (recheck_week is null or recheck_week between 2 and 4);
+
+create unique index if not exists teacher_progress_reviews_block_student_key
+  on public.teacher_progress_reviews (block_id, student_id);
+
+create or replace function public.save_teacher_progress_review(
+  p_submission_id uuid,
+  p_review jsonb
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_submission public.week2_progress_reviews%rowtype;
+  v_saved public.teacher_progress_reviews%rowtype;
+  v_actions text[];
+  v_recheck_week smallint;
+begin
+  if auth.uid() is null or not coalesce(public.is_teacher(), false) then
+    raise exception using errcode = '42501',
+      message = 'Your teacher session is not authorised to save this review. Sign in again and retry.';
+  end if;
+
+  select submission.* into v_submission
+  from public.week2_progress_reviews submission
+  where submission.id = p_submission_id;
+
+  if not found then
+    raise exception using errcode = 'P0002',
+      message = 'The selected Week 2 Pre-check submission was not found. Refresh the dashboard and retry.';
+  end if;
+
+  if v_submission.block_id is null then
+    raise exception using errcode = '23514',
+      message = 'This Pre-check is not linked to a teaching block. Ask the administrator to repair the submission.';
+  end if;
+
+  if nullif(trim(coalesce(v_submission.student_name, '')), '') is null
+     or nullif(trim(coalesce(v_submission.student_id, '')), '') is null
+     or nullif(trim(coalesce(v_submission.team_name, '')), '') is null then
+    raise exception using errcode = '23514',
+      message = 'This Pre-check has incomplete student or team identity. Refresh the roster link before saving a review.';
+  end if;
+
+  if jsonb_typeof(coalesce(p_review -> 'follow_up_actions', '[]'::jsonb)) <> 'array' then
+    raise exception using errcode = '22023', message = 'Follow-up actions are invalid.';
+  end if;
+
+  select coalesce(array_agg(action), array[]::text[])
+  into v_actions
+  from jsonb_array_elements_text(coalesce(p_review -> 'follow_up_actions', '[]'::jsonb)) action;
+
+  if cardinality(v_actions) < 1 then
+    raise exception using errcode = '22023', message = 'Select at least one follow-up action.';
+  end if;
+
+  if nullif(trim(coalesce(p_review ->> 'teacher_feedback', '')), '') is null then
+    raise exception using errcode = '22023', message = 'Add a Conversation note before saving.';
+  end if;
+
+  if char_length(trim(p_review ->> 'teacher_feedback')) > 800 then
+    raise exception using errcode = '22023', message = 'Conversation note must be 800 characters or fewer.';
+  end if;
+
+  v_recheck_week := nullif(p_review ->> 'recheck_week', '')::smallint;
+
+  insert into public.teacher_progress_reviews (
+    block_id, student_name, student_id, team_name, review_outcome,
+    demonstration_outcome, method_explanation, evidence_quality,
+    contribution_verification, report_alignment, teacher_feedback,
+    follow_up_status, follow_up_actions, follow_up_note, recheck_week
+  ) values (
+    v_submission.block_id, trim(v_submission.student_name),
+    trim(v_submission.student_id), trim(v_submission.team_name),
+    p_review ->> 'review_outcome', p_review ->> 'demonstration_outcome',
+    p_review ->> 'method_explanation', p_review ->> 'evidence_quality',
+    p_review ->> 'contribution_verification', p_review ->> 'report_alignment',
+    trim(p_review ->> 'teacher_feedback'), p_review ->> 'follow_up_status',
+    v_actions, nullif(trim(coalesce(p_review ->> 'follow_up_note', '')), ''),
+    v_recheck_week
+  )
+  on conflict (block_id, student_id) do update set
+    student_name = excluded.student_name,
+    team_name = excluded.team_name,
+    review_outcome = excluded.review_outcome,
+    demonstration_outcome = excluded.demonstration_outcome,
+    method_explanation = excluded.method_explanation,
+    evidence_quality = excluded.evidence_quality,
+    contribution_verification = excluded.contribution_verification,
+    report_alignment = excluded.report_alignment,
+    teacher_feedback = excluded.teacher_feedback,
+    follow_up_status = excluded.follow_up_status,
+    follow_up_actions = excluded.follow_up_actions,
+    follow_up_note = excluded.follow_up_note,
+    recheck_week = excluded.recheck_week
+  returning * into v_saved;
+
+  return to_jsonb(v_saved);
+end;
+$$;
+
+revoke all on function public.save_teacher_progress_review(uuid, jsonb) from public, anon;
+grant execute on function public.save_teacher_progress_review(uuid, jsonb) to authenticated;
+
+
+-- Sprint 6 Phase 2D: persist teacher password reset feedback.
+-- Safe to run repeatedly. Existing accounts are unchanged.
+
+alter table public.student_accounts
+  add column if not exists password_reset_at timestamptz;
+
+comment on column public.student_accounts.password_reset_at is
+  'Most recent teacher-issued temporary-password reset. Null means no teacher reset has been recorded.';
+
+create index if not exists student_accounts_password_reset_at_idx
+  on public.student_accounts (password_reset_at)
+  where password_reset_at is not null;
+
+
+-- Sprint 6 Phase 3 storage and RPC privilege hardening.
+-- Keep Poster objects private and constrain new uploads/replacements to
+-- PDF/JPEG/PNG files at or below 1 MB. Existing objects are not deleted.
+
+update storage.buckets
+set
+  public = false,
+  file_size_limit = 1048576,
+  allowed_mime_types = array['application/pdf', 'image/png', 'image/jpeg']::text[]
+where id = 'poster-gallery';
+
+revoke execute on function public.get_my_poster_upload_status() from public, anon;
+revoke execute on function public.get_my_poster_gallery() from public, anon;
+revoke execute on function public.get_teacher_poster_gallery(uuid) from public, anon;
+revoke execute on function public.publish_poster_gallery(uuid) from public, anon;
+revoke execute on function public.hide_poster_gallery(uuid) from public, anon;
+revoke execute on function public.remove_team_poster_draft(uuid) from public, anon;
+
+revoke execute on function public.get_my_session_work_track(uuid) from public, anon;
+revoke execute on function public.save_my_session_work_track(uuid, jsonb) from public, anon;
+revoke execute on function public.get_teacher_session_work_tracks(uuid) from public, anon;
+revoke execute on function public.verify_teacher_session_work_track(uuid, text, integer, text) from public, anon;
+
+revoke execute on function public.get_my_platform_feedback(uuid) from public, anon;
+revoke execute on function public.save_my_platform_feedback(uuid, jsonb) from public, anon;
+revoke execute on function public.get_teacher_platform_feedback_status(uuid) from public, anon;
+
+grant execute on function public.get_my_poster_upload_status() to authenticated, service_role;
+grant execute on function public.get_my_poster_gallery() to authenticated, service_role;
+grant execute on function public.get_teacher_poster_gallery(uuid) to authenticated, service_role;
+grant execute on function public.publish_poster_gallery(uuid) to authenticated, service_role;
+grant execute on function public.hide_poster_gallery(uuid) to authenticated, service_role;
+grant execute on function public.remove_team_poster_draft(uuid) to authenticated, service_role;
+
+grant execute on function public.get_my_session_work_track(uuid) to authenticated, service_role;
+grant execute on function public.save_my_session_work_track(uuid, jsonb) to authenticated, service_role;
+grant execute on function public.get_teacher_session_work_tracks(uuid) to authenticated, service_role;
+grant execute on function public.verify_teacher_session_work_track(uuid, text, integer, text) to authenticated, service_role;
+
+grant execute on function public.get_my_platform_feedback(uuid) to authenticated, service_role;
+grant execute on function public.save_my_platform_feedback(uuid, jsonb) to authenticated, service_role;
+grant execute on function public.get_teacher_platform_feedback_status(uuid) to authenticated, service_role;
+
+
+-- Sprint 7 Phase 1A: separate Work Track access from Session Check-in.
+-- Default behaviour follows the Session schedule; teachers may independently open
+-- or close an S6-S9 Work Track without changing attendance access.
+
+alter table public.studio_sessions
+  add column if not exists work_track_access text not null default 'session';
+
+alter table public.studio_sessions
+  drop constraint if exists studio_sessions_work_track_access_check;
+alter table public.studio_sessions
+  add constraint studio_sessions_work_track_access_check
+  check (work_track_access in ('session', 'open', 'closed')) not valid;
+alter table public.studio_sessions
+  validate constraint studio_sessions_work_track_access_check;
+
+create or replace function public.get_my_session_work_track(p_session_id uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_account public.student_accounts%rowtype;
+  v_session public.studio_sessions%rowtype;
+  v_track public.student_session_work_tracks%rowtype;
+  v_previous_next_focus text;
+  v_previous_response jsonb;
+  v_previous_completion integer;
+  v_block_id uuid;
+begin
+  select * into v_account
+  from public.student_accounts
+  where auth_user_id = auth.uid() and status = 'activated';
+
+  if v_account.student_id is null then
+    raise exception using errcode = 'P0001', message = 'Student account is not available';
+  end if;
+
+  select roster.block_id into v_block_id
+  from public.student_roster roster
+  join public.teaching_blocks block on block.id = roster.block_id
+  where roster.student_id = v_account.student_id and block.status = 'active'
+  order by block.starts_on desc nulls last, block.created_at desc
+  limit 1;
+
+  select * into v_session
+  from public.studio_sessions
+  where id = p_session_id
+    and block_id = v_block_id
+    and session_number between 6 and 9;
+
+  if v_session.id is null then
+    raise exception using errcode = 'P0001', message = 'Session Work Track is not available';
+  end if;
+
+  select * into v_track
+  from public.student_session_work_tracks
+  where session_id = v_session.id and auth_user_id = auth.uid();
+
+  if v_session.session_number > 6 then
+    select track.response,
+           track.response ->> 'nextFocus',
+           case when jsonb_typeof(track.response -> 'completionPercent') = 'number'
+             then (track.response ->> 'completionPercent')::numeric::integer else null end
+    into v_previous_response, v_previous_next_focus, v_previous_completion
+    from public.student_session_work_tracks track
+    join public.studio_sessions previous on previous.id = track.session_id
+    where track.auth_user_id = auth.uid()
+      and track.block_id = v_block_id
+      and previous.session_number < v_session.session_number
+      and previous.session_number between 6 and 9
+    order by previous.session_number desc
+    limit 1;
+  end if;
+
+  return jsonb_build_object(
+    'sessionId', v_session.id,
+    'sessionNumber', v_session.session_number,
+    'focus', coalesce(v_session.curriculum_focus, v_session.title),
+    'taskGuidance', v_session.task_guidance,
+    'expectedEvidence', v_session.expected_evidence,
+    'isOpen', (
+      v_session.work_track_access = 'open'
+      or (
+        v_session.work_track_access = 'session'
+        and (
+          v_session.status = 'open'
+          or (
+            v_session.status = 'scheduled'
+            and v_session.starts_at <= now()
+            and (v_session.ends_at is null or v_session.ends_at > now())
+          )
+        )
+      )
+    ),
+    'response', coalesce(v_track.response, '{}'::jsonb),
+    'updatedAt', v_track.updated_at,
+    'previousNextFocus', v_previous_next_focus,
+    'previousResponse', v_previous_response,
+    'previousCompletion', v_previous_completion
+  );
+end;
+$$;
+
+revoke all on function public.get_my_session_work_track(uuid) from public;
+grant execute on function public.get_my_session_work_track(uuid) to authenticated;
+
+create or replace function public.save_my_session_work_track(p_session_id uuid, p_response jsonb)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_account public.student_accounts%rowtype;
+  v_session public.studio_sessions%rowtype;
+  v_block_id uuid;
+  v_track public.student_session_work_tracks%rowtype;
+  v_response jsonb;
+  v_requirement_count integer;
+  v_invalid_requirement_count integer;
+  v_completion integer;
+  v_stage text;
+  v_path text;
+begin
+  if p_response is null or jsonb_typeof(p_response) <> 'object' or length(p_response::text) > 12000 then
+    raise exception using errcode = 'P0001', message = 'Work Track response is invalid';
+  end if;
+
+  select * into v_account
+  from public.student_accounts
+  where auth_user_id = auth.uid() and status = 'activated';
+
+  select roster.block_id into v_block_id
+  from public.student_roster roster
+  join public.teaching_blocks block on block.id = roster.block_id
+  where roster.student_id = v_account.student_id and block.status = 'active'
+  order by block.starts_on desc nulls last, block.created_at desc
+  limit 1;
+
+  select * into v_session
+  from public.studio_sessions
+  where id = p_session_id
+    and block_id = v_block_id
+    and session_number between 6 and 9
+    and (
+      work_track_access = 'open'
+      or (
+        work_track_access = 'session'
+        and (
+          status = 'open'
+          or (
+            status = 'scheduled'
+            and starts_at <= now()
+            and (ends_at is null or ends_at > now())
+          )
+        )
+      )
+    );
+
+  if v_account.student_id is null or v_session.id is null then
+    raise exception using errcode = 'P0001', message = 'Work Track can only be updated while this Track is open';
+  end if;
+
+  if jsonb_typeof(p_response -> 'requirements') is distinct from 'array' then
+    raise exception using errcode = 'P0001', message = 'Add and assess the committed project requirements first';
+  end if;
+
+  select count(*),
+         count(*) filter (
+           where coalesce(btrim(requirement ->> 'label'), '') = ''
+              or char_length(requirement ->> 'label') > 120
+              or coalesce(requirement ->> 'score', '') not in ('0','25','50','75','100')
+         ),
+         round(avg(case when coalesce(requirement ->> 'score', '') in ('0','25','50','75','100') then (requirement ->> 'score')::numeric else null end))::integer
+  into v_requirement_count, v_invalid_requirement_count, v_completion
+  from jsonb_array_elements(p_response -> 'requirements') requirement;
+
+  if v_requirement_count < 3 or v_requirement_count > 8 or v_invalid_requirement_count > 0 then
+    raise exception using errcode = 'P0001', message = 'Assess the 3 core requirements and any optional requirements with the 0/25/50/75/100 standard';
+  end if;
+
+  if coalesce(p_response -> 'requirements' -> 0 ->> 'label', '') <> 'Core functionality meets the primary user needs'
+     or coalesce(p_response -> 'requirements' -> 1 ->> 'label', '') <> 'Main workflow works end-to-end across integrated components'
+     or coalesce(p_response -> 'requirements' -> 2 ->> 'label', '') <> 'Critical features are tested or validated with evidence' then
+    raise exception using errcode = 'P0001', message = 'The 3 IT Milestone Project core requirements cannot be changed';
+  end if;
+
+  v_stage := case
+    when v_completion <= 40 then 'Building'
+    when v_completion <= 70 then 'Developing'
+    when v_completion <= 90 then 'Completing'
+    when v_completion < 100 then 'Finalising / Verifying'
+    else 'Completed & Verified'
+  end;
+  v_path := case when v_completion <= 70 then 'building' when v_completion <= 90 then 'completing' else 'verifying' end;
+  v_response := jsonb_set(
+    jsonb_set(
+      jsonb_set(p_response, '{completionPercent}', to_jsonb(v_completion), true),
+      '{completionStage}', to_jsonb(v_stage), true
+    ),
+    '{progressPath}', to_jsonb(v_path), true
+  );
+
+  insert into public.student_session_work_tracks (
+    session_id, student_id, auth_user_id, block_id, response
+  ) values (
+    v_session.id, v_account.student_id, auth.uid(), v_block_id, v_response
+  )
+  on conflict (session_id, student_id) do update
+    set response = excluded.response,
+        updated_at = now(),
+        teacher_verified_completion = null,
+        teacher_verification_status = null,
+        teacher_verification_reason = null,
+        teacher_verified_at = null,
+        teacher_verified_by = null
+  returning * into v_track;
+
+  return jsonb_build_object('updatedAt', v_track.updated_at, 'response', v_track.response);
+end;
+$$;
+
+revoke all on function public.save_my_session_work_track(uuid, jsonb) from public;
+grant execute on function public.save_my_session_work_track(uuid, jsonb) to authenticated;
+
+create or replace function public.get_my_session_journey()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_account public.student_accounts%rowtype;
+  v_block_id uuid;
+  v_result jsonb;
+begin
+  select * into v_account from public.student_accounts
+  where auth_user_id = auth.uid() and status = 'activated';
+  if v_account.student_id is null then return '[]'::jsonb; end if;
+
+  select roster.block_id into v_block_id
+  from public.student_roster roster join public.teaching_blocks block on block.id = roster.block_id
+  where roster.student_id = v_account.student_id and block.status = 'active'
+  order by block.starts_on desc nulls last, block.created_at desc limit 1;
+  if v_block_id is null then return '[]'::jsonb; end if;
+
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'sessionId', session.id,
+    'sessionNumber', session.session_number,
+    'weekNumber', session.week_number,
+    'focus', coalesce(session.curriculum_focus, session.title),
+    'title', session.title,
+    'sessionDate', session.session_date,
+    'startsAt', session.starts_at,
+    'endsAt', session.ends_at,
+    'status', case
+      when session.status = 'open' then 'open'
+      when session.status = 'closed' then 'closed'
+      when session.starts_at is not null and session.starts_at <= now() and (session.ends_at is null or session.ends_at > now()) then 'open'
+      when session.ends_at is not null and session.ends_at <= now() then 'closed'
+      else 'scheduled' end,
+    'checkedInAt', checkin.checked_in_at,
+    'workTrackUpdatedAt', track.updated_at,
+    'workTrackStatus', case
+      when session.session_number not between 6 and 9 then null
+      when session.work_track_access = 'open' then 'open'
+      when session.work_track_access = 'closed' then 'closed'
+      when session.status = 'closed' or (session.ends_at is not null and session.ends_at <= now()) then 'closed'
+      when session.status = 'open'
+        or (
+          session.status = 'scheduled'
+          and session.starts_at <= now()
+          and (session.ends_at is null or session.ends_at > now())
+        ) then 'open'
+      else 'scheduled'
+    end,
+    'platformFeedbackCompletedAt', feedback.submitted_at
+  ) order by session.session_number nulls last, session.session_date, session.created_at), '[]'::jsonb)
+  into v_result
+  from public.studio_sessions session
+  left join public.student_session_checkins checkin
+    on checkin.session_id = session.id and checkin.auth_user_id = auth.uid()
+  left join public.student_session_work_tracks track
+    on track.session_id = session.id and track.auth_user_id = auth.uid()
+  left join public.student_platform_feedback feedback
+    on feedback.session_id = session.id and feedback.auth_user_id = auth.uid()
+  where session.block_id = v_block_id;
+
+  return v_result;
+end;
+$$;
+
+revoke all on function public.get_my_session_journey() from public;
+grant execute on function public.get_my_session_journey() to authenticated;
+
+-- Security remains authenticated-only after function replacement.
+revoke all on function public.get_my_session_work_track(uuid) from public;
+grant execute on function public.get_my_session_work_track(uuid) to authenticated;
+revoke all on function public.save_my_session_work_track(uuid, jsonb) from public;
+grant execute on function public.save_my_session_work_track(uuid, jsonb) to authenticated;
+revoke all on function public.get_my_session_journey() from public;
+grant execute on function public.get_my_session_journey() to authenticated;
+
+-- Verification:
+-- 1. Existing rows default to Follow session without changing Check-in or evidence.
+-- 2. Teacher may open S8 Track while S8 Check-in is closed and S9 is current.
+-- 3. S8 and S9 Tracks may be open simultaneously.
+-- 4. Closing a Track preserves saved evidence as read-only.
+-- 5. Returning to Follow session restores schedule-derived Track access.
 
 
 -- Sprint 8 Phase 2A: AI Session Intake data and deterministic fallback foundation.
@@ -2674,6 +5269,809 @@ revoke all on function public.save_my_session_intake_chat(uuid,jsonb,jsonb,jsonb
 grant execute on function public.save_my_session_intake_chat(uuid,jsonb,jsonb,jsonb,text,jsonb) to authenticated;
 
 commit;
+
+-- Sprint 9 R02: minimum secure teacher Intake read workflow.
+--
+-- Purpose: let an authenticated teacher read, for a selected Session, the full
+-- roster with each student's confirmed Session Intake (or an explicit "missing"
+-- marker), so submitted/missing can be counted and a confirmed record and its
+-- sources inspected. Student claims stay distinct from teacher verification.
+--
+-- This migration is ADDITIVE and read-only in effect:
+--   * it creates ONE new function, public.get_teacher_session_intakes(uuid);
+--   * it does not create/alter tables, columns, policies, blocks, sessions or
+--     rows, and it does not call any AI provider;
+--   * no existing function is modified.
+--
+-- Access-pattern decision
+-- ------------------------
+-- The RLS policy "teachers read session intakes" already lets a teacher SELECT
+-- rows in public.student_session_intakes. That policy alone cannot produce the
+-- MISSING entries this workflow needs (a student with no row), because RLS can
+-- only filter rows that exist. Surfacing "missing" requires the roster as the
+-- list base, left-joined to intakes. public.student_roster is not exposed to the
+-- authenticated role for arbitrary selection, so a SECURITY DEFINER function
+-- with an explicit is_teacher() gate is the narrowest pattern that:
+--   * reuses the exact convention of public.get_teacher_session_work_tracks;
+--   * keeps roster read access inside one audited, teacher-only function;
+--   * returns only the fields this teacher workflow needs.
+-- The function is read-only: it performs SELECT only and writes nothing.
+
+begin;
+
+create or replace function public.get_teacher_session_intakes(p_session_id uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_session public.studio_sessions%rowtype;
+  v_roster_rows jsonb;
+  v_orphan_rows jsonb;
+  v_submitted integer;       -- roster students who submitted (roster completion numerator)
+  v_missing integer;         -- roster students with no Intake
+  v_offroster integer;       -- off-roster confirmed Intakes (history; NOT roster completion)
+begin
+  -- 1. Explicit, authenticated teacher requirement. No anon/student path.
+  if not public.is_teacher() then
+    raise exception using errcode = 'P0001', message = 'Teacher access required';
+  end if;
+
+  -- 2. Resolve the Block from the selected Session. Unknown Session => empty,
+  --    well-formed payload (not an error), matching the work-track convention.
+  select * into v_session
+  from public.studio_sessions
+  where id = p_session_id;
+
+  if v_session.id is null then
+    return jsonb_build_object(
+      'sessionId', p_session_id,
+      'sessionNumber', null,
+      'blockId', null,
+      'rosterSize', 0,
+      'rosterSubmittedCount', 0,
+      'missingCount', 0,
+      'offRosterCount', 0,
+      'submittedCount', 0,
+      'intakes', '[]'::jsonb
+    );
+  end if;
+
+  -- 3. Roster of the Session's Block is the LIST BASE. A left join to the
+  --    confirmed Intake for THIS Session and THIS student surfaces missing
+  --    submissions (intake fields null). Join key is (session_id, student_id)
+  --    scoped to the Session's own block_id, so a row from another Block or
+  --    another Session can never attach here.
+  select
+    coalesce(jsonb_agg(row_json order by team_number, student_label, student_id), '[]'::jsonb),
+    coalesce(sum(case when submitted then 1 else 0 end), 0),
+    coalesce(sum(case when submitted then 0 else 1 end), 0)
+  into v_roster_rows, v_submitted, v_missing
+  from (
+    select
+      roster.team_number as team_number,
+      roster.student_id as student_id,
+      coalesce(roster.preferred_name, roster.full_name) as student_label,
+      (intake.id is not null) as submitted,
+      jsonb_build_object(
+        'studentId', roster.student_id,
+        'studentName', coalesce(roster.preferred_name, roster.full_name),
+        'teamName', concat('Team ', roster.team_number),
+        'onRoster', true,
+        'submitted', (intake.id is not null),
+        'intakeId', intake.id,
+        'sourceMode', intake.source_mode,
+        'confirmedAt', intake.confirmed_at,
+        -- Student claim and its sources. Teacher verification is NOT part of
+        -- this record and is reported separately as unset (see below).
+        'studentRecord', intake.student_record,
+        'sourceConversation', intake.source_conversation,
+        'corrections', case
+          when intake.id is null then null
+          else coalesce(intake.student_confirmation -> 'corrections', '[]'::jsonb)
+        end,
+        'studentAttestation', intake.student_confirmation ->> 'attestation',
+        -- Teacher verification lives in no column of this table; always unset.
+        'teacherVerification', jsonb_build_object('status', 'unset', 'recorded', false)
+      ) as row_json
+    from public.student_roster roster
+    left join public.student_session_intakes intake
+      on intake.session_id = v_session.id
+     and intake.block_id = v_session.block_id
+     and intake.student_id = roster.student_id
+    where roster.block_id = v_session.block_id
+  ) roster_base;
+
+  -- 4. Historical preservation. A confirmed Intake whose student is no longer on
+  --    the current roster would be dropped by the roster-base join above. We do
+  --    NOT silently drop it: collect confirmed intakes for THIS Session whose
+  --    student_id has no matching roster row, and append them flagged
+  --    onRoster=false. They are counted as submitted.
+  select
+    coalesce(jsonb_agg(jsonb_build_object(
+      'studentId', intake.student_id,
+      'studentName', intake.student_id,
+      'teamName', null,
+      'onRoster', false,
+      'submitted', true,
+      'intakeId', intake.id,
+      'sourceMode', intake.source_mode,
+      'confirmedAt', intake.confirmed_at,
+      'studentRecord', intake.student_record,
+      'sourceConversation', intake.source_conversation,
+      'corrections', coalesce(intake.student_confirmation -> 'corrections', '[]'::jsonb),
+      'studentAttestation', intake.student_confirmation ->> 'attestation',
+      'teacherVerification', jsonb_build_object('status', 'unset', 'recorded', false)
+    ) order by intake.confirmed_at), '[]'::jsonb)
+  into v_orphan_rows
+  from public.student_session_intakes intake
+  where intake.session_id = v_session.id
+    and intake.block_id = v_session.block_id
+    and not exists (
+      select 1 from public.student_roster roster
+      where roster.block_id = v_session.block_id
+        and roster.student_id = intake.student_id
+    );
+
+  v_offroster := jsonb_array_length(v_orphan_rows);
+
+  return jsonb_build_object(
+    'sessionId', v_session.id,
+    'sessionNumber', v_session.session_number,
+    'blockId', v_session.block_id,
+    -- Roster completion metrics: numerator rosterSubmittedCount over
+    -- rosterSize (= rosterSubmittedCount + missingCount). Off-roster history is
+    -- counted SEPARATELY in offRosterCount and never inflates these.
+    'rosterSize', v_submitted + v_missing,
+    'rosterSubmittedCount', v_submitted,
+    'missingCount', v_missing,
+    'offRosterCount', v_offroster,
+    -- Grand total of all confirmed Intakes shown (roster-submitted + off-roster).
+    -- Provided for display only; it is NOT a roster completion rate.
+    'submittedCount', v_submitted + v_offroster,
+    'intakes', v_roster_rows || v_orphan_rows
+  );
+end;
+$$;
+
+-- 5. Least-privilege execution. No PUBLIC/anon execution; only authenticated.
+--    The is_teacher() gate inside the function restricts the effective caller to
+--    teachers even though EXECUTE is granted to the authenticated role (the same
+--    pattern as get_teacher_session_work_tracks).
+revoke all on function public.get_teacher_session_intakes(uuid) from public;
+revoke all on function public.get_teacher_session_intakes(uuid) from anon;
+grant execute on function public.get_teacher_session_intakes(uuid) to authenticated;
+
+commit;
+
+-- Verification (run read-only after apply; see
+-- supabase/scripts/sprint9_r02_teacher_intake_read_audit.sql):
+-- 1. Function is SECURITY DEFINER with proconfig search_path=''.
+-- 2. EXECUTE is granted to authenticated only; not to public or anon.
+-- 3. A non-teacher authenticated caller receives 'Teacher access required'.
+-- 4. Roster completion is reported separately from off-roster history:
+--    rosterSize = rosterSubmittedCount + missingCount; offRosterCount is counted
+--    on its own and never added into rosterSubmittedCount. submittedCount is a
+--    display-only grand total (rosterSubmittedCount + offRosterCount).
+-- 5. A roster student with no Intake appears with submitted=false and null
+--    studentRecord.
+-- 6. A confirmed Intake from another Block or another Session never attaches to
+--    this Session's rows.
+-- 7. A confirmed Intake whose student left the roster still appears with
+--    onRoster=false and is not dropped.
+-- 8. testing[].baseline_or_expected is present verbatim inside studentRecord.
+-- 9. teacherVerification is always {status:'unset', recorded:false}; this table
+--    has no writable teacher-judgement field.
+--
+-- Rollback: drop function public.get_teacher_session_intakes(uuid);
+-- No table/policy/row changes to reverse.
+
+-- Sprint 9 R01: server-authoritative per-Block Intake capability.
+--
+-- Replaces the hardcoded 2B2 eligibility with a trusted per-Block capability
+-- column teaching_blocks.intake_mode in ('disabled','deterministic','ai'),
+-- default 'disabled'. The capability is resolved server-side and surfaced to the
+-- student client through get_my_student_context(); the client can never supply
+-- or forge it.
+--
+-- This migration is ADDITIVE:
+--   * adds one column with a CHECK constraint and a safe default;
+--   * does NOT enable Intake on any existing Block (every existing row defaults
+--     to 'disabled'; 2B2 is NOT auto-promoted — a teacher sets it explicitly);
+--   * does NOT widen teaching_blocks.block_code (no new teaching code is
+--     confirmed yet; the November Block code remains Joseph's input);
+--   * re-creates get_my_student_context() to expose 'intakeMode', and the Intake
+--     RPCs to gate on intake_mode instead of block_code = '2B2'. Bodies are
+--     otherwise unchanged, preserving enrollment, Session-open, identity and
+--     duplicate-submission checks.
+--
+-- Mode semantics (Block-level capability; separate from Session intake_access):
+--   disabled      : the Block runs the existing non-Intake classroom workflow.
+--                   No save path accepts a new Intake. Previously confirmed
+--                   Intake history remains readable (get_my_session_intake is
+--                   NOT gated on mode).
+--   deterministic : provider-independent Intake only. The deterministic/chat
+--                   save paths accept records; no model calls are authorized
+--                   (the AI endpoint requires 'ai').
+--   ai            : conversational Intake with deterministic fallback. All save
+--                   paths accept records; the AI endpoint is authorized.
+--
+-- Apply AFTER: 20260903 (foundation), 20260912 (ai save), 20260916 (chat save).
+
+begin;
+
+-- 1. Capability column. Default 'disabled' so no existing Block is enabled.
+alter table public.teaching_blocks
+  add column if not exists intake_mode text not null default 'disabled';
+
+alter table public.teaching_blocks
+  drop constraint if exists teaching_blocks_intake_mode_check;
+alter table public.teaching_blocks
+  add constraint teaching_blocks_intake_mode_check
+  check (intake_mode in ('disabled','deterministic','ai')) not valid;
+alter table public.teaching_blocks
+  validate constraint teaching_blocks_intake_mode_check;
+
+-- Only teachers may change the capability. teaching_blocks already carries the
+-- authorized management policy "teachers manage teaching blocks" (FOR ALL USING
+-- is_teacher() WITH CHECK is_teacher()); intake_mode is covered by it. Students
+-- and anon have no UPDATE grant on teaching_blocks, so they cannot change it.
+-- (No new policy is needed; this comment records the authorization path.)
+
+-- 2. Student context exposes the server-owned capability as 'intakeMode'.
+create or replace function public.get_my_student_context()
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare
+  v_account public.student_accounts; v_roster public.student_roster;
+  v_block public.teaching_blocks; v_project public.projects%rowtype; v_checkin boolean;
+begin
+  select * into v_account from public.student_accounts where auth_user_id = auth.uid() and status <> 'disabled';
+  if v_account.auth_user_id is null then raise exception using errcode='P0001', message='Student account is not available'; end if;
+  select roster.* into v_roster from public.student_roster roster
+  join public.teaching_blocks block on block.id=roster.block_id
+  where roster.student_id=v_account.student_id and block.status='active'
+  order by block.starts_on desc nulls last, block.created_at desc limit 1;
+  if v_roster.id is null then raise exception using errcode='P0001', message='No active roster context is available'; end if;
+  select * into v_block from public.teaching_blocks where id=v_roster.block_id;
+  select project.* into v_project from public.teams team
+  join public.team_project_assignments assignment on assignment.team_id=team.id
+  join public.projects project on project.id=assignment.project_id
+  where team.block_id=v_roster.block_id and team.team_number=v_roster.team_number;
+  select exists(select 1 from public.student_checkins where block_id=v_roster.block_id and lower(trim(student_id))=v_account.student_id) into v_checkin;
+  return jsonb_build_object(
+    'status',v_account.status,'studentId',v_account.student_id,'studentName',coalesce(v_roster.preferred_name,v_roster.full_name),
+    'blockId',v_block.id,'blockLabel',concat(v_block.academic_year,' · ',v_block.block_code),'teamName',concat('Team ',v_roster.team_number),
+    'intakeMode',v_block.intake_mode,
+    'projectName',coalesce(v_project.title,v_roster.project_name),'projectProblem',v_project.problem,'projectDescription',v_project.description,
+    'projectTargetUsers',v_project.target_users,'projectExpectedOutcomes',v_project.expected_outcomes,'projectCategory',v_project.category,
+    'projectDifficulty',v_project.difficulty,'projectSource',case when v_project.id is not null then 'catalogue' when v_roster.project_name is not null then 'roster' else 'none' end,
+    'checkinRecognised',v_checkin);
+end;
+$$;
+revoke all on function public.get_my_student_context() from public;
+revoke all on function public.get_my_student_context() from anon;
+grant execute on function public.get_my_student_context() to authenticated;
+
+-- 3. Chat (adaptive) save: gate on intake_mode in ('deterministic','ai') instead
+--    of block_code = '2B2'. All other checks are unchanged from 20260916.
+create or replace function public.save_my_session_intake_chat(
+  p_session_id uuid,
+  p_source_conversation jsonb,
+  p_student_record jsonb,
+  p_student_confirmation jsonb,
+  p_prompt_version text,
+  p_ai_assistance jsonb
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_account public.student_accounts%rowtype;
+  v_roster public.student_roster%rowtype;
+  v_session public.studio_sessions%rowtype;
+  v_intake public.student_session_intakes%rowtype;
+  v_errors text[];
+  v_payload_hash text;
+  v_allowed_ai_keys text[] := array[
+    'used','model','policy_version','follow_up_count','question_purposes',
+    'extraction_status','stop_reason','extracted_record','turn_results','turn_decisions'
+  ];
+begin
+  select * into v_account
+  from public.student_accounts
+  where auth_user_id = auth.uid() and status = 'activated';
+
+  if v_account.student_id is null then
+    raise exception using errcode = 'P0001', message = 'Student account is not available';
+  end if;
+
+  select roster.* into v_roster
+  from public.student_roster roster
+  where roster.student_id = v_account.student_id
+    and roster.block_id = (
+      select session.block_id from public.studio_sessions session where session.id = p_session_id
+    );
+
+  select session.* into v_session
+  from public.studio_sessions session
+  where session.id = p_session_id
+    and session.block_id = v_roster.block_id
+    and session.session_number between 1 and 9
+    and exists (select 1 from public.teaching_blocks b where b.id=session.block_id and b.intake_mode in ('deterministic','ai'))
+    and (
+      session.intake_access = 'open'
+      or (
+        session.intake_access = 'session'
+        and (
+          session.status = 'open'
+          or (
+            session.status = 'scheduled'
+            and session.starts_at <= now()
+            and (session.ends_at is null or session.ends_at > now())
+          )
+        )
+      )
+    );
+
+  if v_roster.id is null or v_session.id is null then
+    raise exception using errcode = 'P0001', message = 'Session Intake can only be submitted while it is open';
+  end if;
+
+  if exists (
+    select 1 from public.student_session_intakes
+    where session_id = v_session.id and student_id = v_account.student_id
+  ) then
+    raise exception using errcode = 'P0001', message = 'This Session Intake has already been confirmed';
+  end if;
+
+  if p_source_conversation is null
+     or jsonb_typeof(p_source_conversation) <> 'array'
+     or jsonb_array_length(p_source_conversation) not between 3 and 17
+     or length(p_source_conversation::text) > 48000
+     or exists (
+       select 1 from jsonb_array_elements(p_source_conversation) turn
+       where jsonb_typeof(turn) <> 'object'
+          or coalesce(turn ->> 'actor','') not in ('student','system')
+          or char_length(btrim(coalesce(turn ->> 'purpose',''))) not between 3 and 80
+          or char_length(btrim(coalesce(turn ->> 'text',''))) not between 1 and 2000
+     ) then
+    raise exception using errcode = 'P0001', message = 'AI-assisted conversation is invalid';
+  end if;
+
+  if mod(jsonb_array_length(p_source_conversation),2) <> 1
+     or p_source_conversation -> -1 ->> 'purpose' is distinct from 'review transition'
+     or exists (
+       select 1 from jsonb_array_elements(p_source_conversation) with ordinality as t(value,n)
+       where value ->> 'actor' is distinct from case when mod(n,2)=1 then 'system' else 'student' end
+          or (value ->> 'purpose' = 'review transition' and n <> jsonb_array_length(p_source_conversation))
+     ) then
+    raise exception 'Chat conversation order is invalid';
+  end if;
+
+  v_errors := public.validate_session_intake_student_record_v11(p_student_record);
+  if cardinality(v_errors) > 0 then
+    raise exception using
+      errcode = 'P0001',
+      message = 'Session Intake evidence is incomplete',
+      detail = array_to_string(v_errors, '; ');
+  end if;
+
+  if p_student_confirmation is null
+     or jsonb_typeof(p_student_confirmation) <> 'object'
+     or coalesce(p_student_confirmation ->> 'status','') <> 'confirmed'
+     or coalesce(p_student_confirmation ->> 'attestation','') <>
+       'This summary reflects what I am claiming and the evidence I have identified. Teacher verification is separate.'
+     or jsonb_typeof(coalesce(p_student_confirmation -> 'corrections','[]'::jsonb)) <> 'array'
+     or length(p_student_confirmation::text) > 48000 then
+    raise exception using errcode = 'P0001', message = 'Student confirmation is invalid';
+  end if;
+
+  if p_prompt_version is null
+     or p_prompt_version not in ('session-intake-ai.v1.2.0','session-intake-ai.v1.3.0') then
+    raise exception using errcode = 'P0001', message = 'AI Intake prompt version is invalid';
+  end if;
+
+  if p_ai_assistance is null or jsonb_typeof(p_ai_assistance) <> 'object'
+     or exists (select 1 from jsonb_object_keys(p_ai_assistance) key where not (key = any(v_allowed_ai_keys)))
+     or p_ai_assistance ->> 'policy_version' not in ('adaptive-intake.v1.0.0','adaptive-intake.v1.1.0')
+     or jsonb_typeof(p_ai_assistance -> 'used') is distinct from 'boolean'
+     or coalesce(p_ai_assistance ->> 'extraction_status','') not in ('completed','fallback','not_used')
+     or coalesce(p_ai_assistance ->> 'stop_reason','') not in ('sufficient_information','teacher_help','budget_exhausted','provider_failure')
+     or coalesce((p_ai_assistance ->> 'follow_up_count')::integer,-1) <> greatest(0, (jsonb_array_length(p_source_conversation)-1)/2-3)
+     or jsonb_typeof(p_ai_assistance -> 'question_purposes') is distinct from 'array'
+     or jsonb_array_length(p_ai_assistance -> 'question_purposes') <> greatest(0, (jsonb_array_length(p_source_conversation)-1)/2-3)
+     or jsonb_typeof(p_ai_assistance -> 'extracted_record') is distinct from 'object'
+     or jsonb_typeof(p_ai_assistance -> 'turn_results') is distinct from 'array'
+     or jsonb_array_length(p_ai_assistance -> 'turn_results') > 8
+     or (p_ai_assistance ? 'turn_decisions' and (jsonb_typeof(p_ai_assistance -> 'turn_decisions') is distinct from 'array' or jsonb_array_length(p_ai_assistance -> 'turn_decisions') > 8))
+     or length(p_ai_assistance::text) > 96000 then
+    raise exception 'Chat assistance metadata is invalid';
+  end if;
+
+  if exists (
+    select 1 from jsonb_array_elements(p_ai_assistance -> 'turn_results') r,
+      lateral jsonb_array_elements(r -> 'evidenceUpdates') u
+    where coalesce(u ->> 'sourceTurn','') !~ '^[0-9]+$'
+       or p_source_conversation -> ((u ->> 'sourceTurn')::integer) ->> 'actor' is distinct from 'student'
+  ) then
+    raise exception 'Chat evidence source is invalid';
+  end if;
+
+  v_payload_hash := md5(
+    'session-intake.v1.1.0' ||
+    p_session_id::text ||
+    auth.uid()::text ||
+    p_source_conversation::text ||
+    p_student_record::text ||
+    p_student_confirmation::text ||
+    p_ai_assistance::text
+  );
+
+  insert into public.student_session_intakes (
+    session_id, block_id, student_id, auth_user_id,
+    schema_version, source_mode, prompt_version, test_suite_version,
+    source_conversation, student_record, ai_assistance,
+    student_confirmation, confirmed_payload_hash
+  ) values (
+    v_session.id, v_session.block_id, v_account.student_id, auth.uid(),
+    'session-intake.v1.1.0', case when (p_ai_assistance ->> 'used')::boolean then 'ai_assisted' else 'deterministic_fallback' end, p_prompt_version,
+    'ai-intake-suite.v1.1.0', p_source_conversation, p_student_record,
+    p_ai_assistance, p_student_confirmation, v_payload_hash
+  )
+  returning * into v_intake;
+
+  return jsonb_build_object(
+    'intakeId', v_intake.id,
+    'schemaVersion', v_intake.schema_version,
+    'sourceMode', v_intake.source_mode,
+    'promptVersion', v_intake.prompt_version,
+    'confirmedAt', v_intake.confirmed_at,
+    'confirmedPayloadHash', v_intake.confirmed_payload_hash
+  );
+end;
+$$;
+
+revoke all on function public.save_my_session_intake_chat(uuid,jsonb,jsonb,jsonb,text,jsonb) from public;
+revoke all on function public.save_my_session_intake_chat(uuid,jsonb,jsonb,jsonb,text,jsonb) from anon;
+grant execute on function public.save_my_session_intake_chat(uuid,jsonb,jsonb,jsonb,text,jsonb) to authenticated;
+
+-- 4. AI (v1.1) save: require intake_mode = 'ai'. Body otherwise unchanged from
+--    20260912 (which previously had no block gate; the AI entry point was gated
+--    only client-side and at the endpoint). Adding the server gate here makes
+--    the authority consistent.
+create or replace function public.save_my_session_intake_ai(
+  p_session_id uuid,
+  p_source_conversation jsonb,
+  p_student_record jsonb,
+  p_student_confirmation jsonb,
+  p_prompt_version text,
+  p_ai_assistance jsonb
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_account public.student_accounts%rowtype;
+  v_roster public.student_roster%rowtype;
+  v_session public.studio_sessions%rowtype;
+  v_intake public.student_session_intakes%rowtype;
+  v_errors text[];
+  v_payload_hash text;
+  v_allowed_ai_keys text[] := array[
+    'used','model','follow_up_count','question_purposes','extraction_status',
+    'uncertainties','flags','suggested_teacher_questions'
+  ];
+begin
+  select * into v_account
+  from public.student_accounts
+  where auth_user_id = auth.uid() and status = 'activated';
+
+  if v_account.student_id is null then
+    raise exception using errcode = 'P0001', message = 'Student account is not available';
+  end if;
+
+  select roster.* into v_roster
+  from public.student_roster roster
+  where roster.student_id = v_account.student_id
+    and roster.block_id = (
+      select session.block_id from public.studio_sessions session where session.id = p_session_id
+    );
+
+  select session.* into v_session
+  from public.studio_sessions session
+  where session.id = p_session_id
+    and session.block_id = v_roster.block_id
+    and session.session_number between 1 and 9
+    and exists (select 1 from public.teaching_blocks b where b.id=session.block_id and b.intake_mode = 'ai')
+    and (
+      session.intake_access = 'open'
+      or (
+        session.intake_access = 'session'
+        and (
+          session.status = 'open'
+          or (
+            session.status = 'scheduled'
+            and session.starts_at <= now()
+            and (session.ends_at is null or session.ends_at > now())
+          )
+        )
+      )
+    );
+
+  if v_roster.id is null or v_session.id is null then
+    raise exception using errcode = 'P0001', message = 'Session Intake can only be submitted while it is open';
+  end if;
+
+  if exists (
+    select 1 from public.student_session_intakes
+    where session_id = v_session.id and student_id = v_account.student_id
+  ) then
+    raise exception using errcode = 'P0001', message = 'This Session Intake has already been confirmed';
+  end if;
+
+  if p_source_conversation is null
+     or jsonb_typeof(p_source_conversation) <> 'array'
+     or jsonb_array_length(p_source_conversation) not between 3 and 12
+     or length(p_source_conversation::text) > 16000
+     or exists (
+       select 1 from jsonb_array_elements(p_source_conversation) turn
+       where jsonb_typeof(turn) <> 'object'
+          or coalesce(turn ->> 'actor','') not in ('student','system')
+          or char_length(btrim(coalesce(turn ->> 'purpose',''))) not between 3 and 80
+          or char_length(btrim(coalesce(turn ->> 'text',''))) not between 1 and 2000
+     ) then
+    raise exception using errcode = 'P0001', message = 'AI-assisted conversation is invalid';
+  end if;
+
+  v_errors := public.validate_session_intake_student_record(p_student_record);
+  if cardinality(v_errors) > 0 then
+    raise exception using
+      errcode = 'P0001',
+      message = 'Session Intake evidence is incomplete',
+      detail = array_to_string(v_errors, '; ');
+  end if;
+
+  if p_student_confirmation is null
+     or jsonb_typeof(p_student_confirmation) <> 'object'
+     or coalesce(p_student_confirmation ->> 'status','') <> 'confirmed'
+     or coalesce(p_student_confirmation ->> 'attestation','') <>
+       'This summary reflects what I am claiming and the evidence I have identified. Teacher verification is separate.'
+     or jsonb_typeof(coalesce(p_student_confirmation -> 'corrections','[]'::jsonb)) <> 'array'
+     or length(p_student_confirmation::text) > 8000 then
+    raise exception using errcode = 'P0001', message = 'Student confirmation is invalid';
+  end if;
+
+  if p_prompt_version is null
+     or p_prompt_version <> 'session-intake-ai.v1.1.0' then
+    raise exception using errcode = 'P0001', message = 'AI Intake prompt version is invalid';
+  end if;
+
+  if p_ai_assistance is null
+     or jsonb_typeof(p_ai_assistance) <> 'object'
+     or exists (
+       select 1 from jsonb_object_keys(p_ai_assistance) key
+       where not (key = any(v_allowed_ai_keys))
+     )
+     or coalesce((p_ai_assistance ->> 'used')::boolean, false) is not true
+     or coalesce(p_ai_assistance ->> 'extraction_status','') <> 'completed'
+     or coalesce((p_ai_assistance ->> 'follow_up_count')::integer, -1) not between 0 and 3
+     or jsonb_typeof(coalesce(p_ai_assistance -> 'question_purposes','[]'::jsonb)) <> 'array'
+     or jsonb_array_length(coalesce(p_ai_assistance -> 'question_purposes','[]'::jsonb)) > 3
+     or jsonb_typeof(coalesce(p_ai_assistance -> 'uncertainties','[]'::jsonb)) <> 'array'
+     or jsonb_array_length(coalesce(p_ai_assistance -> 'uncertainties','[]'::jsonb)) > 5
+     or jsonb_typeof(coalesce(p_ai_assistance -> 'flags','[]'::jsonb)) <> 'array'
+     or jsonb_array_length(coalesce(p_ai_assistance -> 'flags','[]'::jsonb)) > 5
+     or jsonb_typeof(coalesce(p_ai_assistance -> 'suggested_teacher_questions','[]'::jsonb)) <> 'array'
+     or jsonb_array_length(coalesce(p_ai_assistance -> 'suggested_teacher_questions','[]'::jsonb)) > 3
+     or length(p_ai_assistance::text) > 8000 then
+    raise exception using errcode = 'P0001', message = 'AI assistance metadata is invalid';
+  end if;
+
+  v_payload_hash := md5(
+    'session-intake.v1.0.0' ||
+    p_session_id::text ||
+    auth.uid()::text ||
+    p_source_conversation::text ||
+    p_student_record::text ||
+    p_student_confirmation::text ||
+    p_ai_assistance::text
+  );
+
+  insert into public.student_session_intakes (
+    session_id, block_id, student_id, auth_user_id,
+    schema_version, source_mode, prompt_version, test_suite_version,
+    source_conversation, student_record, ai_assistance,
+    student_confirmation, confirmed_payload_hash
+  ) values (
+    v_session.id, v_session.block_id, v_account.student_id, auth.uid(),
+    'session-intake.v1.0.0', 'ai_assisted', p_prompt_version,
+    'ai-intake-suite.v1.0.0', p_source_conversation, p_student_record,
+    p_ai_assistance, p_student_confirmation, v_payload_hash
+  )
+  returning * into v_intake;
+
+  return jsonb_build_object(
+    'intakeId', v_intake.id,
+    'schemaVersion', v_intake.schema_version,
+    'sourceMode', v_intake.source_mode,
+    'promptVersion', v_intake.prompt_version,
+    'confirmedAt', v_intake.confirmed_at,
+    'confirmedPayloadHash', v_intake.confirmed_payload_hash
+  );
+end;
+$$;
+
+revoke all on function public.save_my_session_intake_ai(uuid,jsonb,jsonb,jsonb,text,jsonb) from public;
+revoke all on function public.save_my_session_intake_ai(uuid,jsonb,jsonb,jsonb,text,jsonb) from anon;
+grant execute on function public.save_my_session_intake_ai(uuid,jsonb,jsonb,jsonb,text,jsonb) to authenticated;
+
+-- 5. Deterministic fallback save: gate on intake_mode in ('deterministic','ai').
+--    Body otherwise unchanged from 20260903.
+create or replace function public.save_my_session_intake_fallback(
+  p_session_id uuid,
+  p_source_conversation jsonb,
+  p_student_record jsonb,
+  p_student_confirmation jsonb
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_account public.student_accounts%rowtype;
+  v_roster public.student_roster%rowtype;
+  v_session public.studio_sessions%rowtype;
+  v_intake public.student_session_intakes%rowtype;
+  v_errors text[];
+  v_payload_hash text;
+begin
+  select * into v_account
+  from public.student_accounts
+  where auth_user_id = auth.uid() and status = 'activated';
+
+  if v_account.student_id is null then
+    raise exception using errcode = 'P0001', message = 'Student account is not available';
+  end if;
+
+  select roster.* into v_roster
+  from public.student_roster roster
+  where roster.student_id = v_account.student_id
+    and roster.block_id = (
+      select session.block_id from public.studio_sessions session where session.id = p_session_id
+    );
+
+  select session.* into v_session
+  from public.studio_sessions session
+  where session.id = p_session_id
+    and session.block_id = v_roster.block_id
+    and session.session_number between 1 and 9
+    and exists (select 1 from public.teaching_blocks b where b.id=session.block_id and b.intake_mode in ('deterministic','ai'))
+    and (
+      session.intake_access = 'open'
+      or (
+        session.intake_access = 'session'
+        and (
+          session.status = 'open'
+          or (
+            session.status = 'scheduled'
+            and session.starts_at <= now()
+            and (session.ends_at is null or session.ends_at > now())
+          )
+        )
+      )
+    );
+
+  if v_roster.id is null or v_session.id is null then
+    raise exception using errcode = 'P0001', message = 'Session Intake can only be submitted while it is open';
+  end if;
+
+  if exists (
+    select 1 from public.student_session_intakes
+    where session_id = v_session.id and student_id = v_account.student_id
+  ) then
+    raise exception using errcode = 'P0001', message = 'This Session Intake has already been confirmed';
+  end if;
+
+  if p_source_conversation is null
+     or jsonb_typeof(p_source_conversation) <> 'array'
+     or jsonb_array_length(p_source_conversation) not between 3 and 12
+     or length(p_source_conversation::text) > 16000
+     or exists (
+       select 1 from jsonb_array_elements(p_source_conversation) turn
+       where jsonb_typeof(turn) <> 'object'
+          or coalesce(turn ->> 'actor','') not in ('student','system')
+          or char_length(btrim(coalesce(turn ->> 'purpose',''))) not between 3 and 80
+          or char_length(btrim(coalesce(turn ->> 'text',''))) not between 1 and 2000
+     ) then
+    raise exception using errcode = 'P0001', message = 'Fallback conversation is invalid';
+  end if;
+
+  v_errors := public.validate_session_intake_student_record(p_student_record);
+  if cardinality(v_errors) > 0 then
+    raise exception using
+      errcode = 'P0001',
+      message = 'Session Intake evidence is incomplete',
+      detail = array_to_string(v_errors, '; ');
+  end if;
+
+  if p_student_confirmation is null
+     or jsonb_typeof(p_student_confirmation) <> 'object'
+     or coalesce(p_student_confirmation ->> 'status','') <> 'confirmed'
+     or coalesce(p_student_confirmation ->> 'attestation','') <>
+       'This summary reflects what I am claiming and the evidence I have identified. Teacher verification is separate.'
+     or jsonb_typeof(coalesce(p_student_confirmation -> 'corrections','[]'::jsonb)) <> 'array'
+     or length(p_student_confirmation::text) > 8000 then
+    raise exception using errcode = 'P0001', message = 'Student confirmation is invalid';
+  end if;
+
+  v_payload_hash := md5(
+    'session-intake.v1.0.0' ||
+    p_session_id::text ||
+    auth.uid()::text ||
+    p_source_conversation::text ||
+    p_student_record::text ||
+    p_student_confirmation::text
+  );
+
+  insert into public.student_session_intakes (
+    session_id, block_id, student_id, auth_user_id,
+    schema_version, source_mode, prompt_version, test_suite_version,
+    source_conversation, student_record, ai_assistance,
+    student_confirmation, confirmed_payload_hash
+  ) values (
+    v_session.id, v_session.block_id, v_account.student_id, auth.uid(),
+    'session-intake.v1.0.0', 'deterministic_fallback', null,
+    'ai-intake-suite.v1.0.0', p_source_conversation, p_student_record,
+    '{"used":false,"follow_up_count":0,"question_purposes":[],"extraction_status":"not_used","uncertainties":[],"flags":[],"suggested_teacher_questions":[]}'::jsonb,
+    p_student_confirmation, v_payload_hash
+  )
+  returning * into v_intake;
+
+  return jsonb_build_object(
+    'intakeId', v_intake.id,
+    'schemaVersion', v_intake.schema_version,
+    'sourceMode', v_intake.source_mode,
+    'confirmedAt', v_intake.confirmed_at,
+    'confirmedPayloadHash', v_intake.confirmed_payload_hash
+  );
+end;
+$$;
+
+revoke all on function public.save_my_session_intake_fallback(uuid,jsonb,jsonb,jsonb) from public;
+revoke all on function public.save_my_session_intake_fallback(uuid,jsonb,jsonb,jsonb) from anon;
+grant execute on function public.save_my_session_intake_fallback(uuid,jsonb,jsonb,jsonb) to authenticated;
+
+-- 6. get_my_session_intake is intentionally NOT re-created here. It already does
+--    not gate on block_code, so previously confirmed Intake history remains
+--    readable regardless of the current intake_mode (including 'disabled').
+
+commit;
+
+-- Verification (read-only; see
+-- supabase/scripts/sprint9_r01_block_intake_mode_audit.sql):
+-- 1. teaching_blocks.intake_mode exists, default 'disabled', CHECK in
+--    (disabled,deterministic,ai).
+-- 2. Every existing Block row has intake_mode = 'disabled' (nothing auto-enabled).
+-- 3. block_code CHECK is unchanged (no new teaching code added).
+-- 4. get_my_student_context returns 'intakeMode' from the active Block.
+-- 5. save_my_session_intake_chat and _fallback require intake_mode in
+--    (deterministic,ai); save_my_session_intake_ai requires intake_mode = 'ai'.
+-- 6. A forged client cannot set intake_mode: students/anon have no UPDATE grant
+--    on teaching_blocks; only is_teacher() may update.
+-- 7. get_my_session_intake still returns confirmed history under 'disabled'.
+--
+-- Rollback: the capability column may be kept (inert) or removed with
+--   alter table public.teaching_blocks drop column if exists intake_mode;
+-- after restoring the previous function bodies. Do not drop the column while a
+-- deployed function references it.
+
 
 -- Sprint 10 S10-01: S1-S9 Work Track and selected-method write gating.
 -- New migration: no changes to existing rows, tables, RLS or applied migrations.
@@ -5243,4 +8641,1362 @@ begin
  return public.validate_session_intake_student_record_v12_known(v_check);
 end; $$;
 revoke all on function public.validate_session_intake_student_record_v12(jsonb) from public,anon,authenticated;
+commit;
+
+
+-- Current class/identity baseline (previously distributed as incremental migrations only).
+
+-- Snapshot of 20261023_sprint10_teaching_classes.sql
+-- Independent teaching instances; no historical IDs or records are moved.
+begin;
+alter table public.teaching_blocks drop constraint if exists teaching_blocks_block_code_check;
+alter table public.teaching_blocks add constraint teaching_blocks_block_code_check check(block_code ~ '^[12]B[1-4]$');
+alter table public.teaching_blocks add column if not exists course_code text not null default 'NIT3004', add column if not exists class_code text not null default 'C1';
+alter table public.teaching_blocks drop constraint if exists teaching_blocks_academic_year_block_code_key;
+drop index if exists public.teaching_blocks_single_active_idx;
+create unique index if not exists teaching_classes_identity on public.teaching_blocks(course_code,academic_year,block_code,class_code);
+alter table public.teaching_blocks drop constraint if exists teaching_classes_codes;
+alter table public.teaching_blocks add constraint teaching_classes_codes check(course_code ~ '^[A-Z][A-Z0-9]{2,19}$' and class_code ~ '^[A-Z0-9][A-Z0-9_-]{0,19}$');
+
+create table if not exists public.platform_administrators(user_id uuid primary key references auth.users(id) on delete restrict,created_at timestamptz not null default now());
+create table if not exists public.teacher_profiles(user_id uuid primary key references auth.users(id) on delete cascade,display_name text not null check(length(trim(display_name)) between 1 and 100),active boolean not null default true,must_change_password boolean not null default true,created_at timestamptz not null default now());
+create table if not exists public.teacher_class_memberships(class_id uuid not null references public.teaching_blocks(id) on delete cascade,user_id uuid not null references public.teacher_profiles(user_id) on delete cascade,primary key(class_id,user_id));
+alter table public.platform_administrators enable row level security;
+alter table public.teacher_profiles enable row level security;
+alter table public.teacher_class_memberships enable row level security;
+revoke all on public.platform_administrators,public.teacher_profiles,public.teacher_class_memberships from public,anon,authenticated;
+grant all on public.platform_administrators,public.teacher_profiles,public.teacher_class_memberships to service_role;
+
+-- Bootstrap only the single pre-existing teacher. Multiple teachers require an
+-- explicit administrator UUID in the session; never promote every teacher.
+do $$declare v_id uuid; v_count integer; begin
+ if not exists(select 1 from public.platform_administrators) then
+  v_id:=nullif(current_setting('studio.bootstrap_administrator',true),'')::uuid;
+  if v_id is null then
+   select count(*),(array_agg(id))[1] into v_count,v_id from auth.users where raw_app_meta_data->>'role'='teacher';
+   if v_count<>1 then raise exception 'Set studio.bootstrap_administrator to the existing owner UUID before applying this migration'; end if;
+  end if;
+  if not exists(select 1 from auth.users where id=v_id) then raise exception 'Administrator account does not exist'; end if;
+  insert into public.platform_administrators values(v_id,now());
+  insert into public.teacher_profiles(user_id,display_name,must_change_password) values(v_id,'Platform administrator',false) on conflict(user_id) do nothing;
+ end if;
+end $$;
+
+-- Existing teacher logins remain usable, but receive no automatic class access.
+insert into public.teacher_profiles(user_id,display_name,must_change_password)
+select id,left(coalesce(nullif(email,''),'Teacher'),100),false from auth.users where raw_app_meta_data->>'role'='teacher'
+on conflict(user_id) do nothing;
+
+create or replace function public.is_superadmin() returns boolean language sql stable security definer set search_path='' as $$select exists(select 1 from public.platform_administrators where user_id=auth.uid())$$;
+create or replace function public.is_teacher() returns boolean language sql stable security definer set search_path='' as $$
+ select public.is_superadmin() or (coalesce(auth.jwt()->'app_metadata'->>'role','')='teacher' and not exists(select 1 from public.teacher_profiles where user_id=auth.uid() and (not active or must_change_password)))
+$$;
+create or replace function public.can_manage_teaching_class(p_class_id uuid) returns boolean language sql stable security definer set search_path='' as $$
+ select auth.uid() is not null and (public.is_superadmin() or (public.is_teacher() and exists(select 1 from public.teacher_class_memberships m join public.teacher_profiles p on p.user_id=m.user_id where m.class_id=p_class_id and m.user_id=auth.uid() and p.active and not p.must_change_password)))
+$$;
+create or replace function public.require_teaching_class(p_class_id uuid) returns void language plpgsql stable security definer set search_path='' as $$begin
+ if p_class_id is null or not public.can_manage_teaching_class(p_class_id) then raise exception using errcode='42501',message='This class is not assigned to your account'; end if;
+end $$;
+create or replace function public.require_session_class(p_session_id uuid) returns void language plpgsql stable security definer set search_path='' as $$begin
+ perform public.require_teaching_class((select block_id from public.studio_sessions where id=p_session_id));
+end $$;
+create or replace function public.require_team_class(p_team_id uuid) returns void language plpgsql stable security definer set search_path='' as $$begin
+ perform public.require_teaching_class((select block_id from public.teams where id=p_team_id));
+end $$;
+create or replace function public.require_precheck_class(p_submission_id uuid) returns void language plpgsql stable security definer set search_path='' as $$begin
+ perform public.require_teaching_class((select block_id from public.week2_progress_reviews where id=p_submission_id));
+end $$;
+
+-- Restrictive policies compose with existing student policies and cannot be
+-- bypassed by an older permissive teacher policy.
+do $$declare r record; begin
+ for r in select c.table_name from information_schema.columns c join pg_class t on t.relname=c.table_name join pg_namespace n on n.oid=t.relnamespace and n.nspname='public' where c.table_schema='public' and c.column_name='block_id' and t.relkind='r' loop
+  execute format('drop policy if exists teaching_class_staff_scope on public.%I',r.table_name);
+  execute format('create policy teaching_class_staff_scope on public.%I as restrictive to authenticated using (not public.is_teacher() or public.can_manage_teaching_class(block_id)) with check (not public.is_teacher() or public.can_manage_teaching_class(block_id))',r.table_name);
+ end loop;
+end $$;
+-- Disabled/unactivated staff are still staff for scope restrictions.
+create or replace function public.is_staff_identity() returns boolean language sql stable security definer set search_path='' as $$ select public.is_superadmin() or coalesce(auth.jwt()->'app_metadata'->>'role','')='teacher' $$;
+create or replace function public.can_access_teaching_class(p_class_id uuid) returns boolean language sql stable security definer set search_path='' as $$
+ select case when public.is_staff_identity() then public.can_manage_teaching_class(p_class_id)
+ when auth.uid() is not null then exists(select 1 from public.student_roster r join public.student_accounts a on a.student_id=r.student_id where r.block_id=p_class_id and a.auth_user_id=auth.uid() and a.status<>'disabled')
+ else (select count(*) from public.teaching_blocks where status='active')=1 and exists(select 1 from public.teaching_blocks where id=p_class_id and status='active') end
+$$;
+revoke all on function public.can_access_teaching_class(uuid) from public;
+grant execute on function public.can_access_teaching_class(uuid) to anon,authenticated,service_role;
+do $$declare r record; begin
+ for r in select table_name from information_schema.columns where table_schema='public' and column_name='block_id' loop
+  execute format('alter policy teaching_class_staff_scope on public.%I to anon,authenticated using (public.can_access_teaching_class(block_id)) with check (public.can_access_teaching_class(block_id))',r.table_name);
+ end loop;
+end $$;
+drop policy if exists teaching_class_instance_scope on public.teaching_blocks;
+create policy teaching_class_instance_scope on public.teaching_blocks as restrictive to anon,authenticated using (public.can_access_teaching_class(id)) with check(public.can_manage_teaching_class(id));
+drop policy if exists teaching_class_instance_create on public.teaching_blocks;
+create policy teaching_class_instance_create on public.teaching_blocks as restrictive for insert to authenticated with check(public.is_superadmin());
+drop policy if exists teaching_class_instance_delete on public.teaching_blocks;
+create policy teaching_class_instance_delete on public.teaching_blocks as restrictive for delete to authenticated using(public.is_superadmin());
+
+create or replace function public.can_manage_roster_account(p_student_id text) returns boolean language sql stable security definer set search_path='' as $$select public.is_superadmin() or exists(select 1 from public.student_roster r where r.student_id=p_student_id and public.can_manage_teaching_class(r.block_id))$$;
+drop policy if exists teaching_class_account_scope on public.student_accounts;
+create policy teaching_class_account_scope on public.student_accounts as restrictive to authenticated using(not public.is_staff_identity() or public.can_manage_roster_account(student_id)) with check(not public.is_staff_identity() or public.can_manage_roster_account(student_id));
+-- Team-owned rows do not have a direct block_id.
+do $$declare t text; begin foreach t in array array['team_project_assignments','project_proposals','team_posters'] loop
+ execute format('drop policy if exists teaching_class_team_scope on public.%I',t);
+ execute format('create policy teaching_class_team_scope on public.%I as restrictive to anon,authenticated using(exists(select 1 from public.teams t where t.id=team_id and public.can_access_teaching_class(t.block_id))) with check(exists(select 1 from public.teams t where t.id=team_id and public.can_access_teaching_class(t.block_id)))',t);
+end loop;end $$;
+
+create or replace function public.guard_teaching_class_identity() returns trigger language plpgsql set search_path='' as $$begin
+ if current_user not in ('postgres','service_role') and not public.is_superadmin() and (new.course_code,new.class_code,new.academic_year,new.block_code,new.status) is distinct from (old.course_code,old.class_code,old.academic_year,old.block_code,old.status) then raise exception using errcode='42501',message='Only an administrator can change class identity or lifecycle';end if;return new;
+end $$;
+drop trigger if exists guard_teaching_class_identity on public.teaching_blocks;
+create trigger guard_teaching_class_identity before update on public.teaching_blocks for each row execute function public.guard_teaching_class_identity();
+
+-- Existing student RPCs require a single active roster context. Reject ambiguity
+-- rather than selecting another class with LIMIT 1.
+create or replace function public.guard_active_roster_context() returns trigger language plpgsql security definer set search_path='' as $$declare v_ids text[];begin
+ perform pg_advisory_xact_lock(hashtext('studio.roster.context'));
+ if tg_table_name='student_roster' then
+  if exists(select 1 from public.student_roster r join public.teaching_blocks b on b.id=r.block_id join public.teaching_blocks nb on nb.id=new.block_id where r.student_id=new.student_id and r.block_id<>new.block_id and b.status='active' and nb.status='active') then raise exception 'Student already belongs to another active class; transfer the roster membership first';end if;
+ else
+  if new.status='active' and exists(select 1 from public.student_roster mine join public.student_roster other on other.student_id=mine.student_id and other.block_id<>new.id join public.teaching_blocks b on b.id=other.block_id where mine.block_id=new.id and b.status='active') then raise exception 'Activating this class would give a student multiple active classes';end if;
+ end if;return new;
+end $$;
+drop trigger if exists guard_active_roster_context on public.student_roster;
+create trigger guard_active_roster_context before insert or update on public.student_roster for each row execute function public.guard_active_roster_context();
+drop trigger if exists guard_active_roster_context on public.teaching_blocks;
+create trigger guard_active_roster_context before insert or update on public.teaching_blocks for each row execute function public.guard_active_roster_context();
+
+create or replace function public.current_teaching_block_id() returns uuid language sql stable security definer set search_path='' as $$
+ select case when count(*)=1 then (array_agg(b.id))[1] else null end from public.teaching_blocks b where b.status='active' and
+ (case when public.is_staff_identity() then public.can_manage_teaching_class(b.id) when auth.uid() is not null then exists(select 1 from public.student_roster r join public.student_accounts a on a.student_id=r.student_id where r.block_id=b.id and a.auth_user_id=auth.uid() and a.status<>'disabled') else true end)
+$$;
+
+create or replace function public.get_staff_context() returns jsonb language sql stable security definer set search_path='' as $$
+ select jsonb_build_object('isSuperadmin',public.is_superadmin(),'isTeacher',public.is_teacher(),'mustChangePassword',coalesce((select must_change_password from public.teacher_profiles where user_id=auth.uid()),false))
+$$;
+create or replace function public.get_teacher_administration() returns jsonb language plpgsql stable security definer set search_path='' as $$begin
+ if not public.is_superadmin() then raise exception using errcode='42501',message='Administrator access required';end if;
+ return (select coalesce(jsonb_agg(jsonb_build_object('userId',p.user_id,'name',p.display_name,'email',u.email,'active',p.active,'mustChangePassword',p.must_change_password,'classIds',(select coalesce(jsonb_agg(m.class_id),'[]'::jsonb) from public.teacher_class_memberships m where m.user_id=p.user_id)) order by p.display_name),'[]'::jsonb) from public.teacher_profiles p join auth.users u on u.id=p.user_id where not exists(select 1 from public.platform_administrators a where a.user_id=p.user_id));
+end $$;
+create or replace function public.set_teacher_classes(p_user_id uuid,p_class_ids uuid[],p_display_name text default null,p_active boolean default true) returns void language plpgsql security definer set search_path='' as $$begin
+ if not public.is_superadmin() then raise exception using errcode='42501',message='Administrator access required';end if;
+ if exists(select 1 from public.platform_administrators where user_id=p_user_id) then raise exception 'Administrator permissions cannot be changed here';end if;
+ if not exists(select 1 from auth.users where id=p_user_id and raw_app_meta_data->>'role'='teacher') then raise exception 'Teacher account does not exist';end if;
+ if p_class_ids is null or exists(select 1 from unnest(p_class_ids) id where id is null or not exists(select 1 from public.teaching_blocks b where b.id=id)) then raise exception 'Unknown class';end if;
+ insert into public.teacher_profiles(user_id,display_name,active) values(p_user_id,trim(p_display_name),p_active) on conflict(user_id) do update set display_name=coalesce(nullif(trim(p_display_name),''),teacher_profiles.display_name),active=p_active;
+ delete from public.teacher_class_memberships where user_id=p_user_id;
+ insert into public.teacher_class_memberships(class_id,user_id) select distinct id,p_user_id from unnest(p_class_ids) id;
+end $$;
+
+-- Every new helper has explicit grants; internal trigger helpers are not RPCs.
+do $$declare n text;begin foreach n in array array['is_superadmin()','is_teacher()','is_staff_identity()','can_manage_teaching_class(uuid)','can_manage_roster_account(text)','require_teaching_class(uuid)','require_session_class(uuid)','require_team_class(uuid)','require_precheck_class(uuid)','get_staff_context()','get_teacher_administration()','set_teacher_classes(uuid,uuid[],text,boolean)'] loop
+ execute 'revoke all on function public.'||n||' from public,anon,authenticated';execute 'grant execute on function public.'||n||' to authenticated,service_role';
+end loop;end $$;
+grant execute on function public.is_teacher(),public.is_staff_identity(),public.is_superadmin(),public.can_manage_teaching_class(uuid),public.can_manage_roster_account(text) to anon;
+revoke all on function public.guard_teaching_class_identity(),public.guard_active_roster_context() from public,anon,authenticated;
+
+-- Scoped existing RPC: teacher_reset_week2_precheck
+create or replace function public.teacher_reset_week2_precheck(p_submission_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_submission public.week2_progress_reviews;
+begin
+  perform public.require_precheck_class(p_submission_id);
+  if not coalesce(public.is_teacher(), false) then
+    raise exception using errcode = '42501', message = 'Teacher access is required';
+  end if;
+
+  select submission.* into v_submission
+  from public.week2_progress_reviews submission
+  where submission.id = p_submission_id;
+
+  if v_submission.id is null then
+    raise exception using errcode = 'P0002', message = 'Pre-check submission was not found';
+  end if;
+
+  delete from public.teacher_progress_reviews review
+  where review.block_id = v_submission.block_id
+    and lower(trim(review.student_id)) = lower(trim(v_submission.student_id));
+
+  delete from public.week2_progress_reviews submission
+  where submission.id = p_submission_id;
+end;
+$$;
+
+-- Scoped existing RPC: save_presentation_order_draft
+create or replace function public.save_presentation_order_draft(
+  p_block_id uuid,
+  p_team_ids uuid[]
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_team_count integer;
+begin
+  perform public.require_teaching_class(p_block_id);
+  if not public.is_teacher() then
+    raise exception using errcode = '42501', message = 'Teacher access required';
+  end if;
+
+  select count(*)::integer into v_team_count
+  from public.teams where block_id = p_block_id;
+
+  if v_team_count = 0
+     or coalesce(array_length(p_team_ids, 1), 0) <> v_team_count
+     or (select count(distinct team_id) from unnest(p_team_ids) as supplied(team_id)) <> v_team_count
+     or exists (
+       select 1 from unnest(p_team_ids) as supplied(team_id)
+       where not exists (
+         select 1 from public.teams team
+         where team.id = supplied.team_id and team.block_id = p_block_id
+       )
+     ) then
+    raise exception using errcode = '22023',
+      message = 'Presentation order must contain every block team exactly once';
+  end if;
+
+  insert into public.presentation_orders (block_id, draft_team_ids)
+  values (p_block_id, p_team_ids)
+  on conflict (block_id) do update
+  set draft_team_ids = excluded.draft_team_ids;
+end;
+$$;
+
+-- Scoped existing RPC: get_teacher_poster_gallery
+create or replace function public.get_teacher_poster_gallery(p_block_id uuid)
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare v_published boolean; v_published_at timestamptz;
+begin
+  perform public.require_teaching_class(p_block_id);
+  if not public.is_teacher() then raise exception using errcode='42501', message='Teacher access required'; end if;
+  select is_published,published_at into v_published,v_published_at from public.poster_gallery_settings where block_id=p_block_id;
+  return jsonb_build_object(
+    'isPublished',coalesce(v_published,false),'publishedAt',v_published_at,
+    'teams',coalesce((select jsonb_agg(jsonb_build_object(
+      'teamId',team.id,'teamName',concat('Team ',team.team_number),'projectName',project.title,
+      'draft',case when draft.id is null then null else jsonb_build_object('versionId',draft.id,'originalFilename',draft.original_filename,'mimeType',draft.mime_type,'sizeBytes',draft.size_bytes,'createdAt',draft.created_at) end,
+      'publishedVersionId',published.id
+    ) order by team.team_number)
+    from public.teams team
+    left join public.team_project_assignments assignment on assignment.team_id=team.id
+    left join public.projects project on project.id=assignment.project_id
+    left join public.team_posters poster on poster.block_id=p_block_id and poster.team_id=team.id
+    left join public.poster_versions draft on draft.id=poster.draft_version_id and draft.status='ready'
+    left join public.poster_versions published on published.id=poster.published_version_id and published.status='ready'
+    where team.block_id=p_block_id),'[]'::jsonb)
+  );
+end;
+$$;
+
+-- Scoped existing RPC: publish_poster_gallery
+create or replace function public.publish_poster_gallery(p_block_id uuid)
+returns void language plpgsql security definer set search_path = '' as $$
+begin
+  perform public.require_teaching_class(p_block_id);
+  if not public.is_teacher() then raise exception using errcode='42501', message='Teacher access required'; end if;
+  update public.team_posters set published_version_id=draft_version_id
+  where block_id=p_block_id;
+  insert into public.poster_gallery_settings(block_id,is_published,published_at)
+  values(p_block_id,true,now())
+  on conflict(block_id) do update set is_published=true,published_at=now();
+end;
+$$;
+
+-- Scoped existing RPC: hide_poster_gallery
+create or replace function public.hide_poster_gallery(p_block_id uuid)
+returns void language plpgsql security definer set search_path = '' as $$
+begin
+  perform public.require_teaching_class(p_block_id);
+  if not public.is_teacher() then raise exception using errcode='42501', message='Teacher access required'; end if;
+  update public.poster_gallery_settings set is_published=false where block_id=p_block_id;
+end;
+$$;
+
+-- Scoped existing RPC: remove_team_poster_draft
+create or replace function public.remove_team_poster_draft(p_team_id uuid)
+returns void language plpgsql security definer set search_path = '' as $$
+declare v_version_id uuid;
+begin
+  perform public.require_team_class(p_team_id);
+  if not public.is_teacher() then raise exception using errcode='42501', message='Teacher access required'; end if;
+  select draft_version_id into v_version_id from public.team_posters where team_id=p_team_id;
+  update public.team_posters set draft_version_id=null where team_id=p_team_id;
+  if v_version_id is not null then
+    update public.poster_versions set status='removed',removed_at=now() where id=v_version_id;
+  end if;
+end;
+$$;
+
+-- Scoped existing RPC: get_teacher_session_work_tracks
+create or replace function public.get_teacher_session_work_tracks(p_session_id uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_session public.studio_sessions%rowtype;
+  v_result jsonb;
+begin
+  perform public.require_session_class(p_session_id);
+  if not public.is_teacher() then
+    raise exception using errcode = 'P0001', message = 'Teacher access required';
+  end if;
+
+  select * into v_session from public.studio_sessions where id = p_session_id;
+  if v_session.id is null then return '[]'::jsonb; end if;
+
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'studentId', roster.student_id,
+    'studentName', coalesce(roster.preferred_name, roster.full_name),
+    'teamName', concat('Team ', roster.team_number),
+    'checkedInAt', checkin.checked_in_at,
+    'response', track.response,
+    'updatedAt', track.updated_at,
+    'teacherVerifiedCompletion', track.teacher_verified_completion,
+    'teacherVerificationStatus', track.teacher_verification_status,
+    'teacherVerificationReason', track.teacher_verification_reason,
+    'teacherVerifiedAt', track.teacher_verified_at
+  ) order by roster.team_number, coalesce(roster.preferred_name, roster.full_name), roster.student_id), '[]'::jsonb)
+  into v_result
+  from public.student_roster roster
+  left join public.student_session_checkins checkin
+    on checkin.session_id = v_session.id and checkin.student_id = roster.student_id
+  left join public.student_session_work_tracks track
+    on track.session_id = v_session.id and track.student_id = roster.student_id
+  where roster.block_id = v_session.block_id;
+
+  return v_result;
+end;
+$$;
+
+-- Scoped existing RPC: verify_teacher_session_work_track
+create or replace function public.verify_teacher_session_work_track(
+  p_session_id uuid,
+  p_student_id text,
+  p_verified_completion integer,
+  p_reason text default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_track public.student_session_work_tracks%rowtype;
+  v_student_completion integer;
+  v_status text;
+begin
+  perform public.require_session_class(p_session_id);
+  if not public.is_teacher() then
+    raise exception using errcode = 'P0001', message = 'Teacher access required';
+  end if;
+  if p_verified_completion is null or p_verified_completion < 0 or p_verified_completion > 100 then
+    raise exception using errcode = 'P0001', message = 'Verified completion must be between 0 and 100';
+  end if;
+  if p_reason is not null and char_length(p_reason) > 300 then
+    raise exception using errcode = 'P0001', message = 'Verification reason is too long';
+  end if;
+
+  select * into v_track
+  from public.student_session_work_tracks
+  where session_id = p_session_id and student_id = p_student_id;
+
+  if v_track.id is null then
+    raise exception using errcode = 'P0001', message = 'Student Work Track not found';
+  end if;
+
+  v_student_completion := case
+    when jsonb_typeof(v_track.response -> 'completionPercent') = 'number'
+    then (v_track.response ->> 'completionPercent')::numeric::integer
+    else null
+  end;
+  if v_student_completion is null then
+    raise exception using errcode = 'P0001', message = 'Student completion measure is not available';
+  end if;
+
+  v_status := case when p_verified_completion = v_student_completion then 'confirmed' else 'adjusted' end;
+  if v_status = 'adjusted' and coalesce(btrim(p_reason), '') = '' then
+    raise exception using errcode = 'P0001', message = 'Choose a reason when adjusting student completion';
+  end if;
+
+  update public.student_session_work_tracks
+  set teacher_verified_completion = p_verified_completion,
+      teacher_verification_status = v_status,
+      teacher_verification_reason = nullif(btrim(p_reason), ''),
+      teacher_verified_at = now(),
+      teacher_verified_by = auth.uid()
+  where id = v_track.id
+  returning * into v_track;
+
+  return jsonb_build_object(
+    'teacherVerifiedCompletion', v_track.teacher_verified_completion,
+    'teacherVerificationStatus', v_track.teacher_verification_status,
+    'teacherVerificationReason', v_track.teacher_verification_reason,
+    'teacherVerifiedAt', v_track.teacher_verified_at
+  );
+end;
+$$;
+
+-- Scoped existing RPC: get_teacher_platform_feedback_status
+create or replace function public.get_teacher_platform_feedback_status(p_session_id uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_session public.studio_sessions%rowtype;
+  v_result jsonb;
+begin
+  perform public.require_session_class(p_session_id);
+  if not public.is_teacher() then
+    raise exception using errcode = 'P0001', message = 'Teacher access required';
+  end if;
+
+  select * into v_session from public.studio_sessions where id = p_session_id and session_number = 10;
+  if v_session.id is null then return '[]'::jsonb; end if;
+
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'studentId', roster.student_id,
+    'studentName', coalesce(roster.preferred_name, roster.full_name),
+    'teamName', concat('Team ', roster.team_number),
+    'completedAt', feedback.submitted_at,
+    'updatedAt', feedback.updated_at
+  ) order by roster.team_number, coalesce(roster.preferred_name, roster.full_name), roster.student_id), '[]'::jsonb)
+  into v_result
+  from public.student_roster roster
+  left join public.student_platform_feedback feedback
+    on feedback.session_id = v_session.id and feedback.student_id = roster.student_id
+  where roster.block_id = v_session.block_id;
+
+  return v_result;
+end;
+$$;
+
+-- Scoped existing RPC: save_teacher_progress_review
+create or replace function public.save_teacher_progress_review(
+  p_submission_id uuid,
+  p_review jsonb
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_submission public.week2_progress_reviews%rowtype;
+  v_saved public.teacher_progress_reviews%rowtype;
+  v_actions text[];
+  v_recheck_week smallint;
+begin
+  perform public.require_precheck_class(p_submission_id);
+  if auth.uid() is null or not coalesce(public.is_teacher(), false) then
+    raise exception using errcode = '42501',
+      message = 'Your teacher session is not authorised to save this review. Sign in again and retry.';
+  end if;
+
+  select submission.* into v_submission
+  from public.week2_progress_reviews submission
+  where submission.id = p_submission_id;
+
+  if not found then
+    raise exception using errcode = 'P0002',
+      message = 'The selected Week 2 Pre-check submission was not found. Refresh the dashboard and retry.';
+  end if;
+
+  if v_submission.block_id is null then
+    raise exception using errcode = '23514',
+      message = 'This Pre-check is not linked to a teaching block. Ask the administrator to repair the submission.';
+  end if;
+
+  if nullif(trim(coalesce(v_submission.student_name, '')), '') is null
+     or nullif(trim(coalesce(v_submission.student_id, '')), '') is null
+     or nullif(trim(coalesce(v_submission.team_name, '')), '') is null then
+    raise exception using errcode = '23514',
+      message = 'This Pre-check has incomplete student or team identity. Refresh the roster link before saving a review.';
+  end if;
+
+  if jsonb_typeof(coalesce(p_review -> 'follow_up_actions', '[]'::jsonb)) <> 'array' then
+    raise exception using errcode = '22023', message = 'Follow-up actions are invalid.';
+  end if;
+
+  select coalesce(array_agg(action), array[]::text[])
+  into v_actions
+  from jsonb_array_elements_text(coalesce(p_review -> 'follow_up_actions', '[]'::jsonb)) action;
+
+  if cardinality(v_actions) < 1 then
+    raise exception using errcode = '22023', message = 'Select at least one follow-up action.';
+  end if;
+
+  if nullif(trim(coalesce(p_review ->> 'teacher_feedback', '')), '') is null then
+    raise exception using errcode = '22023', message = 'Add a Conversation note before saving.';
+  end if;
+
+  if char_length(trim(p_review ->> 'teacher_feedback')) > 800 then
+    raise exception using errcode = '22023', message = 'Conversation note must be 800 characters or fewer.';
+  end if;
+
+  v_recheck_week := nullif(p_review ->> 'recheck_week', '')::smallint;
+
+  insert into public.teacher_progress_reviews (
+    block_id, student_name, student_id, team_name, review_outcome,
+    demonstration_outcome, method_explanation, evidence_quality,
+    contribution_verification, report_alignment, teacher_feedback,
+    follow_up_status, follow_up_actions, follow_up_note, recheck_week
+  ) values (
+    v_submission.block_id, trim(v_submission.student_name),
+    trim(v_submission.student_id), trim(v_submission.team_name),
+    p_review ->> 'review_outcome', p_review ->> 'demonstration_outcome',
+    p_review ->> 'method_explanation', p_review ->> 'evidence_quality',
+    p_review ->> 'contribution_verification', p_review ->> 'report_alignment',
+    trim(p_review ->> 'teacher_feedback'), p_review ->> 'follow_up_status',
+    v_actions, nullif(trim(coalesce(p_review ->> 'follow_up_note', '')), ''),
+    v_recheck_week
+  )
+  on conflict (block_id, student_id) do update set
+    student_name = excluded.student_name,
+    team_name = excluded.team_name,
+    review_outcome = excluded.review_outcome,
+    demonstration_outcome = excluded.demonstration_outcome,
+    method_explanation = excluded.method_explanation,
+    evidence_quality = excluded.evidence_quality,
+    contribution_verification = excluded.contribution_verification,
+    report_alignment = excluded.report_alignment,
+    teacher_feedback = excluded.teacher_feedback,
+    follow_up_status = excluded.follow_up_status,
+    follow_up_actions = excluded.follow_up_actions,
+    follow_up_note = excluded.follow_up_note,
+    recheck_week = excluded.recheck_week
+  returning * into v_saved;
+
+  return to_jsonb(v_saved);
+end;
+$$;
+
+-- Scoped existing RPC: get_teacher_session_intakes
+create or replace function public.get_teacher_session_intakes(p_session_id uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_session public.studio_sessions%rowtype;
+  v_roster_rows jsonb;
+  v_orphan_rows jsonb;
+  v_submitted integer;       -- roster students who submitted (roster completion numerator)
+  v_missing integer;         -- roster students with no Intake
+  v_offroster integer;       -- off-roster confirmed Intakes (history; NOT roster completion)
+begin
+  perform public.require_session_class(p_session_id);
+  -- 1. Explicit, authenticated teacher requirement. No anon/student path.
+  if not public.is_teacher() then
+    raise exception using errcode = 'P0001', message = 'Teacher access required';
+  end if;
+
+  -- 2. Resolve the Block from the selected Session. Unknown Session => empty,
+  --    well-formed payload (not an error), matching the work-track convention.
+  select * into v_session
+  from public.studio_sessions
+  where id = p_session_id;
+
+  if v_session.id is null then
+    return jsonb_build_object(
+      'sessionId', p_session_id,
+      'sessionNumber', null,
+      'blockId', null,
+      'rosterSize', 0,
+      'rosterSubmittedCount', 0,
+      'missingCount', 0,
+      'offRosterCount', 0,
+      'submittedCount', 0,
+      'intakes', '[]'::jsonb
+    );
+  end if;
+
+  -- 3. Roster of the Session's Block is the LIST BASE. A left join to the
+  --    confirmed Intake for THIS Session and THIS student surfaces missing
+  --    submissions (intake fields null). Join key is (session_id, student_id)
+  --    scoped to the Session's own block_id, so a row from another Block or
+  --    another Session can never attach here.
+  select
+    coalesce(jsonb_agg(row_json order by team_number, student_label, student_id), '[]'::jsonb),
+    coalesce(sum(case when submitted then 1 else 0 end), 0),
+    coalesce(sum(case when submitted then 0 else 1 end), 0)
+  into v_roster_rows, v_submitted, v_missing
+  from (
+    select
+      roster.team_number as team_number,
+      roster.student_id as student_id,
+      coalesce(roster.preferred_name, roster.full_name) as student_label,
+      (intake.id is not null) as submitted,
+      jsonb_build_object(
+        'studentId', roster.student_id,
+        'studentName', coalesce(roster.preferred_name, roster.full_name),
+        'teamName', concat('Team ', roster.team_number),
+        'onRoster', true,
+        'submitted', (intake.id is not null),
+        'intakeId', intake.id,
+        'sourceMode', intake.source_mode,
+        'confirmedAt', intake.confirmed_at,
+        -- Student claim and its sources. Teacher verification is NOT part of
+        -- this record and is reported separately as unset (see below).
+        'studentRecord', intake.student_record,
+        'sourceConversation', intake.source_conversation,
+        'corrections', case
+          when intake.id is null then null
+          else coalesce(intake.student_confirmation -> 'corrections', '[]'::jsonb)
+        end,
+        'studentAttestation', intake.student_confirmation ->> 'attestation',
+        -- Teacher verification lives in no column of this table; always unset.
+        'teacherVerification', jsonb_build_object('status', 'unset', 'recorded', false)
+      ) as row_json
+    from public.student_roster roster
+    left join public.student_session_intakes intake
+      on intake.session_id = v_session.id
+     and intake.block_id = v_session.block_id
+     and intake.student_id = roster.student_id
+    where roster.block_id = v_session.block_id
+  ) roster_base;
+
+  -- 4. Historical preservation. A confirmed Intake whose student is no longer on
+  --    the current roster would be dropped by the roster-base join above. We do
+  --    NOT silently drop it: collect confirmed intakes for THIS Session whose
+  --    student_id has no matching roster row, and append them flagged
+  --    onRoster=false. They are counted as submitted.
+  select
+    coalesce(jsonb_agg(jsonb_build_object(
+      'studentId', intake.student_id,
+      'studentName', intake.student_id,
+      'teamName', null,
+      'onRoster', false,
+      'submitted', true,
+      'intakeId', intake.id,
+      'sourceMode', intake.source_mode,
+      'confirmedAt', intake.confirmed_at,
+      'studentRecord', intake.student_record,
+      'sourceConversation', intake.source_conversation,
+      'corrections', coalesce(intake.student_confirmation -> 'corrections', '[]'::jsonb),
+      'studentAttestation', intake.student_confirmation ->> 'attestation',
+      'teacherVerification', jsonb_build_object('status', 'unset', 'recorded', false)
+    ) order by intake.confirmed_at), '[]'::jsonb)
+  into v_orphan_rows
+  from public.student_session_intakes intake
+  where intake.session_id = v_session.id
+    and intake.block_id = v_session.block_id
+    and not exists (
+      select 1 from public.student_roster roster
+      where roster.block_id = v_session.block_id
+        and roster.student_id = intake.student_id
+    );
+
+  v_offroster := jsonb_array_length(v_orphan_rows);
+
+  return jsonb_build_object(
+    'sessionId', v_session.id,
+    'sessionNumber', v_session.session_number,
+    'blockId', v_session.block_id,
+    -- Roster completion metrics: numerator rosterSubmittedCount over
+    -- rosterSize (= rosterSubmittedCount + missingCount). Off-roster history is
+    -- counted SEPARATELY in offRosterCount and never inflates these.
+    'rosterSize', v_submitted + v_missing,
+    'rosterSubmittedCount', v_submitted,
+    'missingCount', v_missing,
+    'offRosterCount', v_offroster,
+    -- Grand total of all confirmed Intakes shown (roster-submitted + off-roster).
+    -- Provided for display only; it is NOT a roster completion rate.
+    'submittedCount', v_submitted + v_offroster,
+    'intakes', v_roster_rows || v_orphan_rows
+  );
+end;
+$$;
+
+-- Scoped existing RPC: get_teacher_session_ai_usage
+create or replace function public.get_teacher_session_ai_usage(p_block_id uuid)
+returns jsonb language plpgsql stable security definer set search_path='' as $$
+declare b public.teaching_blocks%rowtype; v_summary jsonb;
+begin
+  perform public.require_teaching_class(p_block_id);
+ if not public.is_teacher() then raise exception 'Teacher access required'; end if;
+ select * into b from public.teaching_blocks where id=p_block_id;
+ if b.id is null then raise exception 'Unknown Block'; end if;
+ select jsonb_build_object('attempts',count(*),'reportedUsd',coalesce(sum(observed_usd),0),
+ 'chargedUsd',coalesce(sum(charged_usd),0),'unresolvedAttempts',count(*) filter(where status<>'settled'),
+ 'reconciliationRequired',coalesce(bool_or(reconciliation_required),false)) into v_summary
+ from public.session_intake_ai_usage where block_id=b.id;
+ return v_summary||jsonb_build_object('budgetUsd',b.intake_ai_budget_usd,'attemptLimit',b.intake_ai_attempt_limit);
+end; $$;
+
+create or replace function public.can_manage_student_credentials(p_class_id uuid,p_student_id text) returns boolean language sql stable security definer set search_path='' as $$
+ select public.is_superadmin() or (public.can_manage_teaching_class(p_class_id) and exists(select 1 from public.teaching_blocks where id=p_class_id and status<>'archived') and exists(select 1 from public.student_roster own where own.block_id=p_class_id and own.student_id=p_student_id) and not exists(select 1 from public.student_roster r join public.teaching_blocks b on b.id=r.block_id where r.student_id=p_student_id and r.block_id<>p_class_id and b.status='active'))
+$$;
+revoke all on function public.can_manage_student_credentials(uuid,text) from public,anon;
+grant execute on function public.can_manage_student_credentials(uuid,text) to authenticated,service_role;
+create or replace function public.guard_class_parent_links() returns trigger language plpgsql security definer set search_path='' as $$
+declare d jsonb:=to_jsonb(new);v_class uuid;v_ref uuid;v_key text;v_team uuid;
+begin
+ v_class:=(d->>'block_id')::uuid;
+ foreach v_key in array array['team_id','session_id','project_id','approved_project_id','draft_version_id','published_version_id'] loop
+  if d->>v_key is null then continue;end if;
+  if v_key='team_id' then select block_id into v_ref from public.teams where id=(d->>v_key)::uuid;
+  elsif v_key='session_id' then select block_id into v_ref from public.studio_sessions where id=(d->>v_key)::uuid;
+  elsif v_key in ('draft_version_id','published_version_id') then select block_id,team_id into v_ref,v_team from public.poster_versions where id=(d->>v_key)::uuid;
+   if v_team is not null and v_team is distinct from (d->>'team_id')::uuid then raise exception using errcode='23514',message='Poster version must belong to this team';end if;
+  else select block_id into v_ref from public.projects where id=(d->>v_key)::uuid;end if;
+  if v_ref is not null and v_class is not null and v_ref<>v_class then raise exception using errcode='23514',message='Linked records must belong to the same class';end if;
+  v_class:=coalesce(v_class,v_ref);
+ end loop;return new;
+end $$;
+revoke all on function public.guard_class_parent_links() from public,anon,authenticated;
+do $$declare t text;begin foreach t in array array['team_project_assignments','project_proposals','team_posters','poster_versions','student_session_checkins','student_session_work_tracks','student_session_intakes','student_platform_feedback','session_intake_ai_usage'] loop
+ execute format('drop trigger if exists guard_class_parent_links on public.%I',t);
+ execute format('create trigger guard_class_parent_links before insert or update on public.%I for each row execute function public.guard_class_parent_links()',t);
+end loop;end $$;
+
+-- Display the enrolled class, without changing student identity lookup.
+create or replace function public.get_my_student_context()
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare
+  v_account public.student_accounts; v_roster public.student_roster;
+  v_block public.teaching_blocks; v_project public.projects%rowtype; v_checkin boolean;
+begin
+  select * into v_account from public.student_accounts where auth_user_id = auth.uid() and status <> 'disabled';
+  if v_account.auth_user_id is null then raise exception using errcode='P0001', message='Student account is not available'; end if;
+  select roster.* into v_roster from public.student_roster roster
+  join public.teaching_blocks block on block.id=roster.block_id
+  where roster.student_id=v_account.student_id and block.status='active'
+  order by block.starts_on desc nulls last, block.created_at desc limit 1;
+  if v_roster.id is null then raise exception using errcode='P0001', message='No active roster context is available'; end if;
+  select * into v_block from public.teaching_blocks where id=v_roster.block_id;
+  select project.* into v_project from public.teams team
+  join public.team_project_assignments assignment on assignment.team_id=team.id
+  join public.projects project on project.id=assignment.project_id
+  where team.block_id=v_roster.block_id and team.team_number=v_roster.team_number;
+  select exists(select 1 from public.student_checkins where block_id=v_roster.block_id and lower(trim(student_id))=v_account.student_id) into v_checkin;
+  return jsonb_build_object(
+    'status',v_account.status,'studentId',v_account.student_id,'studentName',coalesce(v_roster.preferred_name,v_roster.full_name),
+    'blockId',v_block.id,'blockLabel',concat(v_block.course_code,' · ',v_block.academic_year,' · ',v_block.block_code,' · ',v_block.class_code),'teamName',concat('Team ',v_roster.team_number),
+    'intakeMode',v_block.intake_mode,
+    'projectName',coalesce(v_project.title,v_roster.project_name),'projectProblem',v_project.problem,'projectDescription',v_project.description,
+    'projectTargetUsers',v_project.target_users,'projectExpectedOutcomes',v_project.expected_outcomes,'projectCategory',v_project.category,
+    'projectDifficulty',v_project.difficulty,'projectSource',case when v_project.id is not null then 'catalogue' when v_roster.project_name is not null then 'roster' else 'none' end,
+    'checkinRecognised',v_checkin);
+end;
+$$;
+-- Teachers administer credentials through the checked server endpoint, not a
+-- global student_accounts PATCH that could affect another class's enrolment.
+drop policy if exists student_account_update_scope on public.student_accounts;
+create policy student_account_update_scope on public.student_accounts as restrictive for update to authenticated using(not public.is_staff_identity() or public.is_superadmin()) with check(not public.is_staff_identity() or public.is_superadmin());
+create or replace function public.guard_class_ownership() returns trigger language plpgsql security definer set search_path='' as $$
+declare before_row jsonb:=to_jsonb(old);after_row jsonb:=to_jsonb(new);a uuid;b uuid;
+begin
+ if before_row ? 'block_id' and before_row->>'block_id' is distinct from after_row->>'block_id' then raise exception using errcode='23514',message='Existing records cannot be moved between classes';end if;
+ if not(before_row ? 'block_id') and before_row ? 'team_id' and before_row->>'team_id' is distinct from after_row->>'team_id' then
+  select block_id into a from public.teams where id=(before_row->>'team_id')::uuid;
+  select block_id into b from public.teams where id=(after_row->>'team_id')::uuid;
+  if a is distinct from b then raise exception using errcode='23514',message='Existing records cannot be moved between classes';end if;
+ end if;return new;
+end $$;
+revoke all on function public.guard_class_ownership() from public,anon,authenticated;
+do $$declare r record;t text;begin
+ for r in select table_name from information_schema.columns where table_schema='public' and column_name='block_id' loop
+  execute format('drop trigger if exists guard_class_ownership on public.%I',r.table_name);
+  execute format('create trigger guard_class_ownership before update on public.%I for each row execute function public.guard_class_ownership()',r.table_name);
+ end loop;
+ foreach t in array array['team_project_assignments','project_proposals','team_posters'] loop
+  execute format('drop trigger if exists guard_class_ownership on public.%I',t);
+  execute format('create trigger guard_class_ownership before update on public.%I for each row execute function public.guard_class_ownership()',t);
+ end loop;
+end $$;
+
+commit;
+
+
+-- Snapshot of 20261023_sprint10_unassigned_roster.sql
+-- Apply before deploying the optional-team UI. Existing allocations are retained.
+begin;
+alter table public.student_roster alter column team_number drop not null;
+alter table public.student_roster alter column team_number drop default;
+create or replace function public.ensure_roster_team() returns trigger language plpgsql security definer set search_path='' as $$
+begin
+ if new.team_number is not null then
+  insert into public.teams(block_id,team_number) values(new.block_id,new.team_number)
+  on conflict(block_id,team_number) do nothing;
+ end if;
+ return new;
+end; $$;
+revoke all on function public.ensure_roster_team() from public,anon,authenticated;
+drop trigger if exists ensure_roster_team on public.student_roster;
+create trigger ensure_roster_team after insert or update of block_id,team_number on public.student_roster for each row execute function public.ensure_roster_team();
+-- Restore missing identities without replacing any team/project/history IDs.
+insert into public.teams(block_id,team_number)
+select distinct block_id,team_number from public.student_roster where team_number is not null
+on conflict(block_id,team_number) do nothing;
+create or replace function public.get_my_student_context()
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare
+  v_account public.student_accounts; v_roster public.student_roster;
+  v_block public.teaching_blocks; v_project public.projects%rowtype; v_checkin boolean;
+begin
+  select * into v_account from public.student_accounts where auth_user_id = auth.uid() and status <> 'disabled';
+  if v_account.auth_user_id is null then raise exception using errcode='P0001', message='Student account is not available'; end if;
+  select roster.* into v_roster from public.student_roster roster
+  join public.teaching_blocks block on block.id=roster.block_id
+  where roster.student_id=v_account.student_id and block.status='active'
+  order by block.starts_on desc nulls last, block.created_at desc limit 1;
+  if v_roster.id is null then raise exception using errcode='P0001', message='No active roster context is available'; end if;
+  select * into v_block from public.teaching_blocks where id=v_roster.block_id;
+  select project.* into v_project from public.teams team
+  join public.team_project_assignments assignment on assignment.team_id=team.id
+  join public.projects project on project.id=assignment.project_id
+  where team.block_id=v_roster.block_id and team.team_number=v_roster.team_number;
+  select exists(select 1 from public.student_checkins where block_id=v_roster.block_id and lower(trim(student_id))=v_account.student_id) into v_checkin;
+  return jsonb_build_object(
+    'status',v_account.status,'studentId',v_account.student_id,'studentName',coalesce(v_roster.preferred_name,v_roster.full_name),
+    'blockId',v_block.id,'blockLabel',concat(v_block.course_code,' · ',v_block.academic_year,' · ',v_block.block_code,' · ',v_block.class_code),'teamAssigned',v_roster.team_number is not null,'teamName',case when v_roster.team_number is null then 'Not assigned' else concat('Team ',v_roster.team_number) end,
+    'intakeMode',v_block.intake_mode,
+    'projectName',case when v_roster.team_number is not null then coalesce(v_project.title,v_roster.project_name) end,'projectProblem',v_project.problem,'projectDescription',v_project.description,
+    'projectTargetUsers',v_project.target_users,'projectExpectedOutcomes',v_project.expected_outcomes,'projectCategory',v_project.category,
+    'projectDifficulty',v_project.difficulty,'projectSource',case when v_roster.team_number is null then 'none' when v_project.id is not null then 'catalogue' when v_roster.project_name is not null then 'roster' else 'none' end,
+    'checkinRecognised',v_checkin);
+end;
+$$;
+create or replace function public.assign_activity_team_from_roster()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_student_id text;
+  v_team_name text;
+  v_team_column text;
+begin
+  v_student_id := lower(trim(
+    case
+      when tg_table_name = 'poster_reviews'
+        then to_jsonb(new) ->> 'reviewer_student_id'
+      else to_jsonb(new) ->> 'student_id'
+    end
+  ));
+
+  select concat('Team ', roster.team_number)
+  into v_team_name
+  from public.student_roster roster
+  where roster.block_id = new.block_id
+    and roster.student_id = v_student_id
+    and roster.team_number is not null
+  limit 1;
+
+  if v_team_name is null then
+    raise exception using
+      errcode = 'P0001',
+      message = 'Student has no team in this class. Ask your teacher to assign a team first.';
+  end if;
+
+  v_team_column := case
+    when tg_table_name = 'poster_reviews' then 'reviewer_team'
+    else 'team_name'
+  end;
+
+  new := jsonb_populate_record(
+    new,
+    jsonb_build_object(v_team_column, v_team_name)
+  );
+  return new;
+end;
+$$;
+
+revoke all on function public.assign_activity_team_from_roster() from public;
+
+create or replace function public.complete_student_activation(p_goal text default null)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_account public.student_accounts;
+  v_roster public.student_roster;
+  v_existing_id uuid;
+begin
+  select * into v_account from public.student_accounts
+  where auth_user_id = auth.uid() and status = 'ready' for update;
+  if v_account.auth_user_id is null then
+    raise exception using errcode = 'P0001', message = 'Account is not ready to activate';
+  end if;
+  select roster.* into v_roster from public.student_roster roster
+  join public.teaching_blocks block on block.id = roster.block_id
+  where roster.student_id = v_account.student_id and block.status = 'active'
+  limit 1;
+  if v_roster.id is null then
+    raise exception using errcode = 'P0001', message = 'Active roster context is missing';
+  end if;
+
+  if v_roster.team_number is null then raise exception 'Student has no team in this class. Ask your teacher to assign a team first.'; end if;
+
+  select id into v_existing_id from public.student_checkins
+  where lower(trim(student_id)) = v_account.student_id;
+  if v_existing_id is not null then
+    update public.student_checkins set auth_user_id = auth.uid()
+    where id = v_existing_id and auth_user_id is null;
+  else
+    if char_length(trim(coalesce(p_goal, ''))) < 3 then
+      raise exception using errcode = 'P0001', message = 'A Week 1 recovery goal is required';
+    end if;
+    insert into public.student_checkins (
+      student_id, student_name, team_name, goal, block_id, auth_user_id
+    ) values (
+      v_account.student_id, coalesce(v_roster.preferred_name, v_roster.full_name),
+      concat('Team ', v_roster.team_number), trim(p_goal), v_roster.block_id, auth.uid()
+    );
+  end if;
+  update public.student_accounts
+  set status = 'activated', activated_at = now()
+  where auth_user_id = auth.uid();
+  return public.get_my_student_context();
+end;
+$$;
+revoke all on function public.complete_student_activation(text) from public;
+grant execute on function public.complete_student_activation(text) to authenticated;
+
+-- Teacher review lists must label unassigned students, never fabricate "Team ".
+do $$
+declare signature text;definition text;
+begin
+ foreach signature in array array['public.get_teacher_session_intakes(uuid)','public.get_teacher_session_work_tracks(uuid)','public.get_teacher_platform_feedback_status(uuid)'] loop
+  definition:=pg_get_functiondef(signature::regprocedure);
+  if position('then ''Not assigned'' else concat(''Team '', roster.team_number)' in definition)>0 then continue;end if;
+  definition:=replace(definition, 'concat(''Team '', roster.team_number)', 'case when roster.team_number is null then ''Not assigned'' else concat(''Team '', roster.team_number) end');
+  execute definition;
+ end loop;
+end $$;
+commit;
+
+
+-- Snapshot of 20261023_sprint10_v2_password_activation.sql
+-- Activation is password setup, not a progress/attendance submission.
+-- Keep the optional legacy p_goal argument for old clients, but do not record it.
+begin;
+create or replace function public.complete_student_activation(p_goal text default null)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_account public.student_accounts;
+  v_roster public.student_roster;
+  v_existing_id uuid;
+begin
+  select * into v_account from public.student_accounts
+  where auth_user_id = auth.uid() and status = 'ready' for update;
+  if v_account.auth_user_id is null then
+    raise exception using errcode = 'P0001', message = 'Account is not ready to activate';
+  end if;
+  select roster.* into v_roster from public.student_roster roster
+  join public.teaching_blocks block on block.id = roster.block_id
+  where roster.student_id = v_account.student_id and block.status = 'active'
+  limit 1;
+  if v_roster.id is null then
+    raise exception using errcode = 'P0001', message = 'Active roster context is missing';
+  end if;
+
+  if v_roster.team_number is null then raise exception 'Student has no team in this class. Ask your teacher to assign a team first.'; end if;
+
+  select id into v_existing_id from public.student_checkins
+  where lower(trim(student_id)) = v_account.student_id and block_id = v_roster.block_id;
+  if v_existing_id is not null then
+    update public.student_checkins set auth_user_id = auth.uid()
+    where id = v_existing_id and auth_user_id is null;
+  end if;
+  update public.student_accounts
+  set status = 'activated', activated_at = now()
+  where auth_user_id = auth.uid();
+  return public.get_my_student_context();
+end;
+$$;
+revoke all on function public.complete_student_activation(text) from public;
+grant execute on function public.complete_student_activation(text) to authenticated;
+
+comment on function public.complete_student_activation(text) is 'Activate own ready account; preserve/link existing current-class legacy check-in, without requiring a goal or creating a check-in.';
+commit;
+
+
+-- Snapshot of 20261023_sprint10_w_budget_defaults.sql
+begin;
+-- Initialize old trial references only on first installation, never on rerun.
+do $$begin
+ if not exists(select 1 from information_schema.columns where table_schema='public' and table_name='teaching_blocks' and column_name='intake_ai_budget_ceiling_usd') then
+  alter table public.teaching_blocks add column intake_ai_budget_ceiling_usd numeric(12,6) not null default 25 check(intake_ai_budget_ceiling_usd between 0 and 1000);
+  update public.teaching_blocks b set intake_ai_budget_usd=10
+  where b.intake_ai_budget_usd in (0,1) and not exists(select 1 from public.session_intake_ai_usage u where u.block_id=b.id);
+  update public.teaching_blocks set intake_ai_budget_ceiling_usd=greatest(intake_ai_budget_ceiling_usd,intake_ai_budget_usd);
+ end if;
+end $$;
+alter table public.teaching_blocks alter column intake_ai_budget_usd set default 10;
+create or replace function public.guard_class_ai_budget() returns trigger language plpgsql set search_path='' as $$begin
+ if current_user not in ('postgres','service_role') and not public.is_superadmin() then
+  if tg_op='INSERT' then
+   if new.intake_ai_budget_ceiling_usd<>25 then raise exception using errcode='42501',message='Only a super administrator can change the AI budget ceiling';end if;
+  elsif new.intake_ai_budget_ceiling_usd is distinct from old.intake_ai_budget_ceiling_usd then raise exception using errcode='42501',message='Only a super administrator can change the AI budget ceiling';end if;
+ end if;
+ if new.intake_ai_budget_usd>new.intake_ai_budget_ceiling_usd then raise exception using errcode='23514',message='Budget exceeds the administrator ceiling';end if;
+ return new;
+end $$;
+revoke all on function public.guard_class_ai_budget() from public,anon,authenticated;
+drop trigger if exists guard_class_ai_budget on public.teaching_blocks;
+create trigger guard_class_ai_budget before insert or update on public.teaching_blocks for each row execute function public.guard_class_ai_budget();
+create or replace function public.get_teacher_session_ai_usage(p_block_id uuid)
+returns jsonb language plpgsql stable security definer set search_path='' as $$
+declare b public.teaching_blocks%rowtype; v_summary jsonb;
+begin
+  perform public.require_teaching_class(p_block_id);
+ if not public.is_teacher() then raise exception 'Teacher access required'; end if;
+ select * into b from public.teaching_blocks where id=p_block_id;
+ if b.id is null then raise exception 'Unknown Block'; end if;
+ select jsonb_build_object('attempts',count(*),'reportedUsd',coalesce(sum(observed_usd),0),
+ 'chargedUsd',coalesce(sum(charged_usd),0),'unresolvedAttempts',count(*) filter(where status<>'settled'),
+ 'reconciliationRequired',coalesce(bool_or(reconciliation_required),false)) into v_summary
+ from public.session_intake_ai_usage where block_id=b.id;
+ return v_summary||jsonb_build_object('budgetUsd',b.intake_ai_budget_usd,'attemptLimit',b.intake_ai_attempt_limit,'budgetCeilingUsd',b.intake_ai_budget_ceiling_usd,'canManageBudgetCeiling',public.is_superadmin(),'rosterSize',(select count(*) from public.student_roster where block_id=b.id));
+end; $$;
+
+commit;
+
+
+-- Snapshot of 20261101_sprint11_shared_project_library.sql
+-- Shared project definitions; class-owned assignments and evidence remain in place.
+-- Apply after all Sprint 10 class/roster migrations. Transactional and repeatable.
+begin;
+-- Remove the class boundary from project definitions, retaining origin as metadata.
+drop policy if exists teaching_class_staff_scope on public.projects;
+drop policy if exists "teachers manage projects" on public.projects;
+drop trigger if exists guard_class_ownership on public.projects;
+do $$ begin
+ if exists(select 1 from information_schema.columns where table_schema='public' and table_name='projects' and column_name='block_id') then
+  alter table public.projects rename column block_id to legacy_block_id;
+ end if;
+end $$;
+alter table public.projects alter column legacy_block_id drop not null;
+alter table public.projects drop constraint if exists projects_block_id_fkey;
+alter table public.projects drop constraint if exists projects_legacy_block_id_fkey;
+alter table public.projects add constraint projects_legacy_block_id_fkey foreign key(legacy_block_id) references public.teaching_blocks(id) on delete set null;
+alter table public.projects drop constraint if exists projects_block_id_title_key;
+alter table public.projects add column if not exists created_by uuid references auth.users(id) on delete set null;
+alter table public.projects alter column created_by set default auth.uid();
+alter table public.projects add column if not exists legacy_status text;
+-- Old records have no reliable author. Only administrators maintain them until
+-- ownership is explicitly assigned; never infer authorship from class membership.
+update public.projects set legacy_status=status where legacy_status is null and status in ('draft','published');
+alter table public.projects drop constraint if exists projects_status_check;
+update public.projects set status=case when status='published' then 'active' when status='draft' then 'archived' else status end where status in ('draft','published');
+alter table public.projects alter column status set default 'active';
+alter table public.projects add constraint projects_status_check check(status in ('active','archived'));
+drop index if exists public.projects_block_status_idx;
+create index if not exists projects_library_status_title_idx on public.projects(status,title);
+
+create or replace function public.can_read_project_library() returns boolean
+language sql stable security definer set search_path='' as $$
+ select auth.uid() is not null and (public.is_superadmin() or (
+ public.is_teacher() and exists(select 1 from public.teacher_profiles p where p.user_id=auth.uid() and p.active and not p.must_change_password)
+ and exists(select 1 from public.teacher_class_memberships m where m.user_id=auth.uid())))
+$$;
+revoke all on function public.can_read_project_library() from public,anon;
+grant execute on function public.can_read_project_library() to authenticated,service_role;
+revoke all on public.projects from anon,authenticated;
+grant select,insert,update on public.projects to authenticated;
+-- No project deletion endpoint: archive preserves all existing references.
+drop policy if exists project_library_read on public.projects;
+create policy project_library_read on public.projects for select to authenticated using(public.can_read_project_library());
+drop policy if exists project_library_create on public.projects;
+create policy project_library_create on public.projects for insert to authenticated with check(public.can_read_project_library() and created_by=auth.uid() and legacy_block_id is null and legacy_status is null);
+drop policy if exists project_library_edit on public.projects;
+create policy project_library_edit on public.projects for update to authenticated using(public.can_read_project_library() and (public.is_superadmin() or created_by=auth.uid())) with check(public.can_read_project_library() and (public.is_superadmin() or created_by=auth.uid()));
+
+-- Projects are reusable; all other parent links must still share one class.
+
+create or replace function public.guard_class_parent_links() returns trigger language plpgsql security definer set search_path='' as $$
+declare d jsonb:=to_jsonb(new);v_class uuid;v_ref uuid;v_key text;v_team uuid;
+begin
+ v_class:=(d->>'block_id')::uuid;
+ foreach v_key in array array['team_id','session_id','project_id','approved_project_id','draft_version_id','published_version_id'] loop
+  if d->>v_key is null then continue;end if;
+  if v_key='team_id' then select block_id into v_ref from public.teams where id=(d->>v_key)::uuid;
+  elsif v_key='session_id' then select block_id into v_ref from public.studio_sessions where id=(d->>v_key)::uuid;
+  elsif v_key in ('draft_version_id','published_version_id') then select block_id,team_id into v_ref,v_team from public.poster_versions where id=(d->>v_key)::uuid;
+   if v_team is not null and v_team is distinct from (d->>'team_id')::uuid then raise exception using errcode='23514',message='Poster version must belong to this team';end if;
+  else continue; -- project_id/approved_project_id reference the shared library
+  end if;
+  if v_ref is not null and v_class is not null and v_ref<>v_class then raise exception using errcode='23514',message='Linked records must belong to the same class';end if;
+  v_class:=coalesce(v_class,v_ref);
+ end loop;return new;
+end $$;
+
+
+alter table public.team_project_assignments add column if not exists predecessor_assignment_id uuid references public.team_project_assignments(id) on delete restrict;
+create index if not exists team_project_predecessor_idx on public.team_project_assignments(predecessor_assignment_id);
+create or replace function public.guard_project_assignment() returns trigger
+language plpgsql security definer set search_path='' as $$
+declare v_status text; v_previous public.team_project_assignments; v_source_course text; v_target_course text;
+begin
+ if tg_op='UPDATE' and (new.project_id,new.team_id,new.predecessor_assignment_id) is distinct from (old.project_id,old.team_id,old.predecessor_assignment_id)
+ and exists(select 1 from public.team_project_assignments where predecessor_assignment_id=old.id) then
+  raise exception using errcode='23514',message='This assignment is referenced by a continuing project; keep its project and source link unchanged';
+ end if;
+ if tg_op='INSERT' or new.project_id is distinct from old.project_id or new.team_id is distinct from old.team_id then
+  select status into v_status from public.projects where id=new.project_id for share;
+  if v_status is distinct from 'active' then raise exception using errcode='23514',message='Only active library projects can receive new assignments';end if;
+ end if;
+ if new.predecessor_assignment_id is not null and (tg_op='INSERT' or (new.predecessor_assignment_id,new.project_id,new.team_id) is distinct from (old.predecessor_assignment_id,old.project_id,old.team_id)) then
+  select * into v_previous from public.team_project_assignments where id=new.predecessor_assignment_id for share;
+  if v_previous.id is null or v_previous.id=new.id or v_previous.project_id<>new.project_id then raise exception using errcode='23514',message='Continuation must reference an existing assignment of the same project';end if;
+  perform public.require_team_class(new.team_id);
+  perform public.require_team_class(v_previous.team_id);
+  select b.course_code into v_source_course from public.teams t join public.teaching_blocks b on b.id=t.block_id where t.id=v_previous.team_id;
+  select b.course_code into v_target_course from public.teams t join public.teaching_blocks b on b.id=t.block_id where t.id=new.team_id;
+  if v_source_course<>'NIT3003' or v_target_course<>'NIT3004' then raise exception using errcode='23514',message='Continuation links must run from NIT3003 to NIT3004';end if;
+ end if;
+ if new.predecessor_assignment_id is not null then new.continued_from_previous_unit:=true;
+ elsif tg_op='INSERT' or old.predecessor_assignment_id is not null or new.project_id is distinct from old.project_id then new.continued_from_previous_unit:=false;end if;
+ if new.predecessor_assignment_id is not null then new.origin_unit:='NIT3003';end if;
+ return new;
+end $$;
+revoke all on function public.guard_project_assignment() from public,anon,authenticated;
+drop trigger if exists guard_project_assignment on public.team_project_assignments;
+create trigger guard_project_assignment before insert or update on public.team_project_assignments for each row execute function public.guard_project_assignment();
+
+-- Legacy project-selection RPC names remain compatible, now bound to the
+-- authenticated activated student and their unique active class.
+create or replace function public.require_project_student(p_student_id text) returns uuid
+language plpgsql stable security definer set search_path='' as $$
+declare v_class uuid;
+begin
+ if auth.uid() is null or not exists(select 1 from public.student_accounts a where a.auth_user_id=auth.uid() and a.status='activated' and a.student_id=lower(trim(p_student_id))) then raise exception using errcode='42501',message='Activated student access required';end if;
+ v_class:=public.current_teaching_block_id();
+ if v_class is null then raise exception using errcode='42501',message='A single active enrolled class is required';end if;
+ return v_class;
+end $$;
+revoke all on function public.require_project_student(text) from public,anon;
+grant execute on function public.require_project_student(text) to authenticated;
+
+create or replace function public.get_project_checkin_context(p_student_id text)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_block public.teaching_blocks;
+  v_team public.teams;
+  v_assignment public.team_project_assignments;
+  v_project public.projects;
+begin
+  select * into v_block from public.teaching_blocks where id=public.require_project_student(p_student_id);
+
+  select team.* into v_team
+  from public.student_roster roster
+  join public.teams team
+    on team.block_id = roster.block_id
+   and team.team_number = roster.team_number
+  where roster.block_id = v_block.id
+    and roster.student_id = lower(trim(p_student_id))
+  limit 1;
+
+  if v_team.id is null then
+    raise exception using
+      errcode = 'P0001',
+      message = 'Student ID is not present in the active teaching block roster';
+  end if;
+
+  select * into v_assignment
+  from public.team_project_assignments
+  where team_id = v_team.id;
+
+  if v_assignment.project_id is not null then
+    select * into v_project from public.projects
+    where id = v_assignment.project_id;
+  end if;
+
+  return jsonb_build_object(
+    'blockId', v_block.id,
+    'blockLabel', concat(v_block.academic_year, ' · ', v_block.block_code),
+    'setupMode', v_block.project_setup_mode,
+    'teamId', v_team.id,
+    'teamName', concat('Team ', v_team.team_number),
+    'assignmentStatus', v_assignment.selection_status,
+    'project', case when v_project.id is null then null else jsonb_build_object(
+      'id', v_project.id,
+      'title', v_project.title,
+      'problem', v_project.problem,
+      'targetUsers', v_project.target_users,
+      'description', v_project.description,
+      'category', v_project.category,
+      'difficulty', v_project.difficulty
+    ) end,
+    'availableProjects', coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'id', project.id,
+        'title', project.title,
+        'problem', project.problem,
+        'targetUsers', project.target_users,
+        'description', project.description,
+        'category', project.category,
+        'difficulty', project.difficulty
+      ) order by project.title)
+      from public.projects project
+      where project.status = 'active' and v_block.project_setup_mode='student_selection'
+    ), '[]'::jsonb)
+  );
+end;
+$$;
+
+create or replace function public.select_team_project(
+  p_student_id text,
+  p_project_id uuid
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_block public.teaching_blocks;
+  v_team public.teams;
+  v_existing public.team_project_assignments;
+begin
+  select * into v_block from public.teaching_blocks where id=public.require_project_student(p_student_id) for share;
+
+  if v_block.project_setup_mode <> 'student_selection' then
+    raise exception using errcode = 'P0001',
+      message = 'Projects are assigned by the teacher for this teaching block';
+  end if;
+
+  select team.* into v_team
+  from public.student_roster roster
+  join public.teams team
+    on team.block_id = roster.block_id
+   and team.team_number = roster.team_number
+  where roster.block_id = v_block.id
+    and roster.student_id = lower(trim(p_student_id))
+  limit 1;
+
+  if v_team.id is null then
+    raise exception using errcode = 'P0001',
+      message = 'Student ID is not present in the active teaching block roster';
+  end if;
+
+  if not exists (
+    select 1 from public.projects
+    where id = p_project_id
+      and status = 'active'
+  ) then
+    raise exception using errcode = 'P0001',
+      message = 'That project is not active in the project library';
+  end if;
+
+  select * into v_existing
+  from public.team_project_assignments
+  where team_id = v_team.id
+  for update;
+
+  if v_existing.selection_status = 'teacher_confirmed' then
+    raise exception using errcode = 'P0001',
+      message = 'This team project has been confirmed by the teacher';
+  end if;
+
+  insert into public.team_project_assignments (
+    team_id, project_id, selection_status, selected_by_student_id
+  )
+  values (
+    v_team.id, p_project_id, 'student_selected', lower(trim(p_student_id))
+  )
+  on conflict (team_id) do update
+  set project_id = excluded.project_id,
+      selected_by_student_id = excluded.selected_by_student_id,
+      selection_status = 'student_selected',
+      confirmed_at = null;
+
+  return public.get_project_checkin_context(p_student_id);
+end;
+$$;
+
+create or replace function public.submit_team_project_proposal(
+  p_student_id text,
+  p_title text,
+  p_problem text,
+  p_target_users text,
+  p_proposed_solution text,
+  p_category text,
+  p_note text default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_block public.teaching_blocks;
+  v_team_id uuid;
+  v_proposal_id uuid;
+begin
+  select * into v_block from public.teaching_blocks where id=public.require_project_student(p_student_id);
+
+  if v_block.project_setup_mode <> 'student_selection' then
+    raise exception using errcode = 'P0001',
+      message = 'Project proposals are not open for this teaching block';
+  end if;
+
+  select team.id into v_team_id
+  from public.student_roster roster
+  join public.teams team
+    on team.block_id = roster.block_id
+   and team.team_number = roster.team_number
+  where roster.block_id = v_block.id
+    and roster.student_id = lower(trim(p_student_id))
+  limit 1;
+
+  if v_team_id is null then
+    raise exception using errcode = 'P0001',
+      message = 'Student ID is not present in the active teaching block roster';
+  end if;
+
+  if exists (
+    select 1 from public.project_proposals
+    where team_id = v_team_id
+      and status in ('submitted','changes_requested')
+  ) then
+    raise exception using errcode = '23505',
+      message = 'This team already has an active project proposal';
+  end if;
+
+  insert into public.project_proposals (
+    team_id, submitted_by_student_id, title, problem, target_users,
+    proposed_solution, category, note
+  ) values (
+    v_team_id, lower(trim(p_student_id)), trim(p_title), trim(p_problem),
+    trim(p_target_users), trim(p_proposed_solution), p_category,
+    nullif(trim(p_note), '')
+  )
+  returning id into v_proposal_id;
+
+  return v_proposal_id;
+end;
+$$;
+
+
+revoke all on function public.get_project_checkin_context(text),public.select_team_project(text,uuid),public.submit_team_project_proposal(text,text,text,text,text,text,text) from public,anon;
+grant execute on function public.get_project_checkin_context(text),public.select_team_project(text,uuid),public.submit_team_project_proposal(text,text,text,text,text,text,text) to authenticated;
 commit;

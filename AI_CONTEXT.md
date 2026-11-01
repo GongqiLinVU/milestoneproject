@@ -1,6 +1,10 @@
 # AI Context — Engineering Studio Platform
 
-## Current checkpoint — 26 October 2026
+## Current checkpoint — 1 November 2026
+
+PR #100 is merged as `aab40f5` and production deployment was verified. Joseph approved S11-04: a shared Active/Archived Project Library, creator/admin maintenance, class-scoped assignments, and explicit NIT3003→NIT3004 predecessor links. Implementation and local verification are on a focused branch; production migration and release remain pending. Read [the migration/runbook](docs/sprints/sprint-11/S11-04_PROJECT_LIBRARY.md). No production DB action is implied.
+
+## Earlier checkpoint — 26 October 2026
 
 Joseph opened [Sprint 11](docs/sprints/sprint-11/PLAN.md) and extended S11-01/02 to all NIT3004 S1–S9 openings: stage-specific short questions, optional display-only hints/starters/examples, friendlier S1 shortcuts and separately displayed prior context. Full historical role/actions remain in the source opening for interpretation, labelled as historical rather than current evidence. No mandatory next-action question, provider instruction change, new semantic stopping or NIT3003 implementation. Read [handoff](docs/sprints/sprint-11/HANDOFF.md) and preserve the closed Sprint 10 contracts below.
 

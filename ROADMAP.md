@@ -12,6 +12,8 @@ Continue real use across independently managed NIT3004 classes through [the feed
 
 S11-03 adds the approved public landing-page onboarding refresh: classroom routine, first-login guidance and clear progress-record boundaries. See [report](docs/sprints/sprint-11/S11-03_REPORT.md). Release pending review.
 
+S11-04 (approved 1 November): shared Active/Archived Project Library and explicit NIT3003→NIT3004 assignment continuity, with class isolation retained. Code/local validation are prepared; production SQL and release pending. See [runbook](docs/sprints/sprint-11/S11-04_PROJECT_LIBRARY.md).
+
 ## Product direction
 
 Engineering Studio Platform will evolve from a single-course delivery portal into a reusable studio-based teaching platform. The roadmap deliberately prioritises reliable teaching workflows before analytics and AI.
