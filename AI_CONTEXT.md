@@ -2,7 +2,9 @@
 
 ## Current checkpoint — 1 November 2026
 
-PR #100 is merged as `aab40f5` and production deployment was verified. Joseph approved S11-04: a shared Active/Archived Project Library, creator/admin maintenance, class-scoped assignments, and explicit NIT3003→NIT3004 predecessor links. Implementation and local verification are on a focused branch; production migration and release remain pending. Read [the migration/runbook](docs/sprints/sprint-11/S11-04_PROJECT_LIBRARY.md). No production DB action is implied.
+S11-04 is released: Joseph applied its SQL, PR #101 merged (`21ade0f`), Vercel production succeeded. S11-05 now implements exact-ID returning-student lookup/enrolment in Add student, with creator-independent target-class authorization, existing account preservation and no automatic Active-class transfer. See [runbook](docs/sprints/sprint-11/S11-05_STUDENT_ENROLMENT.md). Its additive SQL and hosted acceptance are pending.
+
+PR #100 is merged as `aab40f5` and production deployment was verified. Joseph approved S11-04: a shared Active/Archived Project Library, creator/admin maintenance, class-scoped assignments, and explicit NIT3003→NIT3004 predecessor links. Joseph confirmed the SQL succeeded; PR #101 merged as `21ade0f` and production deployment succeeded. Read [the migration/runbook](docs/sprints/sprint-11/S11-04_PROJECT_LIBRARY.md). No production DB action is implied.
 
 ## Earlier checkpoint — 26 October 2026
 

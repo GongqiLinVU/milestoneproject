@@ -15,3 +15,8 @@ Joseph approved the public onboarding refresh. See [S11-03_REPORT.md](S11-03_REP
 ## S11-04 — Shared Project Library
 
 PR #100 is merged (`aab40f5`), deployed and user-tested. Joseph approved the shared-library implementation after creating 2B4. Read [S11-04_PROJECT_LIBRARY.md](S11-04_PROJECT_LIBRARY.md), especially deployment order: new SQL first, then matching frontend during a Project setup maintenance window. Local migration/permissions tests and fresh-schema installation are covered; hosted UI/PostgREST acceptance and production SQL execution are pending. Keep class evidence isolated; predecessor links record provenance only.
+
+
+## S11-05 — Student ID lookup and enrolment
+
+Joseph confirmed S11-04 SQL success; PR #101 merged as `21ade0f` and production deployment succeeded. S11-05 implements the approved returning-student lookup/enrolment in a focused Draft PR. Read [S11-05_STUDENT_ENROLMENT.md](S11-05_STUDENT_ENROLMENT.md) for permissions, account-preservation contract, tests and rollout. The new SQL and hosted UI acceptance remain pending; no auto-transfer between Active classes.

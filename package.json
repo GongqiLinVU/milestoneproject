@@ -14,7 +14,8 @@
     "dev:api": "./scripts/dev-with-api.sh",
     "preview:api": "./scripts/preview-with-api.sh",
     "test:integration": "./scripts/run-integration-tests.sh",
-    "test:project-library": "node --test tests/project-library/*.test.mjs"
+    "test:project-library": "node --test tests/project-library/*.test.mjs",
+    "test:student-enrolment": "node --test tests/student-enrolment/*.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.8",
