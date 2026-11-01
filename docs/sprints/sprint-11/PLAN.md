@@ -44,3 +44,8 @@ Acceptance: working student/teacher links, keyboard-accessible section links and
 ## S11-04 — Shared Project Library (approved 1 November)
 
 Joseph created 2B4 and approved removing Block ownership from project definitions. Implement Active/Archived lifecycle, shared teacher read with creator/admin maintenance, class-scoped assignments and optional explicit NIT3003 predecessor links for NIT3004. Preserve all IDs and historical evidence. Include an idempotent migration, matching installation snapshot, local RLS/integrity tests and a production rollout/recovery runbook. No production database action, automatic history merge or assessment expansion. See [S11-04_PROJECT_LIBRARY.md](S11-04_PROJECT_LIBRARY.md).
+
+
+## S11-05 — Returning-student enrolment (approved 1 November)
+
+Joseph approved Student ID lookup in Add student: exact match, explicit profile confirmation, existing-account reuse, unassigned team/project, no duplicate current enrolment, and a visible block for another Active class. No match continues manual creation; accountless histories can be prepared later. Add checked teacher-only RPCs, isolated tests and additive migration; preserve all prior history and credentials. See [S11-05_STUDENT_ENROLMENT.md](S11-05_STUDENT_ENROLMENT.md).

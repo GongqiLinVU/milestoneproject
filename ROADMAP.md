@@ -10,9 +10,11 @@ Continue real use across independently managed NIT3004 classes through [the feed
 
 29 October readiness review, 30 October configuration/contingency and 2 November teaching remain rollout checkpoints. Individual teacher/class setup and institutional arrangements remain their owners' responsibility. Earlier sprint narratives below are historical.
 
-S11-03 adds the approved public landing-page onboarding refresh: classroom routine, first-login guidance and clear progress-record boundaries. See [report](docs/sprints/sprint-11/S11-03_REPORT.md). Release pending review.
+S11-03 adds the approved public landing-page onboarding refresh: classroom routine, first-login guidance and clear progress-record boundaries. See [report](docs/sprints/sprint-11/S11-03_REPORT.md). Released via PR #100 (`aab40f5`).
 
-S11-04 (approved 1 November): shared Active/Archived Project Library and explicit NIT3003→NIT3004 assignment continuity, with class isolation retained. Code/local validation are prepared; production SQL and release pending. See [runbook](docs/sprints/sprint-11/S11-04_PROJECT_LIBRARY.md).
+S11-04 (approved 1 November): shared Active/Archived Project Library and explicit NIT3003→NIT3004 assignment continuity, with class isolation retained. Released via PR #101 (`21ade0f`); Joseph confirmed production SQL success. See [runbook](docs/sprints/sprint-11/S11-04_PROJECT_LIBRARY.md).
+
+S11-04 released via PR #101 (`21ade0f`), SQL applied by Joseph. S11-05 adds approved exact-ID student lookup and enrolment with existing-login reuse; additive migration and hosted acceptance pending. See [runbook](docs/sprints/sprint-11/S11-05_STUDENT_ENROLMENT.md).
 
 ## Product direction
 

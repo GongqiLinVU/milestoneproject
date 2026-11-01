@@ -154,3 +154,8 @@ S1–S5 use short responsibility/progress/next-action records with optional evid
 ### Shared Project Library
 
 Project definitions are reusable across classes and NIT3003/NIT3004. Active projects can be assigned to teams; Archived projects retain existing assignments and can be restored. Project creators and administrators maintain definitions; team assignments stay class-scoped. See [S11-04 migration, verification and rollout](docs/sprints/sprint-11/S11-04_PROJECT_LIBRARY.md). The new frontend requires the matching migration; no automatic production database upgrade occurs.
+
+
+### Returning students
+
+Class roster → Add student starts with exact Student ID lookup. Confirm an existing historical profile to enrol it without resetting the login, or enter a new profile when no match exists. Team/project allocation stays separate. See [S11-05 migration and rollout](docs/sprints/sprint-11/S11-05_STUDENT_ENROLMENT.md).
