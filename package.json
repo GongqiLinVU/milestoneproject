@@ -16,7 +16,8 @@
     "test:integration": "./scripts/run-integration-tests.sh",
     "test:project-library": "node --test tests/project-library/*.test.mjs",
     "test:student-enrolment": "node --test tests/student-enrolment/*.test.mjs",
-    "test:intake-diagnostics": "tsc --outDir .test-build --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck src/intakeDiagnostics.ts && node --test tests/intake-diagnostics/*.test.mjs"
+    "test:intake-diagnostics": "tsc --outDir .test-build --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck src/intakeDiagnostics.ts && node --test tests/intake-diagnostics/*.test.mjs",
+    "test:intake-corrections": "node --test tests/intake-corrections/*.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.8",
