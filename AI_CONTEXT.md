@@ -293,3 +293,6 @@ Assigned teacher/superadmin can reopen one submitted student's summary from Sess
 
 ## Pending S11-08 UI follow-up: original summary preview
 Reopened summaries reuse the original IntakeReview step-by-step preview/editor and chat layout; long-form editor removed. A lossless adapter updates only edited saved fields, preserving all other record details. No SQL changes; existing correction permissions/history/RPC stay in place. Build and 10 correction/adapter checks pass. Local browser fixture is provided, but browser execution/visual acceptance is pending because the browser download failed.
+
+## Pending correction button label fix
+Both student Session layouts use View summary when locked and View / correct summary only for teacher-reopened records. Legacy history state now refreshes after student reconfirmation. Frontend only; build passed; no SQL or permission changes.

@@ -917,6 +917,7 @@ function LegacyStudentSessions({intakePilot=false}:{intakePilot?:boolean}) {
   // must still be able to READ it. We surface a small read-only history list that
   // opens the existing read-only confirmed view. No submission path is added.
   const [intakeHistory, setIntakeHistory] = useState<StudentSessionRecord[]>([]);
+  const [correctionOpen,setCorrectionOpen]=useState<Record<string,boolean>>({});
   const [historyView, setHistoryView] = useState<StudentSessionRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -934,9 +935,10 @@ function LegacyStudentSessions({intakePilot=false}:{intakePilot?:boolean}) {
         // Read-only Intake history: which S1–S9 sessions have a confirmed record.
         const pairs = await Promise.all(items.filter(s => s.sessionNumber <= 9).map(async s => {
           const { data: intake } = await supabase.rpc("get_my_session_intake", { p_session_id: s.sessionId });
-          return (intake as SessionIntakeContext | null)?.confirmedRecord ? s : null;
+          const saved=(intake as SessionIntakeContext|null)?.confirmedRecord;
+          return {session:s,confirmed:Boolean(saved),correctionOpen:Boolean(saved?.correctionOpenedAt)};
         }));
-        if (active) setIntakeHistory(pairs.filter((x): x is StudentSessionRecord => Boolean(x)).sort((a, b) => a.sessionNumber - b.sessionNumber));
+        if (active) {setIntakeHistory(pairs.filter(item=>item.confirmed).map(item=>item.session).sort((a,b)=>a.sessionNumber-b.sessionNumber));setCorrectionOpen(Object.fromEntries(pairs.map(item=>[item.session.sessionId,item.correctionOpen])));}
       }
       setLoading(false);
     };
@@ -958,7 +960,7 @@ function LegacyStudentSessions({intakePilot=false}:{intakePilot?:boolean}) {
         <div className="journey-session-content"><div className="journey-session-heading"><div><small>{new Date(`${item.sessionDate}T00:00:00`).toLocaleDateString()}</small><h3>{item.focus}</h3></div><span className={`activity-control-status ${item.status}`}>{item.status === "open" ? "Current" : item.status === "closed" ? "Closed" : "Upcoming"}</span></div>
           <div className="journey-attendance"><SessionAttendance session={item}/></div>
           <div className="journey-track-action">{item.sessionNumber===10 ? item.status==="open"||item.platformFeedbackCompletedAt?<button type="button" className="secondary compact" onClick={()=>setFeedbackSession(item)}>{item.platformFeedbackCompletedAt?"View feedback":"Feedback →"}</button>:<span>Feedback opens with S10</span>
-            :item.intakeConfirmedAt||intakeHistory.some(past=>past.sessionId===item.sessionId)?<button type="button" className="secondary compact" onClick={()=>setHistoryView(item)}>View / correct summary</button>
+            :item.intakeConfirmedAt||intakeHistory.some(past=>past.sessionId===item.sessionId)?<button type="button" className="secondary compact" onClick={()=>setHistoryView(item)}>{correctionOpen[item.sessionId]?"View / correct summary":"View summary"}</button>
             :item.workTrackUpdatedAt||((item.collectionMode??"disabled")==="disabled"&&item.workTrackStatus==="open")?<button type="button" className="secondary compact" onClick={()=>setTrackSession(item)}>{(item.collectionMode??"disabled")==="disabled"&&item.workTrackStatus==="open"?item.workTrackUpdatedAt?"Update track":"Complete Track →":"View Work Track history"}</button>
             :(item.collectionMode??"disabled")!=="disabled"&&item.intakeStatus==="open"?<button type="button" className="secondary compact" onClick={()=>setIntakeSession(item)}>{item.collectionMode==="ai"?"Let’s talk progress":"Share your progress"}</button>:<span>Progress submissions {item.status==="scheduled"?"upcoming":"closed"}</span>}
             {item.sessionNumber<=9&&!item.intakeConfirmedAt&&!intakeHistory.some(past=>past.sessionId===item.sessionId)&&!item.workTrackUpdatedAt&&(item.collectionMode??"disabled")!=="disabled"&&item.intakeStatus==="open"&&<small className="journey-action-note">{item.collectionMode==="ai"?"A short AI-guided chat about your work and next steps.":"A short form about your work and next steps."}</small>}
@@ -972,8 +974,8 @@ function LegacyStudentSessions({intakePilot=false}:{intakePilot?:boolean}) {
       {previousSessions.length > 0 && <details className="session-group"><summary><span><b>Previous sessions</b><small>{previousSessions.length} previous</small></span><ChevronDown size={20} aria-hidden="true"/></summary><div>{previousSessions.map(renderSession)}</div></details>}
       {upcomingSessions.length > 0 && <details className="session-group"><summary><span><b>Upcoming sessions</b><small>{upcomingSessions.length} prepared</small></span><ChevronDown size={20} aria-hidden="true"/></summary><div>{upcomingSessions.map(renderSession)}</div></details>}
     </div> : <p className="empty-state">No sessions have been prepared for this block yet.</p>}
-    {intakeHistory.length>0 && <details className="session-group intake-history-group"><summary><span><b>Confirmed Session Intake history</b><small>{intakeHistory.length} confirmed · read-only</small></span><ChevronDown size={20}/></summary><div>{intakeHistory.map(item=><article key={item.sessionId} className="session-compact-row"><div><b>S{item.sessionNumber} · {item.focus}</b><small>Confirmed · read-only</small></div><button type="button" className="secondary compact" onClick={()=>setHistoryView(item)}>View / correct summary</button></article>)}</div></details>}
-    {historyView&&<FormSessionIntakePrototype session={historyView} aiEnabled={false} onClose={()=>setHistoryView(null)} onSaved={()=>{}}/>}
+    {intakeHistory.length>0 && <details className="session-group intake-history-group"><summary><span><b>Confirmed Session Intake history</b><small>{intakeHistory.length} confirmed{intakeHistory.some(item=>correctionOpen[item.sessionId])?" · correction requested":" · read-only"}</small></span><ChevronDown size={20}/></summary><div>{intakeHistory.map(item=><article key={item.sessionId} className="session-compact-row"><div><b>S{item.sessionNumber} · {item.focus}</b><small>{correctionOpen[item.sessionId]?"Correction requested":"Confirmed · read-only"}</small></div><button type="button" className="secondary compact" onClick={()=>setHistoryView(item)}>{correctionOpen[item.sessionId]?"View / correct summary":"View summary"}</button></article>)}</div></details>}
+    {historyView&&<FormSessionIntakePrototype session={historyView} aiEnabled={false} onClose={()=>setHistoryView(null)} onSaved={()=>window.dispatchEvent(new CustomEvent("student-session-checkin"))}/>}
     {trackSession&&<SessionWorkTrackModal readOnly={(trackSession.collectionMode??"disabled")!=="disabled"} session={trackSession} onClose={()=>setTrackSession(null)} onSaved={()=>window.dispatchEvent(new CustomEvent("student-session-checkin"))}/>}
     {intakeSession&&(intakeSession.collectionMode==="ai"?<SessionIntakeModal session={intakeSession} onClose={()=>setIntakeSession(null)} onSaved={()=>window.dispatchEvent(new CustomEvent("student-session-checkin"))}/>:<FormSessionIntakePrototype session={intakeSession} aiEnabled={false} onClose={()=>setIntakeSession(null)} onSaved={()=>window.dispatchEvent(new CustomEvent("student-session-checkin"))}/>)}
     {feedbackSession&&<PlatformFeedbackModal session={feedbackSession} onClose={()=>setFeedbackSession(null)} onSaved={()=>window.dispatchEvent(new CustomEvent("student-session-checkin"))}/>}
@@ -1017,7 +1019,7 @@ function StudentSessions({intakePilot=false,intakeMode="disabled"}:{intakePilot?
     const intake=intakes[item.sessionId];
     const mode=item.collectionMode??intakeMode;
     if(!intake?.confirmedRecord&&(item.workTrackUpdatedAt||mode==='disabled'))return item.workTrackUpdatedAt||item.workTrackStatus==='open'?<button type="button" className="secondary compact" onClick={()=>setCollectionTrack(item)}>{mode==='disabled'&&item.workTrackStatus==='open'?'Open Work Track':'View Work Track history'}</button>:<span>Work Track not open</span>;
-    if(intake?.confirmedRecord)return <button type="button" className="secondary compact" onClick={()=>setSelected(item)}>{intake.confirmedRecord.correctionOpenedAt?"Correct summary":"View summary"}</button>;
+    if(intake?.confirmedRecord)return <button type="button" className="secondary compact" onClick={()=>setSelected(item)}>{intake.confirmedRecord.correctionOpenedAt?"View / correct summary":"View summary"}</button>;
     if(intake?.isOpen)return <button type="button" className={catchUp?"secondary compact":"compact"} onClick={()=>setSelected(item)}>{catchUp?"Share a progress update":mode==="ai"?"Let’s talk progress":"Share your progress"}</button>;
     return <span className="session-intake-unavailable">Intake {item.status==="closed"?"closed":"not open yet"}</span>;
   };
