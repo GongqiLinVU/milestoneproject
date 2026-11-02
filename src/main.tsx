@@ -1,3 +1,4 @@
+import {IntakeDiagnosticsDownload} from "./IntakeDiagnosticsDownload";
 import {selectCurrentSession,intakePlanningEstimate,DEFAULT_CLASS_AI_BUDGET_USD} from './sessionPlanning';
 import {intakeStart,intakePriorContext,intakeOpeningText} from './intakeStart';
 import {useStaffSession} from './useStaffSession';
@@ -2501,10 +2502,12 @@ type TeacherIntakeRow = { studentId:string; studentName:string; teamName:string|
 type TeacherIntakeData = { sessionId:string; sessionNumber:number|null; blockId:string|null; submittedCount:number; missingCount:number; rosterSize?:number; rosterSubmittedCount?:number; offRosterCount?:number; intakes:TeacherIntakeRow[] };
 
 function StudioSessionControl({
+  isSuperadmin=false,
   blockId,
   blocks,
   onBlockChange,
 }: {
+  isSuperadmin?: boolean;
   blockId: string;
   blocks: Array<{ id: string; academic_year: number; block_code: string; course_code?:string; class_code?:string; status: string; intake_mode?: "disabled" | "deterministic" | "ai" }>;
   onBlockChange: (blockId: string) => void;
@@ -2665,6 +2668,7 @@ function StudioSessionControl({
       <div className="eyebrow">Teaching workspace</div>
       <h2>Studio Sessions</h2><p>Set class defaults, then manage the Session you are teaching.</p>
     </div><label className="admin-block-filter">Class<select value={blockId} onChange={event=>onBlockChange(event.target.value)} disabled={busy}>{blocks.map(block=><option key={block.id} value={block.id}>{classLabel(block)}{block.status==="active"?" — Active":""}</option>)}</select></label></div>
+    {isSuperadmin&&<IntakeDiagnosticsDownload key={blockId} client={supabase} classId={blockId} sessions={sessions}/>}
     {message && <p className="admin-alert" role="status">{message}</p>}
     <section className="session-global-settings" aria-labelledby="session-defaults-title">
       <div className="session-global-top"><div><div className="eyebrow">Applies across this class</div><h3 id="session-defaults-title">Session defaults</h3><p>{overrideCount?`${overrideCount} Session${overrideCount===1?" overrides":"s override"} this default.`:"All Sessions follow this default."} Check-in and submission windows are controlled separately.</p></div>
@@ -3719,7 +3723,7 @@ function Admin() {
       </section>
       <div hidden={adminView !== "roster"}><RosterManager /></div>
       <div hidden={adminView !== "projects"}><ProjectManager /></div>
-      <div hidden={adminView !== "sessions"}><StudioSessionControl blockId={selectedBlockId} blocks={teachingBlocks} onBlockChange={setSelectedBlockId}/></div>
+      <div hidden={adminView !== "sessions"}><StudioSessionControl isSuperadmin={sessionUser.isSuperadmin} blockId={selectedBlockId} blocks={teachingBlocks} onBlockChange={setSelectedBlockId}/></div>
       <div hidden={adminView !== "posters"}><TeacherPosterGallery blockId={selectedBlockId} blocks={teachingBlocks} onBlockChange={setSelectedBlockId}/></div>
       <section hidden={adminView !== "records"} className="activity-workspace" aria-labelledby="activity-workspace-title">
         <div className="activity-workspace-heading">

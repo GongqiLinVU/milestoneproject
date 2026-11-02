@@ -284,3 +284,6 @@ Do not redesign the whole architecture for a small feature. Do not add AI merely
 
 ## Pending S11-06: expanded team numbering
 Roster Team input and CSV support 1–32767 (existing smallint), blank stays Unassigned. Automatic class-scoped team creation is unchanged. Apply only `20261102_sprint11_team_numbers.sql` before frontend deployment; it also removes obsolete Team 1–8 checks from legacy activities/policies without changing access rules. See `docs/sprints/sprint-11/S11-06_TEAM_NUMBERS.md`. Build and 23 isolated DB checks pass; production SQL and browser acceptance pending.
+
+## Pending S11-07: Intake diagnostics export
+Superadmin-only Session-page JSON download, scoped to selected class and one/all Sessions. Additive read-only RPC migration `20261102_sprint11_intake_diagnostics_export.sql` must run before frontend deployment. Export confirmed records plus persisted debug; no deletion, no last-download tracking, no ordinary teacher/student access. Pages of 25 with cutoff/cursor; no partial download on failure. Current roster metadata and debug extent are explicitly labelled. Production build and 9 export/fresh-schema checks pass; hosted/browser acceptance pending. See `docs/sprints/sprint-11/S11-07_INTAKE_DIAGNOSTICS_EXPORT.md`.
