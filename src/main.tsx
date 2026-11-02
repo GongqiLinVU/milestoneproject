@@ -97,7 +97,6 @@ async function resolveIntakeAccessToken(): Promise<string | null> {
   const { data: { session: refreshed } } = await supabase.auth.refreshSession();
   return refreshed?.access_token ?? null;
 }
-const teams = Array.from({ length: 8 }, (_, i) => `Team ${i + 1}`);
 type Kind = "checkin" | "pulse" | "health" | "checkout" | "progress" | "checkout2" | "checkout3" | "checkout4" | "review";
 type AiSuggestionStage = "starting" | "closing";
 type AiDiscussionPath = {
@@ -2081,12 +2080,7 @@ const Team = ({
 }) => (
   <label>
     {label}
-    <select name={name} required>
-      <option value="">Select team</option>
-      {teams.map((t) => (
-        <option key={t}>{t}</option>
-      ))}
-    </select>
+    <input name={name} required pattern="Team [1-9][0-9]*" placeholder="Team 12" title="Enter Team followed by a positive whole number, e.g. Team 12"/>
   </label>
 );
 const Text = ({
@@ -3511,6 +3505,8 @@ function Admin() {
         );
       })
     : [];
+
+  const teams = [...new Set([...presentationTeams.map(team=>`Team ${team.teamNumber}`), ...records.flatMap(record=>[record.team_name,record.reviewer_team,record.reviewed_team]).filter((name): name is string=>typeof name==="string"&&/^Team [1-9][0-9]*$/.test(name))])].sort((a,b)=>Number(a.slice(5))-Number(b.slice(5)));
 
   const teamTemperatures =
     activeTable === "team_health_checks"
