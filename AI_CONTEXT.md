@@ -280,3 +280,7 @@ Do not redesign the whole architecture for a small feature. Do not add AI merely
 - Anonymous/authenticated students can insert but cannot read, update or delete these records; teacher reads and management use `is_teacher()`.
 - Team Participation Temperature is descriptive, preserves raw answers and must not be used as an assessment score.
 \n\n## Sprint 3 Phase 2 boundary\n\nPhase 2 adds student self-reported Week 2 progress and Week 2 engagement evidence. It does not add teacher outcomes, grading, responsibility attribution or AI judgement. The Monday review verifies the project demo, method and individual evidence; teacher feedback remains Phase 3.\n
+
+
+## Pending S11-06: expanded team numbering
+Roster Team input and CSV support 1–32767 (existing smallint), blank stays Unassigned. Automatic class-scoped team creation is unchanged. Apply only `20261102_sprint11_team_numbers.sql` before frontend deployment; it also removes obsolete Team 1–8 checks from legacy activities/policies without changing access rules. See `docs/sprints/sprint-11/S11-06_TEAM_NUMBERS.md`. Build and 23 isolated DB checks pass; production SQL and browser acceptance pending.
