@@ -296,3 +296,6 @@ Reopened summaries reuse the original IntakeReview step-by-step preview/editor a
 
 ## Pending correction button label fix
 Both student Session layouts use View summary when locked and View / correct summary only for teacher-reopened records. Legacy history state now refreshes after student reconfirmation. Frontend only; build passed; no SQL or permission changes.
+
+## Pending S11-09: three-tab teacher administration
+Classes & teachers now separates Assignments (default), Teachers and Classes. Teacher creation takes Name/Email only and sends classIds=[]; existing backend supports this, so no SQL/API change. Assignments operate on one teacher/class association while preserving other current/historical memberships. Active/Planned classes remain expanded; Archived classes/assignments are collapsed history. Teacher lifecycle controls and class access guards stay unchanged. Build, 23 class DB checks, 248 Intake/API checks and one mocked DOM workflow rehearsal pass; real-browser/hosted acceptance pending. See `docs/sprints/sprint-11/S11-09_TEACHER_ADMINISTRATION_TABS.md`.
