@@ -1,0 +1,25 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {db,admin,teacher1,identity,owner} from './fixture.mjs';
+test('administrator teaching memberships preserve identity and require administrator authority',async()=>{
+ await owner();
+ await db.exec(fs.readFileSync('supabase/migrations/20261103_sprint11_admin_teaching_assignments.sql','utf8'));
+ const classes=(await db.query("select id from public.teaching_blocks where status<>'archived' limit 2")).rows;
+ assert.ok(classes.length);
+ const classId=classes[0].id;
+ const before=(await db.query('select * from public.teacher_profiles where user_id=$1',[admin])).rows;
+ await identity();
+ const listed=(await db.query('select public.get_teacher_administration() as data')).rows[0].data;
+ assert.equal(listed.find(t=>t.userId===admin).isSuperadmin,true);
+ await db.query('select public.set_teacher_class_membership($1,$2,true)',[admin,classId]);
+ await db.query('select public.set_teacher_class_membership($1,$2,true)',[admin,classId]);
+ await db.query('select public.set_teacher_class_membership($1,$2,false)',[admin,classId]);
+ assert.equal((await db.query('select public.is_superadmin() as ok')).rows[0].ok,true);
+ await assert.rejects(db.query('select public.set_teacher_classes($1,array[]::uuid[])',[admin]),/Administrator permissions/);
+ await owner();assert.deepEqual((await db.query('select * from public.teacher_profiles where user_id=$1',[admin])).rows,before);
+ await db.query("insert into auth.users(id,email,raw_app_meta_data) values($1,'teacher@example.invalid','{\"role\":\"teacher\"}')",[teacher1]);
+ await identity(teacher1);await assert.rejects(db.query('select public.get_teacher_administration()'),/Administrator access/);
+ await assert.rejects(db.query('select public.set_teacher_class_membership($1,$2,true)',[admin,classId]),/Administrator access/);
+ await db.close();
+});
