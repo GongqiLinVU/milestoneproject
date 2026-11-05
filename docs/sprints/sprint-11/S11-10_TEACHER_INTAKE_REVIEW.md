@@ -40,3 +40,13 @@ User tested the initial implementation and requested option-led review instead o
 ## Area navigation refinement
 
 Select an area from a single dropdown to open its review. Existing areas reopen instead of creating duplicates. When more than one area exists, labelled tabs show one review at a time; arrow/Home/End keyboard navigation supported. Each review can be deleted, with confirmation for nonempty content. Existing duplicate categories are retained with numbered tab labels. No data/schema changes; previous migrations still apply.
+
+## Project-specific interview criteria
+
+The user clarified this is an interview record that supports interaction and clear student expectations, not formal marking. Built-in interview guides cover General, Web, Mobile and Data analytics projects, with AI as an optional additional component. Areas are Design & architecture, Implementation & code, Testing & evaluation, Security & privacy, Documentation & delivery, Presentation & demonstration and Other. Legacy category names remain readable, with canonical display labels; duplicate legacy areas are not deleted.
+
+Each criterion records Not reviewed / Not demonstrated / Partially demonstrated / Demonstrated / Not applicable. An optional evidence/measurement field records actual observations and conditions (e.g. 16/20 representative questions answered correctly), never a calculated mark. Completion percentage is separate and collapsed; overall feedback and notes remain available. A criterion decision can be published without a percentage or a generic feedback choice. Unreviewed checks are not failures. No weights, total grades, official unit-rubric claims, automated assessment or provider calls.
+
+Profile changes preserve substantive existing criterion decisions and measurements. New relevant checks appear as Not reviewed; recorded checks from earlier profiles remain labelled as previously recorded. Legacy written feedback stays unchanged unless the teacher edits it. Published snapshots retain criterion labels and guide version (`interview-review.v1`), so later frontend label changes do not rewrite published observations.
+
+Run additive `supabase/migrations/20261105_sprint11_review_standards.sql` after the existing initial and quick-review migrations. It extends the save RPC's validation and student-publication allow-list; no existing draft/publication data is rewritten. Profile secrets/unknown keys and private teacher notes are excluded from published snapshots. Existing authorization, optimistic versions, summary correction guards and draft/publication separation remain in place.
