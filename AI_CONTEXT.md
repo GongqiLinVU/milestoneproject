@@ -299,3 +299,8 @@ Both student Session layouts use View summary when locked and View / correct sum
 
 ## Pending S11-09: three-tab teacher administration
 Classes & teachers now separates Assignments (default), Teachers and Classes. Teacher creation takes Name/Email only and sends classIds=[]; existing backend supports this, so no SQL/API change. Assignments operate on one teacher/class association while preserving other current/historical memberships. Active/Planned classes remain expanded; Archived classes/assignments are collapsed history. Teacher lifecycle controls and class access guards stay unchanged. Build, 23 class DB checks, 248 Intake/API checks and one mocked DOM workflow rehearsal pass; real-browser/hosted acceptance pending. See `docs/sprints/sprint-11/S11-09_TEACHER_ADMINISTRATION_TABS.md`.
+
+
+## 2026-11-05 — Teacher classroom Intake review (pending release)
+
+Teacher-only autosaved review drafts, explicit student-visible publication, private notes, specific observations and agreed actions. Student claims remain separate and unchanged. New class-scoped RPCs and additive migration `20261105_sprint11_intake_teacher_reviews.sql`; see `docs/sprints/sprint-11/S11-10_TEACHER_INTAKE_REVIEW.md`. Student pace/intake adaptation deferred until implementation-review feedback. No AI harness/scoring changes.
