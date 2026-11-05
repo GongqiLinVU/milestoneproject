@@ -304,3 +304,5 @@ Classes & teachers now separates Assignments (default), Teachers and Classes. Te
 ## 2026-11-05 — Teacher classroom Intake review (pending release)
 
 Teacher-only autosaved review drafts, explicit student-visible publication, private notes, specific observations and agreed actions. Student claims remain separate and unchanged. New class-scoped RPCs and additive migration `20261105_sprint11_intake_teacher_reviews.sql`; see `docs/sprints/sprint-11/S11-10_TEACHER_INTAKE_REVIEW.md`. Student pace/intake adaptation deferred until implementation-review feedback. No AI harness/scoring changes.
+
+Teacher review refinement (PR #111): option-led area/completion/feedback and next-step/evidence/follow-up controls; optional notes. Percentage is a teacher-observed completion estimate, not a formal grade. Initial review migration confirmed run by user; run follow-up `20261105_sprint11_quick_review_choices.sql` before acceptance/merge. Existing drafts and publications preserved.
