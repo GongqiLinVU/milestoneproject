@@ -19,6 +19,7 @@ await db.exec(fs.readFileSync('supabase/migrations/20261105_sprint11_quick_revie
 await db.exec(fs.readFileSync('supabase/migrations/20261105_sprint11_quick_review_choices.sql','utf8'));
 await db.exec(fs.readFileSync('supabase/migrations/20261105_sprint11_review_standards.sql','utf8'));
 await db.exec(fs.readFileSync('supabase/migrations/20261105_sprint11_review_standards.sql','utf8'));
+await db.exec(fs.readFileSync('supabase/migrations/20261105_sprint11_review_standards_v2.sql','utf8'));
 const draft={status:'follow_up',items:[{category:'Code review',status:'follow_up',observation:'Loading never stops on API failure',recommendation:'Handle errors and allow retry',evidence:'Demonstrate an API failure',privateNote:'do not leak nested extras'}],actions:[{task:'Add error handling',evidence:'Test report',due:'S5',privateNote:'secret'}],privateNote:'do not leak top-level extras'};
 const load=()=>value('select get_intake_teacher_review($1)',[intake]);
 const save=(version,publish=false,summaryRevision=1,content=draft)=>value('select save_intake_teacher_review($1,$2,$3,$4,$5,$6)',[intake,version,summaryRevision,content,'Private teacher note',publish]);
@@ -30,6 +31,7 @@ test('only authorized teachers read and save review drafts; students cannot acce
  await identity(teacher1);const initial=await load();assert.equal(initial.version,0);assert.deepEqual(initial.studentRecord,record);
  const saved=await save(0);assert.equal(saved.version,1);assert.equal(saved.privateNote,'Private teacher note');assert.equal(saved.published,null);
  await owner();const prior=await value('select to_jsonb(r) from intake_teacher_reviews r where intake_id=$1',[intake]);await db.exec(fs.readFileSync('supabase/migrations/20261105_sprint11_quick_review_choices.sql','utf8'));assert.deepEqual(await value('select to_jsonb(r) from intake_teacher_reviews r where intake_id=$1',[intake]),prior);await db.exec(fs.readFileSync('supabase/migrations/20261105_sprint11_review_standards.sql','utf8'));assert.deepEqual(await value('select to_jsonb(r) from intake_teacher_reviews r where intake_id=$1',[intake]),prior);
+ await owner();await db.exec(fs.readFileSync('supabase/migrations/20261105_sprint11_review_standards_v2.sql','utf8'));
  await identity(student1,'student');assert.deepEqual(await feedback(),[]);
 });
 test('publication exposes only allow-listed feedback to its student; draft updates preserve last publication',async()=>{
@@ -72,6 +74,13 @@ test('interview criteria publish without a grade and keep measurements while fil
  await assert.rejects(save(version,true,2,{...interview,items:[{...interview.items[0],criteria:[{...interview.items[0].criteria[0],state:'not_reviewed'}]}]}),/criterion decision/);
  const result=await save(version,true,2,interview);assert.equal(result.published.items[0].criteria[0].state,'partial');assert.equal(result.published.standardVersion,'interview-review.v1');
  await identity(student1,'student');const published=(await feedback())[0].feedback;assert.deepEqual(published.profile,{kind:'web',ai:true});assert.equal(published.items[0].criteria[0].measurement,interview.items[0].criteria[0].measurement);assert.equal(JSON.stringify(published).includes('secret'),false);assert.equal(published.totalScore,undefined);
+});
+test('v2 AI and UI/UX areas publish while older guide versions remain supported',async()=>{
+ await identity(teacher1);let version=(await load()).version;
+ for(const category of ['AI integration & understanding','UI/UX design']){
+ const interview={profile:{kind:'web',ai:true},standardVersion:'interview-review.v2',status:'follow_up',items:[{category,status:'follow_up',observation:'',recommendation:'',evidence:'',criteria:[{id:category.startsWith('AI')?'ai-token-context':'web-responsive',label:category.startsWith('AI')?'Token and context handling':'Required screen usability',state:'partial',measurement:'Student demonstrated the normal case; long-input/failure cases need follow-up.'}]}],actions:[]};
+ const result=await save(version,true,2,interview);assert.equal(result.published.standardVersion,'interview-review.v2');assert.equal(result.published.items[0].category,category);version=result.version;
+ }
 });
 test('history exposes earlier student claims and published feedback, never private notes',async()=>{
  await owner();const later=await value("insert into studio_sessions(block_id,title,session_date,session_number,status) values($1,'Later',current_date,2,'closed') returning id",[classId]);
