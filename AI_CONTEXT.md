@@ -299,3 +299,16 @@ Both student Session layouts use View summary when locked and View / correct sum
 
 ## Pending S11-09: three-tab teacher administration
 Classes & teachers now separates Assignments (default), Teachers and Classes. Teacher creation takes Name/Email only and sends classIds=[]; existing backend supports this, so no SQL/API change. Assignments operate on one teacher/class association while preserving other current/historical memberships. Active/Planned classes remain expanded; Archived classes/assignments are collapsed history. Teacher lifecycle controls and class access guards stay unchanged. Build, 23 class DB checks, 248 Intake/API checks and one mocked DOM workflow rehearsal pass; real-browser/hosted acceptance pending. See `docs/sprints/sprint-11/S11-09_TEACHER_ADMINISTRATION_TABS.md`.
+
+
+## 2026-11-05 — Teacher classroom Intake review (pending release)
+
+Teacher-only autosaved review drafts, explicit student-visible publication, private notes, specific observations and agreed actions. Student claims remain separate and unchanged. New class-scoped RPCs and additive migration `20261105_sprint11_intake_teacher_reviews.sql`; see `docs/sprints/sprint-11/S11-10_TEACHER_INTAKE_REVIEW.md`. Student pace/intake adaptation deferred until implementation-review feedback. No AI harness/scoring changes.
+
+Teacher review refinement (PR #111): option-led area/completion/feedback and next-step/evidence/follow-up controls; optional notes. Percentage is a teacher-observed completion estimate, not a formal grade. Initial review migration confirmed run by user; run follow-up `20261105_sprint11_quick_review_choices.sql` before acceptance/merge. Existing drafts and publications preserved.
+
+Interview standards refinement (PR #111): General/Web/Mobile/Data profile plus optional AI component; common design/implementation/testing/security/documentation/presentation areas with profile-specific evidence criteria. Teacher records demonstrated/partial/not demonstrated/not reviewed/not applicable, optional observed measurements, no weights or total grades. Completion estimate separate/collapsed. Profile changes retain substantive criterion observations and measurements. Run latest additive `20261105_sprint11_review_standards.sql` after initial review table migration; it supersedes quick-review save RPC and preserves existing data. Intake/harness unchanged.
+
+Interview guide v2 (PR #111): separate UI/UX design and AI integration & understanding areas. AI prompts cover real requests, model limits, tokens/context, workflow controls, bounded recovery, evaluation and key/data safety. Latest incremental SQL `20261105_sprint11_review_standards_v2.sql` supersedes prior save RPCs and accepts v1/v2. Existing records retained; no automatic grades, provider calls or Intake harness changes.
+
+Classroom follow-up (PR #111): optional criterion-derived priorities (up to two new actions), teacher edits/dismissal and shared follow-up timing; no AI provider calls. Students acknowledge the published version only, separate from completing adjustments. Apply `20261105_sprint11_review_teacher_feedback_receipts.sql` after v2; existing reviews are retained.
