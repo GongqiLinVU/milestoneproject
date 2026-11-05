@@ -36,3 +36,7 @@ Run migration; open a session's Intake records; choose a student. Add Code revie
 ## Review feedback update
 
 User tested the initial implementation and requested option-led review instead of substantial typing. Both review items and next steps now use presets, with optional public notes. Quick-review metadata is validated and allow-listed in a follow-up save RPC migration; no existing drafts/publications are rewritten. Database regression covers option-only publication, null/unverified completion, invalid percentage/choice values and notes visibility; browser regression verifies publication with no typed notes before exercising autosave failure/retry. Intake questions and harness remain unchanged.
+
+## Area navigation refinement
+
+Select an area from a single dropdown to open its review. Existing areas reopen instead of creating duplicates. When more than one area exists, labelled tabs show one review at a time; arrow/Home/End keyboard navigation supported. Each review can be deleted, with confirmation for nonempty content. Existing duplicate categories are retained with numbered tab labels. No data/schema changes; previous migrations still apply.
