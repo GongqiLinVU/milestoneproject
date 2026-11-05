@@ -11,3 +11,4 @@
 .criterion-retained{display:block;margin-top:3px;font-size:10px;font-weight:400;color:#6c7c71}
 .review-ai-guide{margin:12px 0 0;color:#416a56;font-size:12px;line-height:1.7}
 .criterion-prompt{display:block;font-weight:400;font-size:11px;line-height:1.65;color:#60796a;margin-top:6px}
+.review-priority-controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.review-next>label{margin-top:16px}.review-receipt{font-size:13px;color:#476454;margin:12px 0}

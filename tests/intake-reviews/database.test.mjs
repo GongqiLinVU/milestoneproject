@@ -20,6 +20,7 @@ await db.exec(fs.readFileSync('supabase/migrations/20261105_sprint11_quick_revie
 await db.exec(fs.readFileSync('supabase/migrations/20261105_sprint11_review_standards.sql','utf8'));
 await db.exec(fs.readFileSync('supabase/migrations/20261105_sprint11_review_standards.sql','utf8'));
 await db.exec(fs.readFileSync('supabase/migrations/20261105_sprint11_review_standards_v2.sql','utf8'));
+await db.exec(fs.readFileSync('supabase/migrations/20261105_sprint11_review_teacher_feedback_receipts.sql','utf8'));
 const draft={status:'follow_up',items:[{category:'Code review',status:'follow_up',observation:'Loading never stops on API failure',recommendation:'Handle errors and allow retry',evidence:'Demonstrate an API failure',privateNote:'do not leak nested extras'}],actions:[{task:'Add error handling',evidence:'Test report',due:'S5',privateNote:'secret'}],privateNote:'do not leak top-level extras'};
 const load=()=>value('select get_intake_teacher_review($1)',[intake]);
 const save=(version,publish=false,summaryRevision=1,content=draft)=>value('select save_intake_teacher_review($1,$2,$3,$4,$5,$6)',[intake,version,summaryRevision,content,'Private teacher note',publish]);
@@ -81,6 +82,15 @@ test('v2 AI and UI/UX areas publish while older guide versions remain supported'
  const interview={profile:{kind:'web',ai:true},standardVersion:'interview-review.v2',status:'follow_up',items:[{category,status:'follow_up',observation:'',recommendation:'',evidence:'',criteria:[{id:category.startsWith('AI')?'ai-token-context':'web-responsive',label:category.startsWith('AI')?'Token and context handling':'Required screen usability',state:'partial',measurement:'Student demonstrated the normal case; long-input/failure cases need follow-up.'}]}],actions:[]};
  const result=await save(version,true,2,interview);assert.equal(result.published.standardVersion,'interview-review.v2');assert.equal(result.published.items[0].category,category);version=result.version;
  }
+});
+test('student acknowledgement is private, idempotent and tied to the current publication',async()=>{
+ await identity(teacher1);const start=await load(),version=start.published.reviewVersion;
+ const ack=(v=version)=>value('select acknowledge_intake_teacher_feedback($1,$2)',[intake,v]);
+ await assert.rejects(ack(),/not available/);await identity(student2,'student');await assert.rejects(ack(),/not available/);
+ await identity(student1,'student');assert.equal((await feedback())[0].acknowledgedAt,null);await assert.rejects(ack(version-1),/updated/);
+ const at=await ack();assert.ok(at);assert.equal(+new Date(await ack()),+new Date(at));assert.equal(+new Date((await feedback())[0].acknowledgedAt),+new Date(at));await assert.rejects(value('select count(*) from intake_teacher_feedback_receipts'),/permission denied/);
+ await identity(teacher1);assert.equal(+new Date((await load()).publishedAcknowledgedAt),+new Date(at));const drafted=await save(start.version,false,2,start.draft);assert.equal(+new Date(drafted.publishedAcknowledgedAt),+new Date(at));
+ const republished=await save(drafted.version,true,2,start.draft);assert.equal(republished.publishedAcknowledgedAt,null);await identity(student1,'student');assert.equal((await feedback())[0].acknowledgedAt,null);await assert.rejects(ack(),/updated/);assert.ok(await ack(republished.published.reviewVersion));
 });
 test('history exposes earlier student claims and published feedback, never private notes',async()=>{
  await owner();const later=await value("insert into studio_sessions(block_id,title,session_date,session_number,status) values($1,'Later',current_date,2,'closed') returning id",[classId]);
