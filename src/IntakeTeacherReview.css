@@ -12,3 +12,6 @@
 .review-ai-guide{margin:12px 0 0;color:#416a56;font-size:12px;line-height:1.7}
 .criterion-prompt{display:block;font-weight:400;font-size:11px;line-height:1.65;color:#60796a;margin-top:6px}
 .review-priority-controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.review-next>label{margin-top:16px}.review-receipt{font-size:13px;color:#476454;margin:12px 0}
+
+dialog.student-feedback-dialog{width:min(760px,calc(100% - 2rem));max-height:85dvh;overflow:auto;margin:auto;padding:clamp(1rem,4vw,2rem);background:white}
+dialog.student-feedback-dialog::backdrop{background:rgb(18 32 43 / 55%)}

@@ -2378,3 +2378,7 @@ button.danger:hover {
 .enrolment-candidate{display:flex;align-items:start;gap:12px;padding:12px;cursor:pointer}.enrolment-candidate>span{display:grid;gap:6px;overflow-wrap:anywhere}.enrolment-candidate small{color:var(--muted)}
 .student-enrolment-dialog button:disabled{opacity:.6;cursor:wait}
 @media(max-width:600px){.student-enrolment-body{padding:20px}.student-enrolment-search{display:grid}}
+
+.session-review-actions{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
+.session-progress-button{background:#2454ff;color:#fff;border-color:#2454ff}
+.session-progress-button:hover{background:#1943d8;border-color:#1943d8;color:#fff}
