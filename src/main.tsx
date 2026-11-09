@@ -1,4 +1,4 @@
-import {TeacherIntakeReviews,StudentTeacherFeedback} from "./IntakeTeacherReview";
+import {TeacherIntakeReviews,useStudentTeacherFeedback} from "./IntakeTeacherReview";
 import {IntakeSummaryCorrection,type SummaryCorrectionState} from "./IntakeSummaryCorrection";
 import {IntakeDiagnosticsDownload} from "./IntakeDiagnosticsDownload";
 import {selectCurrentSession,intakePlanningEstimate,DEFAULT_CLASS_AI_BUDGET_USD} from './sessionPlanning';
@@ -918,6 +918,8 @@ function LegacyStudentSessions({intakePilot=false}:{intakePilot?:boolean}) {
   // must still be able to READ it. We surface a small read-only history list that
   // opens the existing read-only confirmed view. No submission path is added.
   const [intakeHistory, setIntakeHistory] = useState<StudentSessionRecord[]>([]);
+  const teacherFeedback=useStudentTeacherFeedback(supabase);
+  const [intakeIds,setIntakeIds]=useState<Record<string,string|undefined>>({});
   const [correctionOpen,setCorrectionOpen]=useState<Record<string,boolean>>({});
   const [historyView, setHistoryView] = useState<StudentSessionRecord | null>(null);
   const [loading, setLoading] = useState(true);
@@ -937,9 +939,9 @@ function LegacyStudentSessions({intakePilot=false}:{intakePilot?:boolean}) {
         const pairs = await Promise.all(items.filter(s => s.sessionNumber <= 9).map(async s => {
           const { data: intake } = await supabase.rpc("get_my_session_intake", { p_session_id: s.sessionId });
           const saved=(intake as SessionIntakeContext|null)?.confirmedRecord;
-          return {session:s,confirmed:Boolean(saved),correctionOpen:Boolean(saved?.correctionOpenedAt)};
+          return {session:s,confirmed:Boolean(saved),intakeId:saved?.intakeId,correctionOpen:Boolean(saved?.correctionOpenedAt)};
         }));
-        if (active) {setIntakeHistory(pairs.filter(item=>item.confirmed).map(item=>item.session).sort((a,b)=>a.sessionNumber-b.sessionNumber));setCorrectionOpen(Object.fromEntries(pairs.map(item=>[item.session.sessionId,item.correctionOpen])));}
+        if (active) {setIntakeIds(Object.fromEntries(pairs.map(item=>[item.session.sessionId,item.intakeId])));setIntakeHistory(pairs.filter(item=>item.confirmed).map(item=>item.session).sort((a,b)=>a.sessionNumber-b.sessionNumber));setCorrectionOpen(Object.fromEntries(pairs.map(item=>[item.session.sessionId,item.correctionOpen])));}
       }
       setLoading(false);
     };
@@ -961,22 +963,23 @@ function LegacyStudentSessions({intakePilot=false}:{intakePilot?:boolean}) {
         <div className="journey-session-content"><div className="journey-session-heading"><div><small>{new Date(`${item.sessionDate}T00:00:00`).toLocaleDateString()}</small><h3>{item.focus}</h3></div><span className={`activity-control-status ${item.status}`}>{item.status === "open" ? "Current" : item.status === "closed" ? "Closed" : "Upcoming"}</span></div>
           <div className="journey-attendance"><SessionAttendance session={item}/></div>
           <div className="journey-track-action">{item.sessionNumber===10 ? item.status==="open"||item.platformFeedbackCompletedAt?<button type="button" className="secondary compact" onClick={()=>setFeedbackSession(item)}>{item.platformFeedbackCompletedAt?"View feedback":"Feedback →"}</button>:<span>Feedback opens with S10</span>
-            :item.intakeConfirmedAt||intakeHistory.some(past=>past.sessionId===item.sessionId)?<button type="button" className="secondary compact" onClick={()=>setHistoryView(item)}>{correctionOpen[item.sessionId]?"View / correct summary":"View summary"}</button>
+            :item.intakeConfirmedAt||intakeHistory.some(past=>past.sessionId===item.sessionId)?<div className="session-review-actions"><button type="button" className="secondary compact" onClick={()=>setHistoryView(item)}>{correctionOpen[item.sessionId]?"View / correct summary":"View summary"}</button>{teacherFeedback.button(intakeIds[item.sessionId])}</div>
             :item.workTrackUpdatedAt||((item.collectionMode??"disabled")==="disabled"&&item.workTrackStatus==="open")?<button type="button" className="secondary compact" onClick={()=>setTrackSession(item)}>{(item.collectionMode??"disabled")==="disabled"&&item.workTrackStatus==="open"?item.workTrackUpdatedAt?"Update track":"Complete Track →":"View Work Track history"}</button>
-            :(item.collectionMode??"disabled")!=="disabled"&&item.intakeStatus==="open"?<button type="button" className="secondary compact" onClick={()=>setIntakeSession(item)}>{item.collectionMode==="ai"?"Let’s talk progress":"Share your progress"}</button>:<span>Progress submissions {item.status==="scheduled"?"upcoming":"closed"}</span>}
+            :(item.collectionMode??"disabled")!=="disabled"&&item.intakeStatus==="open"?<button type="button" className="compact session-progress-button" onClick={()=>setIntakeSession(item)}>Complete progress report</button>:<span>Progress submissions {item.status==="scheduled"?"upcoming":"closed"}</span>}
             {item.sessionNumber<=9&&!item.intakeConfirmedAt&&!intakeHistory.some(past=>past.sessionId===item.sessionId)&&!item.workTrackUpdatedAt&&(item.collectionMode??"disabled")!=="disabled"&&item.intakeStatus==="open"&&<small className="journey-action-note">{item.collectionMode==="ai"?"A short AI-guided chat about your work and next steps.":"A short form about your work and next steps."}</small>}
           </div>
         </div>
       </article>;
   return <section id="sessions" className="portal-panel portal-section student-sessions project-journey">
     <SessionsHeading/>
-    <StudentTeacherFeedback client={supabase}/>
     {loading ? <p className="empty-state">Loading your Project Journey…</p> : error ? <p className="empty-state error-state" role="alert">{error}</p> : sessions.length ? <div className="journey-session-list">
       {openSessions.length ? openSessions.map(renderSession) : <p className="empty-state">No session is open right now.</p>}
       {previousSessions.length > 0 && <details className="session-group"><summary><span><b>Previous sessions</b><small>{previousSessions.length} previous</small></span><ChevronDown size={20} aria-hidden="true"/></summary><div>{previousSessions.map(renderSession)}</div></details>}
       {upcomingSessions.length > 0 && <details className="session-group"><summary><span><b>Upcoming sessions</b><small>{upcomingSessions.length} prepared</small></span><ChevronDown size={20} aria-hidden="true"/></summary><div>{upcomingSessions.map(renderSession)}</div></details>}
     </div> : <p className="empty-state">No sessions have been prepared for this block yet.</p>}
-    {intakeHistory.length>0 && <details className="session-group intake-history-group"><summary><span><b>Confirmed Session Intake history</b><small>{intakeHistory.length} confirmed{intakeHistory.some(item=>correctionOpen[item.sessionId])?" · correction requested":" · read-only"}</small></span><ChevronDown size={20}/></summary><div>{intakeHistory.map(item=><article key={item.sessionId} className="session-compact-row"><div><b>S{item.sessionNumber} · {item.focus}</b><small>{correctionOpen[item.sessionId]?"Correction requested":"Confirmed · read-only"}</small></div><button type="button" className="secondary compact" onClick={()=>setHistoryView(item)}>{correctionOpen[item.sessionId]?"View / correct summary":"View summary"}</button></article>)}</div></details>}
+    {intakeHistory.length>0 && <details className="session-group intake-history-group"><summary><span><b>Confirmed Session Intake history</b><small>{intakeHistory.length} confirmed{intakeHistory.some(item=>correctionOpen[item.sessionId])?" · correction requested":" · read-only"}</small></span><ChevronDown size={20}/></summary><div>{intakeHistory.map(item=><article key={item.sessionId} className="session-compact-row"><div><b>S{item.sessionNumber} · {item.focus}</b><small>{correctionOpen[item.sessionId]?"Correction requested":"Confirmed · read-only"}</small></div><div className="session-review-actions"><button type="button" className="secondary compact" onClick={()=>setHistoryView(item)}>{correctionOpen[item.sessionId]?"View / correct summary":"View summary"}</button>{teacherFeedback.button(intakeIds[item.sessionId])}</div></article>)}</div></details>}
+    {!loading&&teacherFeedback.archive(new Set(Object.values(intakeIds).filter((id):id is string=>Boolean(id))))}
+    {teacherFeedback.modal}
     {historyView&&<FormSessionIntakePrototype session={historyView} aiEnabled={false} onClose={()=>setHistoryView(null)} onSaved={()=>window.dispatchEvent(new CustomEvent("student-session-checkin"))}/>}
     {trackSession&&<SessionWorkTrackModal readOnly={(trackSession.collectionMode??"disabled")!=="disabled"} session={trackSession} onClose={()=>setTrackSession(null)} onSaved={()=>window.dispatchEvent(new CustomEvent("student-session-checkin"))}/>}
     {intakeSession&&(intakeSession.collectionMode==="ai"?<SessionIntakeModal session={intakeSession} onClose={()=>setIntakeSession(null)} onSaved={()=>window.dispatchEvent(new CustomEvent("student-session-checkin"))}/>:<FormSessionIntakePrototype session={intakeSession} aiEnabled={false} onClose={()=>setIntakeSession(null)} onSaved={()=>window.dispatchEvent(new CustomEvent("student-session-checkin"))}/>)}
@@ -1011,31 +1014,32 @@ function StudentSessions({intakePilot=false,intakeMode="disabled"}:{intakePilot?
     window.addEventListener("student-session-checkin",onRefresh);
     return()=>{active=false;window.removeEventListener("student-session-checkin",onRefresh);};
   },[]);
+  const teacherFeedback=useStudentTeacherFeedback(supabase);
   const openSessions=sessions.filter(item=>item.status==="open").sort((a,b)=>b.sessionNumber-a.sessionNumber);
   const others=sessions.filter(item=>item.status!=="open");
   const catchup=others.filter(item=>intakes[item.sessionId]?.isOpen&&!intakes[item.sessionId]?.confirmedRecord);
   const correctionSessions=others.filter(item=>Boolean(intakes[item.sessionId]?.confirmedRecord?.correctionOpenedAt));
   const history=others.filter(item=>!correctionSessions.includes(item)&&!catchup.includes(item)&&(Boolean(intakes[item.sessionId]?.confirmedRecord)||item.status==="closed"));
   const upcoming=others.filter(item=>!correctionSessions.includes(item)&&!catchup.includes(item)&&!history.includes(item));
-  const action=(item:StudentSessionRecord,catchUp=false)=>{
+  const action=(item:StudentSessionRecord)=>{
     const intake=intakes[item.sessionId];
     const mode=item.collectionMode??intakeMode;
     if(!intake?.confirmedRecord&&(item.workTrackUpdatedAt||mode==='disabled'))return item.workTrackUpdatedAt||item.workTrackStatus==='open'?<button type="button" className="secondary compact" onClick={()=>setCollectionTrack(item)}>{mode==='disabled'&&item.workTrackStatus==='open'?'Open Work Track':'View Work Track history'}</button>:<span>Work Track not open</span>;
-    if(intake?.confirmedRecord)return <button type="button" className="secondary compact" onClick={()=>setSelected(item)}>{intake.confirmedRecord.correctionOpenedAt?"View / correct summary":"View summary"}</button>;
-    if(intake?.isOpen)return <button type="button" className={catchUp?"secondary compact":"compact"} onClick={()=>setSelected(item)}>{catchUp?"Share a progress update":mode==="ai"?"Let’s talk progress":"Share your progress"}</button>;
+    if(intake?.confirmedRecord)return <div className="session-review-actions"><button type="button" className="secondary compact" onClick={()=>setSelected(item)}>{intake.confirmedRecord.correctionOpenedAt?"View / correct summary":"View summary"}</button>{teacherFeedback.button(intake.confirmedRecord.intakeId)}</div>;
+    if(intake?.isOpen)return <button type="button" className="compact session-progress-button" onClick={()=>setSelected(item)}>Complete progress report</button>;
     return <span className="session-intake-unavailable">Intake {item.status==="closed"?"closed":"not open yet"}</span>;
   };
-  const compact=(item:StudentSessionRecord,catchUp=false)=><article key={item.sessionId} className="session-compact-row"><div><b>S{item.sessionNumber} · {item.focus}</b><small>{new Date(item.sessionDate+"T00:00:00").toLocaleDateString()} · {intakes[item.sessionId]?.confirmedRecord?.correctionOpenedAt?"Correction requested":intakes[item.sessionId]?.confirmedRecord?"Confirmed":catchUp?"Catch-up available":item.status==="closed"?"Closed":"Upcoming"}</small></div>{action(item,catchUp)}</article>;
+  const compact=(item:StudentSessionRecord,catchUp=false)=><article key={item.sessionId} className="session-compact-row"><div><b>S{item.sessionNumber} · {item.focus}</b><small>{new Date(item.sessionDate+"T00:00:00").toLocaleDateString()} · {intakes[item.sessionId]?.confirmedRecord?.correctionOpenedAt?"Correction requested":intakes[item.sessionId]?.confirmedRecord?"Confirmed":catchUp?"Catch-up available":item.status==="closed"?"Closed":"Upcoming"}</small></div>{action(item)}</article>;
   return <section id="sessions" className="portal-section session-first-area">
     <SessionsHeading/>
-    <StudentTeacherFeedback client={supabase}/>
+    {teacherFeedback.modal}
     {loading?<p className="empty-state">Loading your Current Session…</p>:error?<p className="empty-state error-state" role="alert">{error}</p>:sessions.length?<>{openSessions.length?openSessions.map(primary=><article key={primary.sessionId} className="current-session-panel">
       <div className="current-session-top"><div><span className="current-session-label">Current Session</span><h2>S{primary.sessionNumber} · {primary.focus}</h2><p>{primary.title}</p></div><span className={"activity-control-status "+primary.status}>{primary.status==="open"?"Current":primary.status==="closed"?"Closed":"Next"}</span></div>
       <div className="current-session-status">
         <div><span>Attendance</span><SessionAttendance session={primary}/></div>
-        <div><span>Session Intake</span><b>{intakes[primary.sessionId]?.confirmedRecord?.correctionOpenedAt?"Correction requested":intakes[primary.sessionId]?.confirmedRecord?"Confirmed":intakes[primary.sessionId]?.isOpen?"Ready":"Not available"}</b></div>
+        <div><span>Progress report</span><b>{intakes[primary.sessionId]?.confirmedRecord?.correctionOpenedAt?"Correction requested":intakes[primary.sessionId]?.confirmedRecord?"Confirmed":intakes[primary.sessionId]?.isOpen?"Ready":"Not available"}</b></div>
       </div>
-      <div className="current-session-action"><div><span>Your evidence journey</span><p>{intakes[primary.sessionId]?.confirmedRecord?.correctionOpenedAt?"Your teacher has reopened this summary for correction.":intakes[primary.sessionId]?.confirmedRecord?"This summary is read-only unless your teacher reopens it.":intakes[primary.sessionId]?.isOpen?"Describe what happened, organise evidence and agree your next step.":"Your Teacher controls when this Intake opens."}</p></div>{action(primary)}</div>
+      <div className="current-session-action"><div><span>Your evidence journey</span><p>{intakes[primary.sessionId]?.confirmedRecord?.correctionOpenedAt?"Your teacher has reopened this summary for correction.":intakes[primary.sessionId]?.confirmedRecord?"This summary is read-only unless your teacher reopens it.":intakes[primary.sessionId]?.isOpen?"Report what you worked on, what you can show, and what you plan to do next.":"Your Teacher controls when this Intake opens."}</p></div>{action(primary)}</div>
     </article>):<p className="empty-state">No session is open right now.</p>}
     {correctionSessions.length>0&&<section className="session-group" aria-label="Summaries to correct"><h3>Summaries to correct</h3><p>Your teacher has reopened these summaries. Review, correct and confirm them again.</p>{correctionSessions.map(item=>compact(item))}</section>}
     {catchup.length>0&&<details className="session-group"><summary><span><b>Catch-up available</b><small>{catchup.length} incomplete Session{catchup.length===1?"":"s"}</small></span><ChevronDown size={20}/></summary><div>{catchup.map(item=>compact(item,true))}</div></details>}
@@ -1048,6 +1052,7 @@ function StudentSessions({intakePilot=false,intakeMode="disabled"}:{intakePilot?
     {selected&&((selected.collectionMode??intakeMode)==="ai"
       ?<SessionIntakeModal session={selected} onClose={()=>setSelected(null)} onSaved={()=>window.dispatchEvent(new CustomEvent("student-session-checkin"))}/>
       :<FormSessionIntakePrototype session={selected} aiEnabled={false} onClose={()=>setSelected(null)} onSaved={()=>window.dispatchEvent(new CustomEvent("student-session-checkin"))}/>)}
+    {!loading&&teacherFeedback.archive(new Set(Object.values(intakes).flatMap(intake=>intake?.confirmedRecord?.intakeId?[intake.confirmedRecord.intakeId]:[])))}
   </section>;
 }
 
