@@ -2382,3 +2382,8 @@ button.danger:hover {
 .session-review-actions{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
 .session-progress-button{background:#2454ff;color:#fff;border-color:#2454ff}
 .session-progress-button:hover{background:#1943d8;border-color:#1943d8;color:#fff}
+
+/* Make required confirmation and the disabled save state explicit. */
+.focused-review .review-attestation.needs-confirmation{color:#b42318;background:#fff4f2;border:1px solid #f2b8b2;border-radius:12px;padding:.85rem 1rem}
+.review-confirmation-required{display:block;margin-top:.3rem;font-size:.85rem}
+.focused-review .review-actions .review-save-button:disabled{background:#e2e6eb;border-color:#e2e6eb;color:#687382;opacity:1;cursor:not-allowed;box-shadow:none;animation:none;transform:none}
