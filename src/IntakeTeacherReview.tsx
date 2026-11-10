@@ -1,3 +1,4 @@
+import {watchVisibleRefresh} from './visibleRefresh';
 import {useEffect,useRef,useState,type ReactNode} from 'react';
 import type {SupabaseClient} from '@supabase/supabase-js';
 import type {IntakeStudentRecord} from './aiSessionIntake';
@@ -28,7 +29,28 @@ export function useStudentTeacherFeedback(client:SupabaseClient){
  const [ackPending,setAckPending]=useState<string|null>(null),[ackError,setAckError]=useState('');
  async function acknowledge(intakeId:string,reviewVersion:number){setAckPending(intakeId);setAckError('');try{const {data,error}=await client.rpc('acknowledge_intake_teacher_feedback',{p_intake_id:intakeId,p_review_version:reviewVersion});if(error)throw error;setRows(current=>current.map(row=>row.intakeId===intakeId&&row.feedback.reviewVersion===reviewVersion?{...row,acknowledgedAt:data}:row));}catch(e){setAckError((e as Error).message||'Could not acknowledge feedback. Please refresh and try again.');}finally{setAckPending(null);}}
 
- useEffect(()=>{let live=true;const refresh=async()=>{setLoading(true);try{const {data,error}=await client.rpc('get_my_intake_teacher_feedback');if(!live)return;if(error)throw error;setRows(data||[]);setError('');}catch{if(live)setError('Teacher feedback could not be loaded. Please retry.');}finally{if(live)setLoading(false);}};refreshRef.current=()=>void refresh();const visible=()=>{if(document.visibilityState==='visible')void refresh();};void refresh();window.addEventListener('student-session-checkin',refreshRef.current);document.addEventListener('visibilitychange',visible);return()=>{live=false;window.removeEventListener('student-session-checkin',refreshRef.current);document.removeEventListener('visibilitychange',visible);};},[client]);
+ useEffect(()=>{
+  let live=true,inFlight=false,queued=false;
+  const refresh=async()=>{
+   if(inFlight){queued=true;return;}
+   inFlight=true;setLoading(true);
+   try{
+    const {data,error}=await client.rpc('get_my_intake_teacher_feedback');
+    if(!live)return;
+    if(error)throw error;
+    setRows(current=>(data as typeof rows||[]).map(row=>{
+     const prior=current.find(item=>item.intakeId===row.intakeId&&item.feedback.reviewVersion===row.feedback.reviewVersion);
+     return {...row,acknowledgedAt:row.acknowledgedAt??prior?.acknowledgedAt};
+    }));setError('');
+   }catch{if(live)setError('Teacher feedback could not be loaded. Please retry.');}
+   finally{inFlight=false;if(live){setLoading(false);if(queued){queued=false;void refresh();}}}
+  };
+  const request=()=>void refresh();
+  refreshRef.current=request;
+  const stop=watchVisibleRefresh(request);
+  request();window.addEventListener('student-session-checkin',request);
+  return()=>{live=false;stop();window.removeEventListener('student-session-checkin',request);};
+ },[client]);
  const open=(id:string)=>{setAckError('');setSelected(id);};
  const row=rows.find(row=>row.intakeId===selected);
  const button=(id?:string)=>id&&rows.some(row=>row.intakeId===id)?<button type="button" className="secondary compact" aria-haspopup="dialog" onClick={()=>open(id)}>View feedback</button>:null;
@@ -44,8 +66,9 @@ export function useStudentTeacherFeedback(client:SupabaseClient){
 
 export function TeacherIntakeReviews({client,sessionId,title,rows,renderSource,onClose}:{client:SupabaseClient;sessionId:string;title:string;rows:ReviewStudent[];renderSource:(row:ReviewStudent)=>ReactNode;onClose:()=>void}){
  const dialog=useRef<HTMLDialogElement>(null),dirty=useRef(false);const [selected,setSelected]=useState(''),[query,setQuery]=useState(''),[filter,setFilter]=useState('all'),[states,setStates]=useState<State[]>([]),[stateError,setStateError]=useState('');
- const refresh=async()=>{const {data,error}=await client.rpc('get_teacher_intake_review_states',{p_session_id:sessionId});if(error)setStateError('Review statuses unavailable. Open a student to retry loading their review.');else{setStates(data||[]);setStateError('');}};
- useEffect(()=>{dialog.current?.showModal();void refresh();const unload=(event:BeforeUnloadEvent)=>{if(dirty.current){event.preventDefault();event.returnValue='';}};window.addEventListener('beforeunload',unload);return()=>window.removeEventListener('beforeunload',unload);},[sessionId]);
+ const statusRequest=useRef(0);
+ const refresh=async()=>{const request=++statusRequest.current;const {data,error}=await client.rpc('get_teacher_intake_review_states',{p_session_id:sessionId});if(request!==statusRequest.current)return;if(error)setStateError('Review statuses unavailable. Open a student to retry loading their review.');else{setStates(data||[]);setStateError('');}};
+ useEffect(()=>{dialog.current?.showModal();void refresh();const stop=watchVisibleRefresh(()=>void refresh());const unload=(event:BeforeUnloadEvent)=>{if(dirty.current){event.preventDefault();event.returnValue='';}};window.addEventListener('beforeunload',unload);return()=>{statusRequest.current++;stop();window.removeEventListener('beforeunload',unload);};},[sessionId]);
  const canLeave=()=>!dirty.current||window.confirm('This review has unsaved changes. Leave and discard unsaved changes?');
  const status=(r:ReviewStudent)=>{if(!r.submitted)return 'Missing intake';const s=states.find(s=>s.intakeId===r.intakeId);if(!s)return 'Pending review';if(s.hasDraft)return 'Draft';if(s.summaryRevision!==(r.summaryRevision??1))return 'Summary changed';return s.status==='follow_up'?'Needs follow-up':'Reviewed';};
  const visible=rows.filter(r=>`${r.studentName} ${r.studentId} ${r.teamName||''}`.toLowerCase().includes(query.toLowerCase())&&(filter==='all'||filter==='pending'&&['Pending review','Draft','Summary changed'].includes(status(r))||filter==='follow_up'&&status(r)==='Needs follow-up'||filter==='reviewed'&&status(r)==='Reviewed'||filter==='missing'&&!r.submitted));
