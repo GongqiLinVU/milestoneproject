@@ -1,3 +1,4 @@
+import {watchVisibleRefresh} from "./visibleRefresh";
 import {TeacherIntakeReviews,useStudentTeacherFeedback} from "./IntakeTeacherReview";
 import {IntakeSummaryCorrection,type SummaryCorrectionState} from "./IntakeSummaryCorrection";
 import {IntakeDiagnosticsDownload} from "./IntakeDiagnosticsDownload";
@@ -1010,9 +1011,11 @@ function StudentSessions({intakePilot=false,intakeMode="disabled"}:{intakePilot?
       if(active){setIntakes(Object.fromEntries(pairs));setError("");setLoading(false);}
     };
     const onRefresh=()=>void refresh();
+    const onVisible=()=>{if(document.visibilityState==="visible")onRefresh();};
+    document.addEventListener("visibilitychange",onVisible);
     void refresh();
     window.addEventListener("student-session-checkin",onRefresh);
-    return()=>{active=false;window.removeEventListener("student-session-checkin",onRefresh);};
+    return()=>{active=false;document.removeEventListener("visibilitychange",onVisible);window.removeEventListener("student-session-checkin",onRefresh);};
   },[]);
   const teacherFeedback=useStudentTeacherFeedback(supabase);
   const openSessions=sessions.filter(item=>item.status==="open").sort((a,b)=>b.sessionNumber-a.sessionNumber);
@@ -2662,6 +2665,23 @@ function StudioSessionControl({
     if(payload&&payload.sessionId&&payload.sessionId!==item.id){setIntakeLoading(false);return;}
     setIntakeData(payload);setIntakeLoading(false);
   }
+  useEffect(()=>{
+    if(!intakeSession||intakeLoading||intakeError)return;
+    const sessionId=intakeSession.id;
+    const requestKey=`${blockId}:${sessionId}`;
+    let active=true,inFlight=false;
+    const stop=watchVisibleRefresh(async()=>{
+      if(inFlight||intakeRequestRef.current!==requestKey)return;
+      inFlight=true;
+      try{
+        const {data,error}=await supabase.rpc("get_teacher_session_intakes",{p_session_id:sessionId});
+        const payload=data as TeacherIntakeData|null;
+        if(active&&intakeRequestRef.current===requestKey&&!error&&payload?.sessionId===sessionId)setIntakeData(payload);
+      }catch{/* Keep the last successful list on a transient background failure. */}
+      finally{inFlight=false;}
+    });
+    return()=>{active=false;stop();};
+  },[blockId,intakeSession?.id,intakeLoading,intakeError]);
   async function reopenSummary(row:TeacherIntakeRow){
     if(!row.intakeId||!intakeSession||!window.confirm(`Reopen the summary for ${row.studentName}? Only this student can correct and reconfirm it. The Session remains unchanged.`))return;
     const requestKey=`${blockId}:${intakeSession.id}`;
