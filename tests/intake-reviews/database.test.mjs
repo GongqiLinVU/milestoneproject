@@ -21,6 +21,8 @@ await db.exec(fs.readFileSync('supabase/migrations/20261105_sprint11_review_stan
 await db.exec(fs.readFileSync('supabase/migrations/20261105_sprint11_review_standards.sql','utf8'));
 await db.exec(fs.readFileSync('supabase/migrations/20261105_sprint11_review_standards_v2.sql','utf8'));
 await db.exec(fs.readFileSync('supabase/migrations/20261105_sprint11_review_teacher_feedback_receipts.sql','utf8'));
+await db.exec(fs.readFileSync('supabase/migrations/20261111_sprint11_review_modes.sql','utf8'));
+await db.exec(fs.readFileSync('supabase/migrations/20261111_sprint11_review_modes.sql','utf8'));
 const draft={status:'follow_up',items:[{category:'Code review',status:'follow_up',observation:'Loading never stops on API failure',recommendation:'Handle errors and allow retry',evidence:'Demonstrate an API failure',privateNote:'do not leak nested extras'}],actions:[{task:'Add error handling',evidence:'Test report',due:'S5',privateNote:'secret'}],privateNote:'do not leak top-level extras'};
 const load=()=>value('select get_intake_teacher_review($1)',[intake]);
 const save=(version,publish=false,summaryRevision=1,content=draft)=>value('select save_intake_teacher_review($1,$2,$3,$4,$5,$6)',[intake,version,summaryRevision,content,'Private teacher note',publish]);
@@ -32,7 +34,7 @@ test('only authorized teachers read and save review drafts; students cannot acce
  await identity(teacher1);const initial=await load();assert.equal(initial.version,0);assert.deepEqual(initial.studentRecord,record);
  const saved=await save(0);assert.equal(saved.version,1);assert.equal(saved.privateNote,'Private teacher note');assert.equal(saved.published,null);
  await owner();const prior=await value('select to_jsonb(r) from intake_teacher_reviews r where intake_id=$1',[intake]);await db.exec(fs.readFileSync('supabase/migrations/20261105_sprint11_quick_review_choices.sql','utf8'));assert.deepEqual(await value('select to_jsonb(r) from intake_teacher_reviews r where intake_id=$1',[intake]),prior);await db.exec(fs.readFileSync('supabase/migrations/20261105_sprint11_review_standards.sql','utf8'));assert.deepEqual(await value('select to_jsonb(r) from intake_teacher_reviews r where intake_id=$1',[intake]),prior);
- await owner();await db.exec(fs.readFileSync('supabase/migrations/20261105_sprint11_review_standards_v2.sql','utf8'));
+ await owner();await db.exec(fs.readFileSync('supabase/migrations/20261105_sprint11_review_standards_v2.sql','utf8'));await db.exec(fs.readFileSync('supabase/migrations/20261111_sprint11_review_modes.sql','utf8'));
  await identity(student1,'student');assert.deepEqual(await feedback(),[]);
 });
 test('publication exposes only allow-listed feedback to its student; draft updates preserve last publication',async()=>{
@@ -98,4 +100,25 @@ test('history exposes earlier student claims and published feedback, never priva
  await identity(teacher1);const context=await value('select get_intake_teacher_review($1)',[second]);assert.equal(context.history.length,1);assert.equal(context.history[0].sessionNumber,1);assert.ok(context.history[0].feedback);assert.equal(JSON.stringify(context.history).includes('Private teacher note'),false);
  await owner();await db.query("update student_accounts set status='disabled' where auth_user_id=$1",[student1]);await identity(student1,'student');assert.deepEqual(await feedback(),[]);
  await owner();await db.query('delete from teacher_class_memberships where user_id=$1',[teacher1]);await identity(teacher1);await assert.rejects(load(),/not assigned/);await assert.rejects(save(5),/not assigned/);
+});
+
+test('session mode defaults quick and remains class scoped',async()=>{
+ await identity();assert.equal(await value('select session_review_mode($1)',[session]),'quick');
+ assert.equal(await value("select session_review_mode($1,'detailed')",[session]),'detailed');
+ await identity(teacher2);await assert.rejects(value('select session_review_mode($1)',[session]),/not assigned/);
+ await identity(student1,'student');await assert.rejects(value("select session_review_mode($1,'quick')",[session]),/not assigned/);
+});
+test('quick publication permits no criteria, preserves privacy and rejects hidden detailed content',async()=>{
+ await identity();
+ const context=await load();
+ const quick={mode:'quick',quickNotes:'Progress read; discuss testing next class.',status:'reviewed',items:[],actions:[],privateNote:'hidden-extra'};
+ const result=await save(context.version,true,2,quick);
+ assert.equal(result.published.mode,'quick');assert.equal(result.published.quickNotes,quick.quickNotes);
+ assert.equal(JSON.stringify(result.published).includes('hidden-extra'),false);
+ assert.equal(JSON.stringify(result.published).includes('Private teacher note'),false);
+ await assert.rejects(save(result.version,true,2,{...quick,mode:'invalid'}),/Invalid review mode/);
+ await assert.rejects(save(result.version,true,2,{...quick,items:draft.items}),/Keep detailed mode/);
+ await assert.rejects(save(result.version,true,2,{...quick,mode:'detailed'}),/Add an observation/);
+ const detailed=await save(result.version,true,2,{...draft,mode:'detailed'});
+ assert.equal(detailed.published.mode,'detailed');assert.equal(detailed.published.items.length,1);
 });
