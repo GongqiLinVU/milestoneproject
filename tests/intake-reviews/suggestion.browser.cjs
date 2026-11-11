@@ -10,7 +10,7 @@ test('explicit generation, regeneration, adoption, autosave, publication and stu
  await page.route('**/api/review-suggestion',async route=>{calls++;await route.fulfill({json:{suggestion:{progress:'S4: Student reports API integration.',feedback:'Student reports API work; demonstrate it in this review.',questions:['Can you demonstrate the API?'],currentSession:4,baselineSession:3,generatedAt:new Date().toISOString()}}});});
  await page.addScriptTag({content:fs.readFileSync('.test-build/review-preview.js','utf8')});
  await page.getByRole('button',{name:/Alex Taylor/}).click();
- const feedback=page.getByLabel('Optional review feedback',{exact:true});await feedback.waitFor();assert.equal(calls,0);
+ const feedback=page.getByLabel('Optional review feedback',{exact:true});await feedback.waitFor();assert.equal(calls,0);assert.equal(await page.locator('.review-columns').evaluate(e=>getComputedStyle(e).display),'block');await page.getByRole('button',{name:'View sources',exact:true}).click();await page.getByRole('region',{name:'Review sources'}).waitFor();await page.getByRole('button',{name:'Close sources ×',exact:true}).click();
  await feedback.fill('Teacher observed login only.');
  await page.getByRole('button',{name:'Generate suggestion',exact:true}).click();await page.getByRole('button',{name:'Update suggestion',exact:true}).waitFor();
  assert.equal(await feedback.inputValue(),'Teacher observed login only.');

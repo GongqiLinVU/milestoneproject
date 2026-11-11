@@ -17,3 +17,10 @@ test('denied scope never calls provider; malformed output is not adopted',async(
 test('invalid IDs and wrong methods make no external calls',async()=>{
  global.fetch=async()=>{throw Error('must not fetch')};assert.equal((await invoke({intakeId:'wrong'})).code,403);assert.equal((await invoke({},'GET')).code,405);
 });
+
+test('verbose or internal-field output is rejected without replacing teacher feedback',async()=>{
+ for(const progress of ['x'.repeat(541),'S3: E1 available_now']){
+  global.fetch=async url=>String(url).includes('database.example.invalid')?new Response(JSON.stringify({currentSession:5,baselineSession:3,updates:[]})):new Response(JSON.stringify({output_text:JSON.stringify({progress,feedback:'Student reports work; verify it.',questions:['Show the work?']})}));
+  const r=await invoke();assert.equal(r.code,502);assert.match(r.body.error,/too detailed/);
+ }
+});
