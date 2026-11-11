@@ -17,3 +17,49 @@ dialog.student-feedback-dialog{width:min(760px,calc(100% - 2rem));max-height:85d
 dialog.student-feedback-dialog::backdrop{background:rgb(18 32 43 / 55%)}
 
 .review-suggestion{padding:16px;border:1px solid #b6d8d6;border-radius:12px;background:#f3faf9}.review-suggestion h4{margin:12px 0 6px}.review-suggestion-text{white-space:pre-wrap}.review-optional-criteria{margin:16px 0}.review-optional-criteria>summary{cursor:pointer;font-weight:600}
+
+/* Conversation-first workspace: compact roster, one reading/editing column. */
+.intake-review-dialog .review-topbar{height:76px;padding:14px 22px}
+.intake-review-dialog .review-workspace{height:calc(100% - 76px);grid-template-columns:220px minmax(0,1fr)}
+.intake-review-dialog .review-roster{padding:14px 10px}
+.intake-review-dialog .review-roster nav{gap:4px}
+.intake-review-dialog .review-roster nav button{padding:10px 12px;gap:3px;border-radius:9px;font-size:13px;line-height:1.35;min-height:0}
+.intake-review-dialog .review-roster nav button b{font-size:13px}
+.intake-review-dialog .review-roster nav button small{font-size:11px}
+.intake-review-dialog .review-roster-status{font-size:10px}
+.intake-review-dialog .review-content{position:relative;padding:18px 24px 0;scroll-padding-bottom:140px}
+.intake-review-dialog .review-content>.review-student-header{margin-bottom:14px}
+.intake-review-dialog .review-student-header h3{font-size:23px;margin:3px 0}
+.intake-review-dialog .review-single-column{display:block;max-width:1050px;margin:0 auto}
+.intake-review-dialog .review-editor{padding:18px 22px;border-radius:12px}
+.intake-review-dialog .review-fields{margin:0}
+.intake-review-dialog .review-settings{margin:0 0 12px}
+.intake-review-dialog .review-settings summary{font-size:12px;color:#576e62}
+.intake-review-dialog .review-settings label{margin-top:10px}
+.intake-review-dialog .review-suggestion{padding:14px 16px;background:#f4f9f7;border-color:#d7e5dd;margin-bottom:16px}
+.review-preparation-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.review-preparation-toolbar small{display:block;font-size:11px;color:#64786d;margin-top:4px}
+.intake-review-dialog .review-preparation-toolbar h4{margin:0}
+.review-attribution{font-size:11px;color:#64786d;margin:8px 0}
+.review-guide-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.intake-review-dialog .review-guide-grid h4{font-size:14px;margin:10px 0 6px}
+.review-guide-grid ul,.review-guide-grid ol{padding-left:20px;margin:0;font-size:13px;line-height:1.5}
+.review-guide-grid li{margin-bottom:7px;overflow-wrap:anywhere}
+.intake-review-dialog .review-generation-details{margin-top:8px;font-size:12px;line-height:1.5}
+.intake-review-dialog .review-generation-details summary{font-size:11px;color:#64786d}
+.review-feedback-suggestion{border-left:3px solid #a4c6b5;padding:2px 14px;margin:12px 0 16px}
+.intake-review-dialog .review-feedback-suggestion h4{font-size:14px}
+.review-feedback-suggestion .review-suggestion-text{font-size:13px;line-height:1.55;margin:8px 0}
+.intake-review-dialog .review-editor textarea[aria-label="Optional review feedback"]{min-height:130px;line-height:1.5;font-size:14px}
+.intake-review-dialog .review-savebar{position:sticky;bottom:0;z-index:3;padding:10px 0 12px;margin:14px 0 0;background:#fff;box-shadow:0 -6px 12px #ffffffed}
+.intake-review-dialog .review-savebar>p{margin:0 0 6px}
+.intake-review-dialog .review-savebar>small{margin-top:6px}
+.intake-review-dialog .review-source-drawer{position:absolute;right:12px;top:68px;width:min(520px,calc(100% - 24px));max-height:calc(100% - 85px);overflow:auto;z-index:5;box-shadow:0 12px 40px #173b2933;padding:20px;box-sizing:border-box}
+@media(max-width:1000px){.intake-review-dialog .review-workspace{grid-template-columns:190px minmax(0,1fr)}.intake-review-dialog .review-content{padding:14px 16px 0}.review-guide-grid{grid-template-columns:1fr;gap:8px}}
+@media(max-width:650px){.intake-review-dialog .review-workspace{display:flex}.intake-review-dialog .review-topbar{height:76px;padding:12px}.intake-review-dialog .review-roster{max-height:190px}.intake-review-dialog .review-roster nav button{min-width:150px}.intake-review-dialog .review-content{padding:12px 10px 0;flex:1;min-height:0}.intake-review-dialog .review-editor{padding:14px}.intake-review-dialog .review-student-header{flex-direction:row;align-items:center}.review-preparation-toolbar{flex-wrap:wrap}.review-guide-grid{grid-template-columns:1fr}.intake-review-dialog .review-source-drawer{top:65px;max-height:75dvh}.intake-review-dialog .review-savebar{padding-bottom:12px}}
+
+/* Keep actions outside the scrolling body. */
+.intake-review-dialog .review-content{display:flex;flex-direction:column;overflow:hidden;min-height:0}
+.intake-review-dialog .review-single-column{width:100%;flex:1;min-height:0;overflow:auto;box-sizing:border-box;padding-bottom:14px!important}
+.intake-review-dialog .review-content>.review-savebar{position:static;flex-shrink:0;width:100%;max-width:1050px;margin:0 auto;padding:10px 4px;box-sizing:border-box;background:#f3f6f5}
+.intake-review-dialog .review-content>.review-student-header{flex-shrink:0}
