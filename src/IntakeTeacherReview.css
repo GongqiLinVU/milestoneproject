@@ -15,3 +15,5 @@
 
 dialog.student-feedback-dialog{width:min(760px,calc(100% - 2rem));max-height:85dvh;overflow:auto;margin:auto;padding:clamp(1rem,4vw,2rem);background:white}
 dialog.student-feedback-dialog::backdrop{background:rgb(18 32 43 / 55%)}
+
+.review-suggestion{padding:16px;border:1px solid #b6d8d6;border-radius:12px;background:#f3faf9}.review-suggestion h4{margin:12px 0 6px}.review-suggestion-text{white-space:pre-wrap}.review-optional-criteria{margin:16px 0}.review-optional-criteria>summary{cursor:pointer;font-weight:600}
