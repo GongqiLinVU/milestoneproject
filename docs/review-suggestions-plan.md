@@ -20,3 +20,10 @@ Validation: production build and API TypeScript compilation passed. 15 database 
 - New output is bounded and internal record IDs/enums rejected. Legacy suggestions retain full original under disclosures; regeneration is optional and teacher prose remains untouched.
 - Build and 19 database/API checks pass. Browser layout/interaction rehearsal remains unverified: local Chromium socket permissions are blocked and cloud browser cannot connect to the local preview. Do not treat screenshots or visual QA as completed.
 - No migration required for this follow-up. No production deployment or paid model call performed.
+
+## Fixed focus categories and student-facing feedback
+Shared vocabulary: Delivery, Implementation, Understanding, Testing, Evidence, Contribution, Documentation, Communication. AI chooses only from this dictionary; tags carry no automatic grade or risk rating. Generated feedback addresses the student in categorized issue/clarification/recommendation bullets, separate from the teacher conversation guide. Missing evidence is uncertainty, never proof of failure. No current teacher verification is invented.
+
+Teachers explicitly adopt points, edit labels/text/sections, remove or add points, and publish. Regeneration never replaces teacher points. Existing prose and criteria are retained. Students receive the same categories and definitions only after publication. Prior published points naturally feed the next review baseline. No automated resolution or ranking is introduced.
+
+Rollout: apply 20261114_review_focus_feedback.sql before frontend deployment. It updates only the existing save RPC validation and publication allow-list, no table changes or historical rewrites. Legacy prose-only reviews continue to work. No production DB operations or paid provider calls during implementation. Build and database/API/render tests pass; interactive browser/visual verification remains outstanding due to the previously identified environment limitations.

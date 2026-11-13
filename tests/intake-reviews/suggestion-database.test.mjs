@@ -26,6 +26,8 @@ await db.exec(fs.readFileSync('supabase/migrations/20261111_sprint11_review_mode
 
 await db.exec(fs.readFileSync('supabase/migrations/20261112_review_suggestion_context.sql','utf8'));
 await db.exec(fs.readFileSync('supabase/migrations/20261112_review_suggestion_context.sql','utf8'));
+await db.exec(fs.readFileSync('supabase/migrations/20261114_review_focus_feedback.sql','utf8'));
+await db.exec(fs.readFileSync('supabase/migrations/20261114_review_focus_feedback.sql','utf8'));
 const ids={1:intake};
 await owner();
 for(const n of [2,3,4,5,6]){
@@ -59,4 +61,20 @@ test('regenerating current suggestion preserves prose and earlier publication',a
 test('corrected or reopened baseline is not treated as completed current verification',async()=>{
  await owner();await db.query('update student_session_intakes set summary_revision=2 where id=$1',[ids[3]]);
  await identity(teacher1);assert.equal((await ctx()).baselineSession,null);
+});
+
+test('structured focus points round-trip to only the intended student with safe fields',async()=>{
+ await identity(teacher1);
+ const points=[{focus:'Testing',kind:'clarification',text:'Explain the failed-request test result.',secret:'private-extra'},{focus:'Testing',kind:'recommendation',text:'Record one failed-request test.'}];
+ const saved=await publish(6,{...prose,quickNotes:'',feedbackPoints:points});
+ assert.equal(saved.published.feedbackPoints.length,2);assert.equal(saved.published.feedbackPoints[0].focus,'Testing');assert.equal(saved.published.feedbackPoints[0].secret,undefined);
+ await identity(student1,'student');const rows=await value('select get_my_intake_teacher_feedback()');assert.ok(rows.some(r=>r.feedback.feedbackPoints?.length===2));assert.equal(JSON.stringify(rows).includes('private-extra'),false);
+ await identity(student2,'student');assert.deepEqual(await value('select get_my_intake_teacher_feedback()'),[]);
+});
+test('dictionary and section validation rejects unknown values and empty published points',async()=>{
+ await identity(teacher1);
+ for(const point of [{focus:'Bad student',kind:'issue',text:'No'},{focus:'Testing',kind:'failed',text:'No'},{focus:'Testing',kind:'issue',text:''}]){
+  await assert.rejects(publish(6,{...prose,feedbackPoints:[point]},true,1),/feedback/);
+ }
+ await assert.rejects(publish(6,{...prose,mode:'quick',feedbackPoints:[{focus:'Evidence',kind:'clarification',text:'Show the work.'}]},true,1),/detailed mode/);
 });

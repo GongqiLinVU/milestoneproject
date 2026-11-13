@@ -18,7 +18,7 @@
     "test:student-enrolment": "node --test tests/student-enrolment/*.test.mjs",
     "test:intake-diagnostics": "tsc --outDir .test-build --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck src/intakeDiagnostics.ts && node --test tests/intake-diagnostics/*.test.mjs",
     "test:intake-corrections": "tsc --outDir .test-build --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck src/intakeCorrectionReview.ts && node --test tests/intake-corrections/*.test.mjs",
-    "test:review-suggestions": "tsc --outDir .test-api --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck --rootDir . api/review-suggestion.ts && node --test tests/intake-reviews/database.test.mjs tests/intake-reviews/suggestion-database.test.mjs tests/intake-reviews/suggestion-api.test.mjs"
+    "test:review-suggestions": "tsc --outDir .test-api --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck --rootDir . api/review-suggestion.ts src/ReviewFocusFeedback.tsx --jsx react-jsx && node --test tests/intake-reviews/database.test.mjs tests/intake-reviews/suggestion-database.test.mjs tests/intake-reviews/suggestion-api.test.mjs tests/intake-reviews/focus-feedback.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.8",
