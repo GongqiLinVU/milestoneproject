@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { classLabel, type TeachingClass } from "./TeacherAdministration";
 import defaults from "./defaultAssessment.json";
+import { AssessmentStructureEditor } from "./AssessmentStructureEditor";
 import {
   allNodes,
   leaves,
@@ -9,7 +10,6 @@ import {
   totalMaximum,
   subtotal,
   parseMark,
-  validatePlan,
   gradeStatus,
   blankComment,
   type AssessmentPlan,
@@ -66,7 +66,7 @@ export function MarksLedger({
     [selected, setSelected] = useState(""),
     [commentItem, setCommentItem] = useState(""),
     [statuses, setStatuses] = useState<Record<string, string>>({}),
-    [configText, setConfigText] = useState(JSON.stringify(defaults, null, 2)),
+    [structureDirty, setStructureDirty] = useState(false),
     [configBusy, setConfigBusy] = useState(false),
     [exportFiltered, setExportFiltered] = useState(false),
     [aiBusy, setAIBusy] = useState(false),
@@ -81,6 +81,7 @@ export function MarksLedger({
     modal = useRef<HTMLDialogElement>(null),
     request = useRef(0),
     blocked = useRef(new Set<string>());
+  const structureDirtyRef = useRef(false);
   const selectedRef = useRef(selected);
   selectedRef.current = selected;
   const plan = ledger?.plan || null;
@@ -89,8 +90,14 @@ export function MarksLedger({
     current.current.some(
       (r) => saved.current.get(r.rosterId) !== fingerprint(r),
     );
+  const hasUnsaved = () => dirty() || structureDirtyRef.current;
   function reportDirty() {
-    onUnsaved(dirty());
+    onUnsaved(hasUnsaved());
+  }
+  function reportStructureDirty(value: boolean) {
+    structureDirtyRef.current = value;
+    setStructureDirty(value);
+    reportDirty();
   }
   function setCurrent(next: DraftRow[]) {
     current.current = next;
@@ -110,7 +117,6 @@ export function MarksLedger({
       const value = data as Ledger;
       setLedger(value);
       setView("overview");
-      setConfigText(JSON.stringify(value.plan || defaults, null, 2));
       const loaded = value.rows.map((r) => ({
         ...r,
         inputs: Object.fromEntries(
@@ -136,7 +142,7 @@ export function MarksLedger({
     alive.current = true;
     void load();
     const before = (e: BeforeUnloadEvent) => {
-      if (dirty()) {
+      if (hasUnsaved()) {
         e.preventDefault();
         e.returnValue = "";
       }
@@ -280,13 +286,11 @@ export function MarksLedger({
     if (selected && !modal.current?.open) modal.current?.showModal();
     if (!selected && modal.current?.open) modal.current.close();
   }, [selected]);
-  async function configure() {
+  async function configure(cfg: AssessmentPlan) {
     if (!ledger) return;
     setConfigBusy(true);
     setError("");
     try {
-      const cfg = JSON.parse(configText) as AssessmentPlan;
-      validatePlan(cfg);
       const { error } = await client.rpc("set_assessment_plan", {
         p_block_id: blockId,
         p_expected_version: ledger.planVersion,
@@ -294,14 +298,12 @@ export function MarksLedger({
       });
       if (error) throw error;
       await load();
-    } catch (e) {
-      setError((e as Error).message);
     } finally {
       setConfigBusy(false);
     }
   }
   function changeClass(id: string) {
-    if (dirty() || aiBusy) {
+    if (hasUnsaved() || aiBusy) {
       setError("Save or reconcile current edits before switching class.");
       return;
     }
@@ -309,7 +311,7 @@ export function MarksLedger({
   }
   function exportData(format: "csv" | "xlsx") {
     try {
-      if (dirty()) throw Error("Save all edits before exporting.");
+      if (hasUnsaved()) throw Error("Save all edits before exporting.");
       const cls = blocks.find((b) => b.id === blockId);
       if (!plan || !cls) return;
       const matrix = exportMatrix(
@@ -384,7 +386,7 @@ export function MarksLedger({
   }
   function reloadSaved() {
     if (
-      !dirty() ||
+      !hasUnsaved() ||
       window.confirm(
         "Discard local edits and reload saved records? Copy any edits you need to reconcile before continuing.",
       )
@@ -482,44 +484,16 @@ export function MarksLedger({
                 ? "Editable before marking"
                 : "Setup required"}
           </summary>
-          <p>
-            Stable IDs identify items. Groups derive maxima from children. New
-            class snapshots do not change existing classes. Structure locks when
-            the first record is saved.
-          </p>
-          <fieldset disabled={ledger.locked || configBusy || dirty()}>
-            <label>
-              Start from a template
-              <select
-                defaultValue=""
-                onChange={(e) => {
-                  const t = ledger.templates.find(
-                    (t) => t.id === e.target.value,
-                  );
-                  if (t) setConfigText(JSON.stringify(t.config, null, 2));
-                }}
-              >
-                <option value="">Choose a template…</option>
-                {ledger.templates.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.title}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Class assessment configuration (JSON)
-              <textarea
-                value={configText}
-                maxLength={20000}
-                rows={12}
-                onChange={(e) => setConfigText(e.target.value)}
-              />
-            </label>
-            <button type="button" onClick={() => void configure()}>
-              {configBusy ? "Saving…" : "Save class structure"}
-            </button>
-          </fieldset>
+          <AssessmentStructureEditor
+            key={ledger.planVersion}
+            initial={ledger.plan || defaults}
+            saved={!!ledger.plan}
+            locked={ledger.locked}
+            disabled={dirty()}
+            busy={configBusy}
+            onSave={configure}
+            onDirty={reportStructureDirty}
+          />
         </details>
       )}
       {plan && (
@@ -622,7 +596,7 @@ export function MarksLedger({
               <button
                 type="button"
                 className="secondary compact"
-                disabled={dirty()}
+                disabled={hasUnsaved()}
                 onClick={() => exportData("xlsx")}
               >
                 Excel
@@ -630,7 +604,7 @@ export function MarksLedger({
               <button
                 type="button"
                 className="secondary compact"
-                disabled={dirty()}
+                disabled={hasUnsaved()}
                 onClick={() => exportData("csv")}
               >
                 CSV
@@ -642,6 +616,12 @@ export function MarksLedger({
             automatically. Final totals appear only when every required item is
             entered.
           </p>
+          {structureDirty && (
+            <p role="status" className="marks-guidance">
+              Save or discard structure changes before entering marks or
+              exporting.
+            </p>
+          )}
           <div className="marks-table-scroll">
             <table className="marks-table">
               <thead>
@@ -695,7 +675,7 @@ export function MarksLedger({
                             <input
                               type="text"
                               inputMode="decimal"
-                              disabled={configBusy}
+                              disabled={configBusy || structureDirty}
                               aria-label={`${r.name}: ${n.label} /${n.maxScore}`}
                               value={r.inputs[n.id] || ""}
                               placeholder="—"
