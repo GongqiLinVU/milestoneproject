@@ -146,3 +146,90 @@ test("invalid scores do not save, failed saves preserve edits and require explic
     await act(async () => m.tree.unmount());
   }
 });
+
+test("unsaved visual structure changes guard class switching, marking and export until discarded", async () => {
+  const m = await mount(async () => {
+    throw Error("No save expected");
+  });
+  try {
+    const name = () =>
+      m.tree.root.findByProps({ "aria-label": "Name: Final report" });
+    await act(async () =>
+      name().props.onChange({ target: { value: "Final portfolio" } }),
+    );
+    assert.equal(m.changes.at(-1), true);
+    assert.equal(m.input().props.disabled, true);
+    assert.equal(m.button("Excel").props.disabled, true);
+    const classSelect = m.tree.root
+      .findAllByType("select")
+      .find((n) => n.props.value === "block");
+    await act(async () =>
+      classSelect.props.onChange({ target: { value: "different-class" } }),
+    );
+    assert.ok(
+      JSON.stringify(m.tree.toJSON()).includes(
+        "Save or reconcile current edits before switching class",
+      ),
+    );
+    await act(async () =>
+      m.button("Discard structure changes").props.onClick(),
+    );
+    assert.equal(m.changes.at(-1), false);
+    assert.equal(m.input().props.disabled, false);
+    assert.equal(m.button("Excel").props.disabled, false);
+  } finally {
+    await act(async () => m.tree.unmount());
+  }
+});
+
+test("first-time visual setup saves through the existing versioned RPC and then opens the ledger", async () => {
+  let snapshot = null,
+    tree;
+  const writes = [];
+  const client = {
+    rpc: async (name, args) => {
+      if (name === "get_assessment_ledger")
+        return {
+          data: {
+            ...structuredClone(ledger),
+            plan: snapshot,
+            planVersion: snapshot ? 1 : 0,
+          },
+        };
+      assert.equal(name, "set_assessment_plan");
+      writes.push(args);
+      snapshot = args.p_config;
+      return { data: {} };
+    },
+  };
+  await act(async () => {
+    tree = create(
+      React.createElement(MarksLedger, {
+        client,
+        blockId: block.id,
+        blocks: [block],
+        onBlockChange() {},
+        onUnsaved() {},
+      }),
+    );
+  });
+  try {
+    assert.equal(
+      tree.root.findAllByProps({ className: "marks-table" }).length,
+      0,
+    );
+    const save = tree.root
+      .findAllByType("button")
+      .find((b) => b.children.join("") === "Use this assessment structure");
+    await act(async () => save.props.onClick());
+    assert.equal(writes.length, 1);
+    assert.equal(writes[0].p_expected_version, 0);
+    assert.deepEqual(writes[0].p_config, plan);
+    assert.equal(
+      tree.root.findAllByProps({ className: "marks-table" }).length,
+      1,
+    );
+  } finally {
+    await act(async () => tree.unmount());
+  }
+});
