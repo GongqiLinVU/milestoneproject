@@ -1,4 +1,4 @@
-import {hasClassAccess} from './classAccess.js';
+import {hasClassAccess} from './_classAccess.js';
 import { createClient } from "@supabase/supabase-js";
 
 const MAX_BODY_BYTES = 20_000;

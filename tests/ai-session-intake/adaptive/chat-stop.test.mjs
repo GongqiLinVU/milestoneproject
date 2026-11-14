@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {chatStopDecision,chatStopSaveReason} from '../../../.test-api/src/intakeChatStop.js';
-import {questionBudget,signQuestion} from '../../../.test-api/api/intakeQuestionMeta.js';
+import {questionBudget,signQuestion} from '../../../.test-api/api/_intakeQuestionMeta.js';
 import {buildHarnessObservations} from '../../../.test-build/intakeObservations.js';
 import {sourceConversation} from '../../../.test-build/intakePolicy.js';
 const empty={clarificationsUsed:0,usedTargets:[],unverifiedQuestions:0};

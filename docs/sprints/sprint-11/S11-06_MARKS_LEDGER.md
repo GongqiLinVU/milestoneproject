@@ -76,3 +76,7 @@ Migration: [`20261114_block_assessment_ledger.sql`](../../../supabase/migrations
 ### Recovery
 
 If migration fails, the transaction rolls back. Fix the reported dependency/SQL issue and rerun the same migration. If application smoke fails, revert the application deployment while leaving the additive tables and recorded marks intact. Do not delete marks, class plans or audit records as a rollback strategy. Export any recorded results before any separately reviewed data repair.
+
+## Deployment follow-up — 14 November
+
+The teacher confirmed that the migration ran successfully and authorized merge. The initial Vercel preview failed. Log access required a Vercel login unavailable to this workspace. Inspection found 13 root API source files, including three shared utilities that Vercel would count as functions. Marked the utilities with the documented underscore prefix and updated imports/tests, leaving 10 actual function entries and preserving the public endpoint paths. No further database migration is required. Re-run API regressions and wait for a successful Vercel preview before merging; confirm production status afterwards.

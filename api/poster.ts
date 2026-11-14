@@ -1,4 +1,4 @@
-import {hasClassAccess} from './classAccess.js';
+import {hasClassAccess} from './_classAccess.js';
 import { createClient } from "@supabase/supabase-js";
 import { PDFDocument } from "pdf-lib";
 import { randomUUID } from "node:crypto";

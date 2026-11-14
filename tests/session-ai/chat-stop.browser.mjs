@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises
 import {decideTurn} from '../../.test-build/intakeHarness.js';
 import {createServer} from 'vite';import {db,A,sid,identity,owner} from './fixture.mjs';
 import {chatStopDecision,chatStopSaveReason} from '../../.test-api/src/intakeChatStop.js';
-import {questionBudget,signQuestion} from '../../.test-api/api/intakeQuestionMeta.js';
+import {questionBudget,signQuestion} from '../../.test-api/api/_intakeQuestionMeta.js';
 const {chromium}=await import(process.env.S10_PLAYWRIGHT_MODULE||'playwright');
 const root=fileURLToPath(new URL('../../',import.meta.url));const entry=root+'src/chat-stop-smoke.tsx';
 await owner();await db.query("update studio_sessions set intake_mode_override='ai',intake_access='open' where id=$1",[sid(7)]);
