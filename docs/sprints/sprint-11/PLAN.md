@@ -49,3 +49,19 @@ Joseph created 2B4 and approved removing Block ownership from project definition
 ## S11-05 — Returning-student enrolment (approved 1 November)
 
 Joseph approved Student ID lookup in Add student: exact match, explicit profile confirmation, existing-account reuse, unassigned team/project, no duplicate current enrolment, and a visible block for another Active class. No match continues manual creation; accountless histories can be prepared later. Add checked teacher-only RPCs, isolated tests and additive migration; preserve all prior history and credentials. See [S11-05_STUDENT_ENROLMENT.md](S11-05_STUDENT_ENROLMENT.md).
+
+
+## S11-06 — Configurable block marks and feedback ledger (approved 14 November 2026)
+
+Add an independent teacher Marks & Feedback workspace scoped to the selected teaching class/block, not a session. Manual grades only. Default NIT3004 structure: Progress report 10; Final report children Code 25, Technical document 30, User manual 5, Peer Review 5, Poster 5; Presentation 20. Group and total maxima are derived, never separately editable.
+
+Use versioned JSON assessment templates and per-class snapshots; relational student/item marks and teacher comments; immutable append audit records. Stable item IDs survive label/order changes. First release includes the default template and a pre-marking configuration editor, with structure locked once a student record exists. No retroactive template propagation or automatic mark scaling.
+
+Delivery stages:
+1. Class roster ledger, configurable view columns, keyboard-friendly manual inputs, blank versus zero, server-side bounds, missing subtotals, safe per-record versioned saves, teacher-only comments and audit history.
+2. XLSX and UTF-8-BOM CSV for all/filtered students using the same configuration; safe text cells and quoting; no internal notes, AI drafts or intake transcripts.
+3. Explicit teacher-triggered final-feedback assistance from block-wide student claims, published teacher reviews and teacher marking notes. Keep generated draft separate from final comments and marks; no automatic grading/publication; adopted text remains editable. Reports uploaded in ChatGPT are not automatically available in the app.
+
+Acceptance: class/student isolation; invalid/unknown/group marks rejected; blank and zero round-trip; stale tab conflict; immutable audit; template snapshot lock and alternate structures; computed totals and filter export parity; XLSX openability/CSV formula safety; AI authority separation; no leakage of private notes or drafts. Production build and focused offline database/export/component tests. Browser visual QA must be reported honestly if environment remains blocked. Add additive migration and rollout steps; do not touch production DB, call paid models, merge or deploy without the existing release process.
+
+Status: implemented and validated locally; draft PR / staging migration and browser smoke verification precede release. The 20 focused tests and production build pass; an independently opened XLSX preserves IDs, blanks, zero and multiline comments. No production writes or paid model calls. See [S11-06_MARKS_LEDGER.md](S11-06_MARKS_LEDGER.md) for architecture, operation, evidence limits and migration/recovery checklist. S11-06 is independent of unmerged review-focus PR #119.

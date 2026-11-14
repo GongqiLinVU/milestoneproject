@@ -1,0 +1,399 @@
+.marks-workspace {
+  color: #20332e;
+  min-width: 0;
+  padding: 8px 0 24px;
+}
+.marks-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: start;
+  margin-bottom: 22px;
+}
+.marks-heading h2 {
+  font-size: 30px;
+  margin: 5px 0;
+}
+.marks-heading p,
+.marks-guidance {
+  font-size: 13px;
+  color: #65776e;
+  line-height: 1.6;
+  margin: 6px 0;
+}
+.marks-workspace label {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 12px;
+}
+.marks-workspace select,
+.marks-workspace input,
+.marks-workspace textarea {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
+  padding: 9px 11px;
+  border: 1px solid #ccd9d3;
+  border-radius: 8px;
+  background: white;
+  color: #20332e;
+  font: inherit;
+}
+.marks-workspace textarea {
+  width: 100%;
+  line-height: 1.6;
+  resize: vertical;
+}
+.marks-config {
+  margin: 16px 0;
+  padding: 14px 0;
+  border-top: 1px solid #dce5df;
+  border-bottom: 1px solid #dce5df;
+  font-size: 13px;
+}
+.marks-config summary {
+  cursor: pointer;
+  font-weight: 650;
+}
+.marks-config p {
+  max-width: 850px;
+  line-height: 1.6;
+  color: #65776e;
+}
+.marks-config fieldset {
+  border: 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+}
+.marks-config textarea {
+  font-family: monospace;
+}
+.marks-summary {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #dce5df;
+  padding: 4px 0 20px;
+  margin: 16px 0;
+}
+.marks-summary div {
+  display: grid;
+  gap: 3px;
+}
+.marks-summary b {
+  font-size: 26px;
+  font-weight: 650;
+}
+.marks-summary span {
+  font-size: 12px;
+  color: #63776c;
+}
+.marks-views {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+.marks-views button {
+  background: white;
+  color: #4c6556;
+  border: 1px solid #ccd9d3;
+  border-radius: 8px;
+  padding: 9px 15px;
+  font-size: 13px;
+}
+.marks-views button[aria-pressed="true"] {
+  background: #255f49;
+  border-color: #255f49;
+  color: white;
+}
+.marks-toolbar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: end;
+  margin: 20px 0 10px;
+}
+.marks-toolbar > label:first-child {
+  flex: 1;
+  min-width: 180px;
+}
+.marks-export {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+.marks-export label,
+.marks-confirm {
+  display: flex !important;
+  align-items: center;
+  gap: 8px !important;
+  font-weight: 400 !important;
+}
+.marks-export input,
+.marks-confirm input {
+  width: 16px !important;
+  height: 16px;
+  accent-color: #255f49;
+}
+.marks-table-scroll {
+  overflow: auto;
+  max-height: 65dvh;
+  border: 1px solid #dce5df;
+  border-radius: 12px;
+  background: white;
+  margin-top: 14px;
+}
+.marks-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  font-size: 13px;
+  min-width: 750px;
+}
+.marks-table th,
+.marks-table td {
+  border-bottom: 1px solid #e4ebe7;
+  padding: 12px 14px;
+  text-align: left;
+  vertical-align: middle;
+  white-space: normal;
+  min-width: 95px;
+}
+.marks-table thead th {
+  background: #edf3ef;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  font-weight: 650;
+}
+.marks-table th:first-child {
+  min-width: 180px;
+  max-width: 230px;
+  position: sticky;
+  left: 0;
+  background: white;
+  z-index: 1;
+}
+.marks-table thead th:first-child {
+  background: #edf3ef;
+  z-index: 3;
+}
+.marks-table th:nth-child(2),
+.marks-table td:nth-child(2) {
+  min-width: 40px;
+  text-align: center;
+}
+.marks-table small {
+  display: block;
+  font-size: 11px;
+  color: #64776c;
+  margin-top: 5px;
+  font-weight: 400;
+}
+.marks-table input {
+  width: 88px;
+  padding: 9px;
+  font-variant-numeric: tabular-nums;
+}
+.marks-table input:focus {
+  outline: 2px solid #2d7054;
+  outline-offset: 1px;
+}
+.marks-table tbody tr:hover td,
+.marks-table tbody tr:hover th {
+  background: #f7faf8;
+}
+.marks-student {
+  border: 0 !important;
+  background: transparent !important;
+  color: #254f40 !important;
+  padding: 0 !important;
+  font-size: 13px !important;
+  font-weight: 650 !important;
+  text-align: left;
+  white-space: normal !important;
+}
+.marks-table td:last-child {
+  max-width: 230px;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.marks-error {
+  color: #a03527 !important;
+  line-height: 1.6;
+}
+.marks-detail {
+  width: min(920px, 96vw);
+  height: 90dvh;
+  max-height: 94dvh;
+  border: 1px solid #d5e1da;
+  border-radius: 16px;
+  padding: 0;
+  color: #20332e;
+  overflow: hidden;
+  background: white;
+}
+.marks-detail[open] {
+  display: flex;
+  flex-direction: column;
+}
+.marks-detail::backdrop {
+  background: #162b2566;
+}
+.marks-detail-heading {
+  padding: 20px 24px;
+  border-bottom: 1px solid #dce5df;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+.marks-detail-heading h3 {
+  font-size: 23px;
+  margin: 0;
+}
+.marks-detail-heading p {
+  font-size: 12px;
+  color: #64776c;
+  margin: 5px 0 0;
+}
+.marks-detail-body {
+  overflow: auto;
+  min-height: 0;
+  flex: 1;
+  padding: 20px 24px;
+  display: grid;
+  align-content: start;
+  gap: 18px;
+}
+.marks-score-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #dce5df;
+}
+.marks-score-strip span {
+  font-size: 12px;
+  color: #65776e;
+}
+.marks-score-strip b {
+  display: block;
+  color: #20332e;
+  font-size: 17px;
+  margin-top: 5px;
+}
+.marks-detail-footer {
+  padding: 14px 24px;
+  border-top: 1px solid #dce5df;
+  background: #f6f9f7;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.marks-detail-footer > span {
+  font-size: 12px;
+  color: #617568;
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+.marks-ai-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.marks-ai-toolbar small {
+  font-size: 12px;
+  color: #65776e;
+}
+.marks-feedback-text {
+  white-space: pre-wrap;
+  line-height: 1.65;
+  font-size: 14px;
+}
+.marks-detail details {
+  font-size: 13px;
+}
+.marks-detail summary {
+  cursor: pointer;
+  font-weight: 650;
+}
+.marks-detail pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: #f5f8f6;
+  padding: 14px;
+  font-size: 11px;
+}
+.marks-detail textarea {
+  font: inherit;
+}
+.marks-workspace button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.marks-workspace :focus-visible {
+  outline: 3px solid #3565d4;
+  outline-offset: 2px;
+}
+@media (max-width: 700px) {
+  .marks-heading {
+    flex-direction: column;
+  }
+  .marks-toolbar {
+    align-items: stretch;
+  }
+  .marks-toolbar > label {
+    flex: 1;
+  }
+  .marks-export {
+    margin-left: 0;
+  }
+  .marks-summary {
+    gap: 20px;
+  }
+  .marks-detail {
+    width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
+  .marks-detail-heading,
+  .marks-detail-body {
+    padding: 16px;
+  }
+  .marks-detail-footer {
+    padding: 12px;
+    flex-wrap: wrap;
+  }
+  .marks-detail-footer > span {
+    flex-basis: 100%;
+  }
+  .marks-table-scroll {
+    max-height: 60dvh;
+  }
+}
+.marks-audit-entry {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid #dce5df;
+  border-radius: 8px;
+  line-height: 1.6;
+}
+.marks-audit-entry p {
+  margin: 0;
+  color: #64776c;
+  font-size: 12px;
+}
+.marks-audit-entry ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}

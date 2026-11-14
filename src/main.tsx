@@ -1,3 +1,4 @@
+import {MarksLedger} from "./MarksLedger";
 import {watchVisibleRefresh} from "./visibleRefresh";
 import {TeacherIntakeReviews,useStudentTeacherFeedback} from "./IntakeTeacherReview";
 import {IntakeSummaryCorrection,type SummaryCorrectionState} from "./IntakeSummaryCorrection";
@@ -2928,7 +2929,10 @@ function Admin() {
     useState<ActivityTable>("team_health_checks");
   const [teachingBlocks, setTeachingBlocks] = useState<TeachingBlock[]>([]);
   const [selectedBlockId, setSelectedBlockId] = useState("");
-  const [adminView, setAdminView] = useState<"overview" | "roster" | "projects" | "sessions" | "posters" | "records" | "staff">("overview");
+  const [adminView, setAdminView] = useState<"overview" | "roster" | "projects" | "sessions" | "posters" | "records" | "marks" | "staff">("overview");
+  const [marksUnsaved,setMarksUnsaved]=useState(false);
+  function changeAdminView(next:typeof adminView){if(next===adminView)return;if(adminView==='marks'&&marksUnsaved){window.alert('Marks have unsaved changes. Wait for saving or reconcile errors before leaving.');return;}setAdminView(next);}
+
   const [activityWorkspace, setActivityWorkspace] = useState<"weekly" | "records" | "presentation">("records");
   const [records, setRecords] = useState<ActivityRecord[]>([]);
   const [editRecord, setEditRecord] = useState<ActivityRecord | null>(null);
@@ -3383,6 +3387,7 @@ function Admin() {
   }
 
   async function signOut() {
+    if(marksUnsaved){setAuthMessage("Marks have unsaved changes. Save or reconcile them before signing out.");return;}
     setAuthBusy(true);
     setAuthMessage("");
     const { error } = await supabase.auth.signOut();
@@ -3691,18 +3696,20 @@ function Admin() {
       )}
       <div className="admin-shell">
         <aside className="admin-sidebar" aria-label="Teacher dashboard sections">
-          <button type="button" className={adminView === "overview" ? "active" : ""} onClick={() => setAdminView("overview")}><ListChecks size={18}/><span><b>Overview</b><small>Class snapshot</small></span></button>
-          <button type="button" className={adminView === "roster" ? "active" : ""} onClick={() => setAdminView("roster")}><Users size={18}/><span><b>Class roster</b><small>Students and teams</small></span></button>
-          <button type="button" className={adminView === "projects" ? "active" : ""} onClick={() => setAdminView("projects")}><Rocket size={18}/><span><b>Project setup</b><small>Shared library & assignments</small></span></button>
-          <button type="button" className={adminView === "sessions" ? "active" : ""} onClick={() => setAdminView("sessions")}><ClipboardCheck size={18}/><span><b>Session check-in</b><small>Open attendance</small></span></button>
-          <button type="button" className={adminView === "posters" ? "active" : ""} onClick={() => setAdminView("posters")}><Presentation size={18}/><span><b>Poster Gallery</b><small>Week 3 publish</small></span></button>
-          <button type="button" className={adminView === "records" ? "active" : ""} onClick={() => setAdminView("records")}><ClipboardCheck size={18}/><span><b>Activity management</b><small>Weeks, records & order</small></span></button>
-          {sessionUser.isSuperadmin&&<button type="button" className={adminView==='staff'?'active':''} onClick={()=>setAdminView('staff')}><Users size={18}/><span><b>Classes & teachers</b><small>Administrator</small></span></button>}
+          <button type="button" className={adminView === "overview" ? "active" : ""} onClick={() => changeAdminView("overview")}><ListChecks size={18}/><span><b>Overview</b><small>Class snapshot</small></span></button>
+          <button type="button" className={adminView === "roster" ? "active" : ""} onClick={() => changeAdminView("roster")}><Users size={18}/><span><b>Class roster</b><small>Students and teams</small></span></button>
+          <button type="button" className={adminView === "projects" ? "active" : ""} onClick={() => changeAdminView("projects")}><Rocket size={18}/><span><b>Project setup</b><small>Shared library & assignments</small></span></button>
+          <button type="button" className={adminView === "sessions" ? "active" : ""} onClick={() => changeAdminView("sessions")}><ClipboardCheck size={18}/><span><b>Session check-in</b><small>Open attendance</small></span></button>
+          <button type="button" className={adminView === "posters" ? "active" : ""} onClick={() => changeAdminView("posters")}><Presentation size={18}/><span><b>Poster Gallery</b><small>Week 3 publish</small></span></button>
+          <button type="button" className={adminView === "records" ? "active" : ""} onClick={() => changeAdminView("records")}><ClipboardCheck size={18}/><span><b>Activity management</b><small>Weeks, records & order</small></span></button>
+          <button type="button" className={adminView === "marks" ? "active" : ""} onClick={() => changeAdminView("marks")}><ClipboardCheck size={18}/><span><b>Marks &amp; Feedback</b><small>Block assessment ledger</small></span></button>
+          {sessionUser.isSuperadmin&&<button type="button" className={adminView==='staff'?'active':''} onClick={()=>changeAdminView('staff')}><Users size={18}/><span><b>Classes & teachers</b><small>Administrator</small></span></button>}
           <a href="/" className="admin-sidebar-home">Back to student portal</a>
         </aside>
         <div className="admin-content">
       {sessionUser.isSuperadmin&&adminView==='staff'&&<TeacherAdministration client={supabase} classes={teachingBlocks} onChanged={()=>void initialiseDashboard()}/>}
       {teachingBlocks.length===0&&adminView!=='staff'&&<p className="admin-alert">No class is assigned to this account yet. Ask your administrator to assign your class.</p>}
+      {adminView==='marks'&&selectedBlockId&&<MarksLedger key={selectedBlockId} client={supabase} blockId={selectedBlockId} blocks={teachingBlocks} onBlockChange={setSelectedBlockId} onUnsaved={setMarksUnsaved}/>}
       <section hidden={adminView !== "overview"} className="admin-overview" aria-labelledby="overview-title">
         <div className="admin-overview-heading">
           <div>

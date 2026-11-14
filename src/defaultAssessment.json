@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "name": "NIT3004 Assessment",
+  "items": [
+    {
+      "id": "progress_report",
+      "label": "Progress report",
+      "maxScore": 10
+    },
+    {
+      "id": "final_report",
+      "label": "Final report",
+      "commentEnabled": true,
+      "children": [
+        {
+          "id": "code",
+          "label": "Code",
+          "maxScore": 25
+        },
+        {
+          "id": "technical_document",
+          "label": "Technical document",
+          "maxScore": 30
+        },
+        {
+          "id": "user_manual",
+          "label": "User manual",
+          "maxScore": 5
+        },
+        {
+          "id": "peer_review",
+          "label": "Peer Review",
+          "maxScore": 5
+        },
+        {
+          "id": "poster",
+          "label": "Poster",
+          "maxScore": 5
+        }
+      ]
+    },
+    {
+      "id": "presentation",
+      "label": "Presentation",
+      "maxScore": 20
+    }
+  ]
+}
