@@ -1,4 +1,4 @@
-import {callerClient,uuid} from './classAccess.js';
+import {callerClient,uuid} from './_classAccess.js';
 import {parseReviewSuggestion,isCompactSuggestion} from '../src/reviewSuggestion.js';
 export default async function handler(req:any,res:any){
  res.setHeader('Cache-Control','no-store');

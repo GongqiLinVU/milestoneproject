@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {reserveUsage} from '../../../.test-api/api/intakeUsage.js';
+import {reserveUsage} from '../../../.test-api/api/_intakeUsage.js';
 test('advisory ledger row retains trusted scope, configured rates and conservative provision',async()=>{
  let row;
  const admin={rpc:async()=>({error:{message:'Block AI budget reached'}}),from:table=>{assert.equal(table,'session_intake_ai_usage');return {insert:r=>{row=r;return {select:()=>({single:async()=>({data:{id:'ledger-id'}})})}}}}};

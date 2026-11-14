@@ -1,9 +1,9 @@
-import {questionBudget,signQuestion} from './intakeQuestionMeta.js';
+import {questionBudget,signQuestion} from './_intakeQuestionMeta.js';
 import {chatStopDecision,CHAT_STOP_VERSION,MAX_CHAT_CLARIFICATIONS} from '../src/intakeChatStop.js';
 import {conversationSchema,CONVERSATION_INSTRUCTIONS,RECORD_INSTRUCTIONS,CONVERSATION_VERSION} from '../src/intakeConversation.js';
 import {REVIEW_COLLECTION_INSTRUCTIONS, REVIEW_EFFICIENCY_INSTRUCTIONS, REVIEW_CONTRACT_VERSION} from '../src/intakeReviewContract.js';
 import {intakeRecordSchema,finalRecordSchema} from '../src/intakeRecordSchema.js';
-import { usagePricing, requestIdentity, reserveUsage, finishUsage, reportedModelLabel } from "./intakeUsage.js";
+import { usagePricing, requestIdentity, reserveUsage, finishUsage, reportedModelLabel } from "./_intakeUsage.js";
 import { effectiveCollectionMode } from "../src/sessionCollection.js";
 import { createClient } from "@supabase/supabase-js";
 

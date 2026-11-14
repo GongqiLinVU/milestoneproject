@@ -18,10 +18,12 @@
     "test:student-enrolment": "node --test tests/student-enrolment/*.test.mjs",
     "test:intake-diagnostics": "tsc --outDir .test-build --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck src/intakeDiagnostics.ts && node --test tests/intake-diagnostics/*.test.mjs",
     "test:intake-corrections": "tsc --outDir .test-build --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck src/intakeCorrectionReview.ts && node --test tests/intake-corrections/*.test.mjs",
-    "test:review-suggestions": "tsc --outDir .test-api --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck --rootDir . api/review-suggestion.ts && node --test tests/intake-reviews/database.test.mjs tests/intake-reviews/suggestion-database.test.mjs tests/intake-reviews/suggestion-api.test.mjs"
+    "test:review-suggestions": "tsc --outDir .test-api --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck --rootDir . api/review-suggestion.ts && node --test tests/intake-reviews/database.test.mjs tests/intake-reviews/suggestion-database.test.mjs tests/intake-reviews/suggestion-api.test.mjs",
+    "test:assessment": "tsc --outDir .test-build --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck src/assessment.ts src/assessmentExport.ts && tsc --outDir .test-api --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck --rootDir . api/assessment-feedback.ts && node --test tests/assessment/*.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.8",
+    "fflate": "^0.8.3",
     "lucide-react": "^0.468.0",
     "pdf-lib": "^1.17.1",
     "react": "^19.0.0",
@@ -33,6 +35,7 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.3.4",
+    "react-test-renderer": "^19.2.8",
     "typescript": "^5.7.2",
     "vite": "^6.0.5"
   }

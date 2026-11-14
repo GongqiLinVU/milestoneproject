@@ -2,7 +2,7 @@ import {test,after} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {db,A,block,sid,owner,request} from './fixture.mjs';
-import {reserveUsage,finishUsage} from '../../.test-api/api/intakeUsage.js';
+import {reserveUsage,finishUsage} from '../../.test-api/api/_intakeUsage.js';
 after(()=>db.close());
 const admin={rpc:async(name,args)=>{try{await db.exec('set role service_role');const entries=Object.entries(args);const q='select public.'+name+'('+entries.map(([k],i)=>k+'=> $'+(i+1)).join(',')+') result';return {data:(await db.query(q,entries.map(([,v])=>v))).rows[0].result};}catch(e){return {error:{message:e.message}};}},from:()=>({insert:row=>({select:()=>({single:async()=>{try{const keys=Object.keys(row);const result=await db.query('insert into public.session_intake_ai_usage('+keys.join(',')+') values ('+keys.map((_,i)=>'$'+(i+1)).join(',')+') returning id',Object.values(row));return {data:result.rows[0]};}catch(e){return {error:{message:e.message}};}}})})})};
 test('actual service-role ledger retains advisory attempt and settles with zero reference budget',async()=>{

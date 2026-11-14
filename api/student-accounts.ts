@@ -1,4 +1,4 @@
-import {hasClassAccess,callerClient} from './classAccess.js';
+import {hasClassAccess,callerClient} from './_classAccess.js';
 import { createClient } from "@supabase/supabase-js";
 import { randomBytes } from "node:crypto";
 
