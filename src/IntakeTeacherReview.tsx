@@ -451,6 +451,10 @@ export function TeacherIntakeReviews({
     }
   };
   useEffect(() => {
+    const bodyOverflow = document.body.style.overflow;
+    const rootOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
     dialog.current?.showModal();
     void refresh();
     const stop = watchVisibleRefresh(() => void refresh());
@@ -462,6 +466,8 @@ export function TeacherIntakeReviews({
     };
     window.addEventListener("beforeunload", unload);
     return () => {
+      document.body.style.overflow = bodyOverflow;
+      document.documentElement.style.overflow = rootOverflow;
       statusRequest.current++;
       stop();
       window.removeEventListener("beforeunload", unload);

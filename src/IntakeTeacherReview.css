@@ -63,3 +63,8 @@ dialog.student-feedback-dialog::backdrop{background:rgb(18 32 43 / 55%)}
 .intake-review-dialog .review-single-column{width:100%;flex:1;min-height:0;overflow:auto;box-sizing:border-box;padding-bottom:14px!important}
 .intake-review-dialog .review-content>.review-savebar{position:static;flex-shrink:0;width:100%;max-width:1050px;margin:0 auto;padding:10px 4px;box-sizing:border-box;background:#f3f6f5}
 .intake-review-dialog .review-content>.review-student-header{flex-shrink:0}
+
+/* Bound both panes to the dialog; only their inner content may scroll. */
+.intake-review-dialog[open]{display:flex;flex-direction:column;box-sizing:border-box;overscroll-behavior:contain}
+.intake-review-dialog .review-workspace{height:auto;flex:1;min-height:0;overflow:hidden;grid-template-rows:minmax(0,1fr)}
+.intake-review-dialog .review-roster{min-height:0;overscroll-behavior:contain}
