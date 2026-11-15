@@ -19,7 +19,8 @@
     "test:intake-diagnostics": "tsc --outDir .test-build --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck src/intakeDiagnostics.ts && node --test tests/intake-diagnostics/*.test.mjs",
     "test:intake-corrections": "tsc --outDir .test-build --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck src/intakeCorrectionReview.ts && node --test tests/intake-corrections/*.test.mjs",
     "test:review-suggestions": "tsc --outDir .test-api --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck --rootDir . api/review-suggestion.ts && node --test tests/intake-reviews/database.test.mjs tests/intake-reviews/suggestion-database.test.mjs tests/intake-reviews/suggestion-api.test.mjs",
-    "test:assessment": "tsc --outDir .test-build --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck src/assessment.ts src/assessmentExport.ts && tsc --outDir .test-api --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck --rootDir . api/assessment-feedback.ts && node --test tests/assessment/*.test.mjs"
+    "test:assessment": "tsc --outDir .test-build --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck src/assessment.ts src/assessmentExport.ts && tsc --outDir .test-api --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck --rootDir . api/assessment-feedback.ts && node --test tests/assessment/*.test.mjs",
+    "test:core-review": "tsc --outDir .test-build --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck src/coreReview.ts && tsc --outDir .test-api --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck --rootDir . api/review-suggestion.ts && node --test tests/core-review/*.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.8",
