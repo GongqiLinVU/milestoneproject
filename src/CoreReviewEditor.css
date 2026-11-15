@@ -3,6 +3,14 @@
   flex-direction: column;
   min-width: 0;
 }
+.intake-review-dialog .core-review-body {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  align-content: start;
+  scroll-padding-block: 12px;
+}
 .core-review-body {
   max-width: 960px;
   width: 100%;
