@@ -98,7 +98,7 @@ function NodeDialog({
           Close ×
         </button>
       </header>
-      <div className="review-workspace">
+      <div className="node-review-workspace">
         <CoreReviewEditor
           client={client}
           reviewId={review.id}

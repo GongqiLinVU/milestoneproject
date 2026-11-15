@@ -366,6 +366,14 @@ test("work queue opens an independent review for a student without any session i
       false,
     );
     assert.equal(global.document.body.style.overflow, "hidden");
+    assert.equal(
+      tree.root.findAllByProps({ className: "node-review-workspace" }).length,
+      1,
+    );
+    assert.equal(
+      tree.root.findAllByProps({ className: "review-workspace" }).length,
+      0,
+    );
   } finally {
     await close(tree);
   }
