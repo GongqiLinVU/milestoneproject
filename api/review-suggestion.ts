@@ -1,3 +1,4 @@
+import { handleStudioReviewGeneration } from "../server/studioReviewGeneration.js";
 import { handleCoreReviewGeneration } from "../server/coreReviewGeneration.js";
 import { callerClient, uuid } from "./_classAccess.js";
 import {
@@ -5,6 +6,8 @@ import {
   isCompactSuggestion,
 } from "../src/reviewSuggestion.js";
 export default async function handler(req: any, res: any) {
+  if (req.body?.reviewId || req.body?.action === "session-check")
+    return handleStudioReviewGeneration(req, res);
   if (req.body?.action === "prepare" || req.body?.action === "feedback")
     return handleCoreReviewGeneration(req, res);
   res.setHeader("Cache-Control", "no-store");

@@ -26,27 +26,25 @@ export default async function handler(req: any, res: any) {
       return res
         .status(403)
         .json({ error: "Assessment context unavailable or access denied." });
-    if (!context.teacherMarkingNotes?.trim() && !context.sessions?.length)
-      return res
-        .status(400)
-        .json({
-          error:
-            "Add marking notes or session evidence before generating feedback.",
-        });
+    if (
+      !context.teacherMarkingNotes?.trim() &&
+      !context.sessions?.length &&
+      !context.teacherNodeReviews?.length
+    )
+      return res.status(400).json({
+        error:
+          "Add marking notes or session evidence before generating feedback.",
+      });
     if (!process.env.OPENAI_API_KEY)
-      return res
-        .status(503)
-        .json({
-          error:
-            "AI feedback is not configured. You can write feedback manually.",
-        });
+      return res.status(503).json({
+        error:
+          "AI feedback is not configured. You can write feedback manually.",
+      });
     if (JSON.stringify(context).length > 80000)
-      return res
-        .status(413)
-        .json({
-          error:
-            "Evidence is too large. Summarise your observations in marking notes and write feedback manually.",
-        });
+      return res.status(413).json({
+        error:
+          "Evidence is too large. Summarise your observations in marking notes and write feedback manually.",
+      });
     const response = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       signal: AbortSignal.timeout(45000),
@@ -93,12 +91,9 @@ export default async function handler(req: any, res: any) {
       }),
     });
     if (!response.ok)
-      return res
-        .status(502)
-        .json({
-          error:
-            "AI draft unavailable. Marks and final feedback are unchanged.",
-        });
+      return res.status(502).json({
+        error: "AI draft unavailable. Marks and final feedback are unchanged.",
+      });
     const body = await response.json();
     const text =
       body.output_text ||
@@ -136,11 +131,9 @@ export default async function handler(req: any, res: any) {
     if (!draft || draft.length > 6000) throw Error("Invalid draft");
     return res.status(200).json({ draft });
   } catch {
-    return res
-      .status(502)
-      .json({
-        error:
-          "AI draft unavailable. Marks and final feedback are unchanged; try again or write feedback manually.",
-      });
+    return res.status(502).json({
+      error:
+        "AI draft unavailable. Marks and final feedback are unchanged; try again or write feedback manually.",
+    });
   }
 }

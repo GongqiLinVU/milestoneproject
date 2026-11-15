@@ -1,5 +1,6 @@
+import { SessionProgressReview } from "./SessionAIReview";
 import type { ReviewSuggestion } from "./reviewSuggestion";
-import { CoreReviewEditor, CoreFeedbackView } from "./CoreReviewEditor";
+import { CoreFeedbackView } from "./CoreReviewEditor";
 import type { CorePoints } from "./coreReview";
 import { watchVisibleRefresh } from "./visibleRefresh";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -512,7 +513,7 @@ export function TeacherIntakeReviews({
     >
       <header className="review-topbar">
         <div>
-          <span className="review-kicker">Classroom review</span>
+          <span className="review-kicker">Session progress · AI check</span>
           <h2 id="intake-review-heading">{title}</h2>
         </div>
         <button
@@ -572,7 +573,7 @@ export function TeacherIntakeReviews({
           {!visible.length && <p>No matching students.</p>}
         </aside>
         {student?.intakeId ? (
-          <CoreReviewEditor
+          <SessionProgressReview
             key={student.intakeId}
             client={client}
             student={student}
@@ -588,9 +589,9 @@ export function TeacherIntakeReviews({
             <span className="review-kicker">Discuss · Demonstrate · Agree</span>
             <h3>Review the work together.</h3>
             <p>
-              Select a student to compare their progress statement with what
-              they demonstrate, record your observation and confirm the core
-              feedback. Next steps are optional.
+              Select a student to view their session progress and AI check.
+              Teacher reviews are now managed through independent nodes in the
+              Review tab.
             </p>
             <p>
               Drafts are teacher-only. Published feedback is visible to that
