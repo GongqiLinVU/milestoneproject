@@ -1,3 +1,5 @@
+import {ReviewHub} from "./ReviewHub";
+import {SessionAIReview,StudentTeacherNodeReviews} from "./SessionAIReview";
 import {MarksLedger} from "./MarksLedger";
 import {watchVisibleRefresh} from "./visibleRefresh";
 import {TeacherIntakeReviews,useStudentTeacherFeedback} from "./IntakeTeacherReview";
@@ -861,7 +863,7 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
   if(saved?.correctionOpenedAt)return <IntakeSummaryCorrection client={supabase} intake={saved} onClose={onClose} onSaved={()=>{onSaved();onClose();}}/>;
   return createPortal(<div className="chat-intake-page"><header className="chat-intake-header"><button type="button" className="secondary compact" onClick={closeNow}>← Sessions</button><div><span>{saved?"Session history":"Your progress check-in"}</span><h2>S{session.sessionNumber} · {session.focus}</h2></div><div className="chat-header-actions">{showIntakeDebug&&debugEvents.length>0&&<><button type="button" className="secondary compact" onClick={()=>setHarnessOpen(true)}>Visual debug · {debugEvents.length}</button><button type="button" className="secondary compact" onClick={()=>setDebugOpen(true)}>Intake debug · {debugEvents.length}</button></>}<button type="button" className={`evidence-drawer-trigger ${evidenceUpdates&&!evidenceOpen?"has-updates":""}`} onClick={()=>evidenceOpen?setEvidenceOpen(false):openEvidence([])}>{stage<4&&!saved?"Conversation notes":"Evidence chain"} {evidenceUpdates&&!evidenceOpen?<b>{evidenceUpdates} new</b>:null}</button></div></header>
     <main className="chat-intake-shell"><section className="chat-thread" aria-label="Session Intake conversation"><div className="chat-messages">
-      {loading?<p className="empty-state">Loading Session Intake…</p>:saved?<IntakeRecordSummary record={saved.studentRecord} confirmedAt={saved.confirmedAt}/>:!context?.isOpen?<div className="chat-message assistant"><p>This Session Intake is closed. Your Teacher controls when it is available.</p></div>:<>
+      {loading?<p className="empty-state">Loading Session Intake…</p>:saved?<><IntakeRecordSummary record={saved.studentRecord} confirmedAt={saved.confirmedAt}/><SessionAIReview client={supabase} intakeId={saved.intakeId}/></>:!context?.isOpen?<div className="chat-message assistant"><p>This Session Intake is closed. Your Teacher controls when it is available.</p></div>:<>
         {stage<4&&<div className="chat-round-guide" style={{marginBottom:"1.25rem",padding:"1rem 1.2rem",borderRadius:16,background:"#edf3ff",color:"#273c67",lineHeight:1.5}}><strong>{start.guideTitle}</strong><p style={{margin:".3rem 0 0"}}>{start.guideLead} We’ll ask at most {MAX_CHAT_CLARIFICATIONS} follow-up questions. You can review and finish whenever you’re ready.</p></div>}
         {stage<4&&previousCheckin&&<details className="intake-last-checkin" aria-label="Your last confirmed check-in"><summary>Your last check-in</summary><dl>{previousCheckin.role&&<div><dt>Your part last time</dt><dd>{previousCheckin.role}</dd></div>}{previousCheckin.action&&<div><dt>Your planned next step</dt><dd>{previousCheckin.action}</dd></div>}</dl><p>Roles and plans can change. Tell us if anything is different now.</p></details>}
         <details className={`chat-transcript ${stage===4?"archived":"live"}`} open={stage!==4}><summary>View conversation</summary>{turns.map((turn,index)=><div key={index} className={`chat-message ${turn.actor==="student"?"student":"assistant"}`}><span>{turn.actor==="student"?"You":"Intake assistant"}{turn.source==="llm"?<b className="llm-message-badge">LLM</b>:turn.source==="fallback"?<b className="llm-message-badge">Fallback</b>:null}</span><p>{index===0&&turn.purpose==="session starting point"?start.question:turn.text}</p>{turn.actor==="student"&&turn.evidenceChanges?.length?<button type="button" className="message-evidence-update" onClick={()=>openEvidence(turn.evidenceChanges||[])}><b>{turn.evidenceChanges.length} evidence field{turn.evidenceChanges.length===1?"":"s"} updated</b><span>{turn.evidenceChanges.map(value=>value.replace("_"," ")).join(" · ")} · View changes</span></button>:null}</div>)}
@@ -981,6 +983,7 @@ function LegacyStudentSessions({intakePilot=false}:{intakePilot?:boolean}) {
     </div> : <p className="empty-state">No sessions have been prepared for this block yet.</p>}
     {intakeHistory.length>0 && <details className="session-group intake-history-group"><summary><span><b>Confirmed Session Intake history</b><small>{intakeHistory.length} confirmed{intakeHistory.some(item=>correctionOpen[item.sessionId])?" · correction requested":" · read-only"}</small></span><ChevronDown size={20}/></summary><div>{intakeHistory.map(item=><article key={item.sessionId} className="session-compact-row"><div><b>S{item.sessionNumber} · {item.focus}</b><small>{correctionOpen[item.sessionId]?"Correction requested":"Confirmed · read-only"}</small></div><div className="session-review-actions"><button type="button" className="secondary compact" onClick={()=>setHistoryView(item)}>{correctionOpen[item.sessionId]?"View / correct summary":"View summary"}</button>{teacherFeedback.button(intakeIds[item.sessionId])}</div></article>)}</div></details>}
     {!loading&&teacherFeedback.archive(new Set(Object.values(intakeIds).filter((id):id is string=>Boolean(id))))}
+    <StudentTeacherNodeReviews client={supabase}/>
     {teacherFeedback.modal}
     {historyView&&<FormSessionIntakePrototype session={historyView} aiEnabled={false} onClose={()=>setHistoryView(null)} onSaved={()=>window.dispatchEvent(new CustomEvent("student-session-checkin"))}/>}
     {trackSession&&<SessionWorkTrackModal readOnly={(trackSession.collectionMode??"disabled")!=="disabled"} session={trackSession} onClose={()=>setTrackSession(null)} onSaved={()=>window.dispatchEvent(new CustomEvent("student-session-checkin"))}/>}
@@ -1036,6 +1039,7 @@ function StudentSessions({intakePilot=false,intakeMode="disabled"}:{intakePilot?
   const compact=(item:StudentSessionRecord,catchUp=false)=><article key={item.sessionId} className="session-compact-row"><div><b>S{item.sessionNumber} · {item.focus}</b><small>{new Date(item.sessionDate+"T00:00:00").toLocaleDateString()} · {intakes[item.sessionId]?.confirmedRecord?.correctionOpenedAt?"Correction requested":intakes[item.sessionId]?.confirmedRecord?"Confirmed":catchUp?"Catch-up available":item.status==="closed"?"Closed":"Upcoming"}</small></div>{action(item)}</article>;
   return <section id="sessions" className="portal-section session-first-area">
     <SessionsHeading/>
+    <StudentTeacherNodeReviews client={supabase}/>
     {teacherFeedback.modal}
     {loading?<p className="empty-state">Loading your Current Session…</p>:error?<p className="empty-state error-state" role="alert">{error}</p>:sessions.length?<>{openSessions.length?openSessions.map(primary=><article key={primary.sessionId} className="current-session-panel">
       <div className="current-session-top"><div><span className="current-session-label">Current Session</span><h2>S{primary.sessionNumber} · {primary.focus}</h2><p>{primary.title}</p></div><span className={"activity-control-status "+primary.status}>{primary.status==="open"?"Current":primary.status==="closed"?"Closed":"Next"}</span></div>
@@ -2929,9 +2933,10 @@ function Admin() {
     useState<ActivityTable>("team_health_checks");
   const [teachingBlocks, setTeachingBlocks] = useState<TeachingBlock[]>([]);
   const [selectedBlockId, setSelectedBlockId] = useState("");
-  const [adminView, setAdminView] = useState<"overview" | "roster" | "projects" | "sessions" | "posters" | "records" | "marks" | "staff">("overview");
+  const [adminView, setAdminView] = useState<"overview" | "roster" | "projects" | "sessions" | "posters" | "records" | "marks" | "reviews" | "staff">("overview");
   const [marksUnsaved,setMarksUnsaved]=useState(false);
-  function changeAdminView(next:typeof adminView){if(next===adminView)return;if(adminView==='marks'&&marksUnsaved){window.alert('Marks have unsaved changes. Wait for saving or reconcile errors before leaving.');return;}setAdminView(next);}
+  const [reviewUnsaved,setReviewUnsaved]=useState(false);
+  function changeAdminView(next:typeof adminView){if(next===adminView)return;if(reviewUnsaved){window.alert("Reviews have unsaved changes. Save or discard them before leaving.");return;}if(adminView==='marks'&&marksUnsaved){window.alert('Marks have unsaved changes. Wait for saving or reconcile errors before leaving.');return;}setAdminView(next);}
 
   const [activityWorkspace, setActivityWorkspace] = useState<"weekly" | "records" | "presentation">("records");
   const [records, setRecords] = useState<ActivityRecord[]>([]);
@@ -3387,6 +3392,7 @@ function Admin() {
   }
 
   async function signOut() {
+    if(reviewUnsaved){setAuthMessage("Reviews have unsaved changes. Save or discard them before signing out.");return;}
     if(marksUnsaved){setAuthMessage("Marks have unsaved changes. Save or reconcile them before signing out.");return;}
     setAuthBusy(true);
     setAuthMessage("");
@@ -3702,6 +3708,7 @@ function Admin() {
           <button type="button" className={adminView === "sessions" ? "active" : ""} onClick={() => changeAdminView("sessions")}><ClipboardCheck size={18}/><span><b>Session check-in</b><small>Open attendance</small></span></button>
           <button type="button" className={adminView === "posters" ? "active" : ""} onClick={() => changeAdminView("posters")}><Presentation size={18}/><span><b>Poster Gallery</b><small>Week 3 publish</small></span></button>
           <button type="button" className={adminView === "records" ? "active" : ""} onClick={() => changeAdminView("records")}><ClipboardCheck size={18}/><span><b>Activity management</b><small>Weeks, records & order</small></span></button>
+          <button type="button" className={adminView === "reviews" ? "active" : ""} onClick={() => changeAdminView("reviews")}><ClipboardCheck size={18}/><span><b>Review</b><small>Teacher nodes & history</small></span></button>
           <button type="button" className={adminView === "marks" ? "active" : ""} onClick={() => changeAdminView("marks")}><ClipboardCheck size={18}/><span><b>Marks &amp; Feedback</b><small>Block assessment ledger</small></span></button>
           {sessionUser.isSuperadmin&&<button type="button" className={adminView==='staff'?'active':''} onClick={()=>changeAdminView('staff')}><Users size={18}/><span><b>Classes & teachers</b><small>Administrator</small></span></button>}
           <a href="/" className="admin-sidebar-home">Back to student portal</a>
@@ -3709,6 +3716,7 @@ function Admin() {
         <div className="admin-content">
       {sessionUser.isSuperadmin&&adminView==='staff'&&<TeacherAdministration client={supabase} classes={teachingBlocks} onChanged={()=>void initialiseDashboard()}/>}
       {teachingBlocks.length===0&&adminView!=='staff'&&<p className="admin-alert">No class is assigned to this account yet. Ask your administrator to assign your class.</p>}
+      {adminView==='reviews'&&selectedBlockId&&<ReviewHub key={selectedBlockId} client={supabase} blockId={selectedBlockId} blocks={teachingBlocks} onBlockChange={setSelectedBlockId} onUnsaved={setReviewUnsaved}/>}
       {adminView==='marks'&&selectedBlockId&&<MarksLedger key={selectedBlockId} client={supabase} blockId={selectedBlockId} blocks={teachingBlocks} onBlockChange={setSelectedBlockId} onUnsaved={setMarksUnsaved}/>}
       <section hidden={adminView !== "overview"} className="admin-overview" aria-labelledby="overview-title">
         <div className="admin-overview-heading">

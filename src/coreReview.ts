@@ -5,6 +5,7 @@ export type CorePoints = {
 };
 export type CoreDraft = {
   workflow: "core.v1";
+  meetingDate?: string;
   teacherObservation: string;
   coreSourceObservation: string;
   coreEdited: boolean;

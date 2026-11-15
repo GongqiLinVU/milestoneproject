@@ -28,6 +28,10 @@ type ReviewContext = {
   published: any;
   history: any[];
   studentRecord: any;
+  node?: any;
+  sourceSnapshot?: any;
+  sourceChanged?: boolean;
+  publications?: any[];
 };
 type Workspace = {
   review: ReviewContext;
@@ -92,14 +96,26 @@ export function CoreReviewEditor({
   renderPublished,
   onDirty,
   onSaved,
+  reviewId,
 }: {
   client: SupabaseClient;
+  reviewId?: string;
   student: ReviewStudent;
   renderSource: (r: ReviewStudent) => ReactNode;
   renderPublished: (v: any) => ReactNode;
   onDirty: (dirty: boolean) => void;
   onSaved: () => void;
 }) {
+  const [reload, setReload] = useState(0);
+  const rpc = (name: string, args: Record<string, any>) => {
+    if (!reviewId) return client.rpc(name, args);
+    const names: Record<string, string> = {
+      get_core_review_workspace: "get_teacher_node_workspace",
+      save_core_teacher_review: "save_teacher_node_review",
+    };
+    const { p_intake_id, ...rest } = args;
+    return client.rpc(names[name] || name, { ...rest, p_review_id: reviewId });
+  };
   const [context, setContext] = useState<ReviewContext | null>(null),
     [draft, setDraft] = useState<CoreDraft>(emptyCoreDraft),
     [privateNote, setPrivateNote] = useState(""),
@@ -186,7 +202,11 @@ export function CoreReviewEditor({
         "Content-Type": "application/json",
         Authorization: `Bearer ${session.access_token}`,
       },
-      body: JSON.stringify({ intakeId: student.intakeId, action, refresh }),
+      body: JSON.stringify({
+        ...(reviewId ? { reviewId } : { intakeId: student.intakeId }),
+        action,
+        refresh,
+      }),
     });
     const value = await response.json();
     if (!response.ok && response.status !== 202)
@@ -244,7 +264,7 @@ export function CoreReviewEditor({
     const sent = fingerprint(content);
     const operation = Promise.resolve().then(async () => {
       try {
-        const { data, error } = await client.rpc("save_core_teacher_review", {
+        const { data, error } = await rpc("save_core_teacher_review", {
           p_intake_id: student.intakeId,
           p_version: version.current,
           p_summary_revision: summary.current,
@@ -284,6 +304,23 @@ export function CoreReviewEditor({
     savePromise.current = operation;
     reportDirty();
     return operation;
+  }
+  async function refreshSources() {
+    if (dirty() || saving) {
+      setError("Save your draft before refreshing the source snapshot.");
+      return;
+    }
+    const { error } = await client.rpc("refresh_teacher_node_sources", {
+      p_review_id: reviewId,
+      p_version: version.current,
+    });
+    if (error) {
+      setError(error.message);
+      return;
+    }
+    blocked.current = false;
+    autoAttempted.current = null;
+    setReload((n) => n + 1);
   }
   async function organise(refresh = false) {
     if (formatBusy.current || !current.current.draft.teacherObservation.trim())
@@ -366,7 +403,7 @@ export function CoreReviewEditor({
     let active = true;
     void (async () => {
       try {
-        const { data, error } = await client.rpc("get_core_review_workspace", {
+        const { data, error } = await rpc("get_core_review_workspace", {
           p_intake_id: student.intakeId,
         });
         if (!active) return;
@@ -381,6 +418,7 @@ export function CoreReviewEditor({
                 coreSourceObservation: c.draft.coreSourceObservation,
                 coreEdited: c.draft.coreEdited,
                 coreReview: parseCorePoints(c.draft.coreReview),
+                ...(reviewId ? { meetingDate: c.draft.meetingDate || "" } : {}),
               }
             : emptyCoreDraft();
         const content = {
@@ -432,7 +470,7 @@ export function CoreReviewEditor({
       alive.current = false;
       clearTimeout(timer.current);
     };
-  }, [client, student.intakeId]);
+  }, [client, student.intakeId, reviewId, reload]);
   useEffect(() => {
     if (!context) return;
     clearTimeout(timer.current);
@@ -468,7 +506,7 @@ export function CoreReviewEditor({
       if (busy || !active) return;
       busy = true;
       try {
-        const { data, error } = await client.rpc("get_core_review_workspace", {
+        const { data, error } = await rpc("get_core_review_workspace", {
           p_intake_id: student.intakeId,
         });
         if (!active || error) return;
@@ -542,7 +580,76 @@ export function CoreReviewEditor({
           </p>
         </div>
       </header>
-      <div className="core-review-body">
+      <div className="core-review-body" key={student.intakeId}>
+        {context.node && (
+          <section className="core-node-context">
+            <h4>
+              {context.node.id.toUpperCase()} · {context.node.label}
+            </h4>
+            <p>
+              Evidence: S{context.node.fromSession}–S{context.node.toSession} ·
+              Suggested meeting: S{context.node.suggestedSession}. Complete this
+              node on the actual review date; no session submission is required.
+            </p>
+            <details>
+              <summary>Meeting details · optional</summary>
+              <label>
+                Actual meeting date
+                <input
+                  type="date"
+                  aria-label="Actual meeting date"
+                  value={draft.meetingDate || ""}
+                  onChange={(e) =>
+                    update({
+                      ...current.current,
+                      draft: {
+                        ...current.current.draft,
+                        meetingDate: e.target.value,
+                      },
+                    })
+                  }
+                />
+              </label>
+              <small>
+                Use this when recording an earlier meeting. Completion time is
+                recorded separately.
+              </small>
+            </details>
+            <small>
+              External progress reports must be checked separately. Missing
+              session records are unknown.
+            </small>
+            {context.sourceSnapshot?.missingSessions?.length > 0 && (
+              <p>
+                Missing records:{" "}
+                {context.sourceSnapshot.missingSessions
+                  .map((n: number) => `S${n}`)
+                  .join(", ")}
+              </p>
+            )}
+            {context.node.includePreviousBlock &&
+              !context.node.previousBlockId && (
+                <p>
+                  No previous class is linked. R1 uses the available
+                  current-class records.
+                </p>
+              )}
+            <p>
+              {context.sourceChanged
+                ? "Source records changed after this snapshot. Save your draft, then refresh before completing."
+                : "Sources are frozen for this review. You can explicitly capture the latest records."}{" "}
+              <button
+                type="button"
+                className="secondary compact"
+                disabled={saving || dirty()}
+                onClick={() => void refreshSources()}
+              >
+                Refresh source snapshot
+              </button>
+            </p>
+          </section>
+        )}
+
         <section className="core-guide">
           <div className="core-section-heading">
             <h4>Top 3 questions</h4>
@@ -716,8 +823,64 @@ export function CoreReviewEditor({
         </section>
         <details className="core-sources">
           <summary>Sources and earlier reviews</summary>
-          <IntakeReviewDetails record={context.studentRecord} />
+          {context.studentRecord && (
+            <IntakeReviewDetails record={context.studentRecord} />
+          )}
           {renderSource(student)}
+          {context.sourceSnapshot?.baselineFeedback?.coreReview && (
+            <details>
+              <summary>Previous teacher review · baseline</summary>
+              <CoreFeedbackView
+                points={context.sourceSnapshot.baselineFeedback.coreReview}
+              />
+            </details>
+          )}
+          {context.sourceSnapshot?.legacyReviews?.map((h: any, i: number) => (
+            <details key={`legacy-source-${i}`}>
+              <summary>Legacy teacher review · S{h.sessionNumber}</summary>
+              {h.feedback.coreReview ? (
+                <CoreFeedbackView points={h.feedback.coreReview} />
+              ) : (
+                <>
+                  <p>{h.feedback.quickNotes}</p>
+                  {h.feedback.items?.map((v: any, j: number) => (
+                    <p key={j}>
+                      {v.observation} {v.notes} {v.recommendation}
+                    </p>
+                  ))}
+                </>
+              )}
+            </details>
+          ))}
+          {context.sourceSnapshot?.previousBlockTeacherReviews?.map(
+            (p: any, i: number) => (
+              <details key={`previous-review-${i}`}>
+                <summary>Previous class · {p.node.label}</summary>
+                <CoreFeedbackView points={p.coreReview} />
+              </details>
+            ),
+          )}
+          {context.sourceSnapshot?.previousBlockRecords?.map(
+            (h: any, i: number) => (
+              <details key={`previous-${i}`}>
+                <summary>Previous class · S{h.sessionNumber}</summary>
+                <IntakeReviewDetails record={h.studentRecord} />
+              </details>
+            ),
+          )}
+          {context.publications?.map((h: any, i: number) => (
+            <details key={`publication-${i}`}>
+              <summary>
+                Completed review ·{" "}
+                {new Date(h.feedback.publishedAt).toLocaleString()}
+              </summary>
+              <CoreFeedbackView points={h.feedback.coreReview} />
+              <small>
+                Frozen sources: {h.sourceSnapshot.updates.length} session
+                records.
+              </small>
+            </details>
+          ))}
           {context.history.map((h: any, i: number) => (
             <details key={i}>
               <summary>S{h.sessionNumber}</summary>
@@ -819,6 +982,7 @@ export function CoreReviewEditor({
               !validPoints ||
               blocked.current ||
               correction ||
+              !!context.sourceChanged ||
               !coreCanComplete(draft) ||
               completed
             }
