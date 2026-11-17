@@ -1,3 +1,5 @@
+import {PresentationSchedule,useActiveWeek,WeeklyActivitiesSection} from "./PresentationSchedule";
+import {presentationSlots,presentationClock,type PresentationEntry} from "./presentationTiming";
 import {ReviewHub} from "./ReviewHub";
 import {SessionAIReview,StudentTeacherNodeReviews} from "./SessionAIReview";
 import {MarksLedger} from "./MarksLedger";
@@ -1085,16 +1087,32 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
   const [form, setForm] = useState<Kind | null>(null);
   const [reviewTarget, setReviewTarget] = useState<string | null>(null);
   const [weekStates, setWeekStates] = useState<Record<number, boolean> | null>(null);
-  const [presentationOrder, setPresentationOrder] = useState<Array<{ position: number; teamName: string; projectName: string | null }> | null>(null);
+  const [presentationOrder, setPresentationOrder] = useState<PresentationEntry[] | null>(null);
+  const [presentationError,setPresentationError]=useState("");
+  const [loadedPresentationScope,setLoadedPresentationScope]=useState("");
+  const weekScope=useRef("");
+  const presentationScope=`${student.blockId}:${student.studentId}`;
   useEffect(() => {
-    Promise.all([
+    let active=true,inFlight=false;
+    const load=async()=>{
+      if(inFlight)return;inFlight=true;
+      try{const [weeks,order]=await Promise.all([
       supabase.rpc("get_my_weekly_activity_states"),
       supabase.rpc("get_my_published_presentation_order"),
-    ]).then(([weeks, order]) => {
-      setWeekStates(weeks.error ? {} : Object.fromEntries(((weeks.data as Array<{ weekNumber: number; isOpen: boolean }>) || []).map(item => [item.weekNumber, item.isOpen])));
-      setPresentationOrder(order.error ? [] : ((order.data as Array<{ position: number; teamName: string; projectName: string | null }>) || []));
-    });
-  }, [student.blockId]);
+      ]);
+      if(!active)return;
+      if(!weeks.error){setWeekStates(Object.fromEntries(((weeks.data as Array<{weekNumber:number;isOpen:boolean}>)||[]).map(item=>[item.weekNumber,item.isOpen])));weekScope.current=presentationScope;}else if(weekScope.current!==presentationScope)setWeekStates({});
+      setPresentationOrder(order.error?[]:((order.data as PresentationEntry[])||[]));
+      setPresentationError(order.error?"The presentation schedule could not be loaded. Refresh the page to try again.":"");
+      setLoadedPresentationScope(presentationScope);
+      }catch{if(active){if(weekScope.current!==presentationScope)setWeekStates({});setPresentationOrder([]);setPresentationError("The presentation schedule could not be loaded. Refresh the page to try again.");setLoadedPresentationScope(presentationScope);}}
+      finally{inFlight=false;}
+    };
+    void load();const stop=watchVisibleRefresh(()=>void load());const focus=()=>void load();window.addEventListener("focus",focus);
+    return()=>{active=false;stop();window.removeEventListener("focus",focus);};
+  }, [presentationScope]);
+  const currentWeekStates=loadedPresentationScope===presentationScope?weekStates:null;
+  const currentPresentationOrder=loadedPresentationScope===presentationScope?presentationOrder:null;
   // R01: capability is server-authoritative. intakeMode comes from
   // get_my_student_context (the student's active Block). Until the R01 migration
   // is deployed the field is absent and the Block behaves as 'disabled' — the
@@ -1102,7 +1120,7 @@ function StudentPortal({ student }: { student: AuthenticatedStudent }) {
   const intakeMode=student.intakeMode??"disabled";
   const intakePilot=intakeMode!=="disabled";
   const projectPanel=<section id="my-project" className="portal-panel portal-section"><details className="project-summary-details"><summary className="project-summary-toggle"><div><span>My Project</span><b>{student.projectName||"Project not assigned"}</b></div><ChevronDown size={20} aria-hidden="true"/></summary><div className="project-summary-body"><Head label="My Project" title={student.projectName || "Project not assigned"} text={student.projectDescription || (student.projectSource === "roster" ? "This project name came from the roster but is not yet linked to the Project Catalogue. Ask your teacher to complete the team assignment." : "Your teacher has not assigned a catalogue project to this team yet.")}/><div className="student-project-summary"><div><span>Student</span><b>{student.studentName}</b><small>{student.studentId}</small></div><div><span>Team</span><b>{student.teamName}</b><small>Roster assignment</small></div><div><span>Project</span><b>{student.projectName || "Pending"}</b><small>{student.projectCategory || "Catalogue assignment pending"}{student.projectDifficulty ? ` · ${student.projectDifficulty}` : ""}</small></div></div>{student.projectSource === "catalogue" && <div className="project-detail-grid"><article><span>Problem</span><p>{student.projectProblem || "Not specified"}</p></article><article><span>Target users</span><p>{student.projectTargetUsers || "Not specified"}</p></article><article className="wide"><span>Expected outcomes</span><p>{student.projectExpectedOutcomes || "Not specified"}</p></article></div>}</div></details></section>;
-  const activities=<section id="weekly" className="portal-section weekly-activities-panel"><div className="sessions-heading"><h2>Weekly Activities</h2><WeeklyActivitiesHelp/></div><details className="class-activities"><summary><div><b>View this week’s activities</b></div><span className="class-activities-show"><ChevronDown size={20} aria-hidden="true"/></span></summary><div className="portal-weekly-section"><WeeklyHub open={(kind)=>{setReviewTarget(null);setForm(kind)}} openReview={(teamName)=>{setReviewTarget(teamName);setForm("review")}} weekStates={weekStates} presentationOrder={presentationOrder}/></div></details></section>;
+  const activities=<WeeklyActivitiesSection help={<WeeklyActivitiesHelp/>}><WeeklyHub key={presentationScope} myTeamName={student.teamName} presentationError={loadedPresentationScope===presentationScope?presentationError:""} open={(kind)=>{setReviewTarget(null);setForm(kind)}} openReview={(teamName)=>{setReviewTarget(teamName);setForm("review")}} weekStates={currentWeekStates} presentationOrder={currentPresentationOrder}/></WeeklyActivitiesSection>;
   return (
     <>
       <header className="student-portal-header"><a className="brand" href="/">NIT3004 <span>Engineering Studio</span></a><a className="student-help-link" href="#get-help">Get Help</a></header>
@@ -1162,13 +1180,17 @@ function WeeklyHub({
   openReview,
   weekStates,
   presentationOrder,
+  presentationError="",
+  myTeamName,
 }: {
   open: (k: Kind) => void;
   openReview: (teamName: string) => void;
   weekStates: Record<number, boolean> | null;
-  presentationOrder: Array<{ position: number; teamName: string; projectName: string | null }> | null;
+  presentationOrder: PresentationEntry[] | null;
+  presentationError?:string;
+  myTeamName?:string;
 }) {
-  const [week, setWeek] = useState<1 | 2 | 3 | 4>(1);
+  const [week, setWeek] = useActiveWeek(weekStates);
   const tabs = [
     { number: 1 as const, label: "Start", hint: "Connect & align" },
     { number: 2 as const, label: "Prove", hint: "Show implementation" },
@@ -1254,30 +1276,8 @@ function WeeklyHub({
           </>
         )}
 
-        {week === 4 && (
-          <>
-            <div className="week-panel-intro">
-              <div className="week-visual"><Rocket /></div>
-              <div>
-                <span>Week 4 · Demo Day</span>
-                <h3>Prepare a calm, credible presentation.</h3>
-                <p>This space is ready for the final presentation checklist and confirmed presentation order.</p>
-              </div>
-            </div>
-            <div className="week4-placeholders">
-              <article>
-                <ListChecks />
-                <div><span>Preparation</span><h3>Final Delivery Check</h3><p>Confirm presentation, demo fallback, speaking role and final submission readiness.</p></div>
-                <button type="button" disabled={!weekStates?.[4]} onClick={() => open("checkout4")}>{weekStates?.[4] ? "Open activity" : "Locked"} {weekStates?.[4] && <ArrowRight size={16} />}</button>
-              </article>
-              <article>
-                <Presentation />
-                <div><span>Schedule</span><h3>Presentation Order</h3>{!weekStates?.[4] ? <p>The confirmed order will appear when Week 4 is active.</p> : presentationOrder === null ? <p>Loading the published order…</p> : presentationOrder.length === 0 ? <p>Your teacher has not published the presentation order yet.</p> : <ol className="student-presentation-order">{presentationOrder.map(item=><li key={`${item.position}-${item.teamName}`}><b>{item.position}. {item.teamName}</b><small>{item.projectName || "Project assignment pending"}</small></li>)}</ol>}</div>
-                <b>{weekStates?.[4] && presentationOrder?.length ? "Published" : "To be published"}</b>
-              </article>
-            </div>
-          </>
-        )}
+        {week === 4 && <PresentationSchedule isOpen={Boolean(weekStates?.[4])} order={presentationOrder} error={presentationError} myTeamName={myTeamName}/>}
+
       </div>
     </section>
   );
@@ -2947,12 +2947,13 @@ function Admin() {
   const [weeklyStates, setWeeklyStates] = useState<Record<number, boolean>>({});
   const [weeklyBusy, setWeeklyBusy] = useState<number | null>(null);
   const [weeklyMessage, setWeeklyMessage] = useState("");
-  type PresentationTeam = { id: string; teamNumber: number; projectName: string | null };
+  type PresentationTeam = { id: string; teamNumber: number; projectName: string | null; members:string[] };
   const [presentationTeams, setPresentationTeams] = useState<PresentationTeam[]>([]);
-  const [publishedPresentation, setPublishedPresentation] = useState<Array<{ position: number; teamName: string; projectName: string | null }>>([]);
+  const [publishedPresentation, setPublishedPresentation] = useState<PresentationEntry[]>([]);
   const [presentationPublishedAt, setPresentationPublishedAt] = useState<string | null>(null);
   const [presentationBusy, setPresentationBusy] = useState(false);
   const [presentationMessage, setPresentationMessage] = useState("");
+  const draftPresentationSlots=presentationSlots(presentationTeams.map((t,i)=>({position:i+1,teamName:`Team ${t.teamNumber}`,projectName:t.projectName,members:t.members})));
   const [teacherReviewBusy, setTeacherReviewBusy] = useState(false);
   const [teacherReviewMessage, setTeacherReviewMessage] = useState("");
   const [teacherReviews, setTeacherReviews] = useState<ActivityRecord[]>([]);
@@ -2995,12 +2996,13 @@ function Admin() {
 
   async function loadPresentationOrder(blockId: string) {
     setPresentationBusy(true); setPresentationMessage("");
-    const [teamsResult, orderResult] = await Promise.all([
+    const [teamsResult, orderResult, rosterResult] = await Promise.all([
       supabase.from("teams").select("id,team_number,assignment:team_project_assignments(project:projects(title))").eq("block_id", blockId).order("team_number"),
       supabase.from("presentation_orders").select("draft_team_ids,published_snapshot,published_at").eq("block_id", blockId).maybeSingle(),
+      supabase.from("student_roster").select("full_name,team_number").eq("block_id",blockId).order("full_name"),
     ]);
     setPresentationBusy(false);
-    if (teamsResult.error || orderResult.error) {
+    if (teamsResult.error || orderResult.error || rosterResult.error) {
       setPresentationTeams([]);
       setPresentationMessage("Presentation order could not be loaded. Apply the Presentation Order migration and try again.");
       return;
@@ -3009,13 +3011,14 @@ function Admin() {
       id: team.id,
       teamNumber: team.team_number,
       projectName: team.assignment?.[0]?.project?.title || null,
+      members:(rosterResult.data||[]).filter(r=>r.team_number===team.team_number).map(r=>r.full_name),
     })) as PresentationTeam[];
     const savedIds = (orderResult.data?.draft_team_ids || []) as string[];
     const byId = new Map(natural.map(team => [team.id, team]));
     const ordered = savedIds.map(id => byId.get(id)).filter(Boolean) as PresentationTeam[];
     natural.forEach(team => { if (!savedIds.includes(team.id)) ordered.push(team); });
     setPresentationTeams(ordered);
-    setPublishedPresentation((orderResult.data?.published_snapshot as Array<{ position: number; teamName: string; projectName: string | null }>) || []);
+    setPublishedPresentation(((orderResult.data?.published_snapshot as PresentationEntry[])||[]).map(item=>({...item,members:item.members??natural.find(t=>`Team ${t.teamNumber}`===item.teamName)?.members})));
     setPresentationPublishedAt(orderResult.data?.published_at || null);
   }
 
@@ -3041,7 +3044,7 @@ function Admin() {
     if (error) return setPresentationMessage("The presentation order could not be saved. Confirm the teams and your teacher access, then try again.");
     setPresentationMessage(publish ? "Presentation order published. Students will see this snapshot in active Week 4." : "Draft saved. The student-visible published order is unchanged.");
     if (publish) {
-      setPublishedPresentation((data as Array<{ position: number; teamName: string; projectName: string | null }>) || []);
+      setPublishedPresentation((data as PresentationEntry[]) || []);
       setPresentationPublishedAt(new Date().toISOString());
     }
   }
@@ -3792,15 +3795,15 @@ function Admin() {
       </section>
       <section hidden={adminView !== "records" || activityWorkspace !== "weekly"} className="weekly-activity-preview" aria-labelledby="weekly-activities-title">
         <div className="workspace-section-heading"><div><div className="eyebrow">Weekly availability</div><h3 id="weekly-activities-title">Week 1–4 controls</h3><p>Activate the whole week when the class is ready. Every activity in that week follows the same block-based state.</p></div></div>
-        <div className="week-management-grid">{[1,2,3,4].map(week=>{const isOpen=Boolean(weeklyStates[week]);return <article key={week} className={isOpen?"open":"closed"}><div><span>Week {week}</span><strong className={`activity-control-status ${isOpen?"open":"closed"}`}>{isOpen?"Active":"Closed"}</strong></div><b>{week === 3 ? "Peer review & engagement" : week === 2 ? "Pre-check & engagement" : week === 1 ? "Team health & engagement" : "Final delivery"}</b><small>{isOpen?"Students in this block can submit now.":"Students see these activities as locked."}</small><button type="button" className={isOpen?"danger":"primary"} disabled={weeklyBusy===week} onClick={()=>void setWeeklyState(week,!isOpen)}>{weeklyBusy===week?"Updating…":isOpen?`Close Week ${week}`:`Activate Week ${week}`}</button></article>})}</div>
+        <div className="week-management-grid">{[1,2,3,4].map(week=>{const isOpen=Boolean(weeklyStates[week]);return <article key={week} className={isOpen?"open":"closed"}><div><span>Week {week}</span><strong className={`activity-control-status ${isOpen?"open":"closed"}`}>{isOpen?"Active":"Closed"}</strong></div><b>{week === 3 ? "Peer review & engagement" : week === 2 ? "Pre-check & engagement" : week === 1 ? "Team health & engagement" : "Presentation schedule"}</b><small>{week===4?"Presentation schedule only; the Week 4 activity form is hidden.":isOpen?"Students in this block can submit now.":"Students see these activities as locked."}</small><button type="button" className={isOpen?"danger":"primary"} disabled={weeklyBusy===week} onClick={()=>void setWeeklyState(week,!isOpen)}>{weeklyBusy===week?"Updating…":isOpen?`Close Week ${week}`:`Activate Week ${week}`}</button></article>})}</div>
         {weeklyMessage && <p className="activity-control-message" role="status" aria-live="polite">{weeklyMessage}</p>}
       </section>
       <section hidden={adminView !== "records" || activityWorkspace !== "presentation"} className="presentation-order-workspace" aria-labelledby="presentation-order-title">
-        <div className="workspace-section-heading presentation-order-heading"><div><div className="eyebrow">Week 4 publishing</div><h3 id="presentation-order-title">Presentation Order</h3><p>Arrange the selected block's teams, save a private draft, then publish a fixed student-visible snapshot.</p></div><div className="presentation-publish-status"><span className={`activity-control-status ${presentationPublishedAt ? "open" : "scheduled"}`}>{presentationPublishedAt ? "Published" : "Not published"}</span>{presentationPublishedAt && <small>Latest snapshot · {new Date(presentationPublishedAt).toLocaleString()}</small>}</div></div>
-        {presentationBusy && !presentationTeams.length ? <p className="empty-state">Loading presentation teams…</p> : presentationTeams.length ? <div className="presentation-order-list">{presentationTeams.map((team,index)=><article key={team.id}><span className="presentation-position">{index+1}</span><div><b>Team {team.teamNumber}</b><small>{team.projectName || "Project assignment pending"}</small></div><div className="presentation-move-actions"><button type="button" className="secondary compact" disabled={presentationBusy||index===0} onClick={()=>movePresentationTeam(index,-1)} aria-label={`Move Team ${team.teamNumber} up`}><ArrowUp size={16}/> Up</button><button type="button" className="secondary compact" disabled={presentationBusy||index===presentationTeams.length-1} onClick={()=>movePresentationTeam(index,1)} aria-label={`Move Team ${team.teamNumber} down`}><ArrowDown size={16}/> Down</button></div></article>)}</div> : !presentationBusy && <p className="empty-state">No teams are available in this Teaching Block. Create teams before preparing the presentation order.</p>}
+        <div className="workspace-section-heading presentation-order-heading"><div><div className="eyebrow">Week 4 publishing</div><h3 id="presentation-order-title">Presentation Order</h3><p>Arrange the teams and check their members, then publish the schedule. Everyone arrives at 8:30 AM; start estimates may change. Presentation includes demo (15 minutes for 1–3 members; 20 for 4), plus 5 minutes Q&A.</p></div><div className="presentation-publish-status"><span className={`activity-control-status ${presentationPublishedAt ? "open" : "scheduled"}`}>{presentationPublishedAt ? "Published" : "Not published"}</span>{presentationPublishedAt && <small>Latest snapshot · {new Date(presentationPublishedAt).toLocaleString()}</small>}</div></div>
+        {presentationBusy && !presentationTeams.length ? <p className="empty-state">Loading presentation teams…</p> : presentationTeams.length ? <div className="presentation-order-list">{presentationTeams.map((team,index)=><article key={team.id}><span className="presentation-position">{index+1}</span><div><b>Team {team.teamNumber}</b><small>{team.projectName || "Project assignment pending"}</small><small className="presentation-draft-names">{team.members.join(', ')||"No assigned students"}</small><small className="presentation-draft-time">Approx. {presentationClock(draftPresentationSlots[index].startMinute)}</small></div><div className="presentation-move-actions"><button type="button" className="secondary compact" disabled={presentationBusy||index===0} onClick={()=>movePresentationTeam(index,-1)} aria-label={`Move Team ${team.teamNumber} up`}><ArrowUp size={16}/> Up</button><button type="button" className="secondary compact" disabled={presentationBusy||index===presentationTeams.length-1} onClick={()=>movePresentationTeam(index,1)} aria-label={`Move Team ${team.teamNumber} down`}><ArrowDown size={16}/> Down</button></div></article>)}</div> : !presentationBusy && <p className="empty-state">No teams are available in this Teaching Block. Create teams before preparing the presentation order.</p>}
         <div className="presentation-order-actions"><div><b>Draft and Published are separate.</b><small>Saving later draft changes will not alter the current student view until you publish again.</small></div><button type="button" className="secondary" disabled={presentationBusy||!presentationTeams.length} onClick={()=>void savePresentationOrder(false)}>{presentationBusy?"Saving…":"Save draft"}</button><button type="button" disabled={presentationBusy||!presentationTeams.length} onClick={()=>void savePresentationOrder(true)}><Presentation size={17}/>{presentationBusy?"Publishing…":"Publish order"}</button></div>
         {presentationMessage && <p className="activity-control-message" role="status" aria-live="polite">{presentationMessage}</p>}
-        {publishedPresentation.length > 0 && <details className="published-presentation-preview"><summary>View latest published snapshot ({publishedPresentation.length} teams)</summary><ol>{publishedPresentation.map(item=><li key={`${item.position}-${item.teamName}`}><b>{item.position}. {item.teamName}</b><span>{item.projectName || "Project assignment pending"}</span></li>)}</ol></details>}
+        {publishedPresentation.length > 0 && <details className="published-presentation-preview"><summary>View latest published snapshot ({publishedPresentation.length} teams)</summary><ol>{publishedPresentation.map(item=><li key={`${item.position}-${item.teamName}`}><b>{item.position}. {item.teamName}</b><span>{item.projectName || "Project assignment pending"}<br/>{item.members?.join(", ")||"Member names will be resolved from the class roster."}</span></li>)}</ol></details>}
       </section>
       <div hidden={adminView !== "records" || activityWorkspace !== "records"} className="activity-record-picker" aria-label="Current activity record views">
         {activityTables.map(({ table, label }) => (
