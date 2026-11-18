@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { IntakeReviewDetails } from "./IntakeReview";
-import { CoreFeedbackView } from "./CoreReviewEditor";
+import { CoreFeedbackView, PublishedCoreFeedback } from "./CoreReviewEditor";
 import type { ReviewStudent } from "./IntakeTeacherReview";
 import "./ReviewHub.css";
 import { OptionalTeacherCheck } from "./SessionTeacherCheck";
@@ -315,7 +315,7 @@ export function StudentTeacherNodeReviews({
           {r.feedback.reviewedOn && (
             <p>Meeting date: {r.feedback.reviewedOn}</p>
           )}
-          <CoreFeedbackView points={r.feedback.coreReview} />
+          <PublishedCoreFeedback feedback={r.feedback} />
         </article>
       ))}
     </section>

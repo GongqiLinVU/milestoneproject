@@ -291,7 +291,7 @@ test("first session check is automatic and cached reopening makes no model reque
     });
     await flush();
     assert.ok(
-      JSON.stringify(tree.toJSON()).includes("not teacher verification"),
+      JSON.stringify(tree.toJSON()).includes("Teacher reference"),
     );
     await close(tree);
   }

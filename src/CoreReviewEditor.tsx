@@ -89,6 +89,11 @@ export function CoreFeedbackView({ points }: { points: CorePoints }) {
     </div>
   );
 }
+export function PublishedCoreFeedback({feedback}:{feedback:any}) {
+  const shared=feedback.teamFeedback as CorePoints|undefined;
+  const hasShared=shared && (shared.confirmedProgress.length+shared.mainIssues.length+shared.nextSteps.length>0);
+  return <>{hasShared && <section aria-label="Shared team feedback"><h4>Shared team feedback</h4><CoreFeedbackView points={shared}/></section>}{hasShared&&<h4>Individual feedback</h4>}<CoreFeedbackView points={feedback.coreReview}/></>;
+}
 export function CoreReviewEditor({
   client,
   student,
@@ -830,16 +835,14 @@ export function CoreReviewEditor({
           {context.sourceSnapshot?.baselineFeedback?.coreReview && (
             <details>
               <summary>Previous teacher review · baseline</summary>
-              <CoreFeedbackView
-                points={context.sourceSnapshot.baselineFeedback.coreReview}
-              />
+              <PublishedCoreFeedback feedback={context.sourceSnapshot.baselineFeedback}/>
             </details>
           )}
           {context.sourceSnapshot?.legacyReviews?.map((h: any, i: number) => (
             <details key={`legacy-source-${i}`}>
               <summary>Legacy teacher review · S{h.sessionNumber}</summary>
               {h.feedback.coreReview ? (
-                <CoreFeedbackView points={h.feedback.coreReview} />
+                <PublishedCoreFeedback feedback={h.feedback} />
               ) : (
                 <>
                   <p>{h.feedback.quickNotes}</p>
@@ -856,7 +859,7 @@ export function CoreReviewEditor({
             (p: any, i: number) => (
               <details key={`previous-review-${i}`}>
                 <summary>Previous class · {p.node.label}</summary>
-                <CoreFeedbackView points={p.coreReview} />
+                <PublishedCoreFeedback feedback={p} />
               </details>
             ),
           )}
@@ -874,7 +877,7 @@ export function CoreReviewEditor({
                 Completed review ·{" "}
                 {new Date(h.feedback.publishedAt).toLocaleString()}
               </summary>
-              <CoreFeedbackView points={h.feedback.coreReview} />
+              <PublishedCoreFeedback feedback={h.feedback} />
               <small>
                 Frozen sources: {h.sourceSnapshot.updates.length} session
                 records.
