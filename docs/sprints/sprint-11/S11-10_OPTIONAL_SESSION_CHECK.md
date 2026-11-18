@@ -10,6 +10,10 @@ Teachers may open the source and AI check and do nothing. Only **Mark as checked
 
 The check panel sits below the AI panel in the existing scrollable session pane. It uses one column, an explicit optional label and one primary action. The roster refreshes after an AI state change or a saved check. Filters include Checked, AI reviewed, Updated since check and Needs attention. Students see their own check, level/comment and teacher/date in the saved session summary. No check creates no extra student task.
 
+## Student display update — 18 November (S11-11)
+
+Students now see their confirmed summary labelled Progress saved and any saved teacher check/level/comment. The AI analysis card, attention points, questions and generation errors are not rendered on the student page. Automatic AI preparation still runs nonvisually using the existing cached lifecycle, so teachers retain their analysis and retry controls. This is a UI change; existing own-intake RPC/API access is unchanged. No database migration is required. With no teacher check, no pending task is shown.
+
 ## Storage and guards
 
 - `session_teacher_checks` holds the latest check per intake. `session_teacher_check_events` holds append-only check history; the UI returns the last 20 entries.

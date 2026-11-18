@@ -12,7 +12,7 @@ type Slot = {
   requestSourceChanged?: boolean;
   error?: string;
 };
-export function SessionAIReview({
+function useSessionAIPreparation({
   client,
   intakeId,
   onStatusChange,
@@ -107,6 +107,25 @@ export function SessionAIReview({
       clearInterval(timer);
     };
   }, [slot?.status, intakeId, client]);
+  return { slot, error, generate };
+}
+
+// Keep automatic preparation independent of whether its analysis is displayed.
+// Students see only their confirmed summary and saved teacher feedback.
+export function SessionAIPreparation({client, intakeId}: {
+  client: SupabaseClient;
+  intakeId: string;
+}) {
+  useSessionAIPreparation({client, intakeId});
+  return null;
+}
+
+export function SessionAIReview({client, intakeId, onStatusChange}: {
+  client: SupabaseClient;
+  intakeId: string;
+  onStatusChange?: () => void;
+}) {
+  const {slot, error, generate} = useSessionAIPreparation({client, intakeId, onStatusChange});
   return (
     <section
       className="session-ai-check"
@@ -114,7 +133,7 @@ export function SessionAIReview({
     >
       <h4>AI progress check</h4>
       <small>
-        Based on your submitted progress · not teacher verification or a mark.
+        Teacher reference · based on student-reported progress. Verify during your review.
       </small>
       {slot?.sourceChanged && (
         <p>The saved check refers to an earlier summary revision.</p>
