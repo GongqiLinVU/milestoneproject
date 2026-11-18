@@ -1,0 +1,6 @@
+.session-teacher-check{margin:1.25rem 0;padding:1.25rem;border:1px solid #cddfd7;border-radius:16px;background:#fff;color:#20332c;min-width:0}
+.session-teacher-check h4{margin:0;font-size:1.1rem}.session-teacher-check h4 small{font-weight:400;margin-left:.5rem;color:#63796d}
+.session-check-heading,.session-check-actions{display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap}
+.session-check-actions{justify-content:flex-start;margin-top:1rem}.session-teacher-check fieldset{border:0;padding:0;margin:1rem 0;min-width:0;display:grid;gap:1rem}
+.session-teacher-check legend{font-size:.9rem;color:#63796d;margin-bottom:.75rem}.session-teacher-check label{display:grid;gap:.4rem}.session-teacher-check textarea,.session-teacher-check select{width:100%;box-sizing:border-box}
+.session-check-receipt{display:grid;gap:.4rem;margin:.8rem 0;overflow-wrap:anywhere}.session-check-receipt small{color:#63796d}.session-check-receipt p{white-space:pre-wrap;margin:0}.session-teacher-check details{margin-top:1rem}

@@ -22,7 +22,8 @@
     "test:assessment": "tsc --outDir .test-build --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck src/assessment.ts src/assessmentExport.ts && tsc --outDir .test-api --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck --rootDir . api/assessment-feedback.ts && node --test tests/assessment/*.test.mjs",
     "test:core-review": "tsc --outDir .test-build --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck src/coreReview.ts && tsc --outDir .test-api --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck --rootDir . api/review-suggestion.ts && node --test tests/core-review/*.test.mjs",
     "test:review-nodes": "tsc --outDir .test-api --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck --rootDir . api/review-suggestion.ts && node --test tests/review-nodes/*.test.mjs",
-    "test:presentation-schedule": "tsc --outDir .test-build --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck src/presentationTiming.ts && node --test tests/presentation-schedule/*.test.mjs"
+    "test:presentation-schedule": "tsc --outDir .test-build --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck src/presentationTiming.ts && node --test tests/presentation-schedule/*.test.mjs",
+    "test:session-checks": "tsc --outDir .test-build --target ES2022 --module nodenext --moduleResolution nodenext --skipLibCheck src/sessionProgress.ts && node --test tests/session-teacher-checks/*.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.8",

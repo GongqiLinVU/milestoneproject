@@ -1,3 +1,4 @@
+import { sessionProgressStatus, progressStatusLabels, checkLevelLabels, type SessionProgressState } from "./sessionProgress";
 import { SessionProgressReview } from "./SessionAIReview";
 import type { ReviewSuggestion } from "./reviewSuggestion";
 import { CoreFeedbackView } from "./CoreReviewEditor";
@@ -77,13 +78,6 @@ export type ReviewStudent = {
   studentRecord: IntakeStudentRecord | null;
   summaryRevision?: number;
   correctionOpenedAt?: string | null;
-};
-type State = {
-  intakeId: string;
-  published: boolean;
-  hasDraft: boolean;
-  status: string;
-  summaryRevision: number;
 };
 const labels = {
   observed: "Observed",
@@ -432,21 +426,24 @@ export function TeacherIntakeReviews({
   const [selected, setSelected] = useState(""),
     [query, setQuery] = useState(""),
     [filter, setFilter] = useState("all"),
-    [states, setStates] = useState<State[]>([]),
-    [stateError, setStateError] = useState("");
+    [states, setStates] = useState<SessionProgressState[]>([]),
+    [stateError, setStateError] = useState(""),
+    [loaded, setLoaded] = useState(false);
   const statusRequest = useRef(0);
   const refresh = async () => {
     const request = ++statusRequest.current;
     const { data, error } = await client.rpc(
-      "get_teacher_intake_review_states",
+      "get_teacher_session_progress_states",
       { p_session_id: sessionId },
     );
     if (request !== statusRequest.current) return;
-    if (error)
+    setLoaded(true);
+    if (error) {
+      setStates([]);
       setStateError(
         "Review statuses unavailable. Open a student to retry loading their review.",
       );
-    else {
+    } else {
       setStates(data || []);
       setStateError("");
     }
@@ -479,26 +476,13 @@ export function TeacherIntakeReviews({
     window.confirm(
       "This review has unsaved changes. Leave and discard unsaved changes?",
     );
-  const status = (r: ReviewStudent) => {
-    if (!r.submitted) return "Missing intake";
-    const s = states.find((s) => s.intakeId === r.intakeId);
-    if (!s) return "Pending review";
-    if (s.hasDraft) return "Draft";
-    if (s.summaryRevision !== (r.summaryRevision ?? 1))
-      return "Summary changed";
-    return s.status === "follow_up" ? "Needs follow-up" : "Reviewed";
-  };
-  const visible = rows.filter(
-    (r) =>
-      `${r.studentName} ${r.studentId} ${r.teamName || ""}`
-        .toLowerCase()
-        .includes(query.toLowerCase()) &&
-      (filter === "all" ||
-        (filter === "pending" &&
-          ["Pending review", "Draft", "Summary changed"].includes(status(r))) ||
-        (filter === "follow_up" && status(r) === "Needs follow-up") ||
-        (filter === "reviewed" && status(r) === "Reviewed") ||
-        (filter === "missing" && !r.submitted)),
+  const stateFor = (r: ReviewStudent) => states.find(s => s.intakeId === r.intakeId);
+  const statusKey = (r: ReviewStudent) => sessionProgressStatus(r.submitted, stateFor(r), loaded);
+  const status = (r: ReviewStudent) => progressStatusLabels[statusKey(r)];
+  const visible = rows.filter(r =>
+    `${r.studentName} ${r.studentId} ${r.teamName || ""}`.toLowerCase().includes(query.toLowerCase()) &&
+    (filter === "all" || filter === statusKey(r) ||
+      (filter === "attention" && stateFor(r)?.checkCurrent && stateFor(r)?.checkLevel === "needs_attention"))
   );
   const student = rows.find((r) => r.intakeId === selected);
   return (
@@ -538,12 +522,16 @@ export function TeacherIntakeReviews({
             />
           </label>
           <label>
-            Review status
+            Progress status
             <select value={filter} onChange={(e) => setFilter(e.target.value)}>
               <option value="all">All students ({rows.length})</option>
-              <option value="pending">Pending / draft</option>
-              <option value="follow_up">Needs follow-up</option>
-              <option value="reviewed">Reviewed</option>
+              <option value="ai">AI reviewed</option>
+              <option value="checked">Checked</option>
+              <option value="updated">Updated since check</option>
+              <option value="attention">Needs attention</option>
+              <option value="awaiting">Awaiting AI review</option>
+              <option value="reviewing">AI reviewing</option>
+              <option value="unavailable">AI review unavailable</option>
               <option value="missing">Missing intake</option>
             </select>
           </label>
@@ -567,6 +555,7 @@ export function TeacherIntakeReviews({
                   {r.teamName || "Unassigned"} · {r.studentId}
                 </small>
                 <span className="review-roster-status">{status(r)}</span>
+                {stateFor(r)?.checkCurrent && stateFor(r)?.checkLevel && <small>{checkLevelLabels[stateFor(r)!.checkLevel!]}</small>}
               </button>
             ))}
           </nav>
@@ -594,8 +583,8 @@ export function TeacherIntakeReviews({
               Review tab.
             </p>
             <p>
-              Drafts are teacher-only. Published feedback is visible to that
-              student.
+              Teacher checks are optional. Any level or comment you save is
+              visible to that student.
             </p>
           </div>
         )}
