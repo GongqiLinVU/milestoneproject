@@ -1,8 +1,8 @@
-import { StudentSessionCheckReceipt } from "./SessionTeacherCheck";
+import { StudentSessionProgress } from "./StudentSessionProgress";
 import {PresentationSchedule,useActiveWeek,WeeklyActivitiesSection} from "./PresentationSchedule";
 import {presentationSlots,presentationClock,type PresentationEntry} from "./presentationTiming";
 import {ReviewHub} from "./ReviewHub";
-import {SessionAIReview,StudentTeacherNodeReviews} from "./SessionAIReview";
+import {StudentTeacherNodeReviews} from "./SessionAIReview";
 import {MarksLedger} from "./MarksLedger";
 import {watchVisibleRefresh} from "./visibleRefresh";
 import {TeacherIntakeReviews,useStudentTeacherFeedback} from "./IntakeTeacherReview";
@@ -13,7 +13,7 @@ import {intakeStart,intakePriorContext,intakeOpeningText} from './intakeStart';
 import {useStaffSession} from './useStaffSession';
 import {TeacherAdministration,TeacherPasswordSetup,classLabel} from './TeacherAdministration';
 import {chatStopSaveReason,MAX_CHAT_CLARIFICATIONS,type QuestionMeta} from './intakeChatStop';
-import { IntakeReview, IntakeRecordSummary, IntakeReviewDetails } from "./IntakeReview";
+import { IntakeReview, IntakeReviewDetails } from "./IntakeReview";
 import { FOCUSED_REVIEW_VERSION, buildFocusedStudentRecord, validateFocusedIntakeRecord, packReviewDebug, restoreReviewDebug } from "./intakeReviewSupport";
 import { IntakeDebugViewer } from "./IntakeDebugViewer";
 import { buildHarnessObservations } from "./intakeObservations";
@@ -866,7 +866,7 @@ function SessionIntakeModal({session,onClose,onSaved}:{session:StudentSessionRec
   if(saved?.correctionOpenedAt)return <IntakeSummaryCorrection client={supabase} intake={saved} onClose={onClose} onSaved={()=>{onSaved();onClose();}}/>;
   return createPortal(<div className="chat-intake-page"><header className="chat-intake-header"><button type="button" className="secondary compact" onClick={closeNow}>← Sessions</button><div><span>{saved?"Session history":"Your progress check-in"}</span><h2>S{session.sessionNumber} · {session.focus}</h2></div><div className="chat-header-actions">{showIntakeDebug&&debugEvents.length>0&&<><button type="button" className="secondary compact" onClick={()=>setHarnessOpen(true)}>Visual debug · {debugEvents.length}</button><button type="button" className="secondary compact" onClick={()=>setDebugOpen(true)}>Intake debug · {debugEvents.length}</button></>}<button type="button" className={`evidence-drawer-trigger ${evidenceUpdates&&!evidenceOpen?"has-updates":""}`} onClick={()=>evidenceOpen?setEvidenceOpen(false):openEvidence([])}>{stage<4&&!saved?"Conversation notes":"Evidence chain"} {evidenceUpdates&&!evidenceOpen?<b>{evidenceUpdates} new</b>:null}</button></div></header>
     <main className="chat-intake-shell"><section className="chat-thread" aria-label="Session Intake conversation"><div className="chat-messages">
-      {loading?<p className="empty-state">Loading Session Intake…</p>:saved?<><IntakeRecordSummary record={saved.studentRecord} confirmedAt={saved.confirmedAt}/><SessionAIReview client={supabase} intakeId={saved.intakeId}/><StudentSessionCheckReceipt client={supabase} intakeId={saved.intakeId}/></>:!context?.isOpen?<div className="chat-message assistant"><p>This Session Intake is closed. Your Teacher controls when it is available.</p></div>:<>
+      {loading?<p className="empty-state">Loading Session Intake…</p>:saved?<StudentSessionProgress client={supabase} intakeId={saved.intakeId} record={saved.studentRecord} confirmedAt={saved.confirmedAt}/>:!context?.isOpen?<div className="chat-message assistant"><p>This Session Intake is closed. Your Teacher controls when it is available.</p></div>:<>
         {stage<4&&<div className="chat-round-guide" style={{marginBottom:"1.25rem",padding:"1rem 1.2rem",borderRadius:16,background:"#edf3ff",color:"#273c67",lineHeight:1.5}}><strong>{start.guideTitle}</strong><p style={{margin:".3rem 0 0"}}>{start.guideLead} We’ll ask at most {MAX_CHAT_CLARIFICATIONS} follow-up questions. You can review and finish whenever you’re ready.</p></div>}
         {stage<4&&previousCheckin&&<details className="intake-last-checkin" aria-label="Your last confirmed check-in"><summary>Your last check-in</summary><dl>{previousCheckin.role&&<div><dt>Your part last time</dt><dd>{previousCheckin.role}</dd></div>}{previousCheckin.action&&<div><dt>Your planned next step</dt><dd>{previousCheckin.action}</dd></div>}</dl><p>Roles and plans can change. Tell us if anything is different now.</p></details>}
         <details className={`chat-transcript ${stage===4?"archived":"live"}`} open={stage!==4}><summary>View conversation</summary>{turns.map((turn,index)=><div key={index} className={`chat-message ${turn.actor==="student"?"student":"assistant"}`}><span>{turn.actor==="student"?"You":"Intake assistant"}{turn.source==="llm"?<b className="llm-message-badge">LLM</b>:turn.source==="fallback"?<b className="llm-message-badge">Fallback</b>:null}</span><p>{index===0&&turn.purpose==="session starting point"?start.question:turn.text}</p>{turn.actor==="student"&&turn.evidenceChanges?.length?<button type="button" className="message-evidence-update" onClick={()=>openEvidence(turn.evidenceChanges||[])}><b>{turn.evidenceChanges.length} evidence field{turn.evidenceChanges.length===1?"":"s"} updated</b><span>{turn.evidenceChanges.map(value=>value.replace("_"," ")).join(" · ")} · View changes</span></button>:null}</div>)}

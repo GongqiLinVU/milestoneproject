@@ -37,5 +37,5 @@ export function IntakeReviewDetails({record}:{record:IntakeStudentRecord}) {
  </div>;
 }
 export function IntakeRecordSummary({record,confirmedAt}:{record:IntakeStudentRecord;confirmedAt:string}) {
- return <section className="intake-record-summary"><div className="saved-check-in"><span>✓ Saved check-in</span><h3>Your progress, recorded</h3><p>{new Date(confirmedAt).toLocaleString()} · Read-only</p></div><IntakeReviewDetails record={record}/><small>Student account. Unknown details remain unknown. Your teacher reviews the work separately.</small></section>;
+ return <section className="intake-record-summary"><div className="saved-check-in"><span>✓ Progress saved</span><h3>Your progress, recorded</h3><p>{new Date(confirmedAt).toLocaleString()} · Read-only</p></div><IntakeReviewDetails record={record}/><small>Student account. Unknown details remain unknown. Your teacher reviews the work separately.</small></section>;
 }
