@@ -6,7 +6,7 @@ import "./SessionTeacherCheck.css";
 
 function Receipt({ check }: { check: TeacherSessionCheck }) {
   return <div className="session-check-receipt">
-    <small>{check.teacherName} · {new Date(check.checkedAt).toLocaleString()} · Summary v{check.summaryRevision}</small>
+    <small>{check.teacherName} · {new Date(check.checkedAt).toLocaleString(undefined, {year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit"})}</small>
     {check.level && <strong>{checkLevelLabels[check.level]}</strong>}
     {check.comment && <p>{check.comment}</p>}
   </div>;

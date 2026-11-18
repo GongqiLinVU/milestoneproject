@@ -226,6 +226,8 @@ await db.exec(nodesMigration);
 
 const checkMigration = fs.readFileSync("supabase/migrations/20261118_session_teacher_checks.sql", "utf8");
 await db.exec(checkMigration); await db.exec(checkMigration);
+const displayMigration = fs.readFileSync("supabase/migrations/20261118_teacher_feedback_display.sql", "utf8");
+await db.exec(displayMigration); await db.exec(displayMigration);
 const get = () => value("select get_session_teacher_check($1)", [intake]);
 const states = () => value("select get_teacher_session_progress_states($1)", [session]);
 const mark = (version, revision=1, level=null, comment="") => value("select mark_session_teacher_check($1,$2,$3,$4,$5)", [intake,version,revision,level,comment]);
@@ -288,4 +290,39 @@ test("roster AI states follow persisted jobs and current source revision", async
   }
   await owner(); await db.query("insert into studio_review_settings(block_id,config) values($1,'{\"sessionAI\":false}') on conflict(block_id) do update set config=excluded.config",[classId]);
   await identity(teacher1); assert.equal((await states())[0].aiStatus,"disabled");
+});
+
+test("teacher name setting is self-only; current and historical receipt attribution uses each author profile", async () => {
+  await identity(teacher1);
+  const before = await get();
+  assert.equal(await value("select get_my_teacher_display_name()"),"Assigned teacher");
+  await assert.rejects(value("select save_my_teacher_display_name(null)"),/teacher name/);
+  await assert.rejects(value("select save_my_teacher_display_name('  ')"),/teacher name/);
+  await assert.rejects(value("select save_my_teacher_display_name($1)",["x".repeat(101)]),/teacher name/);
+  assert.equal(await value("select save_my_teacher_display_name('  Joseph Lin  ')"),"Joseph Lin");
+  const after = await get();
+  assert.equal(after.check.teacherName,"Joseph Lin");
+  assert.equal(after.check.checkedAt,before.check.checkedAt);
+  assert.equal(after.version,before.version);
+  assert.ok(after.history.every(e=>e.teacherName==="Joseph Lin"));
+  await identity(student1,"student");
+  assert.equal((await get()).check.teacherName,"Joseph Lin");
+  await assert.rejects(value("select save_my_teacher_display_name('Student')"));
+  await assert.rejects(value("select get_my_teacher_display_name()"));
+  await identity(teacher2); await assert.rejects(value("select save_my_teacher_display_name('Other')"));
+  await owner();
+  assert.equal(await value("select teacher_name from session_teacher_checks where intake_id=$1",[intake]),"Assigned teacher");
+  assert.ok((await db.query("select teacher_name from session_teacher_check_events")).rows.every(e=>e.teacher_name==="Assigned teacher"));
+});
+test("receipt identifies the actual checker when different teachers check the same intake", async () => {
+  await identity();
+  await value("select save_my_teacher_display_name('Dr Second Teacher')");
+  const updated=await mark(3,2,"satisfactory");
+  assert.equal(updated.check.teacherName,"Dr Second Teacher");
+  assert.equal(updated.history[0].teacherName,"Dr Second Teacher");
+  assert.equal(updated.history[1].teacherName,"Joseph Lin");
+  await identity(student1,"student");
+  const own=await get();
+  assert.equal(own.check.teacherName,"Dr Second Teacher");
+  assert.equal(own.history[1].teacherName,"Joseph Lin");
 });

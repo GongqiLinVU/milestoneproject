@@ -14,6 +14,12 @@ The check panel sits below the AI panel in the existing scrollable session pane.
 
 Students now see their confirmed summary labelled Progress saved and any saved teacher check/level/comment. The AI analysis card, attention points, questions and generation errors are not rendered on the student page. Automatic AI preparation still runs nonvisually using the existing cached lifecycle, so teachers retain their analysis and retry controls. This is a UI change; existing own-intake RPC/API access is unchanged. No database migration is required. With no teacher check, no pending task is shown.
 
+## Readable attribution — 18 November (S11-12)
+
+The student summary no longer shows the internal explanation about unknown details. Session check receipts show only the teacher name and date/time (without seconds or Summary v1). Revision metadata remains stored for correctness and history.
+
+The owner account was bootstrapped with the display name Platform administrator. This is a stored profile value, not a role badge added by the receipt. Apply `supabase/migrations/20261118_teacher_feedback_display.sql` before merging this update. After deployment, open **Classes and teachers → Your teacher display name**, enter the lecturer name and save. This changes only the signed-in teacher's display name, with no permission or assignment changes. Existing session receipts resolve each original author's current profile name; saved audit names, author IDs, check times and versions are preserved. No person's name is hardcoded or guessed from an email. Students cannot call the own-name getter/setter.
+
 ## Storage and guards
 
 - `session_teacher_checks` holds the latest check per intake. `session_teacher_check_events` holds append-only check history; the UI returns the last 20 entries.

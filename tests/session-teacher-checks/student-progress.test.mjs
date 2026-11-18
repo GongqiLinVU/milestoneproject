@@ -29,6 +29,8 @@ test('student sees confirmed progress and teacher feedback without AI analysis, 
  const text=JSON.stringify(tree.toJSON());
  for(const visible of ['Progress saved','Tested classroom search','Checked by teacher','Satisfactory','Please show the mobile test.'])assert.ok(text.includes(visible),visible);
  assert.doesNotMatch(text,/AI_INTERNAL|AI progress check|Points to clarify|Questions to consider|Pending review/);
+ assert.doesNotMatch(text,/Student account\.|Unknown details remain unknown|Summary v1/);
+ assert.match(text,/Joseph/);
  assert.equal(requests,0);assert.ok(h.calls.every(c=>c.name.startsWith('get_')));
  await act(async()=>tree.unmount());
 });
