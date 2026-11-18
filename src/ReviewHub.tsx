@@ -1,6 +1,7 @@
+import {TeamReviewDialog} from "./TeamReview";
 import { useEffect, useRef, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { CoreReviewEditor, CoreFeedbackView } from "./CoreReviewEditor";
+import { CoreReviewEditor, CoreFeedbackView, PublishedCoreFeedback } from "./CoreReviewEditor";
 import { classLabel, type TeachingClass } from "./TeacherAdministration";
 import "./ReviewHub.css";
 type Node = {
@@ -38,6 +39,7 @@ type Hub = {
   reviews: Review[];
   legacy: any[];
   sessionChecks?: any[];
+  teamMeetings?: any[];
 };
 function NodeDialog({
   client,
@@ -113,7 +115,7 @@ function NodeDialog({
             } as any
           }
           renderSource={() => null}
-          renderPublished={(p) => <CoreFeedbackView points={p.coreReview} />}
+          renderPublished={(p) => <PublishedCoreFeedback feedback={p} />}
           onDirty={(v) => {
             dirty.current = v;
             onDirty(v);
@@ -137,6 +139,8 @@ export function ReviewHub({
   onBlockChange: (id: string) => void;
   onUnsaved: (v: boolean) => void;
 }) {
+  const [mode,setMode] = useState("individual");
+  const [openedTeam,setOpenedTeam] = useState<{teamNumber:number;nodeKey:string;meetingId?:string}|null>(null);
   const [hub, setHub] = useState<Hub | null>(null),
     [config, setConfig] = useState<Config | null>(null),
     [view, setView] = useState("queue"),
@@ -252,7 +256,7 @@ export function ReviewHub({
       .includes(query.toLowerCase()) &&
     (team === "all" || String(s.teamNumber) === team);
   const n = hub?.config.nodes.find((n) => n.id === nodeKey);
-  const locked = (id: string) => !!hub?.reviews.some((r) => r.nodeKey === id);
+  const locked = (id: string) => !!hub?.reviews.some((r) => r.nodeKey === id) || !!hub?.teamMeetings?.some(m => m.nodeKey === id);
   const changeNode = (id: string, patch: Partial<Node>) =>
     setConfig((c) =>
       c
@@ -350,7 +354,7 @@ export function ReviewHub({
                     onChange={(e) => setRecordType(e.target.value)}
                   >
                     <option value="all">All review types</option>
-                    <option value="teacher">Teacher nodes</option>
+                    <option value="teacher">Teacher nodes</option><option value="team">Team meetings</option>
                     <option value="session-ai">Session AI checks</option>
                     <option value="legacy">Legacy teacher reviews</option>
                   </select>
@@ -415,7 +419,16 @@ export function ReviewHub({
                 student's review on the actual date. External reports are
                 checked separately.
               </p>
-              <div className="review-hub-table">
+              <div className="team-meeting-tools" aria-label="Review mode">
+                <button className="secondary compact" aria-pressed={mode==="individual"} onClick={()=>setMode("individual")}>Individual</button>
+                <button className="secondary compact" aria-pressed={mode==="team"} onClick={()=>setMode("team")}>Team</button>
+              </div>
+              {mode==="team" ? <div className="team-queue">{[...new Set(hub.students.map(s=>s.teamNumber).filter((t):t is number=>t!==null))].filter(t=>hub.students.some(s=>s.teamNumber===t&&matches(s))).map(t=>{
+                const members=hub.students.filter(s=>s.teamNumber===t);
+                const visibleMembers=members.filter(s=>status==="all"||reviewStatus(hub.reviews.find(r=>r.studentId===s.studentId&&r.nodeKey===nodeKey))===status);
+                if(!visibleMembers.length)return null;
+                return <article key={t}><b>Team {t}</b><p>{members.map(s=>s.studentName).join(" · ")}</p><p>{members.filter(s=>reviewStatus(hub.reviews.find(r=>r.studentId===s.studentId&&r.nodeKey===nodeKey))==="Completed").length}/{members.length} individual reviews completed</p><button className="secondary compact" disabled={busy||configDirty||!n} onClick={()=>setOpenedTeam({teamNumber:t,nodeKey})}>Open team meeting</button></article>;
+              })}</div> : <div className="review-hub-table">
                 <table>
                   <thead>
                     <tr>
@@ -459,11 +472,12 @@ export function ReviewHub({
                     })}
                   </tbody>
                 </table>
-              </div>
+              </div>}
             </>
           )}
           {view === "records" && (
             <div className="review-record-list">
+              {(recordType==="all"||recordType==="team") && (hub.teamMeetings||[]).filter(m=>(team==="all"||String(m.teamNumber)===team)&&(status==="all"||status===(m.participants.length>0&&m.participants.every((id:string)=>m.confirmed[id])?"Completed":m.observation?"Draft":"Not started"))&&`${m.teamNumber} ${m.nodeKey} ${m.observation} ${JSON.stringify(m.members)} ${JSON.stringify(m.feedback)}`.toLowerCase().includes(query.toLowerCase())).map(m=><article className="team-review-card" key={m.id}><h3>Team {m.teamNumber} · {m.nodeKey.toUpperCase()} meeting</h3><p>{m.meetingDate} · {m.participants.length} participating · {Object.keys(m.confirmed).length} members previously confirmed</p><p>{m.members.map((s:Student)=>s.studentName).join(" · ")}</p><button className="secondary compact" onClick={()=>setOpenedTeam({teamNumber:m.teamNumber,nodeKey:m.nodeKey,meetingId:m.id})}>View meeting</button></article>)}
               {(recordType === "all" || recordType === "teacher") &&
                 hub.reviews
                   .filter((r) => {
@@ -505,7 +519,7 @@ export function ReviewHub({
                           </button>
                         </header>
                         {r.published ? (
-                          <CoreFeedbackView points={r.published.coreReview} />
+                          <PublishedCoreFeedback feedback={r.published} />
                         ) : (
                           <p>
                             {r.draft.teacherObservation ||
@@ -589,7 +603,7 @@ export function ReviewHub({
                           · S{r.sessionNumber}
                         </b>
                         {r.published.coreReview ? (
-                          <CoreFeedbackView points={r.published.coreReview} />
+                          <PublishedCoreFeedback feedback={r.published} />
                         ) : (
                           <>
                             <p>{r.published.quickNotes}</p>
@@ -786,6 +800,7 @@ export function ReviewHub({
           )}
         </>
       )}
+      {openedTeam && <TeamReviewDialog key={`${openedTeam.teamNumber}-${openedTeam.nodeKey}-${openedTeam.meetingId||"latest"}`} client={client} blockId={blockId} {...openedTeam} onDirty={setReviewDirty} onSaved={()=>void load(false)} onClose={()=>{setOpenedTeam(null);setReviewDirty(false);void load(false);}}/>}
       {opened && (
         <NodeDialog
           key={opened.id}
