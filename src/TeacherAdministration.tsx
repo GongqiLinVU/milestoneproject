@@ -1,3 +1,4 @@
+import {TeacherDisplayName} from "./TeacherDisplayName";
 import './TeacherAdministration.css';
 import {useEffect,useRef,useState} from 'react';
 import type {SupabaseClient} from '@supabase/supabase-js';
@@ -46,7 +47,7 @@ export function TeacherAdministration({client,classes,onChanged}:{client:Supabas
   </article>;
  };
  const classRow=(c:TeachingClass)=><li key={c.id}><strong>{classLabel(c)}</strong><label>Status<select disabled={busy} aria-label={`Status for ${classLabel(c)}`} value={c.status} onChange={e=>{const status=e.target.value;void run(async()=>{const {error}=await client.from('teaching_blocks').update({status}).eq('id',c.id);if(error)throw error;setMessage(`Class status changed to ${status}.`);onChanged();});}}>{['planned','active','archived'].map(v=><option key={v}>{v}</option>)}</select></label></li>;
- return <section className="teacher-administration" aria-label="Class and teacher administration"><h2>Classes and teachers</h2><p>Create teacher accounts and classes independently, then manage their assignments.</p>
+ return <section className="teacher-administration" aria-label="Class and teacher administration"><h2>Classes and teachers</h2><TeacherDisplayName client={client}/><p>Create teacher accounts and classes independently, then manage their assignments.</p>
  <div className="staff-tabs" role="tablist" aria-label="Administration sections">{(['assignments','teachers','classes'] as const).map(value=><button key={value} type="button" id={`staff-tab-${value}`} role="tab" aria-selected={tab===value} aria-controls={`staff-panel-${value}`} tabIndex={tab===value?0:-1} disabled={busy} onClick={()=>setTab(value)} onKeyDown={event=>{const tabs=['assignments','teachers','classes'] as const;let index=tabs.indexOf(value);if(event.key==='ArrowRight')index=(index+1)%3;else if(event.key==='ArrowLeft')index=(index+2)%3;else if(event.key==='Home')index=0;else if(event.key==='End')index=2;else return;event.preventDefault();setTab(tabs[index]);document.getElementById(`staff-tab-${tabs[index]}`)?.focus();}}>{value[0].toUpperCase()+value.slice(1)}</button>)}</div>
  {message&&<p className="admin-alert" role="status">{message}</p>}
  {credentials&&<section ref={credentialsRef} tabIndex={-1} className="staff-credentials" aria-label="New teacher credentials"><h3>Share these details with the teacher</h3><p>This password is shown here until you dismiss it. The teacher must change it on first login.</p><dl><dt>Email</dt><dd>{credentials.email}</dd><dt>Temporary password</dt><dd><code>{credentials.initialPassword}</code></dd></dl><button type="button" className="secondary" onClick={()=>setCredentials(null)}>Dismiss credentials</button></section>}
