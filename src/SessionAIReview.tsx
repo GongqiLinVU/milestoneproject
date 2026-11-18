@@ -4,6 +4,7 @@ import { IntakeReviewDetails } from "./IntakeReview";
 import { CoreFeedbackView } from "./CoreReviewEditor";
 import type { ReviewStudent } from "./IntakeTeacherReview";
 import "./ReviewHub.css";
+import { OptionalTeacherCheck } from "./SessionTeacherCheck";
 type Slot = {
   status: string;
   result: any;
@@ -14,12 +15,17 @@ type Slot = {
 export function SessionAIReview({
   client,
   intakeId,
+  onStatusChange,
 }: {
   client: SupabaseClient;
   intakeId: string;
+  onStatusChange?: () => void;
 }) {
   const [slot, setSlot] = useState<Slot | null>(null),
     [error, setError] = useState("");
+  const statusCallback = useRef(onStatusChange);
+  statusCallback.current = onStatusChange;
+  useEffect(() => { if (slot) statusCallback.current?.(); }, [slot?.status, slot?.sourceChanged]);
   const alive = useRef(true),
     running = useRef(false);
   const generate = async (refresh = false) => {
@@ -164,6 +170,8 @@ export function SessionProgressReview({
   student,
   renderSource,
   renderPublished,
+  onDirty,
+  onSaved,
 }: {
   client: SupabaseClient;
   student: ReviewStudent;
@@ -195,7 +203,8 @@ export function SessionProgressReview({
         Session records and AI checks are separate from teacher decisions.
         Complete an independent teacher review in the <b>Review</b> tab.
       </p>
-      <SessionAIReview client={client} intakeId={student.intakeId!} />
+      <SessionAIReview client={client} intakeId={student.intakeId!} onStatusChange={onSaved} />
+      <OptionalTeacherCheck key={student.intakeId} client={client} intakeId={student.intakeId!} onDirty={onDirty} onSaved={onSaved} />
       {error && <p role="alert">{error}</p>}
       {context && (
         <>
