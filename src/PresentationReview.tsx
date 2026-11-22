@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { parseMark } from "./assessment";
+import type { PresentationEntry } from "./presentationTiming";
 import "./PresentationReview.css";
 
 const blankContent = { question: "", followUp: "", basis: "", listenFor: "", notes: "" };
@@ -20,6 +21,28 @@ async function loadReview(client: SupabaseClient, sessionId: string): Promise<Re
   const { data, error } = await client.rpc("get_session_presentation_review", { p_session_id: sessionId });
   if (error) throw error;
   return data;
+}
+
+async function loadPublishedOrder(client: SupabaseClient, blockId: string): Promise<PresentationEntry[]> {
+  const { data, error } = await client.from("presentation_orders")
+    .select("published_snapshot").eq("block_id", blockId).not("published_at", "is", null).maybeSingle();
+  if (error) throw error;
+  return Array.isArray(data?.published_snapshot) ? data.published_snapshot : [];
+}
+
+function orderedTeamKeys(rows: StudentReview[], order: PresentationEntry[]) {
+  const numbers = [...new Set(rows.flatMap(row => row.team === null ? [] : [row.team]))].sort((a, b) => a - b);
+  const remaining = new Map(numbers.map(number => [`Team ${number}`, String(number)]));
+  const keys: string[] = [];
+  for (const entry of [...order].sort((a, b) => a.position - b.position)) {
+    const key = remaining.get(entry.teamName);
+    if (key === undefined) continue;
+    keys.push(key);
+    remaining.delete(entry.teamName);
+  }
+  keys.push(...remaining.values());
+  if (rows.some(row => row.team === null)) keys.push("unassigned");
+  return keys;
 }
 
 async function saveReview(
@@ -177,9 +200,10 @@ function readQuestionFile(text: string) {
   );
 }
 
-export function PresentationReview({ client, sessionId, onClose }: {
+export function PresentationReview({ client, sessionId, blockId, onClose }: {
   client: SupabaseClient;
   sessionId: string;
+  blockId: string;
   onClose: () => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -193,6 +217,8 @@ export function PresentationReview({ client, sessionId, onClose }: {
 
   const [data, setData] = useState<ReviewData | null>(null);
   const [team, setTeam] = useState("");
+  const [publishedOrder, setPublishedOrder] = useState<PresentationEntry[]>([]);
+  const [orderUnavailable, setOrderUnavailable] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [importing, setImporting] = useState(false);
@@ -212,16 +238,19 @@ export function PresentationReview({ client, sessionId, onClose }: {
 
   useEffect(() => {
     let active = true;
-    loadReview(client, sessionId).then(value => {
+    const orderRequest = loadPublishedOrder(client, blockId).catch(() => null);
+    Promise.all([loadReview(client, sessionId), orderRequest]).then(([value, order]) => {
       if (active) {
         setData(value);
-        setTeam(String(value.rows[0]?.team ?? "unassigned"));
+        setPublishedOrder(order ?? []);
+        setOrderUnavailable(order === null);
+        setTeam(orderedTeamKeys(value.rows, order ?? [])[0] ?? "");
       }
     }).catch(cause => {
       if (active) setError(message(cause));
     });
     return () => { active = false; };
-  }, [client, sessionId, attempt]);
+  }, [client, sessionId, blockId, attempt]);
 
   useEffect(() => {
     if (reviewBody.current) reviewBody.current.scrollTop = 0;
@@ -272,9 +301,8 @@ export function PresentationReview({ client, sessionId, onClose }: {
       }
       const saved = new Map(results.map(row => [row.rosterId, row]));
       setData({ ...latest, rows: latest.rows.map(row => saved.get(row.rosterId) ?? row) });
-      if (!latest.rows.some(row => String(row.team ?? "unassigned") === team)) {
-        setTeam(String(latest.rows[0]?.team ?? "unassigned"));
-      }
+      const latestTeams = orderedTeamKeys(latest.rows, publishedOrder);
+      if (!latestTeams.includes(team)) setTeam(latestTeams[0] ?? "");
       const failed = candidates.length - results.length;
       setNotice(`Imported ${results.length}. ${skipped} already had saved reviews. ${latest.rows.length - candidates.length - skipped} had no unique team and name match.${failed ? ` ${failed} could not be saved. Close and reopen the review before retrying.` : ""}`);
     } catch (cause) {
@@ -284,7 +312,7 @@ export function PresentationReview({ client, sessionId, onClose }: {
     }
   }
 
-  const teamKeys = [...new Set(data?.rows.map(row => String(row.team ?? "unassigned")))];
+  const teamKeys = orderedTeamKeys(data?.rows ?? [], publishedOrder);
   const tabId = (key: string) => `presentation-tab-${key}`;
   const panelId = (key: string) => `presentation-team-${key}`;
 
@@ -338,6 +366,7 @@ export function PresentationReview({ client, sessionId, onClose }: {
         {data && <>
           {data.maximum === null && <p>Configure a Presentation scoring item in Marks &amp; Feedback to enter scores.</p>}
           {!teamKeys.length && <p>No students are enrolled in this class.</p>}
+          {orderUnavailable && teamKeys.length > 0 && <p role="status">Published order unavailable. Showing teams by number.</p>}
           <fieldset className="presentation-review-teams" disabled={importing}>
             {teamKeys.map(key => <div className="presentation-review-grid" key={key} role="tabpanel" id={panelId(key)}
               aria-labelledby={tabId(key)} hidden={key !== team}>
