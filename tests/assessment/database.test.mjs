@@ -442,3 +442,50 @@ test("audit records the actual previous comments and AI context excludes private
   ctx = await context();
   assert.equal(ctx.sessions[0].teacherFeedback, null);
 });
+
+test("Session 10 snapshots and marks share the ledger and remain teacher-only", async () => {
+  await owner();
+  await db.exec(fs.readFileSync("supabase/migrations/20261122_session_presentation_reviews.sql", "utf8"));
+  const finalSession = await value(
+    "insert into studio_sessions(block_id,title,session_date,session_number,status,intake_access) values($1,'Presentation',current_date,10,'closed','closed') returning id",
+    [classId],
+  );
+  const presentation = (sessionId = finalSession) =>
+    value("select get_session_presentation_review($1)", [sessionId]);
+  const write = (version, content, markVersion, score, saveScore = true) =>
+    value("select save_session_presentation_review($1,$2,$3,$4,$5,$6,$7)",
+      [finalSession, roster, version, content, markVersion, score, saveScore]);
+  const draft = { question: "What did you demonstrate?", followUp: "Why?", basis: "S3", listenFor: "Evidence", notes: "Teacher only" };
+
+  await identity(teacher1);
+  await assert.rejects(presentation(session), /requires Session 10/);
+  const existing = await getRow();
+  assert.equal((await presentation()).maximum, 20);
+  assert.equal((await write(0, draft, existing.version, null, false)).version, 1);
+  assert.equal((await getRow()).version, existing.version);
+  assert.deepEqual((await presentation()).rows.find(row => row.rosterId === roster).content, draft);
+
+  const marked = await write(1, { ...draft, notes: "Observed during demo" }, existing.version, 17.5);
+  const ledgerRow = await getRow();
+  assert.deepEqual(ledgerRow.scores, { ...existing.scores, presentation: 17.5 });
+  assert.deepEqual(ledgerRow.comments, existing.comments);
+  assert.equal(ledgerRow.version, marked.markVersion);
+  await assert.rejects(write(2, { ...draft, notes: "Reject both writes" }, marked.markVersion, 20.01), /outside allowed range/);
+  await assert.rejects(write(2, draft, existing.version, 18), /changed in another window/);
+  await assert.rejects(write(1, draft, marked.markVersion, 18), /review changed in another window/);
+  const afterConflict = (await presentation()).rows.find(row => row.rosterId === roster);
+  assert.equal(afterConflict.content.notes, "Observed during demo");
+  assert.equal(afterConflict.version, 2);
+  assert.equal(afterConflict.score, 17.5);
+
+  await write(2, null, marked.markVersion, null);
+  assert.equal((await getRow()).scores.presentation, null);
+  assert.equal((await presentation()).rows.find(row => row.rosterId === roster).content.notes, "Observed during demo");
+
+  await identity(teacher2);
+  await assert.rejects(presentation(), /not assigned/);
+  await assert.rejects(write(2, draft, marked.markVersion, 18), /not assigned/);
+  await identity(student1, "student");
+  await assert.rejects(presentation(), /not assigned/);
+  await assert.rejects(value("select content from session_presentation_reviews"), /permission denied/);
+});

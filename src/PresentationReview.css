@@ -1,0 +1,46 @@
+.presentation-review-dialog {
+  width: min(70rem, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  padding: 0;
+  border: 1px solid #ccd9d4;
+  border-radius: 1rem;
+  color: #17312d;
+  background: #fff;
+}
+.presentation-review-dialog::backdrop { background: rgb(15 35 32 / 55%); }
+.presentation-review-header,
+.presentation-review-body { padding: 1rem 1.3rem; }
+.presentation-review-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  background: #eef6f2;
+}
+.presentation-review-header h3,
+.presentation-review-header p { margin: 0; }
+.presentation-review-header p,
+.presentation-save-status,
+.presentation-import small { color: #50645f; }
+.presentation-review-tabs,
+.presentation-review-actions { display: flex; flex-wrap: wrap; gap: .4rem; }
+.presentation-review-tabs { margin: .75rem 0; }
+.presentation-review-tabs [aria-selected="true"] { background: #175e51; color: white; }
+.presentation-review-teams { padding: 0; margin: 0; border: 0; min-width: 0; }
+.presentation-review-grid:not([hidden]) { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .85rem; align-items: start; }
+.presentation-review-card { border: 1px solid #ccd9d4; border-radius: .75rem; padding: 1rem; overflow-wrap: anywhere; }
+.presentation-review-card h4 { color: #175e51; margin: 0; }
+.presentation-question { font-size: 1.12rem; font-weight: 650; margin: .5rem 0; white-space: pre-wrap; }
+.presentation-review-card details { margin: .5rem 0; }
+.presentation-review-card summary { cursor: pointer; }
+.presentation-assessment-fields { display: grid; grid-template-columns: minmax(5.5rem,auto) minmax(0,1fr); gap: .65rem; margin: .7rem 0; }
+.presentation-review-card label { display: block; font-weight: 600; font-size: .9rem; }
+.presentation-review-card input,
+.presentation-review-card textarea { width: 100%; margin-top: .25rem; font: inherit; font-weight: normal; }
+.presentation-review-card textarea { resize: vertical; }
+.presentation-question-fields { display: grid; gap: .4rem; margin-top: .5rem; }
+.presentation-save-status { font-size: .85rem; }
+.presentation-import label { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; font-weight: 650; }
+@media (max-width: 42rem) {
+  .presentation-review-grid:not([hidden]) { grid-template-columns: 1fr; }
+}
