@@ -52,8 +52,29 @@ The current module guides students through a four-week journey:
 - block-aware Week 1–4 activation and current Student Records
 - teacher-controlled Week 2 submission reset
 - Draft and Published Presentation Order management
+- Session 10 Presentation Review with team tabs, individual questions, private teacher notes and Presentation marks
 - Export the currently selected activity as a stable UTF-8 CSV
 - Accessible loading, empty, refresh and actionable error states
+
+### Session 10 Presentation Review
+
+Open **Sessions → Session 10 → Review Presentation**. Select a team to review
+or edit student questions and record optional teacher notes. Scores save to the
+class's existing **Presentation** item in **Marks & Feedback**. The score limit
+comes from the assessment plan. The default NIT3004 plan sets it to 20.
+
+Use **Import Q&A HTML** to prepare a class from the standalone Final Presentation
+Q&A file. Import matches each unique full name and team in the selected class,
+adds question snapshots for new reviews, and reports unmatched or previously
+reviewed students. Imported material contains questions and preparation notes.
+Scores and notes entered in the standalone file stay in that browser.
+
+The migration `20261122_session_presentation_reviews.sql` adds a teacher-only
+table keyed by Session 10 and roster member. It requires no data backfill.
+Verify a saved mark in both Presentation Review and Marks & Feedback using an
+assigned teacher account. Verify that a student and an unassigned teacher
+cannot load the review. If the UI needs to be rolled back after use, retain the
+table and existing assessment records so saved reviews and grades remain recoverable.
 
 ## Technology stack
 
