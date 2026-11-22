@@ -62,7 +62,7 @@ function StudentCard({ client, sessionId, row, maximum, onDirty }: {
   const dirty = changedContent || changedScore;
   const needsAttention = dirty || busy;
   const saveStatus = busy ? "Saving…" : dirty ? "Unsaved changes"
-    : saved.content || saved.score !== null ? "Saved" : "Not started";
+    : saved.score !== null ? "Score saved" : saved.content?.notes ? "Notes saved · score pending" : "Score pending";
 
   useEffect(() => {
     onDirty(row.rosterId, needsAttention);
@@ -118,17 +118,19 @@ function StudentCard({ client, sessionId, row, maximum, onDirty }: {
     <article className="presentation-review-card" aria-label={row.name}>
       <h4>{row.name}</h4>
       <p className="presentation-question">{content.question || "No question prepared."}</p>
-      {(content.followUp || content.basis || content.listenFor) && (
-        <details>
-          <summary>Follow-up and preparation notes</summary>
-          {content.followUp && <p>{content.followUp}</p>}
-          {content.basis && <p><strong>Question basis:</strong> {content.basis}</p>}
-          {content.listenFor && <p><strong>What to listen for:</strong> {content.listenFor}</p>}
-        </details>
-      )}
-      <button type="button" className="secondary compact" onClick={() => setEditing(value => !value)} aria-expanded={editing}>
-        {editing ? "Done editing questions" : "Edit questions"}
-      </button>
+      <div className="presentation-question-tools">
+        {(content.followUp || content.basis || content.listenFor) && (
+          <details>
+            <summary>Follow-up and preparation notes</summary>
+            {content.followUp && <p>{content.followUp}</p>}
+            {content.basis && <p><strong>Question basis:</strong> {content.basis}</p>}
+            {content.listenFor && <p><strong>What to listen for:</strong> {content.listenFor}</p>}
+          </details>
+        )}
+        <button type="button" className="secondary compact" onClick={() => setEditing(value => !value)} aria-expanded={editing}>
+          {editing ? "Done editing questions" : "Edit questions"}
+        </button>
+      </div>
       {editing && <div className="presentation-question-fields">
         {textField("question", "Main question")}
         {textField("followUp", "Follow-up")}
@@ -144,7 +146,7 @@ function StudentCard({ client, sessionId, row, maximum, onDirty }: {
           <textarea disabled={reloading} rows={2} maxLength={6000} value={content.notes} onChange={event => update("notes", event.target.value)} />
         </label>
       </div>
-      <div className="presentation-save-status" role="status">{error || saveStatus}</div>
+      <div className="presentation-save-status" role="status" data-error={Boolean(error)}>{error || saveStatus}</div>
       {error && <div className="presentation-review-actions">
         <button type="button" className="secondary compact" disabled={busy || !dirty} onClick={() => setError("")}>Retry</button>
         <button type="button" className="secondary compact" disabled={busy} onClick={() => void reload()}>Reload saved values</button>
@@ -181,6 +183,8 @@ export function PresentationReview({ client, sessionId, onClose }: {
   onClose: () => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
+  const questionFile = useRef<HTMLInputElement>(null);
+  const reviewBody = useRef<HTMLDivElement>(null);
   const unsaved = useRef(new Set<string>());
   const onDirty = useRef((id: string, dirty: boolean) => {
     if (dirty) unsaved.current.add(id);
@@ -218,6 +222,10 @@ export function PresentationReview({ client, sessionId, onClose }: {
     });
     return () => { active = false; };
   }, [client, sessionId, attempt]);
+
+  useEffect(() => {
+    if (reviewBody.current) reviewBody.current.scrollTop = 0;
+  }, [team]);
 
   function close() {
     if (importing) return;
@@ -288,26 +296,23 @@ export function PresentationReview({ client, sessionId, onClose }: {
           <h3 id="presentation-review-title">S10 · Presentation Review</h3>
           <p>Scores save to Marks &amp; Feedback. Questions and teacher notes stay in this review.</p>
         </div>
-        <button type="button" className="secondary compact" disabled={importing} onClick={close}>Close</button>
-      </header>
-      <div className="presentation-review-body">
-        {error && <p role="alert">{error} <button type="button" className="secondary compact"
-          onClick={() => { setError(""); setAttempt(value => value + 1); }}>Retry</button></p>}
-        {!data && !error && <p role="status">Loading presentation reviews…</p>}
-        {data && <>
-          <div className="presentation-import">
-            <label>Import Q&amp;A HTML<input type="file" accept=".html,text/html" disabled={importing}
+        <div className="presentation-review-actions">
+          {data && <>
+            <button type="button" className="secondary compact" disabled={importing} onClick={() => questionFile.current?.click()}>
+              Import Q&amp;A HTML
+            </button>
+            <input ref={questionFile} type="file" accept=".html,text/html" hidden disabled={importing}
               onChange={event => {
                 const file = event.target.files?.[0];
                 event.target.value = "";
                 if (file) void importQuestions(file);
-              }} /></label>
-            <small>Matches by team and full name. Imports questions and preparation notes into new reviews.</small>
-          </div>
-          {importing && <p role="status">Importing questions…</p>}
-          {notice && <p role="status">{notice}</p>}
-          {data.maximum === null && <p>Configure a Presentation scoring item in Marks &amp; Feedback to enter scores.</p>}
-          {!teamKeys.length && <p>No students are enrolled in this class.</p>}
+              }} />
+          </>}
+          <button type="button" className="secondary compact" disabled={importing} onClick={close}>Close</button>
+        </div>
+      </header>
+      {data && teamKeys.length > 0 && (
+        <nav className="presentation-review-navigation" aria-label="Presentation review navigation">
           <div role="tablist" aria-label="Presentation teams" className="presentation-review-tabs"
             onKeyDown={event => {
               const keys = ["ArrowRight", "ArrowLeft", "Home", "End"];
@@ -323,6 +328,16 @@ export function PresentationReview({ client, sessionId, onClose }: {
               aria-selected={team === key} tabIndex={team === key ? 0 : -1} className="secondary compact"
               onClick={() => setTeam(key)}>{key === "unassigned" ? "Unassigned" : `Team ${key}`}</button>)}
           </div>
+        </nav>
+      )}
+      {(importing || notice) && <p className="presentation-review-notice" role="status">{importing ? "Importing questions…" : notice}</p>}
+      <div className="presentation-review-body" ref={reviewBody}>
+        {error && <p role="alert">{error} <button type="button" className="secondary compact"
+          onClick={() => { setError(""); setAttempt(value => value + 1); }}>Retry</button></p>}
+        {!data && !error && <p role="status">Loading presentation reviews…</p>}
+        {data && <>
+          {data.maximum === null && <p>Configure a Presentation scoring item in Marks &amp; Feedback to enter scores.</p>}
+          {!teamKeys.length && <p>No students are enrolled in this class.</p>}
           <fieldset className="presentation-review-teams" disabled={importing}>
             {teamKeys.map(key => <div className="presentation-review-grid" key={key} role="tabpanel" id={panelId(key)}
               aria-labelledby={tabId(key)} hidden={key !== team}>
