@@ -32,6 +32,7 @@ test("switching teams keeps an in-flight score and newer teacher notes attached 
   let start;
   const firstSave = new Promise(resolve => { start = resolve; });
   const client = {
+    from: publishedOrderSource({ data: null }),
     async rpc(name, args) {
       if (name === "get_session_presentation_review") return { data: { maximum: 20, rows } };
       assert.equal(name, "save_session_presentation_review");
@@ -47,7 +48,7 @@ test("switching teams keeps an in-flight score and newer teacher notes attached 
   let closed = false;
   await act(async () => {
     tree = create(React.createElement(PresentationReview, {
-      client, sessionId: "s10", onClose: () => { closed = true; },
+      client, sessionId: "s10", blockId: "class-2B4", onClose: () => { closed = true; },
     }));
   });
   try {
@@ -74,5 +75,74 @@ test("switching teams keeps an in-flight score and newer teacher notes attached 
     assert.equal(closed, true);
   } finally {
     await act(async () => tree.unmount());
+  }
+});
+
+function publishedOrderSource(result) {
+  return table => {
+    assert.equal(table, "presentation_orders");
+    const query = {
+      select(columns) {
+        assert.equal(columns, "published_snapshot");
+        return query;
+      },
+      eq(column, value) {
+        assert.equal(column, "block_id");
+        assert.equal(value, "class-2B4");
+        return query;
+      },
+      not(column, operator, value) {
+        assert.deepEqual([column, operator, value], ["published_at", "is", null]);
+        return query;
+      },
+      async maybeSingle() { return result; },
+    };
+    return query;
+  };
+}
+
+test("team tabs follow published positions and fall back to team numbers", async () => {
+  const rows = [null, 10, 2, 4, 2].map((team, index) => ({
+    rosterId: String(index), name: `Student ${index}`, team, version: 0, markVersion: 0, content: null, score: null,
+  }));
+  const scenarios = [
+    {
+      result: { data: { published_snapshot: [
+        { position: 3, teamName: "Team 2" },
+        { position: 1, teamName: "Team 4" },
+        { position: 2, teamName: "Team 9" },
+      ] } },
+      expected: ["Team 4", "Team 2", "Team 10", "Unassigned"],
+    },
+    {
+      result: { data: null },
+      expected: ["Team 2", "Team 4", "Team 10", "Unassigned"],
+    },
+    {
+      result: { error: { message: "Order unavailable" } },
+      expected: ["Team 2", "Team 4", "Team 10", "Unassigned"],
+    },
+  ];
+  for (const { result, expected } of scenarios) {
+    let tree;
+    const client = {
+      from: publishedOrderSource(result),
+      async rpc(name) {
+        assert.equal(name, "get_session_presentation_review");
+        return { data: { maximum: 20, rows } };
+      },
+    };
+    await act(async () => {
+      tree = create(React.createElement(PresentationReview, {
+        client, sessionId: "s10", blockId: "class-2B4", onClose() {},
+      }));
+    });
+    try {
+      const tabs = tree.root.findAllByProps({ role: "tab" });
+      assert.deepEqual(tabs.map(tab => tab.children[0]), expected);
+      assert.equal(tabs.find(tab => tab.props["aria-selected"]), tabs[0]);
+    } finally {
+      await act(async () => tree.unmount());
+    }
   }
 });
