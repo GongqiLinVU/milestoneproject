@@ -2765,10 +2765,12 @@ function StudioSessionControl({
               <label className="session-window-control">Submission window<select aria-label="Submission window" value={access} disabled={busy} onChange={event=>{const next=event.target.value as "session"|"open"|"closed";void(supportsIntake?setIntakeState(item,next):setTrackState(item,next));}}><option value="session">Follow Session</option><option value="open">Open</option><option value="closed">Closed</option></select></label><p className="session-window-result">Currently <b>{submissionState==="scheduled"?"scheduled":submissionState}</b>{access==="session"?" · follows the Check-in schedule":" · independent of Check-in"}.</p>
               {collectionMode==="ai"&&<small className="session-ai-note">AI calls also require trial limits and server configuration. Selecting AI does not open submissions.</small>}
             </>:<p>S10 uses the existing Feedback and final-presentation workflow.</p>}</section>
-            <section className="session-function-group"><h4>Student records</h4><p>{supportsFeedback?"Review completion of Platform Feedback.":"Read progress recorded for this Session."}</p>
+            <section className="session-function-group"><h4>Student records</h4><p>{supportsFeedback?"Review presentations and check Platform Feedback submissions.":"Read progress recorded for this Session."}</p>
               {supportsTrack&&<button className="compact" onClick={()=>void(supportsIntake?openIntake(item):openEvidence(item))}><ListChecks size={15}/> {supportsIntake?"Review progress":"View Work Track"}</button>}
-              {supportsFeedback&&<button className="compact" onClick={()=>void openFeedbackStatus(item)}><ClipboardCheck size={15}/> View Feedback status</button>}
-              {supportsFeedback&&<button type="button" className="compact" onClick={()=>setPresentationReviewSession(item)}><ClipboardCheck size={15}/> Review Presentation</button>}
+              {supportsFeedback&&<div className="teacher-session-actions" role="group" aria-label="Session 10 review actions">
+                <button type="button" className="compact" onClick={()=>setPresentationReviewSession(item)}><Presentation size={15}/> Review Presentation</button>
+                <button type="button" className="secondary compact" onClick={()=>void openFeedbackStatus(item)}><ClipboardCheck size={15}/> View Feedback status</button>
+              </div>}
               {supportsTrack&&<details className="session-secondary-tools"><summary>Previous collection records</summary><p>Records from another collection method remain readable.</p><button className="secondary compact" onClick={()=>void(supportsIntake?openEvidence(item):openIntake(item))}>{supportsIntake?"Work Track history":"Intake history"}</button></details>}
             </section>
           </div>

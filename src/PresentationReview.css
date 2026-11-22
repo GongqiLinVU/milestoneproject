@@ -1,46 +1,142 @@
 .presentation-review-dialog {
-  width: min(70rem, calc(100% - 2rem));
+  width: min(76rem, calc(100% - 2rem));
   max-height: calc(100dvh - 2rem);
   padding: 0;
+  overflow: hidden;
   border: 1px solid #ccd9d4;
   border-radius: 1rem;
   color: #17312d;
+  background: #f4f8f6;
+}
+
+.presentation-review-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.presentation-review-dialog::backdrop { background: rgb(15 35 32 / 55%); }
+
+.presentation-review-header,
+.presentation-review-navigation {
+  flex: none;
+  padding: .8rem 1.15rem;
+  border-bottom: 1px solid #d8e3de;
   background: #fff;
 }
-.presentation-review-dialog::backdrop { background: rgb(15 35 32 / 55%); }
-.presentation-review-header,
-.presentation-review-body { padding: 1rem 1.3rem; }
+
 .presentation-review-header {
   display: flex;
-  align-items: flex-start;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  background: #eef6f2;
+  gap: .65rem 1rem;
 }
+
 .presentation-review-header h3,
 .presentation-review-header p { margin: 0; }
-.presentation-review-header p,
-.presentation-save-status,
-.presentation-import small { color: #50645f; }
-.presentation-review-tabs,
-.presentation-review-actions { display: flex; flex-wrap: wrap; gap: .4rem; }
-.presentation-review-tabs { margin: .75rem 0; }
-.presentation-review-tabs [aria-selected="true"] { background: #175e51; color: white; }
+
+.presentation-review-header p {
+  margin-top: .25rem;
+  color: #50645f;
+  font-size: .86rem;
+}
+
+.presentation-review-header .presentation-review-actions { margin-top: 0; }
+.presentation-review-actions { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .35rem; }
+.presentation-review-tabs { display: flex; gap: .4rem; padding: .25rem; margin: -.25rem; overflow-x: auto; }
+.presentation-review-tabs button { flex: none; }
+.presentation-review-tabs button[aria-selected="true"] { border-color: #175e51; background: #175e51; color: #fff; }
+
+.presentation-review-notice {
+  flex: none;
+  margin: 0;
+  padding: .6rem 1.15rem;
+  border-bottom: 1px solid #d8e3de;
+  background: #eaf4ef;
+  font-size: .85rem;
+}
+
+.presentation-review-body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: .9rem 1.15rem 1.15rem;
+}
+
+.presentation-review-body > p:first-child { margin-top: 0; }
 .presentation-review-teams { padding: 0; margin: 0; border: 0; min-width: 0; }
-.presentation-review-grid:not([hidden]) { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .85rem; align-items: start; }
-.presentation-review-card { border: 1px solid #ccd9d4; border-radius: .75rem; padding: 1rem; overflow-wrap: anywhere; }
-.presentation-review-card h4 { color: #175e51; margin: 0; }
-.presentation-question { font-size: 1.12rem; font-weight: 650; margin: .5rem 0; white-space: pre-wrap; }
-.presentation-review-card details { margin: .5rem 0; }
-.presentation-review-card summary { cursor: pointer; }
-.presentation-assessment-fields { display: grid; grid-template-columns: minmax(5.5rem,auto) minmax(0,1fr); gap: .65rem; margin: .7rem 0; }
-.presentation-review-card label { display: block; font-weight: 600; font-size: .9rem; }
+
+.presentation-review-grid:not([hidden]) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: .75rem;
+}
+
+.presentation-review-card {
+  min-width: 0;
+  padding: .85rem 1rem .7rem;
+  border: 1px solid #ccd9d4;
+  border-radius: .75rem;
+  background: #fff;
+  overflow-wrap: anywhere;
+}
+
+.presentation-review-card h4 { margin: 0; color: #175e51; font-size: 1rem; }
+
+.presentation-question {
+  margin: .45rem 0;
+  font-size: 1.04rem;
+  font-weight: 650;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+.presentation-question-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: .45rem;
+  margin: .45rem 0;
+}
+
+.presentation-question-tools button { grid-column: 2; }
+.presentation-question-tools details { font-size: .86rem; }
+.presentation-question-tools details p { margin: .45rem 0; }
+.presentation-question-tools summary { padding: .45rem 0; cursor: pointer; color: #175e51; }
+
+.presentation-assessment-fields {
+  display: grid;
+  grid-template-columns: 6rem minmax(0, 1fr);
+  gap: .7rem;
+  padding-top: .6rem;
+  border-top: 1px solid #e0e9e4;
+}
+
+.presentation-review-card label { display: block; font-weight: 600; font-size: .85rem; }
 .presentation-review-card input,
-.presentation-review-card textarea { width: 100%; margin-top: .25rem; font: inherit; font-weight: normal; }
+.presentation-review-card textarea {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  margin-top: .25rem;
+  padding: .4rem .5rem;
+  border: 1px solid #c8d5cf;
+  border-radius: .4rem;
+  font: inherit;
+  font-weight: normal;
+}
+
 .presentation-review-card textarea { resize: vertical; }
-.presentation-question-fields { display: grid; gap: .4rem; margin-top: .5rem; }
-.presentation-save-status { font-size: .85rem; }
-.presentation-import label { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; font-weight: 650; }
-@media (max-width: 42rem) {
-  .presentation-review-grid:not([hidden]) { grid-template-columns: 1fr; }
+.presentation-question-fields { display: grid; gap: .4rem; margin: .5rem 0 .75rem; }
+.presentation-save-status { margin-top: .35rem; font-size: .78rem; color: #50645f; }
+.presentation-save-status[data-error="true"] { color: #9d3027; }
+
+@media (max-width: 48rem) {
+  .presentation-review-dialog { width: calc(100% - 1rem); max-height: calc(100dvh - 1rem); }
+  .presentation-review-header,
+  .presentation-review-navigation,
+  .presentation-review-notice,
+  .presentation-review-body { padding-inline: .75rem; }
+  .presentation-review-grid:not([hidden]) { grid-template-columns: minmax(0, 1fr); }
 }
